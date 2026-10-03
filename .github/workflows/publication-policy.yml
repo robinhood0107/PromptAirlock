@@ -1,0 +1,74 @@
+name: Publication policy
+
+on:
+  pull_request_target:
+    types: [opened, edited, synchronize, reopened, ready_for_review, closed]
+  workflow_run:
+    workflows: [Publication request]
+    types: [completed]
+  issues:
+    types: [opened, edited]
+  issue_comment:
+    types: [created, edited]
+  schedule:
+    - cron: '17 * * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pull-requests: read
+  issues: read
+  statuses: write
+
+concurrency:
+  group: publication-policy
+  cancel-in-progress: false
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      GH_REPO: ${{ github.repository }}
+    steps:
+      - name: Resolve trusted default branch
+        id: trusted
+        shell: bash
+        run: |
+          set -euo pipefail
+          event_heads=$(jq -r '[.pull_request.head.sha, .workflow_run.head_sha, .workflow_run.pull_requests[]?.head.sha] | .[] | select(type == "string")' "$GITHUB_EVENT_PATH")
+          while IFS= read -r head; do
+            [[ -z "$head" ]] && continue
+            [[ "$head" =~ ^[0-9a-f]{40}$ ]]
+            gh api "repos/$GH_REPO/statuses/$head" --method POST \
+              -f context=publication-policy -f state=pending \
+              -f description='Publication audit required.' > /dev/null
+          done <<< "$event_heads"
+          heads=$(gh api --paginate "repos/$GH_REPO/pulls?state=open&per_page=100" --jq '.[].head.sha')
+          while IFS= read -r head; do
+            [[ -z "$head" ]] && continue
+            [[ "$head" =~ ^[0-9a-f]{40}$ ]]
+            gh api "repos/$GH_REPO/statuses/$head" --method POST \
+              -f context=publication-policy -f state=pending \
+              -f description='Publication audit required.' > /dev/null
+          done <<< "$heads"
+          ref=$(gh api "repos/$GH_REPO" --jq .default_branch)
+          sha=$(gh api "repos/$GH_REPO/commits/$ref" --jq .sha)
+          [[ "$sha" =~ ^[0-9a-f]{40}$ ]]
+          printf 'sha=%s\n' "$sha" >> "$GITHUB_OUTPUT"
+      - name: Read trusted policy code
+        id: checkout
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          ref: ${{ steps.trusted.outputs.sha }}
+          persist-credentials: false
+      - name: Test policy checker
+        id: tests
+        run: node --test .github/scripts/publication-policy.test.mjs
+      - name: Audit published material
+        if: always() && steps.trusted.outcome == 'success' && steps.checkout.outcome == 'success'
+        env:
+          PUBLICATION_DENY_PATTERN: ${{ secrets.PUBLICATION_DENY_PATTERN }}
+          POLICY_TESTS_PASSED: ${{ steps.tests.outcome == 'success' }}
+        run: node .github/scripts/run-publication-policy.mjs

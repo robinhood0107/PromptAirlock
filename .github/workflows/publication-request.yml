@@ -1,0 +1,20 @@
+name: Publication request
+
+on:
+  push:
+  create:
+  release:
+    types: [published, edited]
+  pull_request_review:
+    types: [submitted, edited]
+  pull_request_review_comment:
+    types: [created, edited]
+
+permissions: {}
+
+jobs:
+  request:
+    runs-on: ubuntu-latest
+    timeout-minutes: 1
+    steps:
+      - run: echo 'Repository update queued for review.'
