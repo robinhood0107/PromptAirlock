@@ -1,4 +1,4 @@
-# Local planning documents and reference material (existing exclusions)
+# 로컬 설계·작업 문서와 참고자료는 기존 제외 정책을 유지한다.
 /AGENTS.md
 /spec.md
 /사전 조사 및 설계.md
@@ -6,7 +6,7 @@
 /sources/
 /official/
 
-# CMake / C++ build output
+# CMake와 C++ 빌드 산출물
 build/
 build-debug/
 build-release/
@@ -32,16 +32,16 @@ CMakeUserPresets.json
 *.ilk
 *.exp
 
-# Rust build output; Cargo.lock remains trackable
+# Rust 빌드 산출물이며 Cargo.lock은 추적할 수 있다.
 target/
 
-# Dependency caches; manifests and dependency lockfiles remain trackable
+# 의존성 캐시만 제외하며 manifest와 lockfile은 추적할 수 있다.
 vcpkg_installed/
 /vcpkg/
 /conan-cache/
 /_deps/
 
-# Local credentials and environment; examples remain trackable
+# 로컬 자격 증명과 환경 설정을 제외하며 예제 파일은 추적할 수 있다.
 .env
 .env.*
 !.env.example
@@ -52,8 +52,9 @@ vcpkg_installed/
 *.pfx
 /secrets/
 /credentials/
+/.publication-policy.local.json
 
-# Local models and private data; synthetic fixtures remain trackable
+# 로컬 모델과 비공개 데이터를 제외하며 합성 테스트 자료는 추적할 수 있다.
 /models/
 /data/local/
 /data/private/
@@ -64,7 +65,7 @@ vcpkg_installed/
 *.pth
 *.gguf
 
-# Logs, profiling, coverage, and crash dumps
+# 로그·프로파일·커버리지·크래시 덤프
 /logs/
 *.log
 *.profraw
@@ -77,7 +78,7 @@ vcpkg_installed/
 /core
 /core.[0-9]*
 
-# Local editor / operating-system files
+# 로컬 편집기와 운영체제 파일
 .vs/
 .idea/
 *.user
