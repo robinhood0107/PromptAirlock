@@ -1,0 +1,90 @@
+# Local planning documents and reference material (existing exclusions)
+/AGENTS.md
+/spec.md
+/사전 조사 및 설계.md
+/PHASE_PROMPTS.md
+/sources/
+/official/
+
+# CMake / C++ build output
+build/
+build-debug/
+build-release/
+cmake-build-*/
+out/
+CMakeFiles/
+CMakeCache.txt
+cmake_install.cmake
+CTestTestfile.cmake
+Testing/
+compile_commands.json
+CMakeUserPresets.json
+*.o
+*.obj
+*.a
+*.lib
+*.so
+*.so.*
+*.dylib
+*.dll
+*.exe
+*.pdb
+*.ilk
+*.exp
+
+# Rust build output; Cargo.lock remains trackable
+target/
+
+# Dependency caches; manifests and dependency lockfiles remain trackable
+vcpkg_installed/
+/vcpkg/
+/conan-cache/
+/_deps/
+
+# Local credentials and environment; examples remain trackable
+.env
+.env.*
+!.env.example
+!.env.sample
+*.pem
+*.key
+*.p12
+*.pfx
+/secrets/
+/credentials/
+
+# Local models and private data; synthetic fixtures remain trackable
+/models/
+/data/local/
+/data/private/
+*.onnx
+*.onnx.data
+*.safetensors
+*.pt
+*.pth
+*.gguf
+
+# Logs, profiling, coverage, and crash dumps
+/logs/
+*.log
+*.profraw
+*.profdata
+*.gcda
+*.gcno
+/coverage/
+*.dmp
+*.core
+/core
+/core.[0-9]*
+
+# Local editor / operating-system files
+.vs/
+.idea/
+*.user
+*.suo
+.DS_Store
+Thumbs.db
+Desktop.ini
+*.swp
+*.swo
+*~

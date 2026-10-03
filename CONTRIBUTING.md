@@ -1,0 +1,30 @@
+# Contribution workflow
+
+## 브랜치와 커밋
+
+- 기본 브랜치는 `main`입니다. 초기 커밋 이후 변경은 작업 브랜치와 PR을 거칩니다.
+- 브랜치는 `feat/<topic>`, `fix/<topic>`, `docs/<topic>`, `chore/<topic>`, `spike/<topic>` 형태를 사용합니다.
+- 커밋 제목은 `<type>: <change>` 형태를 사용합니다. 예: `docs: update contribution guide`.
+- 이름과 설명은 변경 목적과 내용으로 작성합니다. 불필요한 작성 도구나 작성 과정 표기를 포함하지 않습니다.
+- 작성자 정보는 실제 기여자만 나타내며, 자동 생성한 공동 작성자 trailer를 붙이지 않습니다.
+- 승인 없이 force push, tag 생성, release 발행을 하지 않습니다.
+
+## Pull request
+
+- 하나의 PR은 하나의 검토 가능한 목적을 다룹니다.
+- 문제, 변경 결과, 실제 검증 결과, 실패·미확인 사항을 기록합니다.
+- 승인된 작업 범위를 지키고, 실행하지 않은 검증을 통과했다고 쓰지 않습니다.
+- 미해결 review 대화를 해소한 뒤 squash merge합니다.
+- 병합 후 작업 브랜치는 자동 삭제합니다.
+
+`main`에는 PR 요구, 선형 이력, review 대화 해결 요구를 적용하며 force push와 삭제를 금지합니다. 관리자에게도 같은 규칙을 적용합니다.
+
+초기 1인 운영 단계에서는 필수 reviewer 승인 수를 0으로 둡니다. 실제 CI가 마련되면 검증된 build/test job을 required checks로 지정합니다. 협업자가 참여하면 필수 승인 수와 code ownership을 재검토합니다.
+
+## 공개 범위와 라이선스
+
+- 공개가 승인된 자료만 포함합니다. 로컬 설계·작업 문서와 참고자료는 기존 제외 정책을 유지합니다.
+- 비밀값, 원문 개인정보, 민감한 원본 응답을 코드·fixture·로그·PR에 포함하지 않습니다.
+- 테스트에는 합성 데이터를 사용합니다.
+- 프로젝트 라이선스는 `AGPL-3.0-only`입니다.
+- 외부 코드·dependency·모델·dataset은 추가 전에 license, provenance, 배포·NOTICE 조건을 검토합니다.
