@@ -1,0 +1,25 @@
+{
+  "name": "prompt-airlock-phase1-spike",
+  "version": "0.0.0",
+  "builtin-baseline": "19780d9cdf84d0944cf9a318666703b89ab6629c",
+  "dependencies": [
+    "gtest",
+    {
+      "name": "boost-asio",
+      "features": ["ssl"]
+    },
+    "boost-beast",
+    "openssl"
+  ],
+  "features": {
+    "drogon": {
+      "description": "HTTP stack comparison (Drogon)",
+      "dependencies": [
+        {
+          "name": "drogon",
+          "default-features": false
+        }
+      ]
+    }
+  }
+}

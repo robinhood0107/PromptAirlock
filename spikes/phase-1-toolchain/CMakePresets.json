@@ -1,0 +1,304 @@
+{
+  "version": 6,
+  "cmakeMinimumRequired": {
+    "major": 3,
+    "minor": 28,
+    "patch": 0
+  },
+  "configurePresets": [
+    {
+      "name": "base",
+      "hidden": true,
+      "generator": "Ninja",
+      "toolchainFile": "$env{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake",
+      "cacheVariables": {
+        "CMAKE_EXPORT_COMPILE_COMMANDS": "ON",
+        "VCPKG_INSTALL_OPTIONS": "$env{PA_VCPKG_INSTALL_OPTIONS}"
+      }
+    },
+    {
+      "name": "win-base",
+      "hidden": true,
+      "inherits": "base",
+      "binaryDir": "${sourceDir}/build/${presetName}",
+      "condition": {
+        "type": "equals",
+        "lhs": "${hostSystemName}",
+        "rhs": "Windows"
+      },
+      "cacheVariables": {
+        "CMAKE_CXX_COMPILER": "clang-cl",
+        "VCPKG_TARGET_TRIPLET": "x64-windows"
+      }
+    },
+    {
+      "name": "win-debug",
+      "inherits": "win-base",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Debug"
+      }
+    },
+    {
+      "name": "win-release",
+      "inherits": "win-base",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Release"
+      }
+    },
+    {
+      "name": "win-asan",
+      "inherits": "win-base",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+        "PA_SANITIZE": "address"
+      }
+    },
+    {
+      "name": "win-drogon",
+      "inherits": "win-base",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Release",
+        "VCPKG_MANIFEST_FEATURES": "drogon",
+        "PA_WITH_DROGON": "ON"
+      }
+    },
+    {
+      "name": "linux-base",
+      "hidden": true,
+      "inherits": "base",
+      "binaryDir": "$env{HOME}/.cache/prompt-airlock/phase-1/${presetName}",
+      "condition": {
+        "type": "equals",
+        "lhs": "${hostSystemName}",
+        "rhs": "Linux"
+      },
+      "cacheVariables": {
+        "VCPKG_TARGET_TRIPLET": "x64-linux"
+      }
+    },
+    {
+      "name": "wsl-gcc14",
+      "inherits": "linux-base",
+      "cacheVariables": {
+        "CMAKE_CXX_COMPILER": "g++-14",
+        "CMAKE_BUILD_TYPE": "Release"
+      }
+    },
+    {
+      "name": "wsl-clang-asan-ubsan",
+      "inherits": "linux-base",
+      "cacheVariables": {
+        "CMAKE_CXX_COMPILER": "clang++-23",
+        "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+        "PA_SANITIZE": "address,undefined"
+      }
+    },
+    {
+      "name": "wsl-clang-tsan",
+      "inherits": "linux-base",
+      "cacheVariables": {
+        "CMAKE_CXX_COMPILER": "clang++-23",
+        "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+        "PA_SANITIZE": "thread"
+      }
+    }
+  ],
+  "buildPresets": [
+    {
+      "name": "win-debug",
+      "configurePreset": "win-debug"
+    },
+    {
+      "name": "win-release",
+      "configurePreset": "win-release"
+    },
+    {
+      "name": "win-asan",
+      "configurePreset": "win-asan"
+    },
+    {
+      "name": "win-drogon",
+      "configurePreset": "win-drogon"
+    },
+    {
+      "name": "wsl-gcc14",
+      "configurePreset": "wsl-gcc14"
+    },
+    {
+      "name": "wsl-clang-asan-ubsan",
+      "configurePreset": "wsl-clang-asan-ubsan"
+    },
+    {
+      "name": "wsl-clang-tsan",
+      "configurePreset": "wsl-clang-tsan"
+    }
+  ],
+  "testPresets": [
+    {
+      "name": "test-base",
+      "hidden": true,
+      "output": {
+        "outputOnFailure": true
+      },
+      "execution": {
+        "noTestsAction": "error"
+      }
+    },
+    {
+      "name": "win-debug",
+      "inherits": "test-base",
+      "configurePreset": "win-debug"
+    },
+    {
+      "name": "win-release",
+      "inherits": "test-base",
+      "configurePreset": "win-release"
+    },
+    {
+      "name": "win-asan",
+      "inherits": "test-base",
+      "configurePreset": "win-asan"
+    },
+    {
+      "name": "win-drogon",
+      "inherits": "test-base",
+      "configurePreset": "win-drogon"
+    },
+    {
+      "name": "wsl-gcc14",
+      "inherits": "test-base",
+      "configurePreset": "wsl-gcc14"
+    },
+    {
+      "name": "wsl-clang-asan-ubsan",
+      "inherits": "test-base",
+      "configurePreset": "wsl-clang-asan-ubsan"
+    },
+    {
+      "name": "wsl-clang-tsan",
+      "inherits": "test-base",
+      "configurePreset": "wsl-clang-tsan"
+    }
+  ],
+  "workflowPresets": [
+    {
+      "name": "win-debug",
+      "steps": [
+        {
+          "type": "configure",
+          "name": "win-debug"
+        },
+        {
+          "type": "build",
+          "name": "win-debug"
+        },
+        {
+          "type": "test",
+          "name": "win-debug"
+        }
+      ]
+    },
+    {
+      "name": "win-release",
+      "steps": [
+        {
+          "type": "configure",
+          "name": "win-release"
+        },
+        {
+          "type": "build",
+          "name": "win-release"
+        },
+        {
+          "type": "test",
+          "name": "win-release"
+        }
+      ]
+    },
+    {
+      "name": "win-asan",
+      "steps": [
+        {
+          "type": "configure",
+          "name": "win-asan"
+        },
+        {
+          "type": "build",
+          "name": "win-asan"
+        },
+        {
+          "type": "test",
+          "name": "win-asan"
+        }
+      ]
+    },
+    {
+      "name": "win-drogon",
+      "steps": [
+        {
+          "type": "configure",
+          "name": "win-drogon"
+        },
+        {
+          "type": "build",
+          "name": "win-drogon"
+        },
+        {
+          "type": "test",
+          "name": "win-drogon"
+        }
+      ]
+    },
+    {
+      "name": "wsl-gcc14",
+      "steps": [
+        {
+          "type": "configure",
+          "name": "wsl-gcc14"
+        },
+        {
+          "type": "build",
+          "name": "wsl-gcc14"
+        },
+        {
+          "type": "test",
+          "name": "wsl-gcc14"
+        }
+      ]
+    },
+    {
+      "name": "wsl-clang-asan-ubsan",
+      "steps": [
+        {
+          "type": "configure",
+          "name": "wsl-clang-asan-ubsan"
+        },
+        {
+          "type": "build",
+          "name": "wsl-clang-asan-ubsan"
+        },
+        {
+          "type": "test",
+          "name": "wsl-clang-asan-ubsan"
+        }
+      ]
+    },
+    {
+      "name": "wsl-clang-tsan",
+      "steps": [
+        {
+          "type": "configure",
+          "name": "wsl-clang-tsan"
+        },
+        {
+          "type": "build",
+          "name": "wsl-clang-tsan"
+        },
+        {
+          "type": "test",
+          "name": "wsl-clang-tsan"
+        }
+      ]
+    }
+  ]
+}
