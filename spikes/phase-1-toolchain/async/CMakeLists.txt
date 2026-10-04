@@ -1,0 +1,4 @@
+pa_add_gtest(async_bounded_queue_test bounded_queue_test.cpp)
+
+pa_add_gtest(async_coroutine_cancel_test coroutine_cancel_test.cpp)
+target_link_libraries(async_coroutine_cancel_test PRIVATE Boost::asio)

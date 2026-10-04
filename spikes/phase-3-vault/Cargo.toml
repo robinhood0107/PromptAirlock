@@ -1,0 +1,17 @@
+# Phase 3 spike 전용 Cargo workspace. 최종 저장소 구조가 아니다.
+[workspace]
+resolver = "3"
+members = ["vault", "ffi-learning"]
+
+[workspace.package]
+edition = "2024"
+license = "AGPL-3.0-only"
+publish = false
+rust-version = "1.85"
+
+[workspace.lints.rust]
+# Vault 본체는 unsafe 를 금지한다. Windows 보안 설명자 모듈만 모듈 단위로 허용한다.
+unsafe_code = "deny"
+
+[profile.release]
+debug = 1

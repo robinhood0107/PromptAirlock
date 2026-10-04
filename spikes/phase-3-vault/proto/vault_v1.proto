@@ -1,0 +1,110 @@
+// Prompt Airlock Secure Mapping Vault IPC 프로토콜 v1 (Phase 3 spike).
+//
+// 전송 형식: [4바이트 big-endian 길이][Request 또는 Response protobuf 바이트].
+// 길이는 서버 설정의 최대 frame 크기를 넘으면 안 된다(기본 65536).
+// 연결의 첫 요청은 반드시 hello 이고, 인증이 끝나야 다른 op 를 받는다.
+// 오류 응답에는 원문 값·mapping 을 담지 않는다. 코드만 보낸다.
+syntax = "proto3";
+
+package prompt_airlock.vault.v1;
+
+// 클라이언트와 서버가 모두 이 값과 같은지 확인한다. 다르면 UNSUPPORTED_VERSION 후 연결 종료.
+enum ProtocolVersion {
+  PROTOCOL_VERSION_UNSPECIFIED = 0;
+  PROTOCOL_VERSION_V1 = 1;
+}
+
+enum ErrorCode {
+  ERROR_CODE_UNSPECIFIED = 0;
+  UNSUPPORTED_VERSION = 1;
+  MALFORMED_REQUEST = 2;
+  FRAME_TOO_LARGE = 3;
+  AUTH_REQUIRED = 4;
+  AUTH_FAILED = 5;
+  OVERLOADED = 6;
+  SCOPE_NOT_FOUND = 7;
+  SCOPE_EXPIRED = 8;
+  TOKEN_NOT_FOUND = 9;
+  MALFORMED_TOKEN = 10;
+  SCOPE_LIMIT = 11;
+  MAPPING_LIMIT = 12;
+  VALUE_TOO_LARGE = 13;
+  INVALID_ARGUMENT = 14;
+  INTERNAL = 15;
+  SHUTTING_DOWN = 16;
+}
+
+message Hello {
+  // 실행마다 Vault 가 새로 만드는 32바이트 비밀값. 부모 프로세스에만 stdout 으로 전달된다.
+  bytes auth_secret = 1;
+}
+
+message HelloAck {}
+
+message CreateScopeRequest {
+  uint64 ttl_ms = 1;
+}
+
+message CreateScopeResponse {
+  // CSPRNG 로 만든 16바이트 불투명 식별자.
+  bytes scope_id = 1;
+  uint64 ttl_ms = 2;
+}
+
+message CreateTokenRequest {
+  bytes scope_id = 1;
+  // 대문자 엔티티 라벨. 예: PERSON, PHONE, EMAIL
+  string entity_type = 2;
+  // 보호할 원문. UTF-8 텍스트지만 Vault 는 바이트로만 다룬다.
+  bytes value = 3;
+}
+
+message CreateTokenResponse {
+  string token = 1;
+}
+
+message ResolveExactRequest {
+  bytes scope_id = 1;
+  string token = 2;
+}
+
+message ResolveExactResponse {
+  string entity_type = 1;
+  bytes value = 2;
+}
+
+message DropScopeRequest {
+  bytes scope_id = 1;
+}
+
+message DropScopeResponse {}
+
+message Error {
+  ErrorCode code = 1;
+}
+
+message Request {
+  ProtocolVersion protocol_version = 1;
+  // 응답에 그대로 돌려준다. 클라이언트는 응답의 request_id 를 확인한다.
+  uint64 request_id = 2;
+  oneof op {
+    Hello hello = 10;
+    CreateScopeRequest create_scope = 11;
+    CreateTokenRequest create_token = 12;
+    ResolveExactRequest resolve_exact = 13;
+    DropScopeRequest drop_scope = 14;
+  }
+}
+
+message Response {
+  ProtocolVersion protocol_version = 1;
+  uint64 request_id = 2;
+  oneof result {
+    Error error = 10;
+    HelloAck hello = 11;
+    CreateScopeResponse create_scope = 12;
+    CreateTokenResponse create_token = 13;
+    ResolveExactResponse resolve_exact = 14;
+    DropScopeResponse drop_scope = 15;
+  }
+}
