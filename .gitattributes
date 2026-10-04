@@ -19,3 +19,6 @@ CMakeLists.txt text eol=lf
 *.ps1 text eol=crlf
 *.bat text eol=crlf
 *.cmd text eol=crlf
+*.jsonl text eol=lf
+*.proto text eol=lf
+Cargo.lock text eol=lf

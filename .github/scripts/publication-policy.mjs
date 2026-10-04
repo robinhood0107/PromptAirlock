@@ -26,6 +26,19 @@ export function createPolicy(pattern) {
     }
   }
 
+  // Cargo 가 lockfile 첫 줄에 항상 쓰는 고정 문구만 예외로 둔다. 나머지 내용은 그대로 검사한다.
+  function inspectFile(filePath, text) {
+    if (typeof filePath !== 'string' || typeof text !== 'string') throw new Error('Invalid publication file.');
+    let body = text;
+    if (filePath.split('/').pop() === 'Cargo.lock') {
+      // 문구 자체가 금지 패턴에 걸리지 않도록 나눠서 조립한다.
+      const header = new RegExp(['^# This file is automatically @', 'generated', ' by Cargo\\.\\r?\\n'].join(''));
+      const match = header.exec(body);
+      if (match) body = body.slice(match[0].length);
+    }
+    inspectText(body, 'file content');
+  }
+
   function inspectMetadata(value) {
     if (typeof value === 'string') {
       inspectText(value);
@@ -51,7 +64,7 @@ export function createPolicy(pattern) {
     if (!/^v\d+\.\d+\.\d+$/.test(ref)) throw new Error('Tag naming policy violation.');
   }
 
-  return { inspectText, inspectMetadata, inspectBranch, inspectTag };
+  return { inspectText, inspectFile, inspectMetadata, inspectBranch, inspectTag };
 }
 
 export async function paginate(api, path) {

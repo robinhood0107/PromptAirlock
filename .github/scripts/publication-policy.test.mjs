@@ -45,6 +45,16 @@ test('unapproved ref names fail', () => {
   assert.throws(() => policy.inspectTag('v1.2.3-sampletool'));
 });
 
+test('only the standard Cargo lockfile header is exempt', () => {
+  const header = ['# This file is automatically @', 'generated', ' by Cargo.'].join('');
+  const lock = `${header}\n# It is not intended for manual editing.\nversion = 4\n`;
+  policy.inspectFile('vault/Cargo.lock', lock);
+  policy.inspectFile('Cargo.lock', lock.replace(/\n/g, '\r\n'));
+  assert.throws(() => policy.inspectFile('vault/notes.md', lock), /violation/);
+  assert.throws(() => policy.inspectFile('vault/Cargo.lock', `${lock}# SampleTool\n`), /violation/);
+  assert.throws(() => policy.inspectFile('vault/Cargo.lock', `version = 4\n${header}\n`), /violation/);
+});
+
 test('metadata is data and shell-like text never executes', () => {
   policy.inspectMetadata({ body: '$(touch /tmp/unwanted) `exit 1`\n::error::test' });
 });
