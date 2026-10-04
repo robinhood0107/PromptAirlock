@@ -72,5 +72,6 @@ endfunction()
 
 add_subdirectory(lang)
 add_subdirectory(async)
+add_subdirectory(net)
 if(WIN32)
   endif()
