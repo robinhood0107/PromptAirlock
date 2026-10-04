@@ -30,6 +30,8 @@ PR 검사는 기본 브랜치의 검증 코드를 사용하고 PR head에 `publi
 
 CI는 공개 후 실행됩니다. PR 병합은 required status로 차단할 수 있지만, GitHub에서 텍스트가 최초로 게시되는 모든 경로를 사전에 차단하지는 못합니다. 이벤트 검사 외에 매시간 전체 검사를 실행합니다. binary 파일·submodule·대용량 파일은 별도 정책이 마련되기 전까지 실패 처리합니다.
 
+게시 전 로컬 검사는 clone 직후 `git config core.hooksPath .githooks`로 켭니다. `commit-msg`는 커밋 메시지·작성자·변경 경로를, `pre-push`는 브랜치·태그 이름과 push할 커밋을 같은 정책으로 검사합니다. 금지 패턴은 추적하지 않는 `.publication-policy.local.json`(`{"pattern": "..."}`)이나 `PUBLICATION_DENY_PATTERN` 환경 변수로 제공하며, 둘 다 없으면 커밋과 push가 실패합니다. 훅을 건너뛰지 않습니다.
+
 로컬 확인: `node --test .github/scripts/publication-policy.test.mjs`. ruleset JSON과 활성화 순서는 [.github/rulesets/README.md](.github/rulesets/README.md)를 참고합니다.
 
 ## 공개 범위와 라이선스
