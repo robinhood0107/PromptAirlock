@@ -1,0 +1,269 @@
+{
+  "version": 6,
+  "cmakeMinimumRequired": {
+    "major": 3,
+    "minor": 28,
+    "patch": 0
+  },
+  "configurePresets": [
+    {
+      "name": "base",
+      "hidden": true,
+      "generator": "Ninja",
+      "toolchainFile": "$env{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake",
+      "cacheVariables": {
+        "CMAKE_EXPORT_COMPILE_COMMANDS": "ON",
+        "VCPKG_INSTALL_OPTIONS": "$env{PA_VCPKG_INSTALL_OPTIONS}"
+      }
+    },
+    {
+      "name": "win-base",
+      "hidden": true,
+      "inherits": "base",
+      "binaryDir": "${sourceDir}/build/${presetName}",
+      "condition": {
+        "type": "equals",
+        "lhs": "${hostSystemName}",
+        "rhs": "Windows"
+      },
+      "cacheVariables": {
+        "CMAKE_CXX_COMPILER": "clang-cl",
+        "VCPKG_TARGET_TRIPLET": "x64-windows"
+      }
+    },
+    {
+      "name": "win-debug",
+      "inherits": "win-base",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Debug"
+      }
+    },
+    {
+      "name": "win-release",
+      "inherits": "win-base",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Release"
+      }
+    },
+    {
+      "name": "win-asan",
+      "inherits": "win-base",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+        "PA_SANITIZE": "address"
+      }
+    },
+    {
+      "name": "linux-base",
+      "hidden": true,
+      "inherits": "base",
+      "binaryDir": "$env{HOME}/.cache/prompt-airlock/main/${presetName}",
+      "condition": {
+        "type": "equals",
+        "lhs": "${hostSystemName}",
+        "rhs": "Linux"
+      },
+      "cacheVariables": {
+        "VCPKG_TARGET_TRIPLET": "x64-linux"
+      }
+    },
+    {
+      "name": "linux-gcc14",
+      "inherits": "linux-base",
+      "cacheVariables": {
+        "CMAKE_CXX_COMPILER": "g++-14",
+        "CMAKE_BUILD_TYPE": "Release"
+      }
+    },
+    {
+      "name": "linux-clang-asan-ubsan",
+      "inherits": "linux-base",
+      "cacheVariables": {
+        "CMAKE_CXX_COMPILER": "clang++-23",
+        "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+        "PA_SANITIZE": "address,undefined"
+      }
+    },
+    {
+      "name": "linux-clang-tsan",
+      "inherits": "linux-base",
+      "cacheVariables": {
+        "CMAKE_CXX_COMPILER": "clang++-23",
+        "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+        "PA_SANITIZE": "thread"
+      }
+    }
+  ],
+  "buildPresets": [
+    {
+      "name": "win-debug",
+      "configurePreset": "win-debug"
+    },
+    {
+      "name": "win-release",
+      "configurePreset": "win-release"
+    },
+    {
+      "name": "win-asan",
+      "configurePreset": "win-asan"
+    },
+    {
+      "name": "linux-gcc14",
+      "configurePreset": "linux-gcc14"
+    },
+    {
+      "name": "linux-clang-asan-ubsan",
+      "configurePreset": "linux-clang-asan-ubsan"
+    },
+    {
+      "name": "linux-clang-tsan",
+      "configurePreset": "linux-clang-tsan"
+    }
+  ],
+  "testPresets": [
+    {
+      "name": "test-base",
+      "hidden": true,
+      "output": {
+        "outputOnFailure": true
+      },
+      "execution": {
+        "noTestsAction": "error"
+      }
+    },
+    {
+      "name": "win-debug",
+      "inherits": "test-base",
+      "configurePreset": "win-debug"
+    },
+    {
+      "name": "win-release",
+      "inherits": "test-base",
+      "configurePreset": "win-release"
+    },
+    {
+      "name": "win-asan",
+      "inherits": "test-base",
+      "configurePreset": "win-asan"
+    },
+    {
+      "name": "linux-gcc14",
+      "inherits": "test-base",
+      "configurePreset": "linux-gcc14"
+    },
+    {
+      "name": "linux-clang-asan-ubsan",
+      "inherits": "test-base",
+      "configurePreset": "linux-clang-asan-ubsan"
+    },
+    {
+      "name": "linux-clang-tsan",
+      "inherits": "test-base",
+      "configurePreset": "linux-clang-tsan"
+    }
+  ],
+  "workflowPresets": [
+    {
+      "name": "win-debug",
+      "steps": [
+        {
+          "type": "configure",
+          "name": "win-debug"
+        },
+        {
+          "type": "build",
+          "name": "win-debug"
+        },
+        {
+          "type": "test",
+          "name": "win-debug"
+        }
+      ]
+    },
+    {
+      "name": "win-release",
+      "steps": [
+        {
+          "type": "configure",
+          "name": "win-release"
+        },
+        {
+          "type": "build",
+          "name": "win-release"
+        },
+        {
+          "type": "test",
+          "name": "win-release"
+        }
+      ]
+    },
+    {
+      "name": "win-asan",
+      "steps": [
+        {
+          "type": "configure",
+          "name": "win-asan"
+        },
+        {
+          "type": "build",
+          "name": "win-asan"
+        },
+        {
+          "type": "test",
+          "name": "win-asan"
+        }
+      ]
+    },
+    {
+      "name": "linux-gcc14",
+      "steps": [
+        {
+          "type": "configure",
+          "name": "linux-gcc14"
+        },
+        {
+          "type": "build",
+          "name": "linux-gcc14"
+        },
+        {
+          "type": "test",
+          "name": "linux-gcc14"
+        }
+      ]
+    },
+    {
+      "name": "linux-clang-asan-ubsan",
+      "steps": [
+        {
+          "type": "configure",
+          "name": "linux-clang-asan-ubsan"
+        },
+        {
+          "type": "build",
+          "name": "linux-clang-asan-ubsan"
+        },
+        {
+          "type": "test",
+          "name": "linux-clang-asan-ubsan"
+        }
+      ]
+    },
+    {
+      "name": "linux-clang-tsan",
+      "steps": [
+        {
+          "type": "configure",
+          "name": "linux-clang-tsan"
+        },
+        {
+          "type": "build",
+          "name": "linux-clang-tsan"
+        },
+        {
+          "type": "test",
+          "name": "linux-clang-tsan"
+        }
+      ]
+    }
+  ]
+}
