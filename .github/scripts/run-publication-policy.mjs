@@ -95,7 +95,7 @@ export async function runAudit({ api, repository, pattern, event = {}, writeStat
         let text;
         try { text = decoder.decode(content); }
         catch { throw new Error('Publication file requires manual review.'); }
-        policy.inspectText(text, 'file content');
+        policy.inspectFile(entry.path, text);
         seenBlobs.add(entry.sha);
       }
     }
