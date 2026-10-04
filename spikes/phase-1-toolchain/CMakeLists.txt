@@ -71,5 +71,6 @@ function(pa_add_gtest name)
 endfunction()
 
 add_subdirectory(lang)
+add_subdirectory(async)
 if(WIN32)
   endif()
