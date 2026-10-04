@@ -16,5 +16,6 @@
 | [0010](0010-build-and-test-commands.md) | 빌드·테스트 명령 | 확정 |
 | [0011](0011-repository-layout.md) | 저장소 구조 | 확정 |
 | [0012](0012-deployment.md) | 배포와 운영 전제 | 확정 |
+| [0013](0013-grade-identification.md) | 기관 분류 등급의 식별 | 확정 |
 
 결정을 바꿀 때는 해당 문서의 상태를 "대체됨"으로 바꾸고 새 번호로 문서를 추가한다.
