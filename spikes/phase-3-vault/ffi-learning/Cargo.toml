@@ -1,0 +1,19 @@
+# 학습용 FFI(cdylib) 실험. 운영 Vault 구조가 아니다(spec §32.1).
+[package]
+name = "pa-ffi-learning"
+version = "0.0.0"
+edition.workspace = true
+license.workspace = true
+publish.workspace = true
+rust-version.workspace = true
+
+[lib]
+name = "pa_ffi_learning"
+crate-type = ["cdylib"]
+path = "src/lib.rs"
+
+[dependencies]
+zeroize = "1"
+
+[lints]
+workspace = true
