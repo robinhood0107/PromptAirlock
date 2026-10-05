@@ -1,4 +1,5 @@
 add_library(prompt_airlock_core
+  sensitive.cpp
   utf8.cpp
   version.cpp)
 target_include_directories(prompt_airlock_core PUBLIC "${PROJECT_SOURCE_DIR}/include")
