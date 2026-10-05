@@ -8,6 +8,7 @@ target_compile_definitions(core_version_test PRIVATE
 foreach(name IN ITEMS
     core_offset_test
     core_sensitive_test
+    core_types_test
     core_utf8_test)
   pa_add_gtest(${name} ${name}.cpp)
   target_link_libraries(${name} PRIVATE prompt_airlock_core)
