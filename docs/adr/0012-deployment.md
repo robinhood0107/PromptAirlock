@@ -10,7 +10,7 @@
 - OS마다 배포 묶음 하나를 만든다. 묶음에는 Gateway 실행 파일, Vault 실행 파일, NER 모델과 tokenizer 파일, 런타임 라이브러리, 설정 파일 하나, 라이선스와 제3자 고지가 들어간다.
 - 기관은 Gateway만 실행한다. Vault는 Gateway가 띄우고 Gateway가 끝나면 함께 끝난다.
 - 기관 애플리케이션은 Chat Completions 호환 API 주소를 Gateway로 바꾸는 것으로 연동한다.
-- 기관이 정하는 설정은 외부 provider 주소와 자격 증명, 허용 출처(인증 수단과 등급 정책, [0013](0013-grade-identification.md)), 기관 보호어 목록, 이력 보존 기간으로 한정한다. provider 주소는 기관 DMZ의 중계 서버나 프록시를 가리킬 수 있다.
+- 기관이 정하는 설정은 외부 provider 주소와 자격 증명, 허용 출처(인증 수단과 등급 정책, [0013](0013-grade-identification.md)), 기관 보호어 목록, 이력 보존 기간, 출력 token 상한([0017](0017-request-response-boundary.md), 기본 4096)으로 한정한다. provider 주소는 기관 DMZ의 중계 서버나 프록시를 가리킬 수 있다.
 - transport, 모델, 정규화 방식, token 형식은 설정으로 바꿀 수 없다.
 
 운영 전제
