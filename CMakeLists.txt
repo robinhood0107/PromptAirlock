@@ -14,7 +14,9 @@ include(GoogleTest)
 find_package(GTest CONFIG REQUIRED)
 
 add_subdirectory(src/core)
+add_subdirectory(tests/support)
 add_subdirectory(tests/unit)
+add_subdirectory(tests/property)
 add_subdirectory(tests/purity)
 add_subdirectory(tests/compile_fail)
 
