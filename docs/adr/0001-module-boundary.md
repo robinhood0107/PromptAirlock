@@ -14,6 +14,7 @@ Gateway는 C++ 프로세스 하나이며 다음 모듈로 나눈다.
 | vault_client | Vault 자식 프로세스 관리, IPC client | 프로세스, IPC |
 | provider | 외부 LLM provider 호출 | 네트워크 |
 | gateway | HTTP server, 요청 처리 순서 | 네트워크 |
+| tls | TLS 설정 생성과 SHA-256, OpenSSL을 부르는 유일한 모듈([0014](0014-cryptography.md)) | 없음 |
 | audit | 감사 메타데이터와 egress 이력(외부로 나간 그대로) 기록, 보존 기간 경과 시 삭제 | 로컬 파일 |
 
 의존 방향은 I/O 모듈에서 core로만 향한다. core는 다른 모듈에 의존하지 않는다. provider는 검증이 끝난 prompt 타입만 받는다.

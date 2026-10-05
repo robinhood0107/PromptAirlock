@@ -15,6 +15,7 @@ src/vault_client/       Vault 프로세스 관리와 IPC client
 src/provider/           외부 provider adapter
 src/gateway/            HTTP server, 요청 처리
 src/audit/              메타데이터 로컬 기록
+src/tls/                TLS 설정, SHA-256
 apps/prompt-airlock/    Gateway 실행 파일
 vault/                  Rust workspace, crates/prompt-airlock-vault
 proto/                  vault_v1.proto
