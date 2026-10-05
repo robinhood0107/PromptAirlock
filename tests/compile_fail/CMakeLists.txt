@@ -9,6 +9,8 @@ pa_add_compile_fail(byte_span_from_codepoint byte_span_from_codepoint.cpp
   "(no viable conversion|cannot convert)[^\n]*Codepoint")
 pa_add_compile_fail(byte_span_direct byte_span_direct.cpp
   "ByteSpan[^\n]*private|private[^\n]*ByteSpan")
+pa_add_compile_fail(entity_span_direct entity_span_direct.cpp
+  "EntitySpan[^\n]*private|private[^\n]*EntitySpan")
 
 # 원문 상자(spec §13)
 pa_add_compile_fail(sensitive_copy sensitive_copy.cpp

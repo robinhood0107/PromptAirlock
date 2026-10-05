@@ -1,4 +1,6 @@
 add_library(prompt_airlock_core
+  entity.cpp
+  merge.cpp
   reason.cpp
   sensitive.cpp
   utf8.cpp
