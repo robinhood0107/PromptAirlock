@@ -1,4 +1,5 @@
 add_library(prompt_airlock_core
+  document.cpp
   entity.cpp
   merge.cpp
   reason.cpp
