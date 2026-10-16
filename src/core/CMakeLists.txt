@@ -4,6 +4,7 @@ add_library(prompt_airlock_core
   grade.cpp
   merge.cpp
   policy.cpp
+  privacy.cpp
   prompt.cpp
   provider_boundary.cpp
   reason.cpp

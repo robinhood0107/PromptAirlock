@@ -25,7 +25,8 @@ endforeach()
 
 # 연구용 열쇠가 필요한 시험. 연구 라이브러리를 링크한다.
 foreach(name IN ITEMS
+    core_privacy_test
     core_strategy_test)
   pa_add_gtest(${name} ${name}.cpp)
-  target_link_libraries(${name} PRIVATE prompt_airlock_core_research)
+  target_link_libraries(${name} PRIVATE prompt_airlock_core_research pa_test_support)
 endforeach()
