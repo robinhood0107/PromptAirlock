@@ -51,3 +51,9 @@ pa_add_compile_fail(verified_direct verified_direct.cpp
   "no matching (constructor|function)[^\n]*VerifiedPrompt")
 pa_add_compile_fail(state_key_forge state_key_forge.cpp
   "StateKey[^\n]*private|private[^\n]*StateKey")
+
+# 연구용 열쇠(invariant 12)
+pa_add_compile_fail(no_protection_without_key no_protection_without_key.cpp
+  "ResearchOnly[^\n]*private|private[^\n]*ResearchOnly")
+pa_add_compile_fail(research_key_without_define research_key_without_define.cpp
+  "make_research_only")

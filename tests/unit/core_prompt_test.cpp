@@ -21,7 +21,8 @@ static_assert(sealed_state<pc::RawPrompt>);
 static_assert(sealed_state<pc::PolicyCheckedPrompt>);
 static_assert(sealed_state<pc::ProtectedPrompt>);
 static_assert(sealed_state<pc::VerifiedPrompt>);
-static_assert(!std::is_constructible_v<pc::PolicyCheckedPrompt, pc::RawPrompt, std::vector<pc::MergedEntity>>);
+static_assert(!std::is_constructible_v<pc::PolicyCheckedPrompt, pc::RawPrompt, std::vector<pc::MergedEntity>,
+                                       pc::PrivacyStrategy>);
 static_assert(!std::is_constructible_v<pc::VerifiedPrompt, pc::ProtectedPrompt>);
 static_assert(sealed_state<pc::ProviderRequest>);
 // 외부 요청은 검증 완료 단계에서만 만들 수 있다. 빌드 실패 자체는 tests/compile_fail 이 확인한다.
