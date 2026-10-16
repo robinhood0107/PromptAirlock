@@ -3,6 +3,8 @@ add_library(prompt_airlock_core
   entity.cpp
   grade.cpp
   merge.cpp
+  policy.cpp
+  prompt.cpp
   reason.cpp
   request_params.cpp
   sensitive.cpp
