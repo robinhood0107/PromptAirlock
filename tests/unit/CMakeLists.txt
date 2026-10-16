@@ -16,6 +16,7 @@ foreach(name IN ITEMS
     core_reason_test
     core_request_params_test
     core_sensitive_test
+    core_token_test
     core_types_test
     core_utf8_test)
   pa_add_gtest(${name} ${name}.cpp)
