@@ -6,10 +6,15 @@ target_compile_definitions(core_version_test PRIVATE
 
 # core 단위 시험: 파일 하나에 실행 파일 하나.
 foreach(name IN ITEMS
+    core_document_test
     core_entity_test
+    core_grade_test
     core_merge_test
     core_offset_test
+    core_policy_test
+    core_prompt_test
     core_reason_test
+    core_request_params_test
     core_sensitive_test
     core_types_test
     core_utf8_test)
