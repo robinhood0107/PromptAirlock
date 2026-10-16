@@ -1,6 +1,7 @@
 add_library(prompt_airlock_core
   document.cpp
   entity.cpp
+  grade.cpp
   merge.cpp
   reason.cpp
   request_params.cpp

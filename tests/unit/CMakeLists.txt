@@ -8,6 +8,7 @@ target_compile_definitions(core_version_test PRIVATE
 foreach(name IN ITEMS
     core_document_test
     core_entity_test
+    core_grade_test
     core_merge_test
     core_offset_test
     core_reason_test
