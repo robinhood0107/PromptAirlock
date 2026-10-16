@@ -10,6 +10,7 @@ foreach(name IN ITEMS
     core_encoded_test
     core_entity_test
     core_grade_test
+    core_link_context_test
     core_merge_test
     core_offset_test
     core_pipeline_test

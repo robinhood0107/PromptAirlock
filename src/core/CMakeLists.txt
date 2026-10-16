@@ -3,6 +3,7 @@ add_library(prompt_airlock_core
   encoded.cpp
   entity.cpp
   grade.cpp
+  link_context.cpp
   merge.cpp
   policy.cpp
   privacy.cpp
