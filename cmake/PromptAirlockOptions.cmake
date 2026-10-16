@@ -31,3 +31,16 @@ if(PA_SANITIZE)
     target_link_options(pa_options INTERFACE -fsanitize=${PA_SANITIZE})
   endif()
 endif()
+
+# libFuzzer 빌드(Linux clang 전용). core 와 시험은 coverage 계측만 받고, fuzz 실행 파일만 libFuzzer main 을 링크한다.
+option(PA_FUZZ "libFuzzer 대상 빌드" OFF)
+if(PA_FUZZ)
+  if(MSVC OR NOT CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
+    message(FATAL_ERROR "PA_FUZZ 는 Linux clang 에서만 지원한다.")
+  endif()
+  target_compile_options(pa_options INTERFACE -fsanitize=fuzzer-no-link)
+  target_link_options(pa_options INTERFACE -fsanitize=fuzzer-no-link)
+endif()
+
+# Rust Vault 빌드·시험을 함께 돌릴지. C++ core 만 보는 fuzz preset 에서 끈다.
+option(PA_WITH_VAULT "Rust Vault 를 cargo 로 빌드하고 시험" ON)

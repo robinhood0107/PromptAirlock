@@ -92,6 +92,17 @@
         "CMAKE_BUILD_TYPE": "RelWithDebInfo",
         "PA_SANITIZE": "thread"
       }
+    },
+    {
+      "name": "linux-clang-fuzz",
+      "inherits": "linux-base",
+      "cacheVariables": {
+        "CMAKE_CXX_COMPILER": "clang++-23",
+        "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+        "PA_SANITIZE": "address,undefined",
+        "PA_FUZZ": "ON",
+        "PA_WITH_VAULT": "OFF"
+      }
     }
   ],
   "buildPresets": [
@@ -118,6 +129,10 @@
     {
       "name": "linux-clang-tsan",
       "configurePreset": "linux-clang-tsan"
+    },
+    {
+      "name": "linux-clang-fuzz",
+      "configurePreset": "linux-clang-fuzz"
     }
   ],
   "testPresets": [
@@ -160,6 +175,11 @@
       "name": "linux-clang-tsan",
       "inherits": "test-base",
       "configurePreset": "linux-clang-tsan"
+    },
+    {
+      "name": "linux-clang-fuzz",
+      "inherits": "test-base",
+      "configurePreset": "linux-clang-fuzz"
     }
   ],
   "workflowPresets": [
@@ -262,6 +282,23 @@
         {
           "type": "test",
           "name": "linux-clang-tsan"
+        }
+      ]
+    },
+    {
+      "name": "linux-clang-fuzz",
+      "steps": [
+        {
+          "type": "configure",
+          "name": "linux-clang-fuzz"
+        },
+        {
+          "type": "build",
+          "name": "linux-clang-fuzz"
+        },
+        {
+          "type": "test",
+          "name": "linux-clang-fuzz"
         }
       ]
     }

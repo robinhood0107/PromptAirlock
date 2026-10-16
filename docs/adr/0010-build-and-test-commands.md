@@ -1,6 +1,6 @@
 # 0010. 빌드·테스트 명령
 
-상태: 확정 (2026-10-05)
+상태: 확정 (2026-10-05). fuzz preset을 2026-10-05에 더했다.
 
 ## 결정
 
@@ -10,10 +10,13 @@ CMake workflow preset 하나로 configure, build, test를 실행한다. Rust 시
 |---|---|---|
 | Windows | `tools\win-dev.cmd cmake --workflow --preset <preset>` | win-debug, win-release, win-asan |
 | Linux | `tools/wsl-dev.sh cmake --workflow --preset <preset>` | linux-gcc14, linux-clang-asan-ubsan, linux-clang-tsan |
+| Linux fuzz | `tools/wsl-dev.sh cmake --workflow --preset linux-clang-fuzz` | linux-clang-fuzz |
 | 공개 정책 | `node --test .github/scripts/publication-policy.test.mjs` | |
 
 - Windows 컴파일러는 clang-cl(MSVC STL), Linux는 gcc-14와 clang-23이다.
 - `tools/win-dev.cmd`는 Visual Studio 환경을 불러오고 vcpkg 경로를 복원한 뒤 명령을 실행한다.
+- `linux-clang-fuzz`는 clang-23 libFuzzer와 ASan·UBSan으로 C++ core만 빌드한다(Rust Vault 빌드·시험 생략). ctest가 fuzz 대상마다 60초(`PA_FUZZ_SECONDS`) 동안 돌리고, 단위·compile-fail·property 시험도 함께 돌린다. Windows clang-cl은 libFuzzer preset을 두지 않는다.
+- 시험 종류: 단위(`tests/unit/`), compile-fail(`tests/compile_fail/`, 정상 짝은 일반 빌드에서 컴파일되고 잘못된 짝은 기대한 진단으로 실패해야 통과), property(`tests/property/`, 고정 seed), core purity 검사(`tests/purity/`, core 소스의 I/O·시계·난수·정규식 금지), fuzz(`tests/fuzz/`).
 
 ## 대안
 

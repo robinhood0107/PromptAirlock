@@ -1,6 +1,6 @@
 # 0011. 저장소 구조
 
-상태: 확정 (2026-10-05)
+상태: 확정 (2026-10-05). 시험 디렉터리를 2026-10-05에 더했다.
 
 ## 결정
 
@@ -20,6 +20,10 @@ apps/prompt-airlock/    Gateway 실행 파일
 vault/                  Rust workspace, crates/prompt-airlock-vault
 proto/                  vault_v1.proto
 tests/unit/, tests/integration/, tests/e2e/, tests/fuzz/
+tests/compile_fail/     빌드되면 안 되는 코드와 그 정상 짝
+tests/property/         고정 seed property 시험
+tests/purity/           core 소스 금지 패턴 검사
+tests/support/          시험 전용 도구(운영 타깃은 링크하지 않음)
 fixtures/               합성 데이터
 tools/                  개발 환경 wrapper
 docs/adr/               결정 기록
