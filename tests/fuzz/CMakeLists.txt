@@ -22,3 +22,5 @@ endfunction()
 
 pa_add_fuzzer(fuzz_utf8)
 pa_add_fuzzer(fuzz_merge)
+pa_add_fuzzer(fuzz_token)
+pa_add_fuzzer(fuzz_link_context)

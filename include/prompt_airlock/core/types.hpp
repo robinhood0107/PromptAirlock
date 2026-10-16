@@ -50,6 +50,9 @@ enum class MessageRole : std::uint8_t { System, Developer, User, Model };
 // 탐지 결과를 낸 detector 의 종류(감사 기록용).
 enum class DetectorKind : std::uint8_t { Pattern, Checksum, Secret, InternalTerm, Context, Ner };
 
+// 풀어서 다시 검사하는 인코딩 종류(ADR 0017 10번).
+enum class EncodingKind : std::uint8_t { Base64, Base64Url, Hex, Percent, HtmlNumericRef, UnicodeEscape };
+
 // 고정 한도(ADR 0015). 설정으로 바꿀 수 없다.
 // 모든 segment(메시지와 stop 문자열)의 UTF-8 byte 합. 이 값 이하만 받는다.
 inline constexpr std::size_t max_prompt_bytes = 64 * 1024;
