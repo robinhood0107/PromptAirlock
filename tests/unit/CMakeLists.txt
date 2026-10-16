@@ -18,6 +18,7 @@ foreach(name IN ITEMS
     core_prompt_test
     core_reason_test
     core_request_params_test
+    core_restore_test
     core_sensitive_test
     core_token_test
     core_types_test

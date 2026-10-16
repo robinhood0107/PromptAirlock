@@ -12,6 +12,7 @@ add_library(prompt_airlock_core
   reason.cpp
   request_params.cpp
   residual.cpp
+  restore.cpp
   sensitive.cpp
   token.cpp
   utf8.cpp

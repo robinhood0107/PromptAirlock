@@ -1,10 +1,11 @@
-// 처음부터 끝까지: 등급 확정 → 정책 검사 → 보호 → 잔여 검사 → provider 요청.
+// 처음부터 끝까지: 등급 확정 → 정책 검사 → 보호 → 잔여 검사 → provider 요청 → 응답 검사 → 복원.
 // 거절 경로에서는 provider 요청이 만들어지지 않고(mock provider 호출 0), 만들어진 요청에는 원문이 없다.
 #include "prompt_airlock/core/grade.hpp"
 #include "prompt_airlock/core/policy.hpp"
 #include "prompt_airlock/core/privacy.hpp"
 #include "prompt_airlock/core/provider_boundary.hpp"
 #include "prompt_airlock/core/residual.hpp"
+#include "prompt_airlock/core/restore.hpp"
 
 #include <gtest/gtest.h>
 
@@ -225,4 +226,20 @@ TEST(CorePipeline, InvalidResidualSpanFailsClosed) {
             {*pc::EntitySpan::make(longer, pc::SegmentIndex{0}, far, EntityType::Person, pc::DetectorKind::Ner)}, {}};
     };
     EXPECT_EQ(rejected(scenario), ReasonCode::DetectorUnavailable);
+}
+
+TEST(CorePipeline, ResponseRoundTripRestoresOriginals) {
+    pa_test::FakeVault vault(7);
+    MockProvider provider;
+    ASSERT_TRUE(run(Scenario{.grade_marks = {"O"}}, vault, provider));
+    // mock provider 는 받은 질문(token 상태)을 그대로 인용해 답한다.
+    const std::string answer = "확인했습니다. " + provider.received[1];
+    auto checked = pc::check_response(pc::SensitiveText::copy_of(answer), {});
+    ASSERT_TRUE(checked);
+    const auto plan = pc::plan_restore(*checked);
+    ASSERT_TRUE(plan);
+    EXPECT_EQ(plan->occurrences.size(), 2U);
+    const auto restored = pc::apply_restore(std::move(*checked), *plan, vault);
+    ASSERT_TRUE(restored);
+    EXPECT_EQ(restored->view(), "확인했습니다. " + user_text);
 }
