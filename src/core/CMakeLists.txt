@@ -1,5 +1,6 @@
 add_library(prompt_airlock_core
   document.cpp
+  encoded.cpp
   entity.cpp
   grade.cpp
   merge.cpp
