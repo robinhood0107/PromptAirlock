@@ -35,3 +35,19 @@ if(CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
   set_tests_properties(lifetimebound_absent_no_warning PROPERTIES
     FAIL_REGULAR_EXPRESSION "-Wreturn-stack-address|-Wdangling")
 endif()
+
+# 단계 타입과 provider 입구(invariant 1, 2)
+# 진단에 원래 단계 타입과 VerifiedPrompt 가 함께 나와야 통과한다(clang 과 gcc 는 순서가 반대다).
+foreach(pair IN ITEMS raw:RawPrompt policy_checked:PolicyCheckedPrompt protected:ProtectedPrompt)
+  string(REPLACE ":" ";" pair "${pair}")
+  list(GET pair 0 stage)
+  list(GET pair 1 type)
+  pa_add_compile_fail(provider_from_${stage} provider_from_${stage}.cpp
+    "(no viable conversion|invalid initialization)[^\n]*(${type}[^\n]*VerifiedPrompt|VerifiedPrompt[^\n]*${type})")
+endforeach()
+pa_add_compile_fail(verified_copy verified_copy.cpp
+  "VerifiedPrompt[^\n]*delete|delete[^\n]*VerifiedPrompt")
+pa_add_compile_fail(verified_direct verified_direct.cpp
+  "no matching (constructor|function)[^\n]*VerifiedPrompt")
+pa_add_compile_fail(state_key_forge state_key_forge.cpp
+  "StateKey[^\n]*private|private[^\n]*StateKey")
