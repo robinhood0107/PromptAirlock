@@ -1,0 +1,49 @@
+name: Build
+
+# 제품 빌드·시험. main 으로 가는 모든 PR 과 main push 에서 돈다.
+# 경로 필터를 두지 않는다: 필수 검사가 보고되지 않으면 PR 이 merge 되지 못한다.
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: build-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  linux-gcc14:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - name: Check out
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          persist-credentials: false
+
+      # vcpkg.json 의 builtin-baseline 을 찾을 수 있도록 전체 이력을 받는다.
+      - name: Prepare vcpkg
+        shell: bash
+        run: |
+          set -euo pipefail
+          echo "VCPKG_ROOT=$HOME/vcpkg" >> "$GITHUB_ENV"
+          echo "VCPKG_DEFAULT_BINARY_CACHE=$HOME/vcpkg-cache" >> "$GITHUB_ENV"
+          echo "VCPKG_DISABLE_METRICS=1" >> "$GITHUB_ENV"
+          mkdir -p "$HOME/vcpkg-cache"
+          git clone --quiet https://github.com/microsoft/vcpkg "$HOME/vcpkg"
+          "$HOME/vcpkg/bootstrap-vcpkg.sh" -disableMetrics
+
+      - name: Restore vcpkg binary cache
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9
+        with:
+          path: ~/vcpkg-cache
+          key: vcpkg-ubuntu-24.04-gcc14-${{ hashFiles('vcpkg.json') }}
+
+      - name: Configure, build and test
+        shell: bash
+        run: cmake --workflow --preset linux-gcc14

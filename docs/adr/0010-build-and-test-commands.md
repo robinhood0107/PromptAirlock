@@ -1,6 +1,6 @@
 # 0010. 빌드·테스트 명령
 
-상태: 확정 (2026-10-05). fuzz preset을 2026-10-05에 더했다.
+상태: 확정 (2026-10-05). fuzz preset을 2026-10-05에, 검증 수준과 빌드 CI를 2026-10-16에 더했다.
 
 ## 결정
 
@@ -16,6 +16,17 @@ CMake workflow preset 하나로 configure, build, test를 실행한다. Rust 시
 - Windows 컴파일러는 clang-cl(MSVC STL), Linux는 gcc-14와 clang-23이다.
 - `tools/win-dev.cmd`는 Visual Studio 환경을 불러오고 vcpkg 경로를 복원한 뒤 명령을 실행한다.
 - `linux-clang-fuzz`는 clang-23 libFuzzer와 ASan·UBSan으로 C++ core만 빌드한다(Rust Vault 빌드·시험 생략). ctest가 fuzz 대상마다 60초(`PA_FUZZ_SECONDS`) 동안 돌리고, 단위·compile-fail·property 시험도 함께 돌린다. Windows clang-cl은 libFuzzer preset을 두지 않는다.
+- CI(`.github/workflows/build.yml`)는 main으로 가는 모든 PR과 main push에서 `linux-gcc14` workflow를 돌린다. 이 job(`linux-gcc14`)은 `publication-policy`와 함께 main의 필수 검사다. vcpkg binary cache로 반복 실행 시간을 줄인다. sanitizer·Windows preset은 CI에 두지 않고 아래 검증 수준에 따라 로컬에서 돌린다.
+
+검증 수준
+
+| 언제 | 무엇을 돌리나 |
+|---|---|
+| 커밋마다 | `win-debug` 1회 |
+| PR마다 | CI `linux-gcc14`, 로컬 `linux-clang-asan-ubsan` 1회. 동시성 코드가 있는 PR만 `linux-clang-tsan`, fuzz는 10초 |
+| Phase 끝 | preset 7개 전부, fuzz 대상마다 60초, 커밋별 깨끗한 트리 빌드, 공개 정책 전체 검사 |
+
+- 시험은 보안 경계(거절이면 provider 호출 0, 잔여 검사, 복원 거부, 등급), 바깥 입력 파서, 외부로 나가는 경로의 타입 경계에 반드시 둔다. 단순 값 타입은 `static_assert`로 대신하거나 생략한다.
 - 시험 종류: 단위(`tests/unit/`), compile-fail(`tests/compile_fail/`, 정상 짝은 일반 빌드에서 컴파일되고 잘못된 짝은 기대한 진단으로 실패해야 통과), property(`tests/property/`, 고정 seed), core purity 검사(`tests/purity/`, core 소스의 I/O·시계·난수·정규식 금지), fuzz(`tests/fuzz/`).
 
 ## 대안

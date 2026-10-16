@@ -1,6 +1,6 @@
 # Repository rules
 
-- `main.json`: PR, 필수 `publication-policy` status, 선형 이력, 대화 해결, force push·삭제 금지. 관리자 bypass 없음.
+- `main.json`: PR, 필수 `publication-policy`·`linux-gcc14` status, 선형 이력, 대화 해결, force push·삭제 금지. 관리자 bypass 없음.
 - `branches.json`: `main`과 `feature/*`, `fix/*`, `docs/*`, `chore/*`, `spike/*` 이외의 브랜치 생성 차단.
 - `tags.json`: force update·삭제 금지. `vMAJOR.MINOR.PATCH` 형식은 CI에서 검사합니다.
 
@@ -28,4 +28,4 @@ CI는 GitHub에 자료가 게시된 뒤 실행되므로 최초 공개를 되돌�
 
 이벤트에 PR head가 있으면 다른 API 조회 전에 기존 status를 pending으로 바꿉니다. 다만 저장소 전체 이벤트에서 GitHub API 장애로 대상 PR 조회나 status 갱신 자체가 불가능하면 이전 성공 status가 남을 수 있습니다. 이 경우 실패한 검사 실행을 확인하여 병합을 중단하고 재검사해야 합니다. 이 CI를 모든 공개 경로의 사전 차단이나 API 장애 중의 완전한 병합 통제로 간주하지 않습니다.
 
-제품 build/test CI는 Phase 1 검증 이후 `main.json`의 required checks에 추가합니다. 지금은 존재하지 않는 job 이름을 필수화하지 않습니다.
+제품 빌드 CI(`build.yml`의 `linux-gcc14` job)는 main에서 한 번 성공한 뒤에 required checks에 추가합니다. 존재하지 않거나 아직 돈 적 없는 job 이름을 필수화하면 모든 PR이 merge되지 못합니다. 경로 필터를 두지 않는 것도 같은 이유입니다.
