@@ -11,6 +11,7 @@ foreach(name IN ITEMS
     core_grade_test
     core_merge_test
     core_offset_test
+    core_policy_test
     core_reason_test
     core_request_params_test
     core_sensitive_test
