@@ -13,6 +13,7 @@ foreach(name IN ITEMS
     core_link_context_test
     core_merge_test
     core_offset_test
+    core_particle_test
     core_pipeline_test
     core_policy_test
     core_prompt_test

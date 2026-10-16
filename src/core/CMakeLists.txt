@@ -5,6 +5,7 @@ add_library(prompt_airlock_core
   grade.cpp
   link_context.cpp
   merge.cpp
+  particle.cpp
   policy.cpp
   privacy.cpp
   prompt.cpp
