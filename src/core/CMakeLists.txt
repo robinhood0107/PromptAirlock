@@ -5,6 +5,7 @@ add_library(prompt_airlock_core
   merge.cpp
   policy.cpp
   prompt.cpp
+  provider_boundary.cpp
   reason.cpp
   request_params.cpp
   sensitive.cpp
