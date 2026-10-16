@@ -12,6 +12,7 @@ foreach(name IN ITEMS
     core_grade_test
     core_merge_test
     core_offset_test
+    core_pipeline_test
     core_policy_test
     core_prompt_test
     core_reason_test
@@ -21,7 +22,7 @@ foreach(name IN ITEMS
     core_types_test
     core_utf8_test)
   pa_add_gtest(${name} ${name}.cpp)
-  target_link_libraries(${name} PRIVATE prompt_airlock_core)
+  target_link_libraries(${name} PRIVATE prompt_airlock_core pa_test_support)
 endforeach()
 
 # 연구용 열쇠가 필요한 시험. 연구 라이브러리를 링크한다.

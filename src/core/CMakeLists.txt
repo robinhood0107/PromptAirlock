@@ -10,6 +10,7 @@ add_library(prompt_airlock_core
   provider_boundary.cpp
   reason.cpp
   request_params.cpp
+  residual.cpp
   sensitive.cpp
   token.cpp
   utf8.cpp
