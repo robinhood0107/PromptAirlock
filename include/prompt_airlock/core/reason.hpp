@@ -59,11 +59,17 @@ struct EntityFinding {
     DetectorKind detector;
     bool operator==(const EntityFinding&) const noexcept = default;
 };
+struct EncodedLocation {
+    SegmentIndex segment;
+    ByteSpan span;
+    EncodingKind kind;
+    bool operator==(const EncodedLocation&) const noexcept = default;
+};
 struct ResponseLocation {
     ByteSpan span;
     bool operator==(const ResponseLocation&) const noexcept = default;
 };
-using AuditFinding = std::variant<EntityFinding, ResponseLocation>;
+using AuditFinding = std::variant<EntityFinding, EncodedLocation, ResponseLocation>;
 
 struct AuditRejection {
     ReasonCode code;

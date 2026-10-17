@@ -8,27 +8,37 @@
 #include "prompt_airlock/core/prompt.hpp"
 #include "prompt_airlock/core/reason.hpp"
 #include "prompt_airlock/core/request_params.hpp"
+#include "prompt_airlock/core/research.hpp"
+#include "prompt_airlock/core/strategy.hpp"
 #include "prompt_airlock/core/types.hpp"
 
 namespace prompt_airlock::core {
 
 // 요청 하나가 처음에 잡는 불변 정책 스냅샷(spec §21). 데이터 멤버가 const 라 대입할 수 없다.
 // 17종 처리와 한도는 고정이고(ADR 0015), 기관이 바꿀 수 있는 것은 출력 token 상한뿐이다(ADR 0017).
+// 가명화 전략은 운영에서 항상 UniquePseudonym 이고, 다른 전략은 연구용 열쇠로만 고른다.
 class Policy {
 public:
     [[nodiscard]] static constexpr Policy standard(OutputTokenCap cap = OutputTokenCap::standard()) noexcept {
-        return Policy(cap);
+        return Policy(cap, PrivacyStrategy::unique_pseudonym());
+    }
+    [[nodiscard]] static constexpr Policy research(ResearchOnly, PrivacyStrategy strategy,
+                                                   OutputTokenCap cap = OutputTokenCap::standard()) noexcept {
+        return Policy(cap, strategy);
     }
 
     [[nodiscard]] constexpr Action action_for(EntityType type) const noexcept { return default_action(type); }
     [[nodiscard]] constexpr std::size_t max_prompt_bytes() const noexcept { return core::max_prompt_bytes; }
     [[nodiscard]] constexpr std::size_t max_entities() const noexcept { return core::max_entities; }
     [[nodiscard]] constexpr OutputTokenCap output_token_cap() const noexcept { return output_token_cap_; }
+    [[nodiscard]] constexpr PrivacyStrategy strategy() const noexcept { return strategy_; }
 
 private:
-    constexpr explicit Policy(OutputTokenCap cap) noexcept : output_token_cap_(cap) {}
+    constexpr Policy(OutputTokenCap cap, PrivacyStrategy strategy) noexcept
+        : output_token_cap_(cap), strategy_(strategy) {}
 
     const OutputTokenCap output_token_cap_;
+    const PrivacyStrategy strategy_;
 };
 
 // 원문 질문을 정책으로 검사한다. 순서: 탐지 결과가 max_entities 를 넘으면 TooManyEntities,

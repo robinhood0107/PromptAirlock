@@ -33,7 +33,7 @@ std::expected<PolicyCheckedPrompt, Rejection> check_policy(RawPrompt raw, std::s
         return std::unexpected(Rejection::with_findings(ReasonCode::EntityBlocked, blocked, std::move(findings)));
     }
     return PolicyCheckedPrompt(detail::StateAccess::key<PolicyCheckedPrompt>(), std::move(raw),
-                               merge_entities(detected));
+                               merge_entities(detected), policy.strategy());
 }
 
 }  // namespace prompt_airlock::core

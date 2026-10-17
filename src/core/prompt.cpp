@@ -12,8 +12,8 @@ RawPrompt::RawPrompt(PromptDocument document, RequestParams params, OpenGrade gr
     : document_(std::move(document)), params_(params), grade_(grade) {}
 
 PolicyCheckedPrompt::PolicyCheckedPrompt(detail::StateKey<PolicyCheckedPrompt>, RawPrompt raw,
-                                         std::vector<MergedEntity> entities) noexcept
-    : raw_(std::move(raw)), entities_(std::move(entities)) {}
+                                         std::vector<MergedEntity> entities, PrivacyStrategy strategy) noexcept
+    : raw_(std::move(raw)), entities_(std::move(entities)), strategy_(strategy) {}
 
 ProtectedPrompt::ProtectedPrompt(detail::StateKey<ProtectedPrompt>, PromptDocument protected_document,
                                  RequestParams params, OpenGrade grade, std::vector<Replacement> replacements) noexcept
