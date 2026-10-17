@@ -98,9 +98,20 @@ TEST(CoreLinkContext, CssUrls) {
     });
 }
 
-TEST(CoreLinkContext, ConservativeRunIncludesLinkText) {
-    // 공백 없이 붙은 링크 글자도 주소 run 안이라 거절한다(애매하면 거절).
-    EXPECT_EQ(context_of("[" + T + "](https://example.invalid/)"), LinkContext::SchemeUrl);
+TEST(CoreLinkContext, LinkTextIsJudgedApartFromAddress) {
+    expect_all({
+        {"[" + T + "](https://example.invalid/)", LinkContext::None},
+        {"[가상 " + T + " 과장](https://example.invalid/a)", LinkContext::None},
+        {"![" + T + "](https://example.invalid/a.png)", LinkContext::None},
+        {"보기:[" + T + "](https://example.invalid/)", LinkContext::None},
+        // 링크 글자 자체가 주소 모양이면 거절한다.
+        {"[https://example.invalid/" + T + "](x)", LinkContext::SchemeUrl},
+        {"[www.example.invalid/" + T + "](x)", LinkContext::WwwUrl},
+        // 주소 쪽 token 은 그대로 거절한다.
+        {"[보기](https://example.invalid/" + T + ")", LinkContext::MarkdownDestination},
+        // 대괄호가 다른 줄에 있으면 링크 글자가 아니다.
+        {"[\n" + T + "](https://example.invalid/)", LinkContext::SchemeUrl},
+    });
 }
 
 TEST(CoreLinkContext, CheckRejectsWithoutNamingToken) {

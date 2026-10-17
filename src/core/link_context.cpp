@@ -2,6 +2,8 @@
 
 #include <algorithm>
 #include <array>
+#include <cstddef>
+#include <cstdint>
 #include <utility>
 
 namespace prompt_airlock::core {
@@ -233,15 +235,38 @@ void mark_css(std::string_view text, Mask& mask) {
     return LinkContext::None;
 }
 
-// L5~L8: ASCII 공백으로만 끊은 run 하나가 주소처럼 보이면 run 전체를 칠한다.
+// 마크다운 링크 글자 [글](주소) 의 "글" 구간마다 같은 번호를 매긴다(0 은 링크 글자 아님).
+// "](" 에서 같은 줄의 가장 가까운 '[' 까지 거꾸로 찾되, 앞서 찾은 자리보다 앞으로는 가지 않아 선형이다.
+[[nodiscard]] std::vector<std::uint32_t> link_text_regions(std::string_view text) {
+    std::vector<std::uint32_t> region(text.size(), 0);
+    std::uint32_t next_id = 1;
+    std::size_t floor = 0;
+    for (auto at = text.find("]("); at != std::string_view::npos; at = text.find("](", at + 2)) {
+        auto open = at;
+        while (open > floor && text[open - 1] != '[' && text[open - 1] != '\n') {
+            --open;
+        }
+        if (open > floor && text[open - 1] == '[') {
+            std::fill(region.begin() + static_cast<std::ptrdiff_t>(open), region.begin() + static_cast<std::ptrdiff_t>(at),
+                      next_id++);
+        }
+        floor = at + 2;
+    }
+    return region;
+}
+
+// L5~L8: ASCII 공백으로 끊은 run 하나가 주소처럼 보이면 run 전체를 칠한다.
+// 마크다운 링크 글자는 경계에서 run 을 끊어 따로 판정한다. 링크 글자는 화면에 보이기만 하므로
+// 주소 뒤에 붙어 있어도 거절하지 않고, 링크 글자 자체가 주소 모양이면 거절한다.
 void mark_runs(std::string_view text, Mask& mask) {
+    const auto region = link_text_regions(text);
     std::size_t i = 0;
     while (i < text.size()) {
         while (i < text.size() && is_space(text[i])) {
             ++i;
         }
         auto end = i;
-        while (end < text.size() && !is_space(text[end])) {
+        while (end < text.size() && !is_space(text[end]) && region[end] == region[i]) {
             ++end;
         }
         if (end > i) {
