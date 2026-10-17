@@ -1,7 +1,7 @@
 {
   "endpoint": "https://aiplatform.googleapis.com/v1/projects/PROJECT_ID/locations/global/endpoints/openapi/chat/completions",
   "model": "MODEL_ID",
-  "auth": { "type": "gcloud" },
+  "auth": { "type": "service-account", "path": "secrets/vertex-service-account.json" },
   "max_tokens": 1024,
   "cases": 40,
   "seed": 20261018,

@@ -16,7 +16,8 @@
 
 1. `config.example.json`을 `secrets/token-survival.json`으로 복사하고 `endpoint`, `model`을 채운다.
 2. 인증을 고른다.
-   - `{"type": "gcloud"}`: `gcloud auth application-default login`을 해 두면 도구가 access token을 받아 쓴다(45분마다 갱신). Vertex 기본값.
+   - `{"type": "service-account", "path": "secrets/서비스 계정 키.json"}`: Vertex용 서비스 계정 키 파일(JSON)을 두면 도구가 access token으로 바꿔 쓴다(gcloud 불필요, 만료 5분 전 갱신).
+   - `{"type": "gcloud"}`: gcloud가 설치돼 있고 `gcloud auth application-default login`을 해 두었으면 그 access token을 쓴다(45분마다 갱신).
    - `{"type": "bearer-env", "env": "환경 변수 이름"}`: 키를 환경 변수로 준다.
    - `{"type": "bearer-file", "path": "secrets/키 파일"}`: 키를 파일로 준다.
 3. 다른 Chat Completions 호환 서비스도 `endpoint`, `model`, `auth`만 바꾸면 같은 도구로 잰다.

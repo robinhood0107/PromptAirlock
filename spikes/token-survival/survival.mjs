@@ -2,28 +2,54 @@
 // token 보존율 측정 실행기. 설정 파일(기본 secrets/token-survival.json)을 읽어 Chat Completions 호환 주소로
 // 합성 사례를 보내고, token 판정 결과를 out 폴더에 JSON 으로 남긴다. 자격 증명과 인증 헤더는 출력하지 않는다.
 import { execFileSync } from 'node:child_process';
+import { createSign } from 'node:crypto';
 import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
 import { pathToFileURL } from 'node:url';
 
 import { buildCases, classify, inventedTokens, requestBody, responseText, summarize } from './lib.mjs';
 
-// 인증: bearer-env(환경 변수의 키), bearer-file(파일의 키), gcloud(application-default access token, 45분마다 갱신).
-export function makeAuth(auth, env = process.env) {
+const base64url = (value) => Buffer.from(value).toString('base64url');
+
+// 서비스 계정 키(JSON)로 JWT 를 서명해 access token 으로 바꾼다(OAuth 2.0 JWT bearer, gcloud 없이).
+async function serviceAccountToken(key, fetchImpl) {
+  const now = Math.floor(Date.now() / 1000);
+  const header = base64url(JSON.stringify({ alg: 'RS256', typ: 'JWT' }));
+  const claims = base64url(JSON.stringify({
+    iss: key.client_email,
+    scope: 'https://www.googleapis.com/auth/cloud-platform',
+    aud: key.token_uri,
+    iat: now,
+    exp: now + 3600,
+  }));
+  const signature = createSign('RSA-SHA256').update(`${header}.${claims}`).sign(key.private_key, 'base64url');
+  const response = await fetchImpl(key.token_uri, {
+    method: 'POST',
+    headers: { 'content-type': 'application/x-www-form-urlencoded' },
+    body: new URLSearchParams({ grant_type: 'urn:ietf:params:oauth:grant-type:jwt-bearer', assertion: `${header}.${claims}.${signature}` }),
+  });
+  if (!response.ok) throw new Error(`token 교환 실패 HTTP ${response.status}`);
+  const json = await response.json();
+  return { token: json.access_token, expiresAt: Date.now() + ((json.expires_in ?? 3600) - 300) * 1000 };
+}
+
+// 인증: bearer-env(환경 변수의 키), bearer-file(파일의 키), gcloud(application-default access token, 45분마다 갱신),
+// service-account(서비스 계정 키 JSON, 만료 5분 전 갱신). 돌려주는 함수는 Bearer 값을 비동기로 준다.
+export function makeAuth(auth, env = process.env, fetchImpl = fetch) {
   if (auth?.type === 'bearer-env') {
     const key = env[auth.env];
     if (!key) throw new Error(`환경 변수 ${auth.env} 가 비어 있다`);
-    return () => key;
+    return async () => key;
   }
   if (auth?.type === 'bearer-file') {
     const key = readFileSync(auth.path, 'utf8').trim();
     if (!key) throw new Error(`${auth.path} 가 비어 있다`);
-    return () => key;
+    return async () => key;
   }
   if (auth?.type === 'gcloud') {
     let token = null;
     let fetchedAt = 0;
-    return () => {
+    return async () => {
       if (!token || Date.now() - fetchedAt > 45 * 60 * 1000) {
         token = execFileSync('gcloud', ['auth', 'application-default', 'print-access-token'], {
           encoding: 'utf8',
@@ -34,14 +60,23 @@ export function makeAuth(auth, env = process.env) {
       return token;
     };
   }
-  throw new Error('auth.type 은 bearer-env, bearer-file, gcloud 중 하나다');
+  if (auth?.type === 'service-account') {
+    const key = JSON.parse(readFileSync(auth.path, 'utf8'));
+    if (!key.client_email || !key.private_key || !key.token_uri) throw new Error(`${auth.path} 는 서비스 계정 키가 아니다`);
+    let cached = null;
+    return async () => {
+      if (!cached || Date.now() > cached.expiresAt) cached = await serviceAccountToken(key, fetchImpl);
+      return cached.token;
+    };
+  }
+  throw new Error('auth.type 은 bearer-env, bearer-file, gcloud, service-account 중 하나다');
 }
 
 async function post(url, body, bearer, { retries = 3, fetchImpl = fetch } = {}) {
   for (let attempt = 0; ; attempt += 1) {
     const response = await fetchImpl(url, {
       method: 'POST',
-      headers: { 'content-type': 'application/json', authorization: `Bearer ${bearer()}` },
+      headers: { 'content-type': 'application/json', authorization: `Bearer ${await bearer()}` },
       body: JSON.stringify(body),
     });
     if (response.ok) return response.json();
@@ -55,7 +90,7 @@ async function post(url, body, bearer, { retries = 3, fetchImpl = fetch } = {}) 
 }
 
 export async function run(config, { env = process.env, log = console.log, fetchImpl = fetch } = {}) {
-  const bearer = makeAuth(config.auth, env);
+  const bearer = makeAuth(config.auth, env, fetchImpl);
   const cases = buildCases({ count: config.cases ?? 40, seed: config.seed ?? 20261018 });
   const conditions = config.conditions ?? ['plain', 'hint'];
   const records = [];

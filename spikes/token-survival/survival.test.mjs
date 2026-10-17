@@ -1,6 +1,10 @@
 // 측정 도구 시험: 가짜 Chat Completions 서버로 요청 모양과 판정을 확인한다(실제 서비스·키 없이).
 import assert from 'node:assert/strict';
+import { createVerify, generateKeyPairSync } from 'node:crypto';
+import { mkdtempSync, writeFileSync } from 'node:fs';
 import { createServer } from 'node:http';
+import { tmpdir } from 'node:os';
+import path from 'node:path';
 import test from 'node:test';
 
 import { buildCases, classify, inventedTokens, makeToken, requestBody, responseText, rng, summarize } from './lib.mjs';
@@ -41,10 +45,43 @@ test('본문에는 temperature·top_p 가 없고 안내 조건에서만 system �
   assert.equal(responseText({}), null);
 });
 
-test('인증 설정이 없거나 비면 실행하지 않는다', () => {
+test('인증 설정이 없거나 비면 실행하지 않는다', async () => {
   assert.throws(() => makeAuth({ type: 'bearer-env', env: 'PA_TS_MISSING' }, {}));
   assert.throws(() => makeAuth({ type: 'unknown' }, {}));
-  assert.equal(makeAuth({ type: 'bearer-env', env: 'K' }, { K: 'abc' })(), 'abc');
+  assert.equal(await makeAuth({ type: 'bearer-env', env: 'K' }, { K: 'abc' })(), 'abc');
+});
+
+test('서비스 계정 키로 서명한 JWT 를 access token 으로 바꾸고 재사용한다', async () => {
+  const { privateKey, publicKey } = generateKeyPairSync('rsa', { modulusLength: 2048 });
+  const exchanges = [];
+  const server = createServer((req, res) => {
+    let raw = '';
+    req.on('data', (chunk) => (raw += chunk));
+    req.on('end', () => {
+      const assertion = new URLSearchParams(raw).get('assertion');
+      const [header, claims, signature] = assertion.split('.');
+      const valid = createVerify('RSA-SHA256').update(`${header}.${claims}`).verify(publicKey, signature, 'base64url');
+      exchanges.push({ valid, claims: JSON.parse(Buffer.from(claims, 'base64url').toString()) });
+      res.writeHead(200, { 'content-type': 'application/json' }).end(JSON.stringify({ access_token: 'sa-token', expires_in: 3600 }));
+    });
+  });
+  await new Promise((resolve) => server.listen(0, '127.0.0.1', resolve));
+  const tokenUri = `http://127.0.0.1:${server.address().port}/token`;
+  const dir = mkdtempSync(path.join(tmpdir(), 'pa-ts-'));
+  const keyFile = path.join(dir, 'key.json');
+  writeFileSync(keyFile, JSON.stringify({ client_email: 'measure@example.invalid', token_uri: tokenUri,
+    private_key: privateKey.export({ type: 'pkcs8', format: 'pem' }) }));
+  try {
+    const bearer = makeAuth({ type: 'service-account', path: keyFile }, {});
+    assert.equal(await bearer(), 'sa-token');
+    assert.equal(await bearer(), 'sa-token');
+    assert.equal(exchanges.length, 1);  // 만료 전에는 다시 바꾸지 않는다
+    assert.equal(exchanges[0].valid, true);
+    assert.equal(exchanges[0].claims.aud, tokenUri);
+    assert.equal(exchanges[0].claims.iss, 'measure@example.invalid');
+  } finally {
+    server.close();
+  }
 });
 
 test('가짜 서버로 끝까지: 요청 모양, 재시도, 요약', async () => {
