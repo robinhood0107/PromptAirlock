@@ -10,8 +10,9 @@ on:
     types: [opened, edited]
   issue_comment:
     types: [created, edited]
+  # 저장소 전체 점검은 하루 한 번. PR 병합 여부는 PR 이벤트가 그 PR 내용만 보고 정한다.
   schedule:
-    - cron: '17 * * * *'
+    - cron: '17 3 * * *'
   workflow_dispatch:
 
 permissions:
@@ -20,9 +21,10 @@ permissions:
   issues: read
   statuses: write
 
+# PR 마다 따로 돌고, 같은 PR 에 새 커밋이 오면 이전 검사를 취소한다. 다른 이벤트는 서로 기다리지 않는다.
 concurrency:
-  group: publication-policy
-  cancel-in-progress: false
+  group: publication-policy-${{ github.event.pull_request.number && format('pr-{0}', github.event.pull_request.number) || github.run_id }}
+  cancel-in-progress: true
 
 jobs:
   audit:
@@ -37,22 +39,14 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          event_heads=$(jq -r '[.pull_request.head.sha, .workflow_run.head_sha, .workflow_run.pull_requests[]?.head.sha] | .[] | select(type == "string")' "$GITHUB_EVENT_PATH")
-          while IFS= read -r head; do
-            [[ -z "$head" ]] && continue
+          # PR 이벤트일 때만 그 PR head 의 이전 결과를 먼저 무효화한다. 다른 PR 의 status 는 건드리지 않는다.
+          if [[ "$GITHUB_EVENT_NAME" == pull_request_target ]] && [[ "$(jq -r .action "$GITHUB_EVENT_PATH")" != closed ]]; then
+            head=$(jq -r .pull_request.head.sha "$GITHUB_EVENT_PATH")
             [[ "$head" =~ ^[0-9a-f]{40}$ ]]
             gh api "repos/$GH_REPO/statuses/$head" --method POST \
               -f context=publication-policy -f state=pending \
               -f description='Publication audit required.' > /dev/null
-          done <<< "$event_heads"
-          heads=$(gh api --paginate "repos/$GH_REPO/pulls?state=open&per_page=100" --jq '.[].head.sha')
-          while IFS= read -r head; do
-            [[ -z "$head" ]] && continue
-            [[ "$head" =~ ^[0-9a-f]{40}$ ]]
-            gh api "repos/$GH_REPO/statuses/$head" --method POST \
-              -f context=publication-policy -f state=pending \
-              -f description='Publication audit required.' > /dev/null
-          done <<< "$heads"
+          fi
           ref=$(gh api "repos/$GH_REPO" --jq .default_branch)
           sha=$(gh api "repos/$GH_REPO/commits/$ref" --jq .sha)
           [[ "$sha" =~ ^[0-9a-f]{40}$ ]]
