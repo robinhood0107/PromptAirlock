@@ -4,7 +4,7 @@
 
 ## 결정
 
-Boost.Asio와 Boost.Beast 1.92.0, TLS는 OpenSSL 3.6.5. 비동기 처리는 C++20 coroutine으로 한다.
+Boost.Asio와 Boost.Beast 1.92.0, TLS는 OpenSSL 3.6.5. 비동기 처리는 C++20 coroutine으로 한다. Vault 클라이언트(`src/vault_client/`)의 Named Pipe·UDS 통신도 같은 Boost.Asio를 쓴다(ADR 0019).
 
 ## 대안
 
