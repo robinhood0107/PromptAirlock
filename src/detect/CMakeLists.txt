@@ -4,6 +4,7 @@ find_package(utf8proc CONFIG REQUIRED)
 add_library(prompt_airlock_detect
   detectors.cpp
   identifiers.cpp
+  network.cpp
   scan.cpp
   terms.cpp
   view.cpp)

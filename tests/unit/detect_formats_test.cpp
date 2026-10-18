@@ -58,6 +58,10 @@ const std::vector<Case> positives = {
     {"11-95-255933-61", EntityType::KoreanDriverLicenseNo, "11-95-255933-61"},
     {"서울 95-255933-61", EntityType::KoreanDriverLicenseNo, "서울 95-255933-61"},
     {"운전면허번호: 119525593361", EntityType::KoreanDriverLicenseNo, "119525593361"},
+    {"메일 user1@example.invalid.", EntityType::Email, "user1@example.invalid"},
+    {"서버 192.0.2.10 접속", EntityType::IpAddress, "192.0.2.10"},
+    {"주소 2001:db8::1 확인", EntityType::IpAddress, "2001:db8::1"},
+    {"::ffff:192.0.2.1", EntityType::IpAddress, "::ffff:192.0.2.1"},
     {"가상 기관 보고서", EntityType::InternalTerm, "가상 기관"},
 };
 
@@ -75,6 +79,11 @@ const std::vector<Case> negatives = {
     {"M1234567890", EntityType::KoreanPassportNo, {}},        // 길이
     {"기록 202610181230", EntityType::KoreanDriverLicenseNo, {}},  // "면허" 없이 붙여 쓴 12자리
     {"99-95-255933-61", EntityType::KoreanDriverLicenseNo, {}},    // 지역 번호 범위 밖
+    {"user@localhost", EntityType::Email, {}},
+    {"버전 1.2.3.4.5", EntityType::IpAddress, {}},
+    {"v1.2.3.4", EntityType::IpAddress, {}},
+    {"256.1.1.1", EntityType::IpAddress, {}},
+    {"12:30:45", EntityType::IpAddress, {}},
     {"가상 회사", EntityType::InternalTerm, {}},
 };
 
@@ -100,3 +109,13 @@ TEST(DetectFormats, InternalTermsAreValidated) {
     EXPECT_EQ(pd::Detectors::make(std::vector<std::string_view>{"\xFF"}).error(), pc::InputError::InvalidUtf8);
 }
 
+TEST(DetectFormats, StopsAfterEntityLimit) {
+    // 탐지 결과가 한도를 넘으면 한도 + 1 개에서 멈춘다(check_policy 가 거절한다).
+    std::string text;
+    for (std::size_t i = 0; i < pc::max_entities + 10; ++i) {
+        text += "192.0.2.1 ";
+    }
+    const auto entities = detectors().detect_segment(text, pc::SegmentIndex{0});
+    ASSERT_TRUE(entities);
+    EXPECT_EQ(entities->size(), pc::max_entities + 1);
+}
