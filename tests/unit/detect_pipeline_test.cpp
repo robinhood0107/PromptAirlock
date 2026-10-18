@@ -110,3 +110,10 @@ TEST(DetectPipeline, TokenizedValuesLeaveNoOriginalInRequest) {
     }
     EXPECT_EQ(pc::scan_tokens(outcome.sent[0]).size(), 3U);
 }
+
+TEST(DetectPipeline, SensitivePersonalInfoNeverReachesProvider) {
+    const auto outcome = run("김가상 과장은 당뇨 치료 중입니다.");
+    ASSERT_FALSE(outcome.result);
+    EXPECT_EQ(outcome.provider_calls, 0);
+    EXPECT_TRUE(outcome.result.error().for_user().blocked_types.contains(EntityType::SensitivePersonalInfo));
+}

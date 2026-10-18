@@ -9,6 +9,7 @@ add_library(prompt_airlock_detect
   network.cpp
   scan.cpp
   secrets.cpp
+  sensitive.cpp
   terms.cpp
   view.cpp)
 target_include_directories(prompt_airlock_detect PUBLIC "${PROJECT_SOURCE_DIR}/include")

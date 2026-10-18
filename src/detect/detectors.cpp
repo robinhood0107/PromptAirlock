@@ -5,6 +5,8 @@
 
 #include "data/account_context_terms.hpp"
 #include "data/credential_markers.hpp"
+#include "data/personal_markers.hpp"
+#include "data/sensitive_category_terms.hpp"
 #include "prompt_airlock/core/types.hpp"
 #include "rules.hpp"
 
@@ -15,7 +17,16 @@ Detectors::Detectors(TermMatcher internal_terms)
       account_context_(TermMatcher::make(data::account_context_terms)),
       secret_markers_(TermMatcher::make(data::secret_markers)),
       user_markers_(TermMatcher::make(data::user_markers)),
-      account_markers_(TermMatcher::make(data::account_markers)) {}
+      account_markers_(TermMatcher::make(data::account_markers)),
+      sensitive_categories_(TermMatcher::make([] {
+          std::vector<std::u32string_view> terms;
+          for (const auto& t : data::sensitive_terms) {
+              terms.push_back(t.term);
+          }
+          return terms;
+      }())),
+      honorifics_(TermMatcher::make(data::honorific_suffixes)),
+      self_statements_(TermMatcher::make(data::self_statements)) {}
 
 std::expected<Detectors, core::InputError> Detectors::make(std::span<const std::string_view> internal_terms) {
     // 보호어도 보기와 같은 정규화를 거쳐야 같은 글자로 비교된다.
@@ -43,6 +54,13 @@ std::expected<Detectors, core::InputError> Detectors::make(std::span<const std::
 
 std::expected<std::vector<core::EntitySpan>, core::DetectError> Detectors::detect_segment(
     std::string_view text, core::SegmentIndex segment) const {
+    SensitiveTally ignored;
+    return scan(text, segment, ignored);
+}
+
+std::expected<std::vector<core::EntitySpan>, core::DetectError> Detectors::scan(std::string_view text,
+                                                                             core::SegmentIndex segment,
+                                                                             SensitiveTally& tally) const {
     const auto view = make_view(text);
     if (!view) {
         return std::unexpected(view.error());
@@ -63,6 +81,9 @@ std::expected<std::vector<core::EntitySpan>, core::DetectError> Detectors::detec
     for (const auto& hit : internal_terms_.find(*view)) {
         hits.push_back({hit.first_unit, hit.last_unit, core::EntityType::InternalTerm, core::DetectorKind::InternalTerm});
     }
+    // 민감정보는 앞의 결과(식별 정보)를 개인 표지로 쓰므로 마지막에 돈다.
+    const std::vector<rules::Hit> identities = hits;
+    rules::find_sensitive(*view, chars, {sensitive_categories_, honorifics_, self_statements_}, identities, hits, tally);
     std::ranges::sort(hits);
     const auto [first, last] = std::ranges::unique(hits);
     hits.erase(first, last);
@@ -86,15 +107,18 @@ std::expected<std::vector<core::EntitySpan>, core::DetectError> Detectors::detec
 std::expected<DocumentDetection, core::DetectError> Detectors::detect(const core::PromptDocument& document) const {
     DocumentDetection result;
     const auto segments = document.segments();
-    for (std::uint32_t i = 0; i < segments.size() && result.entities.size() <= core::max_entities; ++i) {
-        auto found = detect_segment(segments[i].text(), core::SegmentIndex{i});
-        if (!found) {
-            return std::unexpected(found.error());
+    for (std::uint32_t i = 0; i < segments.size(); ++i) {
+        const auto text = segments[i].text();
+        if (result.entities.size() <= core::max_entities) {
+            auto found = scan(text, core::SegmentIndex{i}, result.sensitive_passed);
+            if (!found) {
+                return std::unexpected(found.error());
+            }
+            const auto room = core::max_entities + 1 - result.entities.size();
+            const auto take = std::min(room, found->size());
+            result.entities.insert(result.entities.end(), found->begin(),
+                                   found->begin() + static_cast<std::ptrdiff_t>(take));
         }
-        const auto room = core::max_entities + 1 - result.entities.size();
-        const auto take = std::min(room, found->size());
-        result.entities.insert(result.entities.end(), found->begin(),
-                               found->begin() + static_cast<std::ptrdiff_t>(take));
     }
     return result;
 }

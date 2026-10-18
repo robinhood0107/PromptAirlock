@@ -44,6 +44,7 @@ foreach(name IN ITEMS
     detect_kr_accounts_test
     detect_pipeline_test
     detect_scan_test
+    detect_sensitive_test
     detect_view_test)
   pa_add_gtest(${name} ${name}.cpp)
   target_link_libraries(${name} PRIVATE prompt_airlock_detect pa_test_support)

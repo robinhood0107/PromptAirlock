@@ -12,6 +12,7 @@
 
 #include "prompt_airlock/core/types.hpp"
 #include "prompt_airlock/detect/scan.hpp"
+#include "prompt_airlock/detect/sensitive.hpp"
 #include "prompt_airlock/detect/terms.hpp"
 #include "prompt_airlock/detect/view.hpp"
 
@@ -91,6 +92,14 @@ private:
 void find_network(std::u32string_view text, std::vector<Hit>& out);
 void find_accounts(std::span<const DigitRun> runs, std::u32string_view text, const TermMatcher& context_terms,
                    const DetectionView& view, std::vector<Hit>& out);
+struct SensitiveMatchers {
+    const TermMatcher& categories;  // data::sensitive_terms 순서
+    const TermMatcher& honorifics;
+    const TermMatcher& self_statements;
+};
+// identities 는 이 segment 에서 먼저 찾은 결과다(식별 정보를 개인 표지로 쓴다).
+void find_sensitive(const DetectionView& view, std::u32string_view text, const SensitiveMatchers& matchers,
+                    std::span<const Hit> identities, std::vector<Hit>& out, SensitiveTally& tally);
 void find_credentials(std::u32string_view text, const TermMatcher& secret_markers, const TermMatcher& user_markers,
                       const TermMatcher& account_markers, const DetectionView& view, std::vector<Hit>& out);
 void find_secrets(std::u32string_view text, std::vector<Hit>& out);
