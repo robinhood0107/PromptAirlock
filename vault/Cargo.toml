@@ -11,4 +11,8 @@ publish = false
 rust-version = "1.85"
 
 [workspace.lints.rust]
+# unsafe 는 금지한다. win_sec(Windows 보안 설명자)과 alloc(지우는 할당기) 두 모듈만 모듈 단위로 허용한다.
 unsafe_code = "deny"
+
+[profile.release]
+debug = 1

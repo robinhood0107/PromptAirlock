@@ -13,6 +13,7 @@ pub mod proto {
 }
 
 pub mod actor;
+pub mod alloc;
 pub mod clock;
 pub mod codec;
 pub mod config;
