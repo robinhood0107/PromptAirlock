@@ -99,6 +99,9 @@ TEST(DetectAccounts, ContextRule) {
     // 휴대폰 번호도 계좌 문맥이 있으면 계좌로 본다(ADR 0016 겹침 규칙).
     EXPECT_TRUE(has(accounts("환불 계좌: 010-2345-6789"), "010-2345-6789"));
     EXPECT_TRUE(accounts("연락처 010-2345-6789").empty());
+    // 문맥은 종결 부호를 넘지 않는다(2026-10-18 결정). 줄바꿈은 넘는다.
+    EXPECT_TRUE(accounts("계좌 이체 수수료 안내입니다. 주문번호 12345678").empty());
+    EXPECT_TRUE(has(accounts("계좌번호:\n12345678 입니다"), "12345678"));
     // 문맥 창 밖.
     EXPECT_TRUE(accounts("계좌는 나중에 알려 드리고 우선 주문 내역과 배송 일정을 다시 한번 정리해서 보내 주세요. 주문번호 1234567890").empty());
 }

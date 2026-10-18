@@ -62,7 +62,7 @@ Outcome run(std::string_view user_text) {
     if (!residual) {
         return fail(pc::Rejection::from_error(residual.error()));
     }
-    auto verified = pc::verify_residual(std::move(*protected_prompt), pc::ResidualReport{residual->entities, {}});
+    auto verified = pc::verify_residual(std::move(*protected_prompt), pc::ResidualReport{residual->entities, residual->encoded});
     if (!verified) {
         return fail(verified.error());
     }
@@ -109,4 +109,21 @@ TEST(DetectPipeline, TokenizedValuesLeaveNoOriginalInRequest) {
         EXPECT_EQ(outcome.sent[0].find(original), std::string::npos) << original;
     }
     EXPECT_EQ(pc::scan_tokens(outcome.sent[0]).size(), 3U);
+}
+
+TEST(DetectPipeline, EncodedValuesNeverReachProvider) {
+    // base64 로 감싼 합성 주민번호: 정책 검사는 지나가도 잔여 검사(인코딩 판정)에서 거절된다.
+    for (const std::string_view text : {"참고 OTAwMTAxLTEyMzQ1Njc= 입니다", "참고 T1RBd01UQXhMVEV5TXpRMU5qYz0= 입니다"}) {
+        const auto outcome = run(text);
+        ASSERT_FALSE(outcome.result) << text;
+        EXPECT_EQ(outcome.provider_calls, 0);
+        EXPECT_EQ(outcome.result.error().for_user().code, pc::ReasonCode::EncodedTarget);
+    }
+}
+
+TEST(DetectPipeline, SensitivePersonalInfoNeverReachesProvider) {
+    const auto outcome = run("김가상 과장은 당뇨 치료 중입니다.");
+    ASSERT_FALSE(outcome.result);
+    EXPECT_EQ(outcome.provider_calls, 0);
+    EXPECT_TRUE(outcome.result.error().for_user().blocked_types.contains(EntityType::SensitivePersonalInfo));
 }

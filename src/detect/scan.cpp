@@ -8,6 +8,10 @@ namespace {
     return c == U'-' || c == U' ' || c == U'.' || (c >= U'‐' && c <= U'―') || c == U'−';
 }
 
+[[nodiscard]] constexpr bool is_line_blank(char32_t c) noexcept {
+    return c == U' ' || c == U'\t' || c == U'\n' || c == U'\r';
+}
+
 // 숫자 사이 구분자는 연속 3개까지(예: "123 - 456").
 constexpr std::size_t max_separators = 3;
 
@@ -61,6 +65,28 @@ std::vector<DigitRun> digit_runs(const DetectionView& view) {
         }
     }
     return runs;
+}
+
+std::vector<SentenceSpan> sentences(const DetectionView& view) {
+    const auto& u = view.units;
+    const auto n = static_cast<std::uint32_t>(u.size());
+    std::vector<SentenceSpan> out;
+    std::uint32_t start = 0;
+    for (std::uint32_t i = 0; i < n; ++i) {
+        const char32_t c = u[i].value;
+        const bool terminal = c == U'.' || c == U'?' || c == U'!' || c == U'\u3002' || c == U'\u2026';
+        const bool next_blank = i + 1 == n || is_line_blank(u[i + 1].value);
+        if (c == U'\n' || (terminal && next_blank)) {
+            if (i + 1 > start) {
+                out.push_back({start, i + 1});
+            }
+            start = i + 1;
+        }
+    }
+    if (start < n) {
+        out.push_back({start, n});
+    }
+    return out;
 }
 
 }  // namespace prompt_airlock::detect

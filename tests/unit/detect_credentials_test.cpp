@@ -60,6 +60,7 @@ TEST(DetectCredentials, Negatives) {
              "https://example.invalid:8443/path",
              "ID: user01 만 알려 드립니다",
              "passcode2 field",
+             "로그인 요청 REQ-2026-001234 처리",
          }) {
         EXPECT_TRUE(credentials(text).empty()) << text;
     }

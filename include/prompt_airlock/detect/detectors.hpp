@@ -8,8 +8,10 @@
 #include <vector>
 
 #include "prompt_airlock/core/document.hpp"
+#include "prompt_airlock/core/encoded.hpp"
 #include "prompt_airlock/core/entity.hpp"
 #include "prompt_airlock/core/error.hpp"
+#include "prompt_airlock/detect/sensitive.hpp"
 #include "prompt_airlock/detect/terms.hpp"
 
 namespace prompt_airlock::detect {
@@ -17,6 +19,10 @@ namespace prompt_airlock::detect {
 struct DocumentDetection {
     // core::max_entities 를 넘으면 max_entities + 1 개에서 멈춘다(check_policy 가 TooManyEntities 로 거절).
     std::vector<core::EntitySpan> entities;
+    // 인코딩 덩어리. 판정은 core judge_encoded(잔여 검사 verify_residual 이 필수로 부른다).
+    std::vector<core::EncodedFinding> encoded;
+    // 개인 표지 없이 통과한 민감정보 범주 문장 수(감사용).
+    SensitiveTally sensitive_passed;
 };
 
 // 불변. 만든 뒤에는 const 로만 쓰므로 여러 요청이 함께 읽어도 된다.
@@ -33,11 +39,19 @@ public:
 
 private:
     explicit Detectors(TermMatcher internal_terms);
+    [[nodiscard]] std::expected<std::vector<core::EntitySpan>, core::DetectError> scan(
+        std::string_view text, core::SegmentIndex segment, SensitiveTally& tally) const;
+    // 덩어리를 깊이 2까지 풀고 푼 결과를 같은 탐지기로 본다.
+    [[nodiscard]] std::expected<std::vector<core::EncodedFinding>, core::DetectError> scan_encoded(
+        std::string_view text, core::SegmentIndex segment) const;
     TermMatcher internal_terms_;
     TermMatcher account_context_;   // 계좌 문맥어(data/account_context_terms.hpp)
     TermMatcher secret_markers_;    // 인증 표지어(data/credential_markers.hpp)
     TermMatcher user_markers_;
     TermMatcher account_markers_;
+    TermMatcher sensitive_categories_;  // data/sensitive_category_terms.hpp 순서
+    TermMatcher honorifics_;
+    TermMatcher self_statements_;
 };
 
 }  // namespace prompt_airlock::detect

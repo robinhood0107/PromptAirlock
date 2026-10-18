@@ -5,6 +5,9 @@
 
 #include "data/account_context_terms.hpp"
 #include "data/credential_markers.hpp"
+#include "data/personal_markers.hpp"
+#include "data/sensitive_category_terms.hpp"
+#include "prompt_airlock/detect/encoded.hpp"
 #include "prompt_airlock/core/types.hpp"
 #include "rules.hpp"
 
@@ -15,7 +18,16 @@ Detectors::Detectors(TermMatcher internal_terms)
       account_context_(TermMatcher::make(data::account_context_terms)),
       secret_markers_(TermMatcher::make(data::secret_markers)),
       user_markers_(TermMatcher::make(data::user_markers)),
-      account_markers_(TermMatcher::make(data::account_markers)) {}
+      account_markers_(TermMatcher::make(data::account_markers)),
+      sensitive_categories_(TermMatcher::make([] {
+          std::vector<std::u32string_view> terms;
+          for (const auto& t : data::sensitive_terms) {
+              terms.push_back(t.term);
+          }
+          return terms;
+      }())),
+      honorifics_(TermMatcher::make(data::honorific_suffixes)),
+      self_statements_(TermMatcher::make(data::self_statements)) {}
 
 std::expected<Detectors, core::InputError> Detectors::make(std::span<const std::string_view> internal_terms) {
     // 보호어도 보기와 같은 정규화를 거쳐야 같은 글자로 비교된다.
@@ -43,6 +55,13 @@ std::expected<Detectors, core::InputError> Detectors::make(std::span<const std::
 
 std::expected<std::vector<core::EntitySpan>, core::DetectError> Detectors::detect_segment(
     std::string_view text, core::SegmentIndex segment) const {
+    SensitiveTally ignored;
+    return scan(text, segment, ignored);
+}
+
+std::expected<std::vector<core::EntitySpan>, core::DetectError> Detectors::scan(std::string_view text,
+                                                                             core::SegmentIndex segment,
+                                                                             SensitiveTally& tally) const {
     const auto view = make_view(text);
     if (!view) {
         return std::unexpected(view.error());
@@ -63,6 +82,9 @@ std::expected<std::vector<core::EntitySpan>, core::DetectError> Detectors::detec
     for (const auto& hit : internal_terms_.find(*view)) {
         hits.push_back({hit.first_unit, hit.last_unit, core::EntityType::InternalTerm, core::DetectorKind::InternalTerm});
     }
+    // 민감정보는 앞의 결과(식별 정보)를 개인 표지로 쓰므로 마지막에 돈다.
+    const std::vector<rules::Hit> identities = hits;
+    rules::find_sensitive(*view, chars, {sensitive_categories_, honorifics_, self_statements_}, identities, hits, tally);
     std::ranges::sort(hits);
     const auto [first, last] = std::ranges::unique(hits);
     hits.erase(first, last);
@@ -83,18 +105,84 @@ std::expected<std::vector<core::EntitySpan>, core::DetectError> Detectors::detec
     return out;
 }
 
-std::expected<DocumentDetection, core::DetectError> Detectors::detect(const core::PromptDocument& document) const {
-    DocumentDetection result;
-    const auto segments = document.segments();
-    for (std::uint32_t i = 0; i < segments.size() && result.entities.size() <= core::max_entities; ++i) {
-        auto found = detect_segment(segments[i].text(), core::SegmentIndex{i});
+std::expected<std::vector<core::EncodedFinding>, core::DetectError> Detectors::scan_encoded(
+    std::string_view text, core::SegmentIndex segment) const {
+    const auto candidates = encoded_candidates(text);
+    if (candidates.size() > max_encoded_candidates) {
+        return std::unexpected(core::DetectError::Overloaded);
+    }
+    // 푼 텍스트를 같은 탐지기로 보고 찾은 종류를 targets 에 모은다.
+    const auto collect = [&](std::string_view decoded,
+                             core::EntityTypeSet& targets) -> std::expected<void, core::DetectError> {
+        SensitiveTally ignored;
+        const auto found = scan(decoded, segment, ignored);
         if (!found) {
             return std::unexpected(found.error());
         }
-        const auto room = core::max_entities + 1 - result.entities.size();
-        const auto take = std::min(room, found->size());
-        result.entities.insert(result.entities.end(), found->begin(),
-                               found->begin() + static_cast<std::ptrdiff_t>(take));
+        for (const auto& e : *found) {
+            targets.insert(e.type());
+        }
+        return {};
+    };
+    // 후보 하나가 텍스트의 절반 이상을 덮으면 그 텍스트는 여전히 인코딩이다.
+    const auto covered_by_blob = [](std::string_view s) {
+        return std::ranges::any_of(encoded_candidates(s),
+                                   [&](const EncodedCandidate& c) { return c.source.size() * 2 >= s.size(); });
+    };
+    std::vector<core::EncodedFinding> out;
+    out.reserve(candidates.size());
+    for (const auto& c : candidates) {
+        const auto blob = text.substr(c.source.begin().value(), c.source.size());
+        const auto first = decode(blob, c.kind);
+        core::EncodedFinding f{segment, c.source, c.kind, *core::DecodeDepth::make(1), first && is_text(*first), false, {}};
+        if (f.decoded_is_text) {
+            if (auto r = collect(*first, f.targets); !r) {
+                return std::unexpected(r.error());
+            }
+            const std::string_view level1 = *first;
+            for (const auto& inner : encoded_candidates(level1)) {
+                const auto second = decode(level1.substr(inner.source.begin().value(), inner.source.size()), inner.kind);
+                const bool whole = inner.source.size() * 2 >= level1.size();
+                if (!second || !is_text(*second)) {
+                    // 텍스트 대부분이 텍스트로 풀리지 않는 덩어리면 텍스트가 아닌 것으로 본다.
+                    f.decoded_is_text = f.decoded_is_text && !whole;
+                    continue;
+                }
+                f.depth = *core::DecodeDepth::make(2);
+                if (auto r = collect(*second, f.targets); !r) {
+                    return std::unexpected(r.error());
+                }
+                f.still_encoded = f.still_encoded || covered_by_blob(*second);
+            }
+        }
+        out.push_back(f);
+    }
+    return out;
+}
+
+std::expected<DocumentDetection, core::DetectError> Detectors::detect(const core::PromptDocument& document) const {
+    DocumentDetection result;
+    const auto segments = document.segments();
+    for (std::uint32_t i = 0; i < segments.size(); ++i) {
+        const auto text = segments[i].text();
+        if (result.entities.size() <= core::max_entities) {
+            auto found = scan(text, core::SegmentIndex{i}, result.sensitive_passed);
+            if (!found) {
+                return std::unexpected(found.error());
+            }
+            const auto room = core::max_entities + 1 - result.entities.size();
+            const auto take = std::min(room, found->size());
+            result.entities.insert(result.entities.end(), found->begin(),
+                                   found->begin() + static_cast<std::ptrdiff_t>(take));
+        }
+        auto encoded = scan_encoded(text, core::SegmentIndex{i});
+        if (!encoded) {
+            return std::unexpected(encoded.error());
+        }
+        if (result.encoded.size() + encoded->size() > max_encoded_candidates) {
+            return std::unexpected(core::DetectError::Overloaded);
+        }
+        result.encoded.insert(result.encoded.end(), encoded->begin(), encoded->end());
     }
     return result;
 }

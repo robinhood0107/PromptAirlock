@@ -130,7 +130,7 @@ void find_basic(std::u32string_view text, std::vector<Hit>& out) {
     }
 }
 
-// 무작위 문자열: 8자 이상, 대문자·소문자·숫자·기호 가운데 3종류 이상, 영문 부분이 흔한 단어가 아님.
+// 무작위 문자열: 8자 이상, 대문자·소문자·숫자·기호(구분 기호 제외) 가운데 3종류 이상, 영문 부분이 흔한 단어가 아님.
 [[nodiscard]] bool looks_random(std::u32string_view token) {
     if (token.size() < data::random_min_length || token.find(U"://") != std::u32string_view::npos ||
         token.find(U'@') != std::u32string_view::npos) {
@@ -142,7 +142,8 @@ void find_basic(std::u32string_view text, std::vector<Hit>& out) {
         upper = upper || (c >= U'A' && c <= U'Z');
         lower = lower || (c >= U'a' && c <= U'z');
         digit = digit || is_ascii_digit(c);
-        symbol = symbol || is_ascii_symbol(c);
+        // '-', '_', '.' 는 업무 번호의 구분 기호라 기호 종류로 세지 않는다(REQ-2026-001234, 2026-10-18 결정).
+        symbol = symbol || (is_ascii_symbol(c) && c != U'-' && c != U'_' && c != U'.');
         if (is_ascii_alpha(c)) {
             letters.push_back(static_cast<char>(ascii_lower(c)));
         }

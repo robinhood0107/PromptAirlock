@@ -26,6 +26,14 @@ struct DigitRun {
 
 [[nodiscard]] std::vector<DigitRun> digit_runs(const DetectionView& view);
 
+// 문장 구간 [first_unit, end_unit). 종결 부호(. ? ! 。 …) 뒤에 공백·줄바꿈·끝이 오거나 줄바꿈이면 끝난다.
+// "3.14", "v1.2" 처럼 부호 뒤에 바로 글자가 오면 경계가 아니다. 긴 문장도 자르지 않는다.
+struct SentenceSpan {
+    std::uint32_t first_unit;
+    std::uint32_t end_unit;
+};
+[[nodiscard]] std::vector<SentenceSpan> sentences(const DetectionView& view);
+
 [[nodiscard]] constexpr bool is_ascii_digit(char32_t c) noexcept { return c >= U'0' && c <= U'9'; }
 [[nodiscard]] constexpr bool is_ascii_alpha(char32_t c) noexcept {
     return (c >= U'A' && c <= U'Z') || (c >= U'a' && c <= U'z');
