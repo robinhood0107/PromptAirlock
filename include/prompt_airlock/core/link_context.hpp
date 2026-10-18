@@ -25,8 +25,8 @@ enum class LinkContext : std::uint8_t {
 };
 
 // 응답을 한 번 훑어 byte 마다 문맥을 칠한 뒤, token 마다 자기 구간에 칠해진 문맥을 돌려준다.
-// 정규식 없이 선형 시간이다. 애매하면 링크로 본다: 닫히지 않은 구문은 끝까지, 주소 run 은 ASCII 공백으로만 끊는다
-// (그래서 공백 없이 붙은 "[T](https://…)" 의 링크 글자 T 도 거절된다).
+// 정규식 없이 선형 시간이다. 애매하면 링크로 본다: 닫히지 않은 구문은 끝까지 칠하고, 주소 run 은 ASCII 공백과
+// 마크다운 링크 글자 경계에서만 끊는다(링크 글자 "[T](주소)" 의 T 는 따로 판정해 주소 모양이 아니면 통과).
 [[nodiscard]] std::vector<LinkContext> classify_link_contexts(std::string_view response,
                                                               std::span<const TokenOccurrence> tokens);
 
