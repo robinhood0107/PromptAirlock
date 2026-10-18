@@ -56,6 +56,23 @@ public:
             max_last_.push_back(m);
         }
     }
+    // [first, last] 에서 window 글자 안에 걸친 문맥어가 있고, 그 사이에 종결 부호가 없는가(clause 가 같음).
+    // 문맥어는 짧으므로(64자 미만) 창 앞뒤의 문맥어만 거꾸로 훑는다.
+    [[nodiscard]] bool around_in_clause(std::size_t first, std::size_t last, std::size_t window,
+                                        std::span<const std::uint32_t> clause) const {
+        constexpr std::size_t max_term = 64;
+        auto it = std::ranges::upper_bound(hits_, last + window, {}, &TermHit::first_unit);
+        while (it != hits_.begin()) {
+            --it;
+            if (it->first_unit + max_term + window < first) {
+                break;
+            }
+            if (it->last_unit + window >= first && clause[it->first_unit] == clause[first]) {
+                return true;
+            }
+        }
+        return false;
+    }
     // [first, last] 에서 window 글자 안에 걸친 문맥어가 있는가.
     [[nodiscard]] bool around(std::size_t first, std::size_t last, std::size_t window) const {
         const auto end = std::ranges::upper_bound(hits_, last + window, {}, &TermHit::first_unit);

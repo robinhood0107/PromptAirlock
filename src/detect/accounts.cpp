@@ -114,8 +114,32 @@ void push(std::vector<Hit>& out, std::size_t first, std::size_t last, DetectorKi
     }
 }
 
-// 국내 형식표. 휴대폰·사업자번호 모양이면 계좌 문맥이 있을 때만 계좌로 본다(ADR 0016 겹침 규칙).
-[[nodiscard]] bool matches_domestic(std::string_view d, bool context) noexcept {
+// 묶음 [a, b] 의 길이가 "3-2-5-1" 과 같은가.
+[[nodiscard]] bool same_structure(const DigitRun& run, std::size_t a, std::size_t b, std::string_view structure) noexcept {
+    std::size_t g = a;
+    while (!structure.empty()) {
+        const auto dash = structure.find('-');
+        const auto part = structure.substr(0, dash);
+        std::size_t length = 0;
+        for (const char c : part) {
+            length = length * 10 + static_cast<std::size_t>(c - '0');
+        }
+        if (g > b || run.groups[g].digits.size() != length) {
+            return false;
+        }
+        ++g;
+        if (dash == std::string_view::npos) {
+            break;
+        }
+        structure.remove_prefix(dash + 1);
+    }
+    return g == b + 1;
+}
+
+// 국내 형식표. 계좌 문맥이 없으면 묶음 구조까지 같게 끊어 쓴 경우만 계좌로 보고(2026-10-18 결정),
+// 휴대폰·사업자번호 모양이면 계좌 문맥이 있을 때만 계좌로 본다(ADR 0016 겹침 규칙).
+[[nodiscard]] bool matches_domestic(const DigitRun& run, std::size_t a, std::size_t b, std::string_view d,
+                                    bool context) noexcept {
     const bool shared = is_phone_number(d) || is_business_number(d);
     return std::ranges::any_of(data::kr_account_formats, [&](const data::KrAccountFormat& f) {
         if (f.digits != d.size() || !has_prefix(d, f.fixed_prefix)) {
@@ -124,7 +148,7 @@ void push(std::vector<Hit>& out, std::size_t first, std::size_t last, DetectorKi
         if (f.subject_length > 0 && !has_code(f.subject_codes, d.substr(f.subject_offset, f.subject_length))) {
             return false;
         }
-        return context || (!f.needs_context && !shared);
+        return context || (!f.needs_context && !shared && same_structure(run, a, b, f.structure));
     });
 }
 
@@ -311,6 +335,16 @@ void find_ifsc(std::u32string_view text, std::span<const DigitRun> runs, std::ve
 void find_accounts(std::span<const DigitRun> runs, std::u32string_view text, const TermMatcher& context_terms,
                    const DetectionView& view, std::vector<Hit>& out) {
     const Nearby context(context_terms.find(view));
+    // 종결 부호(. ? ! 。) 뒤에 공백이 오면 다음 구절이다. 계좌 문맥은 구절을 넘지 않는다(줄바꿈은 넘는다).
+    std::vector<std::uint32_t> clause(text.size() + 1, 0);
+    for (std::size_t i = 0; i < text.size(); ++i) {
+        const char32_t c = text[i];
+        // 영문자 바로 뒤의 마침표는 약어("account no. 123")일 수 있어 구절 끝으로 보지 않는다.
+        const bool period = c == U'.' && !(i > 0 && is_ascii_alpha(text[i - 1]));
+        const bool end = (period || c == U'?' || c == U'!' || c == U'\u3002') && i + 1 < text.size() &&
+                         (text[i + 1] == U' ' || text[i + 1] == U'\n' || text[i + 1] == U'\t');
+        clause[i + 1] = clause[i] + (end ? 1U : 0U);
+    }
     for (const auto& run : runs) {
         // 날짜에 속한 묶음. 날짜 안의 구간(예: "2026-10")도 문맥 규칙에서 뺀다.
         std::vector<bool> in_date(run.groups.size(), false);
@@ -322,14 +356,14 @@ void find_accounts(std::span<const DigitRun> runs, std::u32string_view text, con
         for_each_window(run, [&](std::size_t a, std::size_t b, std::string_view d) {
             const auto first = run.groups[a].first_unit;
             const auto last = run.groups[b].last_unit;
-            const bool near = context.around(first, last, data::account_context_window);
+            const bool near = context.around_in_clause(first, last, data::account_context_window, clause);
             // 금액과 날짜는 문맥에 기대는 판정(문맥 규칙, 문맥이 필요한 형식표 행)에서만 뺀다.
             const bool exempt = is_amount(text, first, last) ||
                                 std::all_of(in_date.begin() + static_cast<std::ptrdiff_t>(a),
                                             in_date.begin() + static_cast<std::ptrdiff_t>(b) + 1, [](bool v) { return v; });
             const bool usable = near && !exempt;
             // 1. 국내 형식표.
-            if (matches_domestic(d, usable)) {
+            if (matches_domestic(run, a, b, d, usable)) {
                 push(out, first, last, DetectorKind::Pattern);
             }
             // 2. 외국 구조 가운데 숫자만으로 판정하는 것: 멕시코 CLABE, 중국 은행카드, 미국 ABA + 계좌.
