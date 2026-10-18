@@ -14,11 +14,16 @@ pub mod proto {
 
 pub mod actor;
 pub mod clock;
+pub mod codec;
 pub mod config;
 pub mod error;
+pub mod server;
 pub mod state;
 pub mod token;
+pub mod transport;
 pub mod types;
+#[cfg(windows)]
+pub mod win_sec;
 
 #[cfg(test)]
 mod tests {
