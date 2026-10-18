@@ -62,6 +62,14 @@ const std::vector<Case> positives = {
     {"서버 192.0.2.10 접속", EntityType::IpAddress, "192.0.2.10"},
     {"주소 2001:db8::1 확인", EntityType::IpAddress, "2001:db8::1"},
     {"::ffff:192.0.2.1", EntityType::IpAddress, "::ffff:192.0.2.1"},
+    {"키 sk-0000aaaa1111bbbb2222cccc", EntityType::ApiKey, "sk-0000aaaa1111bbbb2222cccc"},
+    {"AKIA0000AAAA1111BBBB", EntityType::ApiKey, "AKIA0000AAAA1111BBBB"},
+    {"Authorization: Bearer abcdefghij0123456789", EntityType::ApiKey, "abcdefghij0123456789"},
+    {"t=eyJhbGciOiJub25lIn0.eyJzdWIiOiIwMDAifQ.c2lnbmF0dXJlMDA", EntityType::ApiKey,
+     "eyJhbGciOiJub25lIn0.eyJzdWIiOiIwMDAifQ.c2lnbmF0dXJlMDA"},
+    {"-----BEGIN PRIVATE KEY-----\nAAAA\n-----END PRIVATE KEY-----\n끝", EntityType::PrivateKey,
+     "-----BEGIN PRIVATE KEY-----\nAAAA\n-----END PRIVATE KEY-----"},
+    {"-----BEGIN EC PRIVATE KEY-----\nAAAA", EntityType::PrivateKey, "-----BEGIN EC PRIVATE KEY-----\nAAAA"},
     {"가상 기관 보고서", EntityType::InternalTerm, "가상 기관"},
 };
 
@@ -84,6 +92,9 @@ const std::vector<Case> negatives = {
     {"v1.2.3.4", EntityType::IpAddress, {}},
     {"256.1.1.1", EntityType::IpAddress, {}},
     {"12:30:45", EntityType::IpAddress, {}},
+    {"sk-short", EntityType::ApiKey, {}},
+    {"bearer token", EntityType::ApiKey, {}},
+    {"-----BEGIN PUBLIC KEY-----\nAAAA", EntityType::PrivateKey, {}},
     {"가상 회사", EntityType::InternalTerm, {}},
 };
 
