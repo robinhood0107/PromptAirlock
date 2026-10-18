@@ -28,4 +28,5 @@ endif()
 
 if(PA_WITH_VAULT)
   include(Vault)
+  add_subdirectory(tests/e2e)
 endif()
