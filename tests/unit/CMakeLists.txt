@@ -41,6 +41,7 @@ foreach(name IN ITEMS
     detect_accounts_test
     detect_credentials_test
     detect_encoded_test
+    detect_evasion_test
     detect_formats_test
     detect_kr_accounts_test
     detect_pipeline_test
