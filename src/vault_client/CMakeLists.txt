@@ -26,6 +26,7 @@ endif()
 add_library(prompt_airlock_vault_client
   connection.cpp
   process.cpp
+  service.cpp
   stream.cpp
   types.cpp)
 target_include_directories(prompt_airlock_vault_client PUBLIC "${PROJECT_SOURCE_DIR}/include")
