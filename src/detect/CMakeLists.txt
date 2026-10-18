@@ -2,6 +2,8 @@ find_package(utf8proc CONFIG REQUIRED)
 
 # 결정론 탐지기(ADR 0001, 0018). core 와 같은 금지 패턴을 지키고 경고를 오류로 다룬다.
 add_library(prompt_airlock_detect
+  accounts.cpp
+  credentials.cpp
   detectors.cpp
   identifiers.cpp
   network.cpp

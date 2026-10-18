@@ -28,6 +28,7 @@ std::vector<std::vector<std::string>> runs(std::string_view text) {
 TEST(DetectScan, DigitRuns) {
     using Runs = std::vector<std::vector<std::string>>;
     EXPECT_EQ(runs("010-2345-6789"), (Runs{{"010", "2345", "6789"}}));
+    EXPECT_EQ(pd::digit_runs(*pd::make_view("12-34 5"))[0].groups[0].separator, U'-');
     EXPECT_EQ(runs("123 - 456"), (Runs{{"123", "456"}}));
     EXPECT_EQ(runs("12    34"), (Runs{{"12"}, {"34"}}));         // 구분자 4개 이상이면 끊는다
     EXPECT_EQ(runs("1,234,567원"), (Runs{{"1"}, {"234"}, {"567"}}));  // 쉼표는 구분자가 아니다
@@ -47,4 +48,8 @@ TEST(DetectScan, TermMatcher) {
     std::ranges::sort(found);
     EXPECT_EQ(found, (std::vector<std::uint32_t>{0, 1, 2}));
     EXPECT_TRUE(pd::TermMatcher::make({}).find(view).empty());
+    // ASCII 단어는 단어 경계에서만 맞는다.
+    const std::vector<std::u32string_view> ascii = {U"bic"};
+    EXPECT_TRUE(pd::TermMatcher::make(ascii).find(*pd::make_view("public")).empty());
+    EXPECT_EQ(pd::TermMatcher::make(ascii).find(*pd::make_view("BIC: X")).size(), 1U);
 }

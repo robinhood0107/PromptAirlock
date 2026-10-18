@@ -18,6 +18,7 @@ struct DigitGroup {
     std::uint32_t first_unit;
     std::uint32_t last_unit;
     std::string digits;
+    char32_t separator = 0;  // 다음 묶음과의 첫 구분자(마지막 묶음은 0)
 };
 struct DigitRun {
     std::vector<DigitGroup> groups;
