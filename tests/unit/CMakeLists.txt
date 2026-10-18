@@ -39,6 +39,7 @@ endforeach()
 # 탐지기 시험. 파이프라인 시험은 시험용 Vault(pa_test_support)를 쓴다.
 foreach(name IN ITEMS
     detect_accounts_test
+    detect_credentials_test
     detect_formats_test
     detect_kr_accounts_test
     detect_pipeline_test

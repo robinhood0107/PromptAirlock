@@ -4,6 +4,7 @@
 #include <string>
 
 #include "data/account_context_terms.hpp"
+#include "data/credential_markers.hpp"
 #include "prompt_airlock/core/types.hpp"
 #include "rules.hpp"
 
@@ -11,7 +12,10 @@ namespace prompt_airlock::detect {
 
 Detectors::Detectors(TermMatcher internal_terms)
     : internal_terms_(std::move(internal_terms)),
-      account_context_(TermMatcher::make(data::account_context_terms)) {}
+      account_context_(TermMatcher::make(data::account_context_terms)),
+      secret_markers_(TermMatcher::make(data::secret_markers)),
+      user_markers_(TermMatcher::make(data::user_markers)),
+      account_markers_(TermMatcher::make(data::account_markers)) {}
 
 std::expected<Detectors, core::InputError> Detectors::make(std::span<const std::string_view> internal_terms) {
     // 보호어도 보기와 같은 정규화를 거쳐야 같은 글자로 비교된다.
@@ -55,6 +59,7 @@ std::expected<std::vector<core::EntitySpan>, core::DetectError> Detectors::detec
     rules::find_network(chars, hits);
     rules::find_secrets(chars, hits);
     rules::find_accounts(runs, chars, account_context_, *view, hits);
+    rules::find_credentials(chars, secret_markers_, user_markers_, account_markers_, *view, hits);
     for (const auto& hit : internal_terms_.find(*view)) {
         hits.push_back({hit.first_unit, hit.last_unit, core::EntityType::InternalTerm, core::DetectorKind::InternalTerm});
     }

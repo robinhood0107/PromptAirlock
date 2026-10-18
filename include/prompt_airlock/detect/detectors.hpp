@@ -35,6 +35,9 @@ private:
     explicit Detectors(TermMatcher internal_terms);
     TermMatcher internal_terms_;
     TermMatcher account_context_;   // 계좌 문맥어(data/account_context_terms.hpp)
+    TermMatcher secret_markers_;    // 인증 표지어(data/credential_markers.hpp)
+    TermMatcher user_markers_;
+    TermMatcher account_markers_;
 };
 
 }  // namespace prompt_airlock::detect
