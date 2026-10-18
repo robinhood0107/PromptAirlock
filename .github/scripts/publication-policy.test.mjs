@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { createPolicy, paginate } from './publication-policy.mjs';
-import { makeApi, runAudit } from './run-publication-policy.mjs';
+import { auditEvent, auditPull, auditPush, makeApi, runAudit } from './run-publication-policy.mjs';
 
 const pattern = 'sampletool|co[- ]?authored[- ]?by\\s*:|generated\\s+by';
 const policy = createPolicy(pattern);
@@ -74,10 +74,15 @@ test('API errors do not expose server response or credentials', async () => {
   await assert.rejects(api('https://example.com'));
 });
 
-function fixtureApi({ text = 'Neutral source', truncated = false, changed = false, failCommits = false, failPullList = false } = {}) {
+function fixtureApi({ text = 'Neutral source', truncated = false, changed = false, failCommits = false, failPullList = false,
+  tooManyFiles = false } = {}) {
   const writes = [];
-  const pull = { number: 1, title: 'chore: add checks', body: '', state: 'open',
+  let pullReads = 0;
+  const pull = { number: 1, title: 'chore: add checks', body: '', state: 'open', user: { login: 'owner' },
     head: { sha, ref: 'chore/checks' }, base: { ref: 'main' } };
+  const files = tooManyFiles
+    ? Array.from({ length: 300 }, (_, i) => ({ filename: `f${i}.txt`, status: 'added', sha: blobSha }))
+    : [{ filename: 'src/core.cpp', status: 'modified', sha: blobSha }];
   const api = async (path, method, body) => {
     if (method === 'POST') { writes.push({ path, ...body }); return {}; }
     const tail = path.replace('repos/owner/repository', '');
@@ -86,24 +91,41 @@ function fixtureApi({ text = 'Neutral source', truncated = false, changed = fals
       if (failPullList) throw new Error('Unavailable');
       return [pull];
     }
+    if (tail.startsWith('/pulls/1/commits')) {
+      if (failCommits) throw new Error('Unavailable');
+      return [{ sha }];
+    }
+    if (tail === '/pulls/1') {
+      pullReads += 1;
+      return changed && pullReads > 1 ? { ...pull, body: 'Changed during audit' } : pull;
+    }
+    if (tail.startsWith('/compare/')) return { commits: [{ sha }] };
+    if (tail === `/commits/${sha}`) {
+      if (failCommits) throw new Error('Unavailable');
+      return { commit: { message: 'chore: initial work', author: { name: 'Owner' } }, files };
+    }
     if (tail.startsWith('/branches?')) return [{ name: 'main', commit: { sha } }];
     if (tail.startsWith('/commits?')) {
       if (failCommits) throw new Error('Unavailable');
       return [{ sha, commit: { message: 'chore: initial work', author: { name: 'Owner' }, tree: { sha: treeSha } } }];
     }
     if (tail.startsWith('/git/trees/')) return { truncated, tree: [{ type: 'blob', path: 'src/core.cpp', sha: blobSha, size: Buffer.byteLength(text) }] };
-    if (tail.startsWith('/git/blobs/')) return { encoding: 'base64', content: Buffer.from(text).toString('base64') };
+    if (tail.startsWith('/git/blobs/')) {
+      return { encoding: 'base64', content: Buffer.from(text).toString('base64'), size: Buffer.byteLength(text) };
+    }
     if (tail === '/actions/workflows?per_page=100') return { total_count: 0, workflows: [] };
-    if (tail === '/pulls/1') return changed ? { ...pull, body: 'Changed during audit' } : pull;
     return [];
   };
-  return { api, writes, event: { pull_request: pull } };
+  return { api, writes };
 }
 
-test('audit binds required status to the exact PR head', async () => {
+const repository = 'owner/repository';
+
+test('PR audit binds the required status to the exact PR head', async () => {
   const fixture = fixtureApi();
-  const result = await runAudit({ ...fixture, repository: 'owner/repository', pattern, writeStatuses: true });
+  const result = await auditPull({ ...fixture, repository, pattern, number: 1, writeStatuses: true });
   assert.deepEqual(result, { commits: 1, files: 1 });
+  assert.equal(fixture.writes[0].state, 'pending');
   assert.equal(fixture.writes.at(-1).state, 'success');
   assert.ok(fixture.writes.every((entry) => entry.path.endsWith(`/statuses/${sha}`)));
   assert.ok(fixture.writes.every((entry) => entry.context === 'publication-policy'));
@@ -112,42 +134,51 @@ test('audit binds required status to the exact PR head', async () => {
 for (const [name, options] of Object.entries({
   'forbidden file content': { text: 'SampleTool' },
   'binary content': { text: '\u0000binary' },
-  'truncated tree': { truncated: true },
   'API failure': { failCommits: true },
-  'early PR listing failure': { failPullList: true },
+  'too many changed files': { tooManyFiles: true },
   'concurrent PR edit': { changed: true },
 })) {
-  test(`audit fails closed for ${name}`, async () => {
+  test(`PR audit fails closed for ${name}`, async () => {
     const fixture = fixtureApi(options);
-    await assert.rejects(runAudit({ ...fixture, repository: 'owner/repository', pattern, writeStatuses: true }));
+    await assert.rejects(auditPull({ ...fixture, repository, pattern, number: 1, writeStatuses: true }));
     assert.equal(fixture.writes.at(-1).state, 'failure');
     assert.ok(fixture.writes.every((entry) => entry.state !== 'success'));
   });
 }
 
-test('missing configuration invalidates the previous PR status', async () => {
-  const fixture = fixtureApi();
-  await assert.rejects(runAudit({ ...fixture, repository: 'owner/repository', pattern: '', writeStatuses: true }));
-  assert.equal(fixture.writes[0].state, 'pending');
-  assert.equal(fixture.writes.at(-1).state, 'failure');
+test('missing configuration or failed checker never publishes a passing PR status', async () => {
+  for (const options of [{ pattern: '' }, { pattern, validationPassed: false }]) {
+    const fixture = fixtureApi();
+    await assert.rejects(auditPull({ ...fixture, repository, number: 1, writeStatuses: true, ...options }));
+    assert.equal(fixture.writes[0].state, 'pending');
+    assert.equal(fixture.writes.at(-1).state, 'failure');
+  }
 });
 
-test('failed checker validation cannot publish a passing status', async () => {
-  const fixture = fixtureApi();
-  await assert.rejects(runAudit({ ...fixture, repository: 'owner/repository', pattern, writeStatuses: true, validationPassed: false }));
-  assert.equal(fixture.writes.at(-1).state, 'failure');
+test('issue and comment events check only the current text and never touch PR statuses', () => {
+  const clean = { issue: { title: 'Measure', body: 'Neutral', labels: [{ name: 'phase:4', description: '' }] },
+    comment: { body: 'Neutral reply' },
+    // 수정 전 문구는 이미 지워졌으므로 위반이어도 실패시키지 않는다.
+    changes: { body: { from: 'SampleTool' } } };
+  assert.deepEqual(auditEvent({ pattern, event: clean }), { items: 2 });
+  assert.throws(() => auditEvent({ pattern, event: { comment: { body: 'SampleTool' } } }), /violation/);
+  assert.throws(() => auditEvent({ pattern, event: { issue: { title: 'x', body: '', labels: [{ name: 'SampleTool' }] } } }), /violation/);
 });
 
-test('trusted downstream events invalidate the head before listing failure', async () => {
-  const fixture = fixtureApi({ failPullList: true });
-  const event = { workflow_run: { head_sha: sha, pull_requests: [{ head: { sha } }] } };
-  await assert.rejects(runAudit({ ...fixture, event, repository: 'owner/repository', pattern, writeStatuses: true }));
-  assert.equal(fixture.writes[0].state, 'pending');
-  assert.equal(fixture.writes.at(-1).state, 'failure');
-});
-
-test('read-only audits never post repository statuses', async () => {
+test('push audit checks only commits that are not on main', async () => {
   const fixture = fixtureApi();
-  await runAudit({ ...fixture, repository: 'owner/repository', pattern });
+  assert.deepEqual(await auditPush({ ...fixture, repository, pattern, head: sha, branch: 'chore/checks' }), { commits: 1, files: 1 });
+  await assert.rejects(auditPush({ ...fixtureApi({ text: 'SampleTool' }), repository, pattern, head: sha, branch: 'chore/checks' }));
+  await assert.rejects(auditPush({ ...fixture, repository, pattern, head: sha, branch: 'unapproved' }));
   assert.deepEqual(fixture.writes, []);
+});
+
+test('repository audit sweeps everything and never posts statuses', async () => {
+  const fixture = fixtureApi();
+  assert.deepEqual(await runAudit({ ...fixture, repository, pattern }), { commits: 1, files: 1 });
+  assert.deepEqual(fixture.writes, []);
+  for (const options of [{ text: 'SampleTool' }, { truncated: true }, { failCommits: true }, { failPullList: true }]) {
+    await assert.rejects(runAudit({ ...fixtureApi(options), repository, pattern }));
+  }
+  await assert.rejects(runAudit({ ...fixture, repository, pattern, validationPassed: false }));
 });
