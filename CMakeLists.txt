@@ -15,6 +15,7 @@ find_package(GTest CONFIG REQUIRED)
 
 add_subdirectory(src/core)
 add_subdirectory(src/detect)
+add_subdirectory(src/vault_client)
 add_subdirectory(tests/support)
 add_subdirectory(tests/unit)
 add_subdirectory(tests/property)

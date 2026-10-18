@@ -51,3 +51,4 @@ foreach(name IN ITEMS
   pa_add_gtest(${name} ${name}.cpp)
   target_link_libraries(${name} PRIVATE prompt_airlock_detect pa_test_support)
 endforeach()
+
