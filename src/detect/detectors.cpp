@@ -7,6 +7,7 @@
 #include "data/credential_markers.hpp"
 #include "data/personal_markers.hpp"
 #include "data/sensitive_category_terms.hpp"
+#include "prompt_airlock/detect/encoded.hpp"
 #include "prompt_airlock/core/types.hpp"
 #include "rules.hpp"
 
@@ -104,6 +105,61 @@ std::expected<std::vector<core::EntitySpan>, core::DetectError> Detectors::scan(
     return out;
 }
 
+std::expected<std::vector<core::EncodedFinding>, core::DetectError> Detectors::scan_encoded(
+    std::string_view text, core::SegmentIndex segment) const {
+    const auto candidates = encoded_candidates(text);
+    if (candidates.size() > max_encoded_candidates) {
+        return std::unexpected(core::DetectError::Overloaded);
+    }
+    // 푼 텍스트를 같은 탐지기로 보고 찾은 종류를 targets 에 모은다.
+    const auto collect = [&](std::string_view decoded,
+                             core::EntityTypeSet& targets) -> std::expected<void, core::DetectError> {
+        SensitiveTally ignored;
+        const auto found = scan(decoded, segment, ignored);
+        if (!found) {
+            return std::unexpected(found.error());
+        }
+        for (const auto& e : *found) {
+            targets.insert(e.type());
+        }
+        return {};
+    };
+    // 후보 하나가 텍스트의 절반 이상을 덮으면 그 텍스트는 여전히 인코딩이다.
+    const auto covered_by_blob = [](std::string_view s) {
+        return std::ranges::any_of(encoded_candidates(s),
+                                   [&](const EncodedCandidate& c) { return c.source.size() * 2 >= s.size(); });
+    };
+    std::vector<core::EncodedFinding> out;
+    out.reserve(candidates.size());
+    for (const auto& c : candidates) {
+        const auto blob = text.substr(c.source.begin().value(), c.source.size());
+        const auto first = decode(blob, c.kind);
+        core::EncodedFinding f{segment, c.source, c.kind, *core::DecodeDepth::make(1), first && is_text(*first), false, {}};
+        if (f.decoded_is_text) {
+            if (auto r = collect(*first, f.targets); !r) {
+                return std::unexpected(r.error());
+            }
+            const std::string_view level1 = *first;
+            for (const auto& inner : encoded_candidates(level1)) {
+                const auto second = decode(level1.substr(inner.source.begin().value(), inner.source.size()), inner.kind);
+                const bool whole = inner.source.size() * 2 >= level1.size();
+                if (!second || !is_text(*second)) {
+                    // 텍스트 대부분이 텍스트로 풀리지 않는 덩어리면 텍스트가 아닌 것으로 본다.
+                    f.decoded_is_text = f.decoded_is_text && !whole;
+                    continue;
+                }
+                f.depth = *core::DecodeDepth::make(2);
+                if (auto r = collect(*second, f.targets); !r) {
+                    return std::unexpected(r.error());
+                }
+                f.still_encoded = f.still_encoded || covered_by_blob(*second);
+            }
+        }
+        out.push_back(f);
+    }
+    return out;
+}
+
 std::expected<DocumentDetection, core::DetectError> Detectors::detect(const core::PromptDocument& document) const {
     DocumentDetection result;
     const auto segments = document.segments();
@@ -119,6 +175,14 @@ std::expected<DocumentDetection, core::DetectError> Detectors::detect(const core
             result.entities.insert(result.entities.end(), found->begin(),
                                    found->begin() + static_cast<std::ptrdiff_t>(take));
         }
+        auto encoded = scan_encoded(text, core::SegmentIndex{i});
+        if (!encoded) {
+            return std::unexpected(encoded.error());
+        }
+        if (result.encoded.size() + encoded->size() > max_encoded_candidates) {
+            return std::unexpected(core::DetectError::Overloaded);
+        }
+        result.encoded.insert(result.encoded.end(), encoded->begin(), encoded->end());
     }
     return result;
 }

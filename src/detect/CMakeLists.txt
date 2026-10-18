@@ -5,6 +5,7 @@ add_library(prompt_airlock_detect
   accounts.cpp
   credentials.cpp
   detectors.cpp
+  encoded.cpp
   identifiers.cpp
   network.cpp
   scan.cpp
