@@ -45,7 +45,8 @@ std::expected<std::vector<core::EntitySpan>, core::DetectError> Detectors::detec
     }
 
     std::vector<rules::Hit> hits;
-    rules::find_identifiers(*view, chars, hits);
+    const auto runs = digit_runs(*view);
+    rules::find_identifiers(runs, chars, hits);
     rules::find_network(chars, hits);
     rules::find_secrets(chars, hits);
     for (const auto& hit : internal_terms_.find(*view)) {

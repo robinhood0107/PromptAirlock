@@ -23,8 +23,10 @@ using core::EntityType;
     return std::ranges::any_of(prefixes, [d](std::string_view p) { return d.starts_with(p); });
 }
 
+}  // namespace
+
 // 전기통신번호관리세칙의 번호 대역(data/kr_identifier_formats.hpp).
-[[nodiscard]] bool is_phone(std::string_view d) noexcept {
+bool is_phone_number(std::string_view d) noexcept {
     const auto n = d.size();
     if (d.starts_with("010")) {
         return n == 11 && d[3] >= '2';
@@ -43,6 +45,8 @@ using core::EntityType;
     }
     return starts_with_any(d, data::area_codes) && (n == 10 || n == 11);
 }
+
+namespace {
 
 [[nodiscard]] bool is_valid_date(int year, int month, int day) noexcept {
     if (month < 1 || month > 12 || day < 1) {
@@ -70,8 +74,10 @@ using core::EntityType;
     return g <= 4 ? EntityType::KoreanRrn : EntityType::KoreanAlienRegistrationNo;
 }
 
+}  // namespace
+
 // 사업자등록번호 10자리 검증 자리(공개 계산식, 가중치 1,3,7,1,3,7,1,3,5).
-[[nodiscard]] bool is_business_no(std::string_view d) noexcept {
+bool is_business_number(std::string_view d) noexcept {
     if (d.size() != 10) {
         return false;
     }
@@ -83,6 +89,8 @@ using core::EntityType;
     sum += (d[8] - '0') * 5 / 10;
     return (10 - sum % 10) % 10 == d[9] - '0';
 }
+
+namespace {
 
 // 카드번호: 13~19자리, Luhn(ISO/IEC 7812-1). 0 으로 시작하는 번호는 카드 발급자 번호가 아니다.
 [[nodiscard]] bool is_card(std::string_view d) noexcept {
@@ -125,20 +133,20 @@ using core::EntityType;
     return text.substr(from, first - from).find(data::license_keyword) != std::u32string_view::npos;
 }
 
-void check_window(const DigitRun& run, std::size_t a, std::size_t b, const std::string& d, std::u32string_view text,
+void check_window(const DigitRun& run, std::size_t a, std::size_t b, std::string_view d, std::u32string_view text,
                   std::vector<Hit>& out) {
     const auto first = run.groups[a].first_unit;
     const auto last = run.groups[b].last_unit;
     const auto hit = [&](EntityType type, DetectorKind kind) { out.push_back({first, last, type, kind}); };
 
     // 국가번호 82 로 시작하면 앞자리 0 을 붙여 국내 번호로 본다(+82 10-...).
-    if (is_phone(d) || (d.starts_with("82") && d.size() >= 10 && is_phone("0" + d.substr(2)))) {
+    if (is_phone_number(d) || (d.starts_with("82") && d.size() >= 10 && is_phone_number("0" + std::string(d.substr(2))))) {
         hit(EntityType::KoreanPhone, DetectorKind::Pattern);
     }
     if (const auto type = resident_type(d)) {
         hit(*type, DetectorKind::Pattern);
     }
-    if (is_business_no(d)) {
+    if (is_business_number(d)) {
         hit(EntityType::KoreanBusinessNo, DetectorKind::Checksum);
     }
     if (is_card(d)) {
@@ -194,19 +202,9 @@ void find_passports(std::u32string_view text, std::vector<Hit>& out) {
 
 }  // namespace
 
-void find_identifiers(const DetectionView& view, std::u32string_view text, std::vector<Hit>& out) {
-    for (const auto& run : digit_runs(view)) {
-        // 묶음의 연속 구간마다 본다. 숫자가 max_digit_run 을 넘는 구간은 번호가 아니다. 구간 수는 묶음 수 × 34 이하.
-        for (std::size_t a = 0; a < run.groups.size(); ++a) {
-            std::string d;
-            for (std::size_t b = a; b < run.groups.size(); ++b) {
-                d += run.groups[b].digits;
-                if (d.size() > max_digit_run) {
-                    break;
-                }
-                check_window(run, a, b, d, text, out);
-            }
-        }
+void find_identifiers(std::span<const DigitRun> runs, std::u32string_view text, std::vector<Hit>& out) {
+    for (const auto& run : runs) {
+        for_each_window(run, [&](std::size_t a, std::size_t b, std::string_view d) { check_window(run, a, b, d, text, out); });
     }
     find_passports(text, out);
 }

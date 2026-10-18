@@ -79,6 +79,12 @@ std::vector<TermHit> TermMatcher::find(const DetectionView& view) const {
         for (std::uint32_t out = nodes_[node].terms.empty() ? nodes_[node].output_link : node; out != 0;
              out = nodes_[out].output_link) {
             const auto first = positions[positions.size() - nodes_[out].length];
+            const auto& u = view.units;
+            const bool open = !is_ascii_alnum(u[first].value) || first == 0 || !is_ascii_alnum(u[first - 1].value);
+            const bool close = !is_ascii_alnum(raw) || i + 1 == u.size() || !is_ascii_alnum(u[i + 1].value);
+            if (!open || !close) {
+                continue;
+            }
             for (const auto term : nodes_[out].terms) {
                 hits.push_back({first, i, term});
             }

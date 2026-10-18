@@ -47,6 +47,7 @@ std::vector<DigitRun> digit_runs(const DetectionView& view) {
             if (k == j || k >= n || !is_ascii_digit(u[k].value)) {
                 break;
             }
+            run.groups.back().separator = u[j].value;
             j = k;
         }
         // 마지막 숫자 바로 뒤가 영문이면 식별자 일부다.
