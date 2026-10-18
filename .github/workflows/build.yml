@@ -19,7 +19,8 @@ concurrency:
 jobs:
   linux-gcc14:
     runs-on: ubuntu-24.04
-    timeout-minutes: 30
+    # protobuf 처럼 큰 의존성을 처음 빌드할 때를 위한 여유. 캐시가 차면 수 분 안에 끝난다.
+    timeout-minutes: 60
     steps:
       - name: Check out
         uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
@@ -43,6 +44,8 @@ jobs:
         with:
           path: ~/vcpkg-cache
           key: vcpkg-ubuntu-24.04-gcc14-${{ hashFiles('vcpkg.json') }}
+          # 의존성이 바뀌어도 이전 캐시의 패키지(gtest 등)는 다시 쓴다. vcpkg 는 패키지마다 따로 캐시한다.
+          restore-keys: vcpkg-ubuntu-24.04-gcc14-
 
       - name: Configure, build and test
         shell: bash
