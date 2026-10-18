@@ -24,7 +24,9 @@ endif()
 
 # Vault 프로세스 관리와 IPC 클라이언트(ADR 0001, 0003, 0019). core 에만 의존한다.
 add_library(prompt_airlock_vault_client
+  connection.cpp
   process.cpp
+  stream.cpp
   types.cpp)
 target_include_directories(prompt_airlock_vault_client PUBLIC "${PROJECT_SOURCE_DIR}/include")
 target_link_libraries(prompt_airlock_vault_client
