@@ -10,6 +10,7 @@ cmake/                  빌드 옵션, sanitizer, 런타임 DLL 복사
 include/prompt_airlock/ 공개 헤더
 src/core/               도메인 타입, 상태 전이, 판정 함수
 src/detect/             결정론 detector
+src/detect/data/        탐지 형식표와 단어 사전(항목마다 출처 주석)
 src/ner/                tokenizer, 추론
 src/vault_client/       Vault 프로세스 관리와 IPC client
 src/provider/           외부 provider adapter
