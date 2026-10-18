@@ -10,6 +10,10 @@ rust-version.workspace = true
 name = "prompt_airlock_vault"
 path = "src/lib.rs"
 
+[[bin]]
+name = "prompt-airlock-vault"
+path = "src/main.rs"
+
 # 라이선스·판 검토는 Phase 3 에서 했다(같은 판, Cargo.lock 고정).
 [dependencies]
 prost = "0.14"
