@@ -24,6 +24,12 @@
 #include "prompt_airlock/detect/detectors.hpp"
 #include "prompt_airlock/vault_client/service.hpp"
 
+#ifdef _WIN32
+#include <windows.h>
+#else
+#include <signal.h>
+#endif
+
 namespace pc = prompt_airlock::core;
 namespace pd = prompt_airlock::detect;
 namespace pv = prompt_airlock::vault_client;
@@ -32,6 +38,18 @@ using pc::EntityType;
 using pc::MessageRole;
 
 namespace {
+
+void kill_process(std::uint64_t pid) {
+#ifdef _WIN32
+    HANDLE h = OpenProcess(PROCESS_TERMINATE | SYNCHRONIZE, FALSE, static_cast<DWORD>(pid));
+    ASSERT_NE(h, nullptr);
+    TerminateProcess(h, 9);
+    WaitForSingleObject(h, 5000);
+    CloseHandle(h);
+#else
+    ASSERT_EQ(::kill(static_cast<pid_t>(pid), SIGKILL), 0);
+#endif
+}
 
 struct Turn {
     MessageRole role;
@@ -243,4 +261,37 @@ TEST(VaultPipelineE2E, RestoredValuesComeOnlyFromTheSameRequest) {
         ASSERT_FALSE(cross);
         EXPECT_EQ(cross.error().code(), pc::ReasonCode::ResponseTokenUnresolved);
     }
+}
+
+TEST(VaultPipelineE2E, VaultKilledBeforeIssueSendsNothingThenRecovers) {
+    Gateway gateway;
+    const std::string text = "연락처 " + phone;
+    auto failed = gateway.send({{MessageRole::User, text}}, [&] {
+        const auto pid = gateway.service().vault_pid();
+        ASSERT_TRUE(pid);
+        kill_process(*pid);
+    });
+    ASSERT_FALSE(failed.result);
+    EXPECT_EQ(failed.result.error().code(), pc::ReasonCode::ProtectionUnavailable);
+    EXPECT_EQ(failed.provider_calls, 0);
+
+    const auto next = gateway.send({{MessageRole::User, text}});
+    ASSERT_TRUE(next.result);
+    EXPECT_EQ(next.provider_calls, 1);
+    EXPECT_FALSE(contains(next.sent, phone));
+}
+
+TEST(VaultPipelineE2E, VaultKilledBeforeRestoreRejectsTheResponse) {
+    Gateway gateway;
+    auto request = gateway.send({{MessageRole::User, "연락처 " + phone}});
+    ASSERT_TRUE(request.result);
+    const auto pid = gateway.service().vault_pid();
+    ASSERT_TRUE(pid);
+    kill_process(*pid);
+    const auto restored = gateway.restore(request, "확인: " + request.sent[0]);
+    ASSERT_FALSE(restored);
+    EXPECT_EQ(restored.error().code(), pc::ReasonCode::ProtectionUnavailable);  // 복원기 장애(TokenNotFound 와 구분)
+    // token 이 없는 응답은 Vault 없이도 그대로 돌려준다.
+    const auto plain = gateway.restore(request, "연락처를 확인했습니다.");
+    ASSERT_TRUE(plain);
 }
