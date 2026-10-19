@@ -1,6 +1,6 @@
 # Prompt Airlock
 
-외부 LLM에 보내는 프롬프트에서 개인정보를 가명 token으로 바꾸고, 응답을 원래 값으로 되돌리는 보안 중계 Gateway입니다. 현재 아키텍처를 동결하고 본 구현을 시작하는 단계입니다. 설계 결정은 [docs/adr](docs/adr/README.md)에 있습니다.
+외부 LLM에 보내는 프롬프트에서 개인정보를 가명 token으로 바꾸고, 응답을 원래 값으로 되돌리는 보안 중계 Gateway입니다. 현재 core, 결정론 탐지기, Vault 와 그 클라이언트까지 구현했고 HTTP 처리는 아직 없습니다. 코드 구조는 [docs/structure.md](docs/structure.md), 외부 의존성과 라이선스는 [docs/dependencies.md](docs/dependencies.md), 설계 결정은 [docs/adr](docs/adr/README.md)에 있습니다.
 
 ## 구성
 
@@ -31,7 +31,7 @@ Linux
 tools/wsl-dev.sh cmake --workflow --preset linux-gcc14
 ```
 
-preset: `linux-gcc14`, `linux-clang-asan-ubsan`, `linux-clang-tsan`
+preset: `linux-gcc14`, `linux-clang-asan-ubsan`, `linux-clang-tsan`, `linux-clang-fuzz`(fuzz 대상마다 60초)
 
 workflow preset은 configure, build, test를 차례로 실행하며 Rust Vault의 `cargo test --locked`도 함께 실행합니다. Windows에서는 `tools\win-dev.cmd`를 거쳐야 Visual Studio 환경과 vcpkg 경로가 맞게 잡힙니다.
 
