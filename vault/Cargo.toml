@@ -1,4 +1,4 @@
-# Rust Secure Mapping Vault workspace.
+# Rust Secure Mapping Vault 작업 공간.
 [workspace]
 resolver = "3"
 members = ["crates/prompt-airlock-vault"]
