@@ -186,3 +186,61 @@ TEST(VaultPipelineE2E, BlockedTypesNeverReachVaultOrProvider) {
     }
     EXPECT_FALSE(gateway.service().vault_pid());  // 정책에서 거절되어 Vault 를 띄우지도 않았다
 }
+
+TEST(VaultPipelineE2E, MultiTurnNeverLeaksEarlierOriginals) {
+    Gateway gateway;
+    const std::string first = "담당자 연락처는 " + phone + ", 메일은 " + email + " 입니다.";
+    auto turn1 = gateway.send({{MessageRole::User, first}});
+    ASSERT_TRUE(turn1.result);
+    const auto answer1 = gateway.restore(turn1, "정리하면 " + turn1.sent[0]);
+    ASSERT_TRUE(answer1);
+    ASSERT_NE(answer1->view().find(phone), std::string_view::npos);  // 사용자는 원문 답을 받는다
+
+    // 2턴: 클라이언트가 1턴 질문과 복원된 답을 다시 보낸다. 모든 역할을 다시 탐지하므로 원문이 나가지 않는다.
+    auto turn2 = gateway.send({{MessageRole::User, first},
+                               {MessageRole::Model, std::string(answer1->view())},
+                               {MessageRole::User, "위 연락처로 보낼 안내문을 써 주세요."}});
+    ASSERT_TRUE(turn2.result) << pc::reason_code_name(turn2.result.error().code());
+    ASSERT_EQ(turn2.sent.size(), 3U);
+    for (const std::string_view original : {std::string_view(phone), std::string_view(email)}) {
+        EXPECT_FALSE(contains(turn2.sent, original)) << original;
+    }
+    // 1턴 token 은 1턴 범위에만 있다. 2턴 범위에서는 풀리지 않는다.
+    const auto cross = turn2.scope->resolve(pc::scan_tokens(turn1.sent[0])[0].token);
+    ASSERT_FALSE(cross);
+    EXPECT_EQ(cross.error(), pc::RestoreError::TokenNotFound);
+}
+
+TEST(VaultPipelineE2E, RestoredValuesComeOnlyFromTheSameRequest) {
+    // 고정 seed 로 값을 섞은 요청을 만들고, 그 범위에서 풀리는 값이 모두 그 요청의 입력 값인지 본다.
+    Gateway gateway;
+    pa_test::SplitMix64 rng(20261019);
+    const std::vector<std::string> pool = {phone,         "010-9876-5432", email, "user2@example.invalid",
+                                           ip,            "198.51.100.7",  "02-3456-7890"};
+    auto other = gateway.service().open_scope();
+    ASSERT_TRUE(other);
+    const auto foreign = other->issue(EntityType::Email, "user9@example.invalid");
+    ASSERT_TRUE(foreign);
+
+    for (int round = 0; round < 30; ++round) {
+        std::string text = "참고:";
+        std::set<std::string> used;
+        const auto count = 1 + rng.below(4);
+        for (std::uint64_t i = 0; i < count; ++i) {
+            const auto& value = pool[rng.below(pool.size())];
+            used.insert(value);
+            text += " " + value + " ,";
+        }
+        auto request = gateway.send({{MessageRole::User, text}});
+        ASSERT_TRUE(request.result) << text;
+        for (const auto& found : pc::scan_tokens(request.sent[0])) {
+            const auto value = request.scope->resolve(found.token);
+            ASSERT_TRUE(value);
+            EXPECT_TRUE(used.contains(std::string(value->view()))) << "round " << round;
+        }
+        // 다른 범위의 token 은 이 범위에서 풀리지 않고, 응답에 섞이면 응답 전체를 거절한다.
+        const auto cross = gateway.restore(request, "답: " + std::string(foreign->text()));
+        ASSERT_FALSE(cross);
+        EXPECT_EQ(cross.error().code(), pc::ReasonCode::ResponseTokenUnresolved);
+    }
+}
