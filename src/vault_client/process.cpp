@@ -178,6 +178,7 @@ struct VaultProcess::Impl {
 };
 
 Result<VaultProcess> VaultProcess::spawn(const SpawnOptions& opts) {
+    // 같은 프로세스 안에서 파이프 이름이 겹치지 않게 하는 원자 카운터(바뀌는 전역 상태의 예외, 결정 #88).
     static std::atomic<unsigned> counter{0};
     // stdout: 부모 쪽만 overlapped 인 이름 있는 파이프. 익명 파이프는 timeout 대기를 지원하지 않는다.
     const std::wstring name = L"\\\\.\\pipe\\pa-vault-spawn-" + std::to_wstring(GetCurrentProcessId()) + L"-" +
