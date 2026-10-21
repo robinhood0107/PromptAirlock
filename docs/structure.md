@@ -38,6 +38,8 @@ LLM의 답이 오면 token을 원래 값으로 되돌려 직원에게 준다.
 | `include/prompt_airlock/detect/`, `src/detect/` | 규칙 기반(결정론) 탐지기. core에만 의존한다 |
 | `src/detect/data/` | 탐지 형식표와 단어 사전. 항목마다 출처 주석이 있다 |
 | `include/prompt_airlock/vault_client/`, `src/vault_client/` | Vault 프로세스 실행, IPC 연결, 연결 풀. core에만 의존한다 |
+| `include/prompt_airlock/tls/`, `src/tls/` | TLS 설정. 협상 범위가 고정이고, OpenSSL 설정을 직접 부르는 곳은 여기뿐이다 |
+| `include/prompt_airlock/gateway/`, `src/gateway/` | HTTP 입구: 설정 파일, 출처 인증, 오류 응답, HTTPS 서버 |
 | `vault/` | Rust로 만든 Vault 프로세스(Cargo workspace) |
 | `proto/` | Gateway와 Vault가 함께 쓰는 IPC 메시지 정의 |
 | `cmake/` | 빌드 옵션, 검사 스크립트, Vault 빌드 연결 |
@@ -134,6 +136,25 @@ Vault는 처음 범위를 열 때 자식 프로세스로 띄운다. 연결이 �
 | `vault_client/connection.hpp`, `connection.cpp` | 연결 하나. 인증 후 요청과 응답을 차례로 주고받는다. 한 번 실패하면 broken이 된다 | `VaultConnection::connect`, `VaultConnection::handshake`, `create_scope`, `create_token`, `resolve_exact`, `drop_scope`, `broken`, `ConnectionOptions` |
 | `vault_client/service.hpp`, `service.cpp` | 프로세스 감독, 연결 풀, 재시작 간격, 요청 단위 범위. core 발급기·복원기 계약을 만족한다 | `VaultService::open_scope`, `vault_pid`, `VaultScope::issue`, `VaultScope::resolve`, `last_error`, `ServiceOptions`, `to_protection_error`, `to_restore_error` |
 | `src/vault_client/CMakeLists.txt` | 생성 코드 라이브러리와 클라이언트 라이브러리 정의 | - |
+
+## tls
+
+라이브러리 `prompt_airlock_tls`. 서버(기관 앱 방향)와 클라이언트(provider 방향) TLS 설정을 하나씩 만든다. 협상 범위는 ADR 0014 로 고정이고 설정으로 바꿀 수 없다.
+
+| 파일 | 하는 일 | 주요 타입·함수 |
+|---|---|---|
+| `tls/context.hpp`, `context.cpp` | TLS 1.2·1.3, AES-GCM, ECDHE(P-256·P-384), ECDSA·RSA-PSS 서명만 허용. 약한 인증서 키(RSA 2048 미만, 다른 곡선)는 기동 때 거절. 클라이언트는 상대 인증서를 항상 검증 | `make_server_context`, `make_client_context`, `TlsError` |
+
+## gateway
+
+라이브러리 `prompt_airlock_gateway`. HTTP 입구다(ADR 0020). 앞 단계에서 거절하면 본문을 읽지 않고 처리 단계(handler)도 부르지 않는다.
+
+| 파일 | 하는 일 | 주요 타입·함수 |
+|---|---|---|
+| `gateway/config.hpp`, `config.cpp` | 설정 파일(JSON) 하나를 검증해 바꾸지 않는 값으로. 모르는 키·중복 키·잘못된 값이면 필드 경로와 함께 기동 거부 | `parse_config`, `Config`, `Origin`, `ConfigError` |
+| `gateway/auth.hpp`, `auth.cpp` | Bearer token 의 SHA-256 을 등록 출처와 상수 시간 비교. 같은 주소에서 5번 이어 실패하면 60초 잠금 | `Authenticator`, `AuthFailure` |
+| `gateway/error_body.hpp`, `error_body.cpp` | Chat Completions 호환 error 객체. 사유 코드 이름과 차단 종류만 담는다 | `error_response`, `EntryError`, `JsonResponse` |
+| `gateway/server.hpp`, `server.cpp` | Beast HTTPS 서버(coroutine). TLS → 인증 → 경로·메서드·형식 → 등급 헤더 → 본문 상한 → handler 순서 | `Server`, `ServerLimits`, `AcceptedRequest`, `RequestHandler` |
 
 ## Rust Vault
 
@@ -236,10 +257,8 @@ fuzz 대상
 
 | 항목 | 상태 |
 |---|---|
-| HTTP 서버와 요청 처리(`src/gateway/`, `apps/prompt-airlock/`) | Phase 8. 기관 보호어 설정과 JSON 경계도 이때 붙는다 |
+| 요청 JSON 읽기와 처리 단계 연결, 실행 파일(`apps/prompt-airlock/`) | Phase 8a 다음 단위 |
 | 감사 기록(`src/audit/`) | Phase 8. 지금은 `Rejection::for_audit`와 `SensitiveTally`가 기록할 값만 만든다 |
-| 한국어 NER(`src/ner/`, 이름·조직 탐지) | Phase 7. `EntityType::Person`, `Organization`과 `trim_trailing_particles`가 미리 있다 |
 | 추론 worker와 동시성 제한 | Phase 9 |
 | 실제 provider 호출(`src/provider/`)과 요청 직렬화 | 직렬화는 Phase 10. 지금은 `ProviderRequest`까지만 만든다 |
-| TLS 설정(`src/tls/`) | 이후 단계 |
 | 연구 평가 | Phase 11. 지금은 `ResearchOnly` 열쇠와 연구용 전략만 있다 |

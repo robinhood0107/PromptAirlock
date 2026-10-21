@@ -5,6 +5,7 @@
 - C++ 의존성은 vcpkg manifest(`vcpkg.json`)와 baseline `19780d9cdf84d0944cf9a318666703b89ab6629c` 로 판을 고정합니다(ADR 0005).
 - Rust 의존성은 `vault/Cargo.lock` 으로 판과 해시를 고정하고 `--locked` 로만 빌드합니다.
 - 배포 묶음을 만들 때(ADR 0012) 각 라이브러리의 저작권·라이선스 고지를 함께 넣습니다. Apache-2.0 라이브러리는 NOTICE 내용도 넣습니다.
+- OpenSSL 3 은 Apache-2.0 이라 AGPL-3.0 과 함께 배포할 수 있습니다(OpenSSL 1.x 의 이전 라이선스 문제는 3.0 부터 없습니다).
 
 ## C++ (vcpkg)
 
@@ -15,7 +16,9 @@
 | abseil(protobuf 가 씀) | 20260107.1 | Apache-2.0 | protobuf 내부 | Windows DLL, Linux 정적 |
 | utf8-range(protobuf 가 씀) | 6.33.4 | MIT | protobuf 내부 | 정적 |
 | boost-asio(와 Boost 하위 라이브러리) | 1.92.0 | BSL-1.0 | `src/vault_client`(Named Pipe·UDS 입출력) | 대부분 헤더, 일부 하위 라이브러리 링크 |
-| nlohmann-json | 3.12.0 | MIT | `src/ner`(tokenizer.json 읽기) | 헤더만 |
+| boost-beast | 1.92.0 | BSL-1.0 | `src/gateway`(HTTPS 서버) | 헤더만 |
+| OpenSSL | 3.6.5 | Apache-2.0 | `src/tls`(TLS 협상 범위, ADR 0014), `src/gateway`(HTTPS 입출력) | Windows DLL, Linux 정적 |
+| nlohmann-json | 3.12.0 | MIT | `src/ner`(tokenizer.json 읽기), `src/gateway`(설정·오류 응답, ADR 0020) | 헤더만 |
 | gtest | 1.18.0 | BSD-3-Clause | 시험만 | 배포하지 않음 |
 
 ## 공식 배포본과 모델(CMake 가 고정 해시로 받음)

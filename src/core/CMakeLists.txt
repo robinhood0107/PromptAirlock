@@ -15,6 +15,7 @@ add_library(prompt_airlock_core
   residual.cpp
   restore.cpp
   sensitive.cpp
+  sha256.cpp
   token.cpp
   utf8.cpp
   version.cpp)

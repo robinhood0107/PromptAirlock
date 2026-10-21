@@ -21,6 +21,7 @@ foreach(name IN ITEMS
     core_request_params_test
     core_restore_test
     core_sensitive_test
+    core_sha256_test
     core_token_test
     core_types_test
     core_utf8_test)
@@ -69,7 +70,6 @@ foreach(name IN ITEMS
     ner_model_files_test
     ner_pool_test
     ner_session_test
-    ner_sha256_test
     ner_tokenizer_test
     ner_windows_test)
   pa_add_gtest(${name} ${name}.cpp)
@@ -78,3 +78,19 @@ foreach(name IN ITEMS
     PA_NER_MODEL_DIR="${PA_NER_MODEL_DIR}"
     PA_NER_FIXTURE_DIR="${PROJECT_SOURCE_DIR}/tests/fixtures/ner")
 endforeach()
+
+# TLS 설정(ADR 0014). 시험 인증서는 실행 때마다 새로 만든다.
+pa_add_gtest(tls_context_test tls_context_test.cpp)
+target_link_libraries(tls_context_test PRIVATE prompt_airlock_tls pa_test_cert)
+
+# HTTP 입구: 설정, 출처 인증, 오류 응답.
+foreach(name IN ITEMS
+    gateway_auth_test
+    gateway_config_test
+    gateway_error_body_test)
+  pa_add_gtest(${name} ${name}.cpp)
+  target_link_libraries(${name} PRIVATE prompt_airlock_gateway nlohmann_json::nlohmann_json)
+endforeach()
+pa_add_gtest(gateway_server_test gateway_server_test.cpp)
+target_link_libraries(gateway_server_test PRIVATE prompt_airlock_gateway prompt_airlock_tls pa_test_cert
+                      nlohmann_json::nlohmann_json)

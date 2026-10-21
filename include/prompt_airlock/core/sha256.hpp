@@ -1,4 +1,4 @@
-// SHA-256(FIPS 180-4). 모델·tokenizer 파일이 고정된 바이트인지 확인하는 데만 쓴다.
+// SHA-256(FIPS 180-4). 고정 파일 확인(NER 모델), 출처 token 대조, 감사 연결 해시에 쓴다. 입출력 없는 순수 계산이다.
 #pragma once
 
 #include <array>
@@ -7,7 +7,7 @@
 #include <span>
 #include <string>
 
-namespace prompt_airlock::ner {
+namespace prompt_airlock::core {
 
 class Sha256 {
 public:
@@ -27,4 +27,4 @@ private:
 
 [[nodiscard]] std::string sha256_hex(std::span<const std::byte> data);
 
-}  // namespace prompt_airlock::ner
+}  // namespace prompt_airlock::core
