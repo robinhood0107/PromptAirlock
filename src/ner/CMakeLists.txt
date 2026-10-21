@@ -5,9 +5,11 @@ find_package(utf8proc CONFIG REQUIRED)
 add_library(prompt_airlock_ner
   engine.cpp
   model_files.cpp
+  pool.cpp
   session.cpp
   sha256.cpp
-  tokenizer.cpp)
+  tokenizer.cpp
+  windows.cpp)
 target_include_directories(prompt_airlock_ner PUBLIC "${PROJECT_SOURCE_DIR}/include")
 target_link_libraries(prompt_airlock_ner
   PUBLIC prompt_airlock_core prompt_airlock_detect
@@ -16,6 +18,8 @@ if(MSVC)
   target_compile_options(prompt_airlock_ner PRIVATE /WX)
 else()
   target_compile_options(prompt_airlock_ner PRIVATE -Werror)
+  find_package(Threads REQUIRED)
+  target_link_libraries(prompt_airlock_ner PUBLIC Threads::Threads)
 endif()
 if(CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
   target_compile_options(prompt_airlock_ner PRIVATE -Wglobal-constructors -Wexit-time-destructors)

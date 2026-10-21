@@ -9,9 +9,24 @@
 
 namespace prompt_airlock::ner {
 
+struct OrtEnv::Impl {
+    Ort::Env env{ORT_LOGGING_LEVEL_ERROR, "prompt-airlock-ner"};
+};
+
+OrtEnv::OrtEnv(Key, std::unique_ptr<Impl> impl) noexcept : impl_(std::move(impl)) {}
+OrtEnv::~OrtEnv() = default;
+
+std::expected<std::shared_ptr<const OrtEnv>, SessionError> OrtEnv::create() {
+    try {
+        return std::make_shared<const OrtEnv>(Key{}, std::make_unique<Impl>());
+    } catch (const std::exception&) {
+        return std::unexpected(SessionError::Load);
+    }
+}
+
 struct OrtSession::Impl {
     // 선언 순서가 곧 해제 역순이다. Env 는 세션보다 오래 살아야 한다.
-    Ort::Env env{ORT_LOGGING_LEVEL_ERROR, "prompt-airlock-ner"};
+    std::shared_ptr<const OrtEnv> env;
     std::unique_ptr<Ort::Session> session;
     std::vector<std::string> input_names;
     std::string output_name;
@@ -27,15 +42,20 @@ OrtSession::OrtSession(OrtSession&&) noexcept = default;
 OrtSession& OrtSession::operator=(OrtSession&&) noexcept = default;
 OrtSession::~OrtSession() = default;
 
-std::expected<OrtSession, SessionError> OrtSession::create(std::span<const std::byte> onnx) {
+std::expected<OrtSession, SessionError> OrtSession::create(std::shared_ptr<const OrtEnv> env,
+                                                           std::span<const std::byte> onnx) {
+    if (!env) {
+        return std::unexpected(SessionError::Load);
+    }
     try {
         auto impl = std::make_unique<Impl>();
+        impl->env = std::move(env);
         Ort::SessionOptions options;
         options.SetIntraOpNumThreads(1);
         options.SetInterOpNumThreads(1);
         options.SetExecutionMode(ExecutionMode::ORT_SEQUENTIAL);
         options.SetGraphOptimizationLevel(GraphOptimizationLevel::ORT_ENABLE_ALL);
-        impl->session = std::make_unique<Ort::Session>(impl->env, onnx.data(), onnx.size(), options);
+        impl->session = std::make_unique<Ort::Session>(impl->env->impl_->env, onnx.data(), onnx.size(), options);
 
         Ort::AllocatorWithDefaultOptions allocator;
         bool has_input_ids = false;

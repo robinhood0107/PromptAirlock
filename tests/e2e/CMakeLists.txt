@@ -7,4 +7,8 @@ foreach(name IN ITEMS vault_client_test vault_pipeline_test)
   target_compile_definitions(${name} PRIVATE "PA_VAULT_EXE=\"${PA_VAULT_EXE}\"")
   add_dependencies(${name} prompt_airlock_vault)
 endforeach()
-target_link_libraries(vault_pipeline_test PRIVATE prompt_airlock_detect pa_test_support)
+find_package(nlohmann_json CONFIG REQUIRED)
+target_link_libraries(vault_pipeline_test PRIVATE prompt_airlock_detect prompt_airlock_ner pa_test_support
+                      nlohmann_json::nlohmann_json)
+target_compile_definitions(vault_pipeline_test PRIVATE PA_NER_MODEL_DIR="${PA_NER_MODEL_DIR}"
+                           PA_NER_FIXTURE_DIR="${PROJECT_SOURCE_DIR}/tests/fixtures/ner")

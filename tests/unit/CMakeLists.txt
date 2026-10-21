@@ -44,6 +44,7 @@ foreach(name IN ITEMS
     detect_evasion_test
     detect_formats_test
     detect_kr_accounts_test
+    detect_ner_test
     detect_pipeline_test
     detect_scan_test
     detect_sensitive_test
@@ -63,9 +64,11 @@ find_package(nlohmann_json CONFIG REQUIRED)
 foreach(name IN ITEMS
     ner_engine_test
     ner_model_files_test
+    ner_pool_test
     ner_session_test
     ner_sha256_test
-    ner_tokenizer_test)
+    ner_tokenizer_test
+    ner_windows_test)
   pa_add_gtest(${name} ${name}.cpp)
   target_link_libraries(${name} PRIVATE prompt_airlock_ner nlohmann_json::nlohmann_json)
   target_compile_definitions(${name} PRIVATE

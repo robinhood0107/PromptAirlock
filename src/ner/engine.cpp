@@ -1,11 +1,14 @@
 #include "prompt_airlock/ner/engine.hpp"
 
+#include <algorithm>
+#include <cassert>
 #include <charconv>
 #include <nlohmann/json.hpp>
 #include <span>
 #include <string>
 
 #include "prompt_airlock/core/particle.hpp"
+#include "prompt_airlock/ner/windows.hpp"
 
 namespace prompt_airlock::ner {
 namespace {
@@ -66,19 +69,21 @@ NerEngine::NerEngine(WordPieceTokenizer tokenizer, OrtSession session, std::vect
 
 std::expected<NerEngine, pc::DetectError> NerEngine::make(const std::filesystem::path& dir) {
     const auto files = read_verified_model_files(dir);
-    if (!files) {
+    auto env = OrtEnv::create();
+    if (!files || !env) {
         return std::unexpected(pc::DetectError::Unavailable);
     }
-    return make(*files);
+    return make(*files, std::move(*env));
 }
 
-std::expected<NerEngine, pc::DetectError> NerEngine::make(const VerifiedModelFiles& files) {
+std::expected<NerEngine, pc::DetectError> NerEngine::make(const VerifiedModelFiles& files,
+                                                          std::shared_ptr<const OrtEnv> env) {
     auto tokenizer = WordPieceTokenizer::parse(files.tokenizer);
     auto labels = parse_labels(files.config);
     if (!tokenizer || !labels) {
         return std::unexpected(pc::DetectError::Unavailable);
     }
-    auto session = OrtSession::create(files.model);
+    auto session = OrtSession::create(std::move(env), files.model);
     if (!session) {
         return std::unexpected(pc::DetectError::Unavailable);
     }
@@ -91,17 +96,64 @@ std::expected<std::vector<pc::EntitySpan>, NerError> NerEngine::detect(std::stri
     if (range.first > range.end || range.end > view.units.size()) {
         return std::unexpected(NerError::InvalidSpan);
     }
-    const auto units = std::span(view.units).subspan(range.first, range.end - range.first);
-
-    const auto tokens = tokenizer_.encode(units);
+    const auto tokens = tokenizer_.encode(std::span(view.units).subspan(range.first, range.end - range.first));
     if (tokens.size() > max_ner_tokens) {
         return std::unexpected(NerError::InputTooLong);  // 자르지 않는다
     }
+    std::vector<pc::EntitySpan> out;
+    const auto body = std::span(tokens).subspan(1, tokens.size() - 2);
+    if (auto r = infer(text, segment, view, range.first, body, tokens.front().id, tokens.back().id, out); !r) {
+        return std::unexpected(r.error());
+    }
+    return out;
+}
+
+std::expected<std::vector<pc::EntitySpan>, NerError> NerEngine::detect_all(std::string_view text,
+                                                                           pc::SegmentIndex segment,
+                                                                           const detect::DetectionView& view) {
+    const auto tokens = tokenizer_.encode(view.units);
+    const auto body = std::span(tokens).subspan(1, tokens.size() - 2);
+    // 문장 끝: 토큰의 마지막 글자가 문장 부호이거나, 다음 토큰과의 사이에 줄바꿈이 있다.
+    const auto is_stop = [](char32_t c) { return c == U'.' || c == U'?' || c == U'!' || c == U'\u3002'; };
+    const auto is_newline = [](char32_t c) { return c == U'\n' || c == U'\r'; };
+    std::vector<std::uint32_t> cuts;
+    for (std::uint32_t i = 0; i + 1 < body.size(); ++i) {
+        const auto gap = std::span(view.units).subspan(body[i].last_unit + 1, body[i + 1].first_unit - body[i].last_unit - 1);
+        if (is_stop(view.units[body[i].last_unit].value) ||
+            std::ranges::any_of(gap, [&](const auto& u) { return is_newline(u.value); })) {
+            cuts.push_back(i);
+        }
+    }
+    const auto windows = split_windows(static_cast<std::uint32_t>(body.size()), cuts);
+    if (!windows) {
+        return std::unexpected(NerError::TooManyWindows);
+    }
+    std::vector<pc::EntitySpan> out;
+    for (const auto& w : *windows) {
+        if (auto r = infer(text, segment, view, 0, body.subspan(w.first, w.end - w.first), tokens.front().id,
+                           tokens.back().id, out);
+            !r) {
+            return std::unexpected(r.error());
+        }
+    }
+    std::ranges::sort(out);
+    const auto [first, last] = std::ranges::unique(out);
+    out.erase(first, last);
+    return out;
+}
+
+std::expected<void, NerError> NerEngine::infer(std::string_view text, pc::SegmentIndex segment,
+                                               const detect::DetectionView& view, std::uint32_t base,
+                                               std::span<const Token> body, std::int64_t cls, std::int64_t sep,
+                                               std::vector<pc::EntitySpan>& out) {
     std::vector<std::int64_t> ids;
-    ids.reserve(tokens.size());
-    for (const auto& token : tokens) {
+    ids.reserve(body.size() + 2);
+    ids.push_back(cls);
+    for (const auto& token : body) {
         ids.push_back(token.id);
     }
+    ids.push_back(sep);
+    assert(ids.size() <= max_ner_tokens);
     const auto logits = session_.run(ids);
     if (!logits || logits->labels != labels_.size()) {
         return std::unexpected(NerError::Unavailable);
@@ -110,19 +162,16 @@ std::expected<std::vector<pc::EntitySpan>, NerError> NerEngine::detect(std::stri
     // BIO 결합: B 는 새로 시작, I 는 같은 종류가 열려 있을 때만 잇고 아니면 새로 시작한다.
     // 같은 종류가 끊김 없이 맞닿으면(사이에 글자가 없으면) 하나로 합친다.
     std::vector<Run> runs;
-    for (std::size_t i = 0; i < tokens.size(); ++i) {
-        if (tokens[i].special) {
-            continue;
-        }
-        const auto& label = labels_[logits->argmax(i)];
+    for (std::size_t i = 0; i < body.size(); ++i) {
+        const auto& label = labels_[logits->argmax(i + 1)];  // 0 번은 앞 special
         if (!label.type) {
             if (!runs.empty()) {
                 runs.back().open = false;
             }
             continue;
         }
-        const auto first = tokens[i].first_unit;
-        const auto last = tokens[i].last_unit;
+        const auto first = body[i].first_unit;
+        const auto last = body[i].last_unit;
         const bool joins = !runs.empty() && runs.back().type == *label.type &&
                            ((runs.back().open && !label.begin) || runs.back().last + 1 == first);
         if (joins) {
@@ -133,11 +182,9 @@ std::expected<std::vector<pc::EntitySpan>, NerError> NerEngine::detect(std::stri
         }
     }
 
-    std::vector<pc::EntitySpan> out;
-    out.reserve(runs.size());
     for (const auto& run : runs) {
         // 조사는 원문 구간이 정해진 뒤 보기의 글자를 보고 뗀다.
-        const auto whole = detect::source_span(view, range.first + run.first, range.first + run.last);
+        const auto whole = detect::source_span(view, base + run.first, base + run.last);
         const auto bytes = pc::trim_trailing_particles(view.units, whole);
         const auto entity = pc::EntitySpan::make(text, segment, bytes, run.type, pc::DetectorKind::Ner);
         if (!entity) {
@@ -145,7 +192,7 @@ std::expected<std::vector<pc::EntitySpan>, NerError> NerEngine::detect(std::stri
         }
         out.push_back(*entity);
     }
-    return out;
+    return {};
 }
 
 }  // namespace prompt_airlock::ner
