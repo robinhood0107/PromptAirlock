@@ -27,7 +27,10 @@ TEST(CoreParticle, StripsWhenBatchimAgrees) {
     EXPECT_EQ(trim("하늬솔님"), "하늬솔");
     EXPECT_EQ(trim("누리별테크가"), "누리별테크");
     EXPECT_EQ(trim("가온해운과"), "가온해운");
-    EXPECT_EQ(trim("누리별테크에"), "누리별테크");  // NER 구간을 어절까지 넓힌 뒤 붙어 오는 장소 조사
+    EXPECT_EQ(trim("누리별테크에"), "누리별테크");
+    EXPECT_EQ(trim("Minsu Kim는"), "Minsu Kim");  // 영문 뒤는 받침을 가릴 수 없어 짝 조사 둘 다 뗀다
+    EXPECT_EQ(trim("Yejun Kwon를"), "Yejun Kwon");
+    EXPECT_EQ(trim("Lee가"), "Lee");  // NER 구간을 어절까지 넓힌 뒤 붙어 오는 장소 조사
 }
 
 TEST(CoreParticle, KeepsNameWhenAgreementFails) {

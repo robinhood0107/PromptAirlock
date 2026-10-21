@@ -38,7 +38,15 @@ constexpr std::array<Particle, 27> particles = {{
     {U"님", Cond::Any, 2}, {U"씨", Cond::Any, 2},
 }};
 
+[[nodiscard]] constexpr bool is_ascii_alnum(char32_t c) noexcept {
+    return (c >= U'0' && c <= U'9') || (c >= U'A' && c <= U'Z') || (c >= U'a' && c <= U'z');
+}
+
 [[nodiscard]] constexpr bool cond_ok(Cond cond, char32_t prev) noexcept {
+    // 영문·숫자 뒤(Minsu Kim는, Lee가)는 읽는 소리에 따라 짝 조사 둘 다 쓰여 받침으로 가를 수 없다. 둘 다 받는다.
+    if (is_ascii_alnum(prev)) {
+        return true;
+    }
     switch (cond) {
         case Cond::Any: return true;
         case Cond::NeedBatchim: return has_batchim(prev);
