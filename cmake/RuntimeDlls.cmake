@@ -1,8 +1,14 @@
 # 실행 파일이 쓰는 런타임 DLL 을 실행 파일 옆에 둔다. 전역 PATH 에 기대지 않는다(docs/adr/0009).
+# 같은 폴더로 같은 DLL 을 여러 링크가 동시에 복사하면 Windows 에서 파일이 잠겨 "permission denied" 로 실패한다.
+# DLL 이 아직 없는 깨끗한 빌드에서만 드러난다. DLL 을 복사하는 대상의 링크(빌드 직후 복사 포함)를 한 줄로 세운다.
+# Ninja 전용 속성이며 다른 생성기는 무시한다.
+set_property(GLOBAL APPEND PROPERTY JOB_POOLS pa_runtime_dll_copy=1)
+
 function(pa_copy_runtime_dlls target)
   if(NOT WIN32)
     return()
   endif()
+  set_property(TARGET ${target} PROPERTY JOB_POOL_LINK pa_runtime_dll_copy)
   add_custom_command(TARGET ${target} POST_BUILD
     COMMAND ${CMAKE_COMMAND} -E $<IF:$<BOOL:$<TARGET_RUNTIME_DLLS:${target}>>,copy_if_different,true>
             $<TARGET_RUNTIME_DLLS:${target}> $<TARGET_FILE_DIR:${target}>
