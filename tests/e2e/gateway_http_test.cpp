@@ -103,8 +103,7 @@ protected:
     void TearDown() override {
         server_->stop();
         mock_->stop();
-        io_.stop();
-        thread_.join();
+        thread_.join();  // 남은 연결이 끝나 io.run 이 스스로 돌아온다
     }
 
     Reply post(std::string_view text, std::string_view grade = {}) {

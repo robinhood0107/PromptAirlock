@@ -38,8 +38,7 @@ protected:
     }
     void TearDown() override {
         mock_->stop();
-        io_.stop();
-        thread_.join();
+        thread_.join();  // 남은 연결이 끝나 io.run 이 스스로 돌아온다(강제로 멈추면 Windows 에서 다음 listen 이 드물게 실패)
     }
 
     std::expected<gw::ProviderReply, gw::ProviderError> send(std::string host, std::string credential,
