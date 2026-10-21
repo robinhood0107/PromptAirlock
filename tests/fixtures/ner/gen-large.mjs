@@ -2,13 +2,17 @@
 // 모든 이름·기관은 음절을 조합한 가상의 것이다. 실제 인물·연락처·식별번호를 쓰지 않는다.
 // 사람 300, 기관 300, 이름 없는 문장 300. 고정 seed 라 같은 Node 에서 언제 돌려도 같은 결과가 나온다.
 // 실행: node tests/fixtures/ner/gen-large.mjs > tests/fixtures/ner/ner-large.jsonl          (개발용)
-//       node tests/fixtures/ner/gen-large.mjs heldout > tests/fixtures/ner/ner-heldout.jsonl (판정용)
+//       node tests/fixtures/ner/gen-large.mjs heldout > tests/fixtures/ner/ner-heldout.jsonl (1차 판정용)
+//       node tests/fixtures/ner/gen-large.mjs heldout2 > tests/fixtures/ner/ner-heldout2.jsonl (2차 판정용)
+// 1차·2차 판정용 셋은 결과를 본 뒤 후처리·기관 규칙을 더 고쳤으므로 참고값만 남긴다. 판정은 규칙을 고정한 뒤 새로 만든
+// 셋으로만 한다(결정 #107).
 // 정답 이름에는 호칭·직함·조사·서술격 조사·법인 표기·부서명을 넣지 않는다(Phase 2 기준, 결정 #107).
 // 판정용 셋은 경계 후처리 규칙을 고정한 뒤 만들었다. seed, 문장 틀, 이름·기관 목록, 직함이 개발용과 다르다.
 // 개발용 셋으로 후처리를 다듬고 판정용 셋으로만 합격을 판정한다(측정 부풀림 방지).
 
 const HELDOUT = process.argv[2] === 'heldout';
-const SEED = HELDOUT ? 20261107 : 20261021;
+const HELDOUT2 = process.argv[2] === 'heldout2';
+const SEED = HELDOUT2 ? 20261121 : HELDOUT ? 20261107 : 20261021;
 
 // mulberry32: 작고 결정적인 PRNG.
 let state = SEED >>> 0;
@@ -36,12 +40,19 @@ const josa = (word, [withFinal, without]) => (hasBatchim(word) ? withFinal : wit
 const I_GA = ['이', '가'], EUN_NEUN = ['은', '는'], EUL_REUL = ['을', '를'], GWA_WA = ['과', '와'], IRANG = ['이랑', '랑'];
 const RO = ['으로', '로'], COPULA = ['이다', '다'], YEYO = ['이에요', '예요'];
 
-const surnames = HELDOUT
+const surnames = HELDOUT2
+  ? ['김', '이', '박', '최', '정', '강', '조', '윤', '장', '임', '추', '도', '소', '여', '맹', '제', '탁', '국', '어', '은',
+    '편', '용', '예', '경', '봉', '사', '부', '피', '하', '나']
+  : HELDOUT
   ? ['표', '변', '엄', '원', '천', '방', '공', '현', '함', '석', '선', '설', '마', '길', '연', '위', '김', '이', '박', '최',
     '정', '강', '조', '윤', '장', '임', '한', '오', '서', '신']
   : ['김', '이', '박', '최', '정', '강', '조', '윤', '장', '임', '한', '오', '서', '신', '권', '황', '안', '송',
   '류', '전', '홍', '고', '문', '양', '손', '배', '백', '허', '남', '심', '노', '하', '곽', '성', '차', '주', '우', '구', '민', '진'];
-const givens = HELDOUT
+const givens = HELDOUT2
+  ? ['다올', '수호', '연서', '정민', '하엘', '규민', '단우', '소이', '태경', '서온', '지성', '라온', '예빈', '도겸', '시하',
+    '민혁', '채아', '우현', '나연', '주하', '현진', '세윤', '다빈', '승현', '유리', '태오', '하늬', '은결', '서진', '보영',
+    '지훈', '아영', '도경', '시온', '윤호', '수민', '가람', '해인', '도원', '나은']
+  : HELDOUT
   ? ['은서', '시윤', '하준', '서윤', '지안', '유준', '로아', '이준', '아린', '도하', '서아', '우진', '채윤', '민준', '지유',
     '태린', '예서', '하율', '지환', '소율', '다인', '시현', '윤서', '현서', '준우', '나윤', '라희', '은찬', '서하', '루아', '건희',
     '민채', '세린', '한결', '보람', '이안', '재윤', '선우', '아인', '해솔']
@@ -49,31 +60,48 @@ const givens = HELDOUT
   '현우', '다은', '준서', '채원', '건우', '소윤', '태호', '나래', '가은', '하늘', '현도', '서지', '윤아', '재민', '수빈', '동현',
   '예린', '승우', '민지', '지훈', '혜원', '성민', '유나', '정우', '다현', '준혁', '세아', '주원', '하람', '규리', '시은', '도현',
   '보민', '연우', '태윤', '수현'];
-const romanSurnames = HELDOUT
+const romanSurnames = HELDOUT2
+  ? ['Choo', 'Do', 'So', 'Yeo', 'Je', 'Kook', 'Eun', 'Yong', 'Kyung', 'Bong']
+  : HELDOUT
   ? ['Cho', 'Bae', 'Moon', 'Shin', 'Hong', 'Song', 'Oh', 'Lim', 'Ahn', 'Ryu']
   : ['Kim', 'Lee', 'Park', 'Choi', 'Jung', 'Kang', 'Yoon', 'Han', 'Seo', 'Kwon'];
-const romanGivens = HELDOUT
+const romanGivens = HELDOUT2
+  ? ['Daol', 'Suho', 'Yeonseo', 'Jeongmin', 'Kyumin', 'Danwoo', 'Soi', 'Taekyung', 'Seoon', 'Jiseong']
+  : HELDOUT
   ? ['Eunseo', 'Siyun', 'Hajun', 'Seoyun', 'Jian', 'Yujun', 'Roa', 'Ijun', 'Arin', 'Doha']
   : ['Minsu', 'Seoyeon', 'Jiho', 'Haeun', 'Doyun', 'Seojun', 'Jiwoo', 'Suah', 'Yejun', 'Harin'];
-const titles = HELDOUT
+const titles = HELDOUT2
+  ? ['팀원', '고문', '감사', '전무', '부원장', '이사장', '학장', '총장', '대표', '프로', '변호사', '회계사']
+  : HELDOUT
   ? ['실장', '차장', '수석', '원장', '소장', '매니저', '이사', '상무', '위원장', '박사', '교수', '본부장']
   : ['팀장', '과장', '대리', '연구원', '교수', '사원', '부장', '주무관', '책임', '선임'];
 
-const orgHeads = HELDOUT
+const orgHeads = HELDOUT2
+  ? ['푸른솔', '한마음', '바다숲', '새날', '이로운', '참길', '하늘빛', '맑은물', '드림', '온새미', '금빛', '다솔',
+    '푸르미', '새싹', '들꽃', '아침해', '은빛', '큰바위', '해오름', '물결', '샛별', '단풍', '옹달샘', '노랑', '파란',
+    '꿈나래', '느티', '모란', '솔숲', '미리내']
+  : HELDOUT
   ? ['한누리', '별빛', '가람', '새솔', '늘해', '하나로', '빛가람', '미소', '다원', '늘품', '소담', '청솔', '해든', '다래',
     '꽃샘', '물빛', '산들', '윤슬', '너울', '아름', '세움', '함께', '바른길', '열매', '초록', '가비', '나래', '노을', '마중', '예담']
   : ['누리별', '가온', '솔빛', '다온', '새온', '하람', '미르', '푸른바다', '한빛', '늘봄', '은하수', '마루', '바름',
   '다솜', '아라', '이음', '해솔', '별하', '라온', '도담', '나린', '온누리', '새벽빛', '푸름', '고운결', '참빛', '한결', '단비',
   '여울', '비채'];
-const orgTails = HELDOUT
+const orgTails = HELDOUT2
+  ? ['미디어', '자동차', '건축', '게임즈', '푸드', '리테일', '상사', '엔지니어링', '보험', '항공', '은행', '증권', '병원',
+    '대학교', '연구소', '재단', '협회', '전자', '제약', '컴퍼니']
+  : HELDOUT
   ? ['산업', '화학', '통신', '물류', '보험', '카드', '항공', '호텔', '신문', '방송', '출판', '학회', '공사', '공단', '의료원',
     '학원', '연구원', '조합', '은행', '전자']
   : ['테크', '해운', '연구소', '바이오', '전자', '물산', '대학교', '정보기술', '건설', '제약', '은행', '증권', '재단',
   '협회', '병원', '식품', '에너지', '소프트', '디자인', '컨설팅'];
-const asciiHeads = HELDOUT
+const asciiHeads = HELDOUT2
+  ? ['Vega', 'Kite', 'Atlas', 'B&K', 'MX', 'Polar', 'S2', 'Echo']
+  : HELDOUT
   ? ['QX', 'Hanaro', 'M&C', 'Zeta', 'ONE', 'Orbit', 'P2', 'Lumi']
   : ['ABC', 'K', 'NX', 'J&P', 'SKY', 'DMZ', 'Bluewave', 'Nova'];
-const asciiTails = HELDOUT
+const asciiTails = HELDOUT2
+  ? ['미디어', '게임즈', '랩스', '모터스', '푸드']
+  : HELDOUT
   ? ['시스템', '물류', '컴퍼니', '그룹', '엔터']
   : ['솔루션즈', '랩스', '시스템즈', '파트너스', '네트웍스'];
 
@@ -102,7 +130,28 @@ const heldoutPersonTemplates = [
   ['list', (p) => `참석: ${p} 외 2명`],
 ];
 
-const personTemplates = HELDOUT ? heldoutPersonTemplates : [
+const heldout2PersonTemplates = [
+  ['particle', (p) => `${p}${josa(p, I_GA)} 내일부터 휴직한다.`],
+  ['particle', (p) => `발표 자료는 ${p}${josa(p, I_GA)} 준비했다.`],
+  ['particle', (p) => `${p}${josa(p, EUL_REUL)} 신규 담당으로 지정했다.`],
+  ['particle', (p) => `${p}${josa(p, EUN_NEUN)} 현장에 남았다.`],
+  ['particle', (p) => `${p}한테서 연락이 왔다.`],
+  ['particle', (p) => `${p}까지 포함해 다섯 명이다.`],
+  ['particle', (p) => `${p}보다 먼저 도착했다.`],
+  ['particle', (p) => `${p}${josa(p, IRANG)} 같이 점심을 먹었다.`],
+  ['particle', (p) => `${p}에게 결과를 알려 주세요.`],
+  ['plain', (p) => `면담 대상: ${p}`],
+  ['plain', (p) => `이번 달 우수 사원은 ${p} 입니다.`],
+  ['honorific', (p) => `${p}님 앞으로 택배가 도착했습니다.`],
+  ['honorific', (p) => `${p}씨에게 전화를 돌려 드릴게요.`],
+  ['title', (p) => { const t = pick(titles); return `${p} ${t}${josa(t, I_GA)} 회의를 열었다.`; }],
+  ['title_attached', (p) => { const t = pick(titles); return `${p}${t}${josa(t, EUN_NEUN)} 자리를 비웠다.`; }],
+  ['copula', (p) => `최종 승인자는 ${p}${josa(p, COPULA)}.`],
+  ['punctuation', (p) => `<${p}> 님의 요청 사항`],
+  ['punctuation', (p) => `작성: ${p} (총무)`],
+];
+
+const personTemplates = HELDOUT2 ? heldout2PersonTemplates : HELDOUT ? heldoutPersonTemplates : [
   ['particle', (p) => `${p}${josa(p, I_GA)} 내일 회의에 참석합니다.`],
   ['particle', (p) => `어제 ${p}${josa(p, EUL_REUL)} 만났다.`],
   ['particle', (p) => `${p}${josa(p, EUN_NEUN)} 보고서를 제출했다.`],
@@ -142,7 +191,21 @@ const heldoutOrgTemplates = [
   ['punctuation', (o) => `[${o}] 보도자료를 배포했다.`],
 ];
 
-const orgTemplates = HELDOUT ? heldoutOrgTemplates : [
+const heldout2OrgTemplates = [
+  ['particle', (o) => `${o}${josa(o, I_GA)} 새 공장을 지었다.`],
+  ['particle', (o) => `${o}${josa(o, EUL_REUL)} 협력사로 선정했다.`],
+  ['particle', (o) => `${o}의 신제품 발표회에 다녀왔다.`],
+  ['particle', (o) => `${o}${josa(o, EUN_NEUN)} 지난해 흑자를 냈다.`],
+  ['particle', (o) => `${o}에서 근무한 지 3년이 됐다.`],
+  ['plain', (o) => `거래처: ${o}`],
+  ['plain', (o) => `${o} 측 담당자가 회신했다.`],
+  ['department', (o) => `${o} 기술지원팀에 요청했다.`],
+  ['prefix', (o) => `(주)${o}${josa(o, GWA_WA)} 계약을 갱신했다.`],
+  ['prefix', (o) => `사단법인 ${o}${josa(o, EUN_NEUN)} 회원을 모집한다.`],
+  ['punctuation', (o) => `《${o}》 연례 보고서`],
+];
+
+const orgTemplates = HELDOUT2 ? heldout2OrgTemplates : HELDOUT ? heldoutOrgTemplates : [
   ['particle', (o) => `${o}${josa(o, I_GA)} 신제품을 출시했다.`],
   ['particle', (o) => `${o}${josa(o, GWA_WA)} 공급 계약을 맺었다.`],
   ['particle', (o) => `우리 팀은 ${o}에 다닌다.`],
@@ -157,14 +220,22 @@ const orgTemplates = HELDOUT ? heldoutOrgTemplates : [
 ];
 
 // 이름 없는 문장. 이름처럼 보이는 일반 낱말(하늘, 바다 등), 직함만 있는 문장, 기관 일반명사를 섞는다.
-const negSubjects = HELDOUT
+const negSubjects = HELDOUT2
+  ? ['자동차 정비 일정은', '보험 청구 서류는', '항공권 예약은', '대학교 축제는', '병원 진료 시간은', '은행 영업시간은',
+    '미디어 교육은', '새날이', '들꽃이', '아침해가', '물결이', '팀원 면담은', '고문 위촉은', '협회 가입 절차는',
+    '연구소 견학은', '재단 장학 공고는', '게임즈 행사는', '푸드 트럭은', '건축 허가는', '증권 계좌 개설은']
+  : HELDOUT
   ? ['산업 동향은', '보험 약관은', '카드 사용 내역은', '별빛이', '미소가', '소담한 마당은', '팀장 회의는', '고객센터 운영 시간은',
     '출판 일정은', '항공 운항 정보는', '호텔 예약은', '학회 발표 순서는', '본부 정기 회의는', '원장 직무 대행은', '물류 창고 점검은',
     '통신 장애 공지는', '노을이', '초록 숲길은', '열매가', '공사 구간 안내는']
   : ['오늘 회의는', '팀장님이', '담당자는', '연구소 이전은', '하늘이', '바다가', '보안 점검은', '새 정책은',
   '대학교 입학 설명회는', '본사 이전 일정은', '고객님 문의는', '분기 보고서는', '사내 메신저 공지는', '서버 장애는', '은행 점검 시간은',
   '병원 예약 시스템은', '협회 정기 총회는', '재단 이사회는', '기쁨과 보람은', '새벽 배송은'];
-const negPredicates = HELDOUT
+const negPredicates = HELDOUT2
+  ? ['다음 주로 옮겼다.', '이미 마감되었다.', '생각보다 간단했다.', '아직 정해지지 않았다.', '안내문을 참고하세요.',
+    '오전 중에 끝난다.', '조금 바뀌었다.', '작년과 같다.', '사진으로 남겼다.', '모두 무사히 끝났다.', '공지를 확인해 주세요.',
+    '하루 더 걸린다.', '다시 검토하기로 했다.', '예정보다 빨랐다.', '변경 사항이 없다.']
+  : HELDOUT
   ? ['지난달과 같다.', '홈페이지에 올라와 있다.', '유난히 아름다웠다.', '내일까지 확정된다.', '변동 없이 유지된다.',
     '다시 공지할 예정이다.', '모두 끝났다.', '조금 늦어질 수 있다.', '새로 정리했다.', '회의에서 다룬다.', '아직 검토 중이다.',
     '두 시간 걸렸다.', '예상보다 길어졌다.', '지난 분기보다 줄었다.', '문제없이 마쳤다.']
@@ -212,7 +283,7 @@ while (n < 300) {
       nameVariant = 'zero_width';
     }
   }
-  if (add(`${HELDOUT ? 'h-' : ''}person-${String(n + 1).padStart(3, '0')}`, 'person', nameVariant, template(name), [['PERSON', name]])) n += 1;
+  if (add(`${HELDOUT2 ? 'g-' : HELDOUT ? 'h-' : ''}person-${String(n + 1).padStart(3, '0')}`, 'person', nameVariant, template(name), [['PERSON', name]])) n += 1;
 }
 
 // 기관: 15 % 영문 섞인 이름, 그중 절반은 전각.
@@ -231,14 +302,14 @@ while (n < 300) {
   } else {
     org = pick(orgHeads) + pick(orgTails);
   }
-  if (add(`${HELDOUT ? 'h-' : ''}org-${String(n + 1).padStart(3, '0')}`, 'organization', orgVariant, template(org), [['ORG', org]])) n += 1;
+  if (add(`${HELDOUT2 ? 'g-' : HELDOUT ? 'h-' : ''}org-${String(n + 1).padStart(3, '0')}`, 'organization', orgVariant, template(org), [['ORG', org]])) n += 1;
 }
 
 n = 0;
 while (n < 300) {
   const text = `${pick(negSubjects)} ${pick(negPredicates)}`;
   const longer = rand() < 0.3 ? `${text} ${pick(negSubjects)} ${pick(negPredicates)}` : text;
-  if (add(`${HELDOUT ? 'h-' : ''}neg-${String(n + 1).padStart(3, '0')}`, 'negative', 'plain', longer, [])) n += 1;
+  if (add(`${HELDOUT2 ? 'g-' : HELDOUT ? 'h-' : ''}neg-${String(n + 1).padStart(3, '0')}`, 'negative', 'plain', longer, [])) n += 1;
 }
 
 for (const r of records) console.log(JSON.stringify(r));

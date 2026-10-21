@@ -1,0 +1,900 @@
+{"id":"g-person-001","category":"person","variant":"honorific","text":"탁나은씨에게 전화를 돌려 드릴게요.","entities":[{"type":"PERSON","text":"탁나은","start_byte":0,"end_byte":9,"start_cp":0,"end_cp":3}]}
+{"id":"g-person-002","category":"person","variant":"plain","text":"이번 달 우수 사원은 경시하 입니다.","entities":[{"type":"PERSON","text":"경시하","start_byte":28,"end_byte":37,"start_cp":12,"end_cp":15}]}
+{"id":"g-person-003","category":"person","variant":"punctuation","text":"<임소이> 님의 요청 사항","entities":[{"type":"PERSON","text":"임소이","start_byte":1,"end_byte":10,"start_cp":1,"end_cp":4}]}
+{"id":"g-person-004","category":"person","variant":"punctuation","text":"작성: 윤시온 (총무)","entities":[{"type":"PERSON","text":"윤시온","start_byte":8,"end_byte":17,"start_cp":4,"end_cp":7}]}
+{"id":"g-person-005","category":"person","variant":"honorific","text":"장현진씨에게 전화를 돌려 드릴게요.","entities":[{"type":"PERSON","text":"장현진","start_byte":0,"end_byte":9,"start_cp":0,"end_cp":3}]}
+{"id":"g-person-006","category":"person","variant":"honorific","text":"도시온님 앞으로 택배가 도착했습니다.","entities":[{"type":"PERSON","text":"도시온","start_byte":0,"end_byte":9,"start_cp":0,"end_cp":3}]}
+{"id":"g-person-007","category":"person","variant":"title_attached","text":"박우현학장은 자리를 비웠다.","entities":[{"type":"PERSON","text":"박우현","start_byte":0,"end_byte":9,"start_cp":0,"end_cp":3}]}
+{"id":"g-person-008","category":"person","variant":"zero_width","text":"용​나은은 현장에 남았다.","entities":[{"type":"PERSON","text":"용​나은","start_byte":0,"end_byte":12,"start_cp":0,"end_cp":4}]}
+{"id":"g-person-009","category":"person","variant":"copula","text":"최종 승인자는 제승현이다.","entities":[{"type":"PERSON","text":"제승현","start_byte":20,"end_byte":29,"start_cp":8,"end_cp":11}]}
+{"id":"g-person-010","category":"person","variant":"particle","text":"강주하에게 결과를 알려 주세요.","entities":[{"type":"PERSON","text":"강주하","start_byte":0,"end_byte":9,"start_cp":0,"end_cp":3}]}
+{"id":"g-person-011","category":"person","variant":"particle","text":"은민혁은 현장에 남았다.","entities":[{"type":"PERSON","text":"은민혁","start_byte":0,"end_byte":9,"start_cp":0,"end_cp":3}]}
+{"id":"g-person-012","category":"person","variant":"honorific","text":"조세윤씨에게 전화를 돌려 드릴게요.","entities":[{"type":"PERSON","text":"조세윤","start_byte":0,"end_byte":9,"start_cp":0,"end_cp":3}]}
+{"id":"g-person-013","category":"person","variant":"punctuation","text":"<여연서> 님의 요청 사항","entities":[{"type":"PERSON","text":"여연서","start_byte":1,"end_byte":10,"start_cp":1,"end_cp":4}]}
+{"id":"g-person-014","category":"person","variant":"particle","text":"봉단우를 신규 담당으로 지정했다.","entities":[{"type":"PERSON","text":"봉단우","start_byte":0,"end_byte":9,"start_cp":0,"end_cp":3}]}
+{"id":"g-person-015","category":"person","variant":"particle","text":"제윤호한테서 연락이 왔다.","entities":[{"type":"PERSON","text":"제윤호","start_byte":0,"end_byte":9,"start_cp":0,"end_cp":3}]}
+{"id":"g-person-016","category":"person","variant":"punctuation","text":"<제윤호> 님의 요청 사항","entities":[{"type":"PERSON","text":"제윤호","start_byte":1,"end_byte":10,"start_cp":1,"end_cp":4}]}
+{"id":"g-person-017","category":"person","variant":"title","text":"박도원 프로가 회의를 열었다.","entities":[{"type":"PERSON","text":"박도원","start_byte":0,"end_byte":9,"start_cp":0,"end_cp":3}]}
+{"id":"g-person-018","category":"person","variant":"title","text":"맹수호 대표가 회의를 열었다.","entities":[{"type":"PERSON","text":"맹수호","start_byte":0,"end_byte":9,"start_cp":0,"end_cp":3}]}
+{"id":"g-person-019","category":"person","variant":"particle","text":"용해인한테서 연락이 왔다.","entities":[{"type":"PERSON","text":"용해인","start_byte":0,"end_byte":9,"start_cp":0,"end_cp":3}]}
+{"id":"g-person-020","category":"person","variant":"copula","text":"최종 승인자는 제서온이다.","entities":[{"type":"PERSON","text":"제서온","start_byte":20,"end_byte":29,"start_cp":8,"end_cp":11}]}
+{"id":"g-person-021","category":"person","variant":"particle","text":"윤라온한테서 연락이 왔다.","entities":[{"type":"PERSON","text":"윤라온","start_byte":0,"end_byte":9,"start_cp":0,"end_cp":3}]}
+{"id":"g-person-022","category":"person","variant":"particle","text":"발표 자료는 봉지훈이 준비했다.","entities":[{"type":"PERSON","text":"봉지훈","start_byte":17,"end_byte":26,"start_cp":7,"end_cp":10}]}
+{"id":"g-person-023","category":"person","variant":"particle","text":"제지훈이랑 같이 점심을 먹었다.","entities":[{"type":"PERSON","text":"제지훈","start_byte":0,"end_byte":9,"start_cp":0,"end_cp":3}]}
+{"id":"g-person-024","category":"person","variant":"particle","text":"사연서에게 결과를 알려 주세요.","entities":[{"type":"PERSON","text":"사연서","start_byte":0,"end_byte":9,"start_cp":0,"end_cp":3}]}
+{"id":"g-person-025","category":"person","variant":"particle","text":"발표 자료는 탁보영이 준비했다.","entities":[{"type":"PERSON","text":"탁보영","start_byte":17,"end_byte":26,"start_cp":7,"end_cp":10}]}
+{"id":"g-person-026","category":"person","variant":"english","text":"작성: Danwoo So (총무)","entities":[{"type":"PERSON","text":"Danwoo So","start_byte":8,"end_byte":17,"start_cp":4,"end_cp":13}]}
+{"id":"g-person-027","category":"person","variant":"particle","text":"강하엘보다 먼저 도착했다.","entities":[{"type":"PERSON","text":"강하엘","start_byte":0,"end_byte":9,"start_cp":0,"end_cp":3}]}
+{"id":"g-person-028","category":"person","variant":"punctuation","text":"작성: 탁수민 (총무)","entities":[{"type":"PERSON","text":"탁수민","start_byte":8,"end_byte":17,"start_cp":4,"end_cp":7}]}
+{"id":"g-person-029","category":"person","variant":"copula","text":"최종 승인자는 피보영이다.","entities":[{"type":"PERSON","text":"피보영","start_byte":20,"end_byte":29,"start_cp":8,"end_cp":11}]}
+{"id":"g-person-030","category":"person","variant":"nfd","text":"작성: 예지훈 (총무)","entities":[{"type":"PERSON","text":"예지훈","start_byte":8,"end_byte":29,"start_cp":4,"end_cp":11}]}
+{"id":"g-person-031","category":"person","variant":"particle","text":"맹태오랑 같이 점심을 먹었다.","entities":[{"type":"PERSON","text":"맹태오","start_byte":0,"end_byte":9,"start_cp":0,"end_cp":3}]}
+{"id":"g-person-032","category":"person","variant":"title","text":"여서진 총장이 회의를 열었다.","entities":[{"type":"PERSON","text":"여서진","start_byte":0,"end_byte":9,"start_cp":0,"end_cp":3}]}
+{"id":"g-person-033","category":"person","variant":"title","text":"부도경 총장이 회의를 열었다.","entities":[{"type":"PERSON","text":"부도경","start_byte":0,"end_byte":9,"start_cp":0,"end_cp":3}]}
+{"id":"g-person-034","category":"person","variant":"honorific","text":"경나은씨에게 전화를 돌려 드릴게요.","entities":[{"type":"PERSON","text":"경나은","start_byte":0,"end_byte":9,"start_cp":0,"end_cp":3}]}
+{"id":"g-person-035","category":"person","variant":"english","text":"<Soi Eun> 님의 요청 사항","entities":[{"type":"PERSON","text":"Soi Eun","start_byte":1,"end_byte":8,"start_cp":1,"end_cp":8}]}
+{"id":"g-person-036","category":"person","variant":"title_attached","text":"은우현부원장은 자리를 비웠다.","entities":[{"type":"PERSON","text":"은우현","start_byte":0,"end_byte":9,"start_cp":0,"end_cp":3}]}
+{"id":"g-person-037","category":"person","variant":"particle","text":"최주하는 현장에 남았다.","entities":[{"type":"PERSON","text":"최주하","start_byte":0,"end_byte":9,"start_cp":0,"end_cp":3}]}
+{"id":"g-person-038","category":"person","variant":"copula","text":"최종 승인자는 어예빈이다.","entities":[{"type":"PERSON","text":"어예빈","start_byte":20,"end_byte":29,"start_cp":8,"end_cp":11}]}
+{"id":"g-person-039","category":"person","variant":"particle","text":"추연서에게 결과를 알려 주세요.","entities":[{"type":"PERSON","text":"추연서","start_byte":0,"end_byte":9,"start_cp":0,"end_cp":3}]}
+{"id":"g-person-040","category":"person","variant":"copula","text":"최종 승인자는 조도원이다.","entities":[{"type":"PERSON","text":"조도원","start_byte":20,"end_byte":29,"start_cp":8,"end_cp":11}]}
+{"id":"g-person-041","category":"person","variant":"particle","text":"강도원은 현장에 남았다.","entities":[{"type":"PERSON","text":"강도원","start_byte":0,"end_byte":9,"start_cp":0,"end_cp":3}]}
+{"id":"g-person-042","category":"person","variant":"english","text":"Taekyung Choo한테서 연락이 왔다.","entities":[{"type":"PERSON","text":"Taekyung Choo","start_byte":0,"end_byte":13,"start_cp":0,"end_cp":13}]}
+{"id":"g-person-043","category":"person","variant":"zero_width","text":"<은​아영> 님의 요청 사항","entities":[{"type":"PERSON","text":"은​아영","start_byte":1,"end_byte":13,"start_cp":1,"end_cp":5}]}
+{"id":"g-person-044","category":"person","variant":"particle","text":"도태오가 내일부터 휴직한다.","entities":[{"type":"PERSON","text":"도태오","start_byte":0,"end_byte":9,"start_cp":0,"end_cp":3}]}
+{"id":"g-person-045","category":"person","variant":"nfd","text":"용수호씨에게 전화를 돌려 드릴게요.","entities":[{"type":"PERSON","text":"용수호","start_byte":0,"end_byte":21,"start_cp":0,"end_cp":7}]}
+{"id":"g-person-046","category":"person","variant":"title_attached","text":"예채아감사는 자리를 비웠다.","entities":[{"type":"PERSON","text":"예채아","start_byte":0,"end_byte":9,"start_cp":0,"end_cp":3}]}
+{"id":"g-person-047","category":"person","variant":"title_attached","text":"어하엘감사는 자리를 비웠다.","entities":[{"type":"PERSON","text":"어하엘","start_byte":0,"end_byte":9,"start_cp":0,"end_cp":3}]}
+{"id":"g-person-048","category":"person","variant":"english","text":"최종 승인자는 Soi Yong다.","entities":[{"type":"PERSON","text":"Soi Yong","start_byte":20,"end_byte":28,"start_cp":8,"end_cp":16}]}
+{"id":"g-person-049","category":"person","variant":"particle","text":"정태경은 현장에 남았다.","entities":[{"type":"PERSON","text":"정태경","start_byte":0,"end_byte":9,"start_cp":0,"end_cp":3}]}
+{"id":"g-person-050","category":"person","variant":"zero_width","text":"임​현진 부원장이 회의를 열었다.","entities":[{"type":"PERSON","text":"임​현진","start_byte":0,"end_byte":12,"start_cp":0,"end_cp":4}]}
+{"id":"g-person-051","category":"person","variant":"particle","text":"추지훈을 신규 담당으로 지정했다.","entities":[{"type":"PERSON","text":"추지훈","start_byte":0,"end_byte":9,"start_cp":0,"end_cp":3}]}
+{"id":"g-person-052","category":"person","variant":"particle","text":"용주하는 현장에 남았다.","entities":[{"type":"PERSON","text":"용주하","start_byte":0,"end_byte":9,"start_cp":0,"end_cp":3}]}
+{"id":"g-person-053","category":"person","variant":"particle","text":"사예빈에게 결과를 알려 주세요.","entities":[{"type":"PERSON","text":"사예빈","start_byte":0,"end_byte":9,"start_cp":0,"end_cp":3}]}
+{"id":"g-person-054","category":"person","variant":"english","text":"Soi Do가 내일부터 휴직한다.","entities":[{"type":"PERSON","text":"Soi Do","start_byte":0,"end_byte":6,"start_cp":0,"end_cp":6}]}
+{"id":"g-person-055","category":"person","variant":"particle","text":"발표 자료는 최예빈이 준비했다.","entities":[{"type":"PERSON","text":"최예빈","start_byte":17,"end_byte":26,"start_cp":7,"end_cp":10}]}
+{"id":"g-person-056","category":"person","variant":"particle","text":"이정민을 신규 담당으로 지정했다.","entities":[{"type":"PERSON","text":"이정민","start_byte":0,"end_byte":9,"start_cp":0,"end_cp":3}]}
+{"id":"g-person-057","category":"person","variant":"punctuation","text":"<부수호> 님의 요청 사항","entities":[{"type":"PERSON","text":"부수호","start_byte":1,"end_byte":10,"start_cp":1,"end_cp":4}]}
+{"id":"g-person-058","category":"person","variant":"zero_width","text":"은​보영이사장은 자리를 비웠다.","entities":[{"type":"PERSON","text":"은​보영","start_byte":0,"end_byte":12,"start_cp":0,"end_cp":4}]}
+{"id":"g-person-059","category":"person","variant":"particle","text":"은민혁보다 먼저 도착했다.","entities":[{"type":"PERSON","text":"은민혁","start_byte":0,"end_byte":9,"start_cp":0,"end_cp":3}]}
+{"id":"g-person-060","category":"person","variant":"particle","text":"예나은까지 포함해 다섯 명이다.","entities":[{"type":"PERSON","text":"예나은","start_byte":0,"end_byte":9,"start_cp":0,"end_cp":3}]}
+{"id":"g-person-061","category":"person","variant":"particle","text":"맹태오는 현장에 남았다.","entities":[{"type":"PERSON","text":"맹태오","start_byte":0,"end_byte":9,"start_cp":0,"end_cp":3}]}
+{"id":"g-person-062","category":"person","variant":"nfd","text":"박하늬랑 같이 점심을 먹었다.","entities":[{"type":"PERSON","text":"박하늬","start_byte":0,"end_byte":21,"start_cp":0,"end_cp":7}]}
+{"id":"g-person-063","category":"person","variant":"particle","text":"봉가람보다 먼저 도착했다.","entities":[{"type":"PERSON","text":"봉가람","start_byte":0,"end_byte":9,"start_cp":0,"end_cp":3}]}
+{"id":"g-person-064","category":"person","variant":"nfd","text":"장주하까지 포함해 다섯 명이다.","entities":[{"type":"PERSON","text":"장주하","start_byte":0,"end_byte":21,"start_cp":0,"end_cp":7}]}
+{"id":"g-person-065","category":"person","variant":"particle","text":"발표 자료는 예우현이 준비했다.","entities":[{"type":"PERSON","text":"예우현","start_byte":17,"end_byte":26,"start_cp":7,"end_cp":10}]}
+{"id":"g-person-066","category":"person","variant":"particle","text":"편유리가 내일부터 휴직한다.","entities":[{"type":"PERSON","text":"편유리","start_byte":0,"end_byte":9,"start_cp":0,"end_cp":3}]}
+{"id":"g-person-067","category":"person","variant":"particle","text":"피도원에게 결과를 알려 주세요.","entities":[{"type":"PERSON","text":"피도원","start_byte":0,"end_byte":9,"start_cp":0,"end_cp":3}]}
+{"id":"g-person-068","category":"person","variant":"copula","text":"최종 승인자는 편단우다.","entities":[{"type":"PERSON","text":"편단우","start_byte":20,"end_byte":29,"start_cp":8,"end_cp":11}]}
+{"id":"g-person-069","category":"person","variant":"english","text":"Suho Do에게 결과를 알려 주세요.","entities":[{"type":"PERSON","text":"Suho Do","start_byte":0,"end_byte":7,"start_cp":0,"end_cp":7}]}
+{"id":"g-person-070","category":"person","variant":"english","text":"Kyumin Yeo를 신규 담당으로 지정했다.","entities":[{"type":"PERSON","text":"Kyumin Yeo","start_byte":0,"end_byte":10,"start_cp":0,"end_cp":10}]}
+{"id":"g-person-071","category":"person","variant":"plain","text":"면담 대상: 정태오","entities":[{"type":"PERSON","text":"정태오","start_byte":15,"end_byte":24,"start_cp":7,"end_cp":10}]}
+{"id":"g-person-072","category":"person","variant":"particle","text":"피승현을 신규 담당으로 지정했다.","entities":[{"type":"PERSON","text":"피승현","start_byte":0,"end_byte":9,"start_cp":0,"end_cp":3}]}
+{"id":"g-person-073","category":"person","variant":"copula","text":"최종 승인자는 어아영이다.","entities":[{"type":"PERSON","text":"어아영","start_byte":20,"end_byte":29,"start_cp":8,"end_cp":11}]}
+{"id":"g-person-074","category":"person","variant":"nfd","text":"발표 자료는 은가람이 준비했다.","entities":[{"type":"PERSON","text":"은가람","start_byte":17,"end_byte":41,"start_cp":7,"end_cp":15}]}
+{"id":"g-person-075","category":"person","variant":"particle","text":"최연서에게 결과를 알려 주세요.","entities":[{"type":"PERSON","text":"최연서","start_byte":0,"end_byte":9,"start_cp":0,"end_cp":3}]}
+{"id":"g-person-076","category":"person","variant":"plain","text":"이번 달 우수 사원은 추정민 입니다.","entities":[{"type":"PERSON","text":"추정민","start_byte":28,"end_byte":37,"start_cp":12,"end_cp":15}]}
+{"id":"g-person-077","category":"person","variant":"english","text":"Daol Je는 현장에 남았다.","entities":[{"type":"PERSON","text":"Daol Je","start_byte":0,"end_byte":7,"start_cp":0,"end_cp":7}]}
+{"id":"g-person-078","category":"person","variant":"english","text":"Danwoo Yeo님 앞으로 택배가 도착했습니다.","entities":[{"type":"PERSON","text":"Danwoo Yeo","start_byte":0,"end_byte":10,"start_cp":0,"end_cp":10}]}
+{"id":"g-person-079","category":"person","variant":"english","text":"Suho Choo까지 포함해 다섯 명이다.","entities":[{"type":"PERSON","text":"Suho Choo","start_byte":0,"end_byte":9,"start_cp":0,"end_cp":9}]}
+{"id":"g-person-080","category":"person","variant":"particle","text":"여도겸을 신규 담당으로 지정했다.","entities":[{"type":"PERSON","text":"여도겸","start_byte":0,"end_byte":9,"start_cp":0,"end_cp":3}]}
+{"id":"g-person-081","category":"person","variant":"particle","text":"도보영까지 포함해 다섯 명이다.","entities":[{"type":"PERSON","text":"도보영","start_byte":0,"end_byte":9,"start_cp":0,"end_cp":3}]}
+{"id":"g-person-082","category":"person","variant":"copula","text":"최종 승인자는 소수호다.","entities":[{"type":"PERSON","text":"소수호","start_byte":20,"end_byte":29,"start_cp":8,"end_cp":11}]}
+{"id":"g-person-083","category":"person","variant":"title_attached","text":"탁연서학장은 자리를 비웠다.","entities":[{"type":"PERSON","text":"탁연서","start_byte":0,"end_byte":9,"start_cp":0,"end_cp":3}]}
+{"id":"g-person-084","category":"person","variant":"particle","text":"피민혁을 신규 담당으로 지정했다.","entities":[{"type":"PERSON","text":"피민혁","start_byte":0,"end_byte":9,"start_cp":0,"end_cp":3}]}
+{"id":"g-person-085","category":"person","variant":"punctuation","text":"<조소이> 님의 요청 사항","entities":[{"type":"PERSON","text":"조소이","start_byte":1,"end_byte":10,"start_cp":1,"end_cp":4}]}
+{"id":"g-person-086","category":"person","variant":"honorific","text":"부태경님 앞으로 택배가 도착했습니다.","entities":[{"type":"PERSON","text":"부태경","start_byte":0,"end_byte":9,"start_cp":0,"end_cp":3}]}
+{"id":"g-person-087","category":"person","variant":"plain","text":"이번 달 우수 사원은 나시온 입니다.","entities":[{"type":"PERSON","text":"나시온","start_byte":28,"end_byte":37,"start_cp":12,"end_cp":15}]}
+{"id":"g-person-088","category":"person","variant":"title_attached","text":"김민혁학장은 자리를 비웠다.","entities":[{"type":"PERSON","text":"김민혁","start_byte":0,"end_byte":9,"start_cp":0,"end_cp":3}]}
+{"id":"g-person-089","category":"person","variant":"particle","text":"소은결은 현장에 남았다.","entities":[{"type":"PERSON","text":"소은결","start_byte":0,"end_byte":9,"start_cp":0,"end_cp":3}]}
+{"id":"g-person-090","category":"person","variant":"particle","text":"윤민혁한테서 연락이 왔다.","entities":[{"type":"PERSON","text":"윤민혁","start_byte":0,"end_byte":9,"start_cp":0,"end_cp":3}]}
+{"id":"g-person-091","category":"person","variant":"zero_width","text":"하​채아한테서 연락이 왔다.","entities":[{"type":"PERSON","text":"하​채아","start_byte":0,"end_byte":12,"start_cp":0,"end_cp":4}]}
+{"id":"g-person-092","category":"person","variant":"plain","text":"이번 달 우수 사원은 탁태오 입니다.","entities":[{"type":"PERSON","text":"탁태오","start_byte":28,"end_byte":37,"start_cp":12,"end_cp":15}]}
+{"id":"g-person-093","category":"person","variant":"english","text":"Danwoo Kook는 현장에 남았다.","entities":[{"type":"PERSON","text":"Danwoo Kook","start_byte":0,"end_byte":11,"start_cp":0,"end_cp":11}]}
+{"id":"g-person-094","category":"person","variant":"honorific","text":"예소이씨에게 전화를 돌려 드릴게요.","entities":[{"type":"PERSON","text":"예소이","start_byte":0,"end_byte":9,"start_cp":0,"end_cp":3}]}
+{"id":"g-person-095","category":"person","variant":"plain","text":"면담 대상: 장나연","entities":[{"type":"PERSON","text":"장나연","start_byte":15,"end_byte":24,"start_cp":7,"end_cp":10}]}
+{"id":"g-person-096","category":"person","variant":"honorific","text":"어나연님 앞으로 택배가 도착했습니다.","entities":[{"type":"PERSON","text":"어나연","start_byte":0,"end_byte":9,"start_cp":0,"end_cp":3}]}
+{"id":"g-person-097","category":"person","variant":"particle","text":"여다올에게 결과를 알려 주세요.","entities":[{"type":"PERSON","text":"여다올","start_byte":0,"end_byte":9,"start_cp":0,"end_cp":3}]}
+{"id":"g-person-098","category":"person","variant":"particle","text":"사나연한테서 연락이 왔다.","entities":[{"type":"PERSON","text":"사나연","start_byte":0,"end_byte":9,"start_cp":0,"end_cp":3}]}
+{"id":"g-person-099","category":"person","variant":"copula","text":"최종 승인자는 정도원이다.","entities":[{"type":"PERSON","text":"정도원","start_byte":20,"end_byte":29,"start_cp":8,"end_cp":11}]}
+{"id":"g-person-100","category":"person","variant":"honorific","text":"박도경씨에게 전화를 돌려 드릴게요.","entities":[{"type":"PERSON","text":"박도경","start_byte":0,"end_byte":9,"start_cp":0,"end_cp":3}]}
+{"id":"g-person-101","category":"person","variant":"particle","text":"강아영이 내일부터 휴직한다.","entities":[{"type":"PERSON","text":"강아영","start_byte":0,"end_byte":9,"start_cp":0,"end_cp":3}]}
+{"id":"g-person-102","category":"person","variant":"punctuation","text":"<박시하> 님의 요청 사항","entities":[{"type":"PERSON","text":"박시하","start_byte":1,"end_byte":10,"start_cp":1,"end_cp":4}]}
+{"id":"g-person-103","category":"person","variant":"honorific","text":"정단우님 앞으로 택배가 도착했습니다.","entities":[{"type":"PERSON","text":"정단우","start_byte":0,"end_byte":9,"start_cp":0,"end_cp":3}]}
+{"id":"g-person-104","category":"person","variant":"english","text":"Daol Bong는 현장에 남았다.","entities":[{"type":"PERSON","text":"Daol Bong","start_byte":0,"end_byte":9,"start_cp":0,"end_cp":9}]}
+{"id":"g-person-105","category":"person","variant":"particle","text":"국단우에게 결과를 알려 주세요.","entities":[{"type":"PERSON","text":"국단우","start_byte":0,"end_byte":9,"start_cp":0,"end_cp":3}]}
+{"id":"g-person-106","category":"person","variant":"particle","text":"은다빈이 내일부터 휴직한다.","entities":[{"type":"PERSON","text":"은다빈","start_byte":0,"end_byte":9,"start_cp":0,"end_cp":3}]}
+{"id":"g-person-107","category":"person","variant":"particle","text":"하소이가 내일부터 휴직한다.","entities":[{"type":"PERSON","text":"하소이","start_byte":0,"end_byte":9,"start_cp":0,"end_cp":3}]}
+{"id":"g-person-108","category":"person","variant":"zero_width","text":"도​아영님 앞으로 택배가 도착했습니다.","entities":[{"type":"PERSON","text":"도​아영","start_byte":0,"end_byte":12,"start_cp":0,"end_cp":4}]}
+{"id":"g-person-109","category":"person","variant":"english","text":"Suho Yong 총장이 회의를 열었다.","entities":[{"type":"PERSON","text":"Suho Yong","start_byte":0,"end_byte":9,"start_cp":0,"end_cp":9}]}
+{"id":"g-person-110","category":"person","variant":"english","text":"이번 달 우수 사원은 Soi Do 입니다.","entities":[{"type":"PERSON","text":"Soi Do","start_byte":28,"end_byte":34,"start_cp":12,"end_cp":18}]}
+{"id":"g-person-111","category":"person","variant":"zero_width","text":"조​연서는 현장에 남았다.","entities":[{"type":"PERSON","text":"조​연서","start_byte":0,"end_byte":12,"start_cp":0,"end_cp":4}]}
+{"id":"g-person-112","category":"person","variant":"title","text":"제해인 전무가 회의를 열었다.","entities":[{"type":"PERSON","text":"제해인","start_byte":0,"end_byte":9,"start_cp":0,"end_cp":3}]}
+{"id":"g-person-113","category":"person","variant":"particle","text":"발표 자료는 정민혁이 준비했다.","entities":[{"type":"PERSON","text":"정민혁","start_byte":17,"end_byte":26,"start_cp":7,"end_cp":10}]}
+{"id":"g-person-114","category":"person","variant":"title_attached","text":"추현진회계사는 자리를 비웠다.","entities":[{"type":"PERSON","text":"추현진","start_byte":0,"end_byte":9,"start_cp":0,"end_cp":3}]}
+{"id":"g-person-115","category":"person","variant":"copula","text":"최종 승인자는 김해인이다.","entities":[{"type":"PERSON","text":"김해인","start_byte":20,"end_byte":29,"start_cp":8,"end_cp":11}]}
+{"id":"g-person-116","category":"person","variant":"title_attached","text":"경가람전무는 자리를 비웠다.","entities":[{"type":"PERSON","text":"경가람","start_byte":0,"end_byte":9,"start_cp":0,"end_cp":3}]}
+{"id":"g-person-117","category":"person","variant":"particle","text":"추연서를 신규 담당으로 지정했다.","entities":[{"type":"PERSON","text":"추연서","start_byte":0,"end_byte":9,"start_cp":0,"end_cp":3}]}
+{"id":"g-person-118","category":"person","variant":"title","text":"어시하 부원장이 회의를 열었다.","entities":[{"type":"PERSON","text":"어시하","start_byte":0,"end_byte":9,"start_cp":0,"end_cp":3}]}
+{"id":"g-person-119","category":"person","variant":"particle","text":"이라온보다 먼저 도착했다.","entities":[{"type":"PERSON","text":"이라온","start_byte":0,"end_byte":9,"start_cp":0,"end_cp":3}]}
+{"id":"g-person-120","category":"person","variant":"particle","text":"경시하를 신규 담당으로 지정했다.","entities":[{"type":"PERSON","text":"경시하","start_byte":0,"end_byte":9,"start_cp":0,"end_cp":3}]}
+{"id":"g-person-121","category":"person","variant":"plain","text":"이번 달 우수 사원은 봉현진 입니다.","entities":[{"type":"PERSON","text":"봉현진","start_byte":28,"end_byte":37,"start_cp":12,"end_cp":15}]}
+{"id":"g-person-122","category":"person","variant":"particle","text":"예단우에게 결과를 알려 주세요.","entities":[{"type":"PERSON","text":"예단우","start_byte":0,"end_byte":9,"start_cp":0,"end_cp":3}]}
+{"id":"g-person-123","category":"person","variant":"honorific","text":"어세윤님 앞으로 택배가 도착했습니다.","entities":[{"type":"PERSON","text":"어세윤","start_byte":0,"end_byte":9,"start_cp":0,"end_cp":3}]}
+{"id":"g-person-124","category":"person","variant":"honorific","text":"제시온씨에게 전화를 돌려 드릴게요.","entities":[{"type":"PERSON","text":"제시온","start_byte":0,"end_byte":9,"start_cp":0,"end_cp":3}]}
+{"id":"g-person-125","category":"person","variant":"punctuation","text":"작성: 예단우 (총무)","entities":[{"type":"PERSON","text":"예단우","start_byte":8,"end_byte":17,"start_cp":4,"end_cp":7}]}
+{"id":"g-person-126","category":"person","variant":"particle","text":"맹소이에게 결과를 알려 주세요.","entities":[{"type":"PERSON","text":"맹소이","start_byte":0,"end_byte":9,"start_cp":0,"end_cp":3}]}
+{"id":"g-person-127","category":"person","variant":"plain","text":"면담 대상: 박라온","entities":[{"type":"PERSON","text":"박라온","start_byte":15,"end_byte":24,"start_cp":7,"end_cp":10}]}
+{"id":"g-person-128","category":"person","variant":"english","text":"<Kyumin Kook> 님의 요청 사항","entities":[{"type":"PERSON","text":"Kyumin Kook","start_byte":1,"end_byte":12,"start_cp":1,"end_cp":12}]}
+{"id":"g-person-129","category":"person","variant":"honorific","text":"나예빈님 앞으로 택배가 도착했습니다.","entities":[{"type":"PERSON","text":"나예빈","start_byte":0,"end_byte":9,"start_cp":0,"end_cp":3}]}
+{"id":"g-person-130","category":"person","variant":"plain","text":"이번 달 우수 사원은 정민혁 입니다.","entities":[{"type":"PERSON","text":"정민혁","start_byte":28,"end_byte":37,"start_cp":12,"end_cp":15}]}
+{"id":"g-person-131","category":"person","variant":"honorific","text":"여다빈씨에게 전화를 돌려 드릴게요.","entities":[{"type":"PERSON","text":"여다빈","start_byte":0,"end_byte":9,"start_cp":0,"end_cp":3}]}
+{"id":"g-person-132","category":"person","variant":"honorific","text":"윤윤호님 앞으로 택배가 도착했습니다.","entities":[{"type":"PERSON","text":"윤윤호","start_byte":0,"end_byte":9,"start_cp":0,"end_cp":3}]}
+{"id":"g-person-133","category":"person","variant":"particle","text":"장수민은 현장에 남았다.","entities":[{"type":"PERSON","text":"장수민","start_byte":0,"end_byte":9,"start_cp":0,"end_cp":3}]}
+{"id":"g-person-134","category":"person","variant":"title_attached","text":"제유리전무는 자리를 비웠다.","entities":[{"type":"PERSON","text":"제유리","start_byte":0,"end_byte":9,"start_cp":0,"end_cp":3}]}
+{"id":"g-person-135","category":"person","variant":"honorific","text":"윤규민님 앞으로 택배가 도착했습니다.","entities":[{"type":"PERSON","text":"윤규민","start_byte":0,"end_byte":9,"start_cp":0,"end_cp":3}]}
+{"id":"g-person-136","category":"person","variant":"title_attached","text":"사단우변호사는 자리를 비웠다.","entities":[{"type":"PERSON","text":"사단우","start_byte":0,"end_byte":9,"start_cp":0,"end_cp":3}]}
+{"id":"g-person-137","category":"person","variant":"english","text":"Seoon Kyung한테서 연락이 왔다.","entities":[{"type":"PERSON","text":"Seoon Kyung","start_byte":0,"end_byte":11,"start_cp":0,"end_cp":11}]}
+{"id":"g-person-138","category":"person","variant":"plain","text":"면담 대상: 국연서","entities":[{"type":"PERSON","text":"국연서","start_byte":15,"end_byte":24,"start_cp":7,"end_cp":10}]}
+{"id":"g-person-139","category":"person","variant":"particle","text":"여윤호는 현장에 남았다.","entities":[{"type":"PERSON","text":"여윤호","start_byte":0,"end_byte":9,"start_cp":0,"end_cp":3}]}
+{"id":"g-person-140","category":"person","variant":"honorific","text":"여주하님 앞으로 택배가 도착했습니다.","entities":[{"type":"PERSON","text":"여주하","start_byte":0,"end_byte":9,"start_cp":0,"end_cp":3}]}
+{"id":"g-person-141","category":"person","variant":"particle","text":"여아영에게 결과를 알려 주세요.","entities":[{"type":"PERSON","text":"여아영","start_byte":0,"end_byte":9,"start_cp":0,"end_cp":3}]}
+{"id":"g-person-142","category":"person","variant":"title_attached","text":"은나연팀원은 자리를 비웠다.","entities":[{"type":"PERSON","text":"은나연","start_byte":0,"end_byte":9,"start_cp":0,"end_cp":3}]}
+{"id":"g-person-143","category":"person","variant":"zero_width","text":"<최​지훈> 님의 요청 사항","entities":[{"type":"PERSON","text":"최​지훈","start_byte":1,"end_byte":13,"start_cp":1,"end_cp":5}]}
+{"id":"g-person-144","category":"person","variant":"particle","text":"박시온까지 포함해 다섯 명이다.","entities":[{"type":"PERSON","text":"박시온","start_byte":0,"end_byte":9,"start_cp":0,"end_cp":3}]}
+{"id":"g-person-145","category":"person","variant":"title_attached","text":"추유리변호사는 자리를 비웠다.","entities":[{"type":"PERSON","text":"추유리","start_byte":0,"end_byte":9,"start_cp":0,"end_cp":3}]}
+{"id":"g-person-146","category":"person","variant":"punctuation","text":"<조규민> 님의 요청 사항","entities":[{"type":"PERSON","text":"조규민","start_byte":1,"end_byte":10,"start_cp":1,"end_cp":4}]}
+{"id":"g-person-147","category":"person","variant":"english","text":"Soi Do한테서 연락이 왔다.","entities":[{"type":"PERSON","text":"Soi Do","start_byte":0,"end_byte":6,"start_cp":0,"end_cp":6}]}
+{"id":"g-person-148","category":"person","variant":"plain","text":"이번 달 우수 사원은 추하엘 입니다.","entities":[{"type":"PERSON","text":"추하엘","start_byte":28,"end_byte":37,"start_cp":12,"end_cp":15}]}
+{"id":"g-person-149","category":"person","variant":"title","text":"경수호 회계사가 회의를 열었다.","entities":[{"type":"PERSON","text":"경수호","start_byte":0,"end_byte":9,"start_cp":0,"end_cp":3}]}
+{"id":"g-person-150","category":"person","variant":"particle","text":"임태오랑 같이 점심을 먹었다.","entities":[{"type":"PERSON","text":"임태오","start_byte":0,"end_byte":9,"start_cp":0,"end_cp":3}]}
+{"id":"g-person-151","category":"person","variant":"particle","text":"국시하까지 포함해 다섯 명이다.","entities":[{"type":"PERSON","text":"국시하","start_byte":0,"end_byte":9,"start_cp":0,"end_cp":3}]}
+{"id":"g-person-152","category":"person","variant":"honorific","text":"부아영씨에게 전화를 돌려 드릴게요.","entities":[{"type":"PERSON","text":"부아영","start_byte":0,"end_byte":9,"start_cp":0,"end_cp":3}]}
+{"id":"g-person-153","category":"person","variant":"title_attached","text":"나라온전무는 자리를 비웠다.","entities":[{"type":"PERSON","text":"나라온","start_byte":0,"end_byte":9,"start_cp":0,"end_cp":3}]}
+{"id":"g-person-154","category":"person","variant":"punctuation","text":"작성: 김태오 (총무)","entities":[{"type":"PERSON","text":"김태오","start_byte":8,"end_byte":17,"start_cp":4,"end_cp":7}]}
+{"id":"g-person-155","category":"person","variant":"punctuation","text":"작성: 정태오 (총무)","entities":[{"type":"PERSON","text":"정태오","start_byte":8,"end_byte":17,"start_cp":4,"end_cp":7}]}
+{"id":"g-person-156","category":"person","variant":"punctuation","text":"작성: 부윤호 (총무)","entities":[{"type":"PERSON","text":"부윤호","start_byte":8,"end_byte":17,"start_cp":4,"end_cp":7}]}
+{"id":"g-person-157","category":"person","variant":"plain","text":"면담 대상: 경도겸","entities":[{"type":"PERSON","text":"경도겸","start_byte":15,"end_byte":24,"start_cp":7,"end_cp":10}]}
+{"id":"g-person-158","category":"person","variant":"particle","text":"발표 자료는 이해인이 준비했다.","entities":[{"type":"PERSON","text":"이해인","start_byte":17,"end_byte":26,"start_cp":7,"end_cp":10}]}
+{"id":"g-person-159","category":"person","variant":"english","text":"작성: Soi Bong (총무)","entities":[{"type":"PERSON","text":"Soi Bong","start_byte":8,"end_byte":16,"start_cp":4,"end_cp":12}]}
+{"id":"g-person-160","category":"person","variant":"copula","text":"최종 승인자는 김다올이다.","entities":[{"type":"PERSON","text":"김다올","start_byte":20,"end_byte":29,"start_cp":8,"end_cp":11}]}
+{"id":"g-person-161","category":"person","variant":"particle","text":"국소이를 신규 담당으로 지정했다.","entities":[{"type":"PERSON","text":"국소이","start_byte":0,"end_byte":9,"start_cp":0,"end_cp":3}]}
+{"id":"g-person-162","category":"person","variant":"nfd","text":"하유리를 신규 담당으로 지정했다.","entities":[{"type":"PERSON","text":"하유리","start_byte":0,"end_byte":18,"start_cp":0,"end_cp":6}]}
+{"id":"g-person-163","category":"person","variant":"honorific","text":"장도경님 앞으로 택배가 도착했습니다.","entities":[{"type":"PERSON","text":"장도경","start_byte":0,"end_byte":9,"start_cp":0,"end_cp":3}]}
+{"id":"g-person-164","category":"person","variant":"title","text":"이은결 회계사가 회의를 열었다.","entities":[{"type":"PERSON","text":"이은결","start_byte":0,"end_byte":9,"start_cp":0,"end_cp":3}]}
+{"id":"g-person-165","category":"person","variant":"honorific","text":"추서진씨에게 전화를 돌려 드릴게요.","entities":[{"type":"PERSON","text":"추서진","start_byte":0,"end_byte":9,"start_cp":0,"end_cp":3}]}
+{"id":"g-person-166","category":"person","variant":"particle","text":"여서진한테서 연락이 왔다.","entities":[{"type":"PERSON","text":"여서진","start_byte":0,"end_byte":9,"start_cp":0,"end_cp":3}]}
+{"id":"g-person-167","category":"person","variant":"zero_width","text":"국​시하는 현장에 남았다.","entities":[{"type":"PERSON","text":"국​시하","start_byte":0,"end_byte":12,"start_cp":0,"end_cp":4}]}
+{"id":"g-person-168","category":"person","variant":"english","text":"Yeonseo Kyung를 신규 담당으로 지정했다.","entities":[{"type":"PERSON","text":"Yeonseo Kyung","start_byte":0,"end_byte":13,"start_cp":0,"end_cp":13}]}
+{"id":"g-person-169","category":"person","variant":"particle","text":"여민혁한테서 연락이 왔다.","entities":[{"type":"PERSON","text":"여민혁","start_byte":0,"end_byte":9,"start_cp":0,"end_cp":3}]}
+{"id":"g-person-170","category":"person","variant":"plain","text":"이번 달 우수 사원은 정다올 입니다.","entities":[{"type":"PERSON","text":"정다올","start_byte":28,"end_byte":37,"start_cp":12,"end_cp":15}]}
+{"id":"g-person-171","category":"person","variant":"particle","text":"김채아는 현장에 남았다.","entities":[{"type":"PERSON","text":"김채아","start_byte":0,"end_byte":9,"start_cp":0,"end_cp":3}]}
+{"id":"g-person-172","category":"person","variant":"particle","text":"국나연에게 결과를 알려 주세요.","entities":[{"type":"PERSON","text":"국나연","start_byte":0,"end_byte":9,"start_cp":0,"end_cp":3}]}
+{"id":"g-person-173","category":"person","variant":"plain","text":"면담 대상: 장해인","entities":[{"type":"PERSON","text":"장해인","start_byte":15,"end_byte":24,"start_cp":7,"end_cp":10}]}
+{"id":"g-person-174","category":"person","variant":"particle","text":"피지훈은 현장에 남았다.","entities":[{"type":"PERSON","text":"피지훈","start_byte":0,"end_byte":9,"start_cp":0,"end_cp":3}]}
+{"id":"g-person-175","category":"person","variant":"particle","text":"발표 자료는 국시하가 준비했다.","entities":[{"type":"PERSON","text":"국시하","start_byte":17,"end_byte":26,"start_cp":7,"end_cp":10}]}
+{"id":"g-person-176","category":"person","variant":"particle","text":"최민혁이 내일부터 휴직한다.","entities":[{"type":"PERSON","text":"최민혁","start_byte":0,"end_byte":9,"start_cp":0,"end_cp":3}]}
+{"id":"g-person-177","category":"person","variant":"punctuation","text":"작성: 조가람 (총무)","entities":[{"type":"PERSON","text":"조가람","start_byte":8,"end_byte":17,"start_cp":4,"end_cp":7}]}
+{"id":"g-person-178","category":"person","variant":"honorific","text":"하태오씨에게 전화를 돌려 드릴게요.","entities":[{"type":"PERSON","text":"하태오","start_byte":0,"end_byte":9,"start_cp":0,"end_cp":3}]}
+{"id":"g-person-179","category":"person","variant":"particle","text":"여하늬까지 포함해 다섯 명이다.","entities":[{"type":"PERSON","text":"여하늬","start_byte":0,"end_byte":9,"start_cp":0,"end_cp":3}]}
+{"id":"g-person-180","category":"person","variant":"particle","text":"맹라온은 현장에 남았다.","entities":[{"type":"PERSON","text":"맹라온","start_byte":0,"end_byte":9,"start_cp":0,"end_cp":3}]}
+{"id":"g-person-181","category":"person","variant":"title","text":"사시하 이사장이 회의를 열었다.","entities":[{"type":"PERSON","text":"사시하","start_byte":0,"end_byte":9,"start_cp":0,"end_cp":3}]}
+{"id":"g-person-182","category":"person","variant":"particle","text":"예하엘보다 먼저 도착했다.","entities":[{"type":"PERSON","text":"예하엘","start_byte":0,"end_byte":9,"start_cp":0,"end_cp":3}]}
+{"id":"g-person-183","category":"person","variant":"title_attached","text":"맹주하총장은 자리를 비웠다.","entities":[{"type":"PERSON","text":"맹주하","start_byte":0,"end_byte":9,"start_cp":0,"end_cp":3}]}
+{"id":"g-person-184","category":"person","variant":"particle","text":"나태경보다 먼저 도착했다.","entities":[{"type":"PERSON","text":"나태경","start_byte":0,"end_byte":9,"start_cp":0,"end_cp":3}]}
+{"id":"g-person-185","category":"person","variant":"honorific","text":"김도겸씨에게 전화를 돌려 드릴게요.","entities":[{"type":"PERSON","text":"김도겸","start_byte":0,"end_byte":9,"start_cp":0,"end_cp":3}]}
+{"id":"g-person-186","category":"person","variant":"nfd","text":"탁해인씨에게 전화를 돌려 드릴게요.","entities":[{"type":"PERSON","text":"탁해인","start_byte":0,"end_byte":24,"start_cp":0,"end_cp":8}]}
+{"id":"g-person-187","category":"person","variant":"particle","text":"소시하를 신규 담당으로 지정했다.","entities":[{"type":"PERSON","text":"소시하","start_byte":0,"end_byte":9,"start_cp":0,"end_cp":3}]}
+{"id":"g-person-188","category":"person","variant":"particle","text":"김가람에게 결과를 알려 주세요.","entities":[{"type":"PERSON","text":"김가람","start_byte":0,"end_byte":9,"start_cp":0,"end_cp":3}]}
+{"id":"g-person-189","category":"person","variant":"particle","text":"은가람을 신규 담당으로 지정했다.","entities":[{"type":"PERSON","text":"은가람","start_byte":0,"end_byte":9,"start_cp":0,"end_cp":3}]}
+{"id":"g-person-190","category":"person","variant":"particle","text":"제나연에게 결과를 알려 주세요.","entities":[{"type":"PERSON","text":"제나연","start_byte":0,"end_byte":9,"start_cp":0,"end_cp":3}]}
+{"id":"g-person-191","category":"person","variant":"particle","text":"조시온보다 먼저 도착했다.","entities":[{"type":"PERSON","text":"조시온","start_byte":0,"end_byte":9,"start_cp":0,"end_cp":3}]}
+{"id":"g-person-192","category":"person","variant":"english","text":"Kyumin Je감사는 자리를 비웠다.","entities":[{"type":"PERSON","text":"Kyumin Je","start_byte":0,"end_byte":9,"start_cp":0,"end_cp":9}]}
+{"id":"g-person-193","category":"person","variant":"english","text":"<Soi Do> 님의 요청 사항","entities":[{"type":"PERSON","text":"Soi Do","start_byte":1,"end_byte":7,"start_cp":1,"end_cp":7}]}
+{"id":"g-person-194","category":"person","variant":"english","text":"Suho Bong가 내일부터 휴직한다.","entities":[{"type":"PERSON","text":"Suho Bong","start_byte":0,"end_byte":9,"start_cp":0,"end_cp":9}]}
+{"id":"g-person-195","category":"person","variant":"zero_width","text":"발표 자료는 은​민혁이 준비했다.","entities":[{"type":"PERSON","text":"은​민혁","start_byte":17,"end_byte":29,"start_cp":7,"end_cp":11}]}
+{"id":"g-person-196","category":"person","variant":"nfd","text":"최종 승인자는 추유리다.","entities":[{"type":"PERSON","text":"추유리","start_byte":20,"end_byte":38,"start_cp":8,"end_cp":14}]}
+{"id":"g-person-197","category":"person","variant":"particle","text":"이승현은 현장에 남았다.","entities":[{"type":"PERSON","text":"이승현","start_byte":0,"end_byte":9,"start_cp":0,"end_cp":3}]}
+{"id":"g-person-198","category":"person","variant":"nfd","text":"이지성한테서 연락이 왔다.","entities":[{"type":"PERSON","text":"이지성","start_byte":0,"end_byte":21,"start_cp":0,"end_cp":7}]}
+{"id":"g-person-199","category":"person","variant":"particle","text":"제라온에게 결과를 알려 주세요.","entities":[{"type":"PERSON","text":"제라온","start_byte":0,"end_byte":9,"start_cp":0,"end_cp":3}]}
+{"id":"g-person-200","category":"person","variant":"particle","text":"부태오에게 결과를 알려 주세요.","entities":[{"type":"PERSON","text":"부태오","start_byte":0,"end_byte":9,"start_cp":0,"end_cp":3}]}
+{"id":"g-person-201","category":"person","variant":"particle","text":"봉태오는 현장에 남았다.","entities":[{"type":"PERSON","text":"봉태오","start_byte":0,"end_byte":9,"start_cp":0,"end_cp":3}]}
+{"id":"g-person-202","category":"person","variant":"particle","text":"정라온이 내일부터 휴직한다.","entities":[{"type":"PERSON","text":"정라온","start_byte":0,"end_byte":9,"start_cp":0,"end_cp":3}]}
+{"id":"g-person-203","category":"person","variant":"particle","text":"추나연은 현장에 남았다.","entities":[{"type":"PERSON","text":"추나연","start_byte":0,"end_byte":9,"start_cp":0,"end_cp":3}]}
+{"id":"g-person-204","category":"person","variant":"particle","text":"발표 자료는 윤정민이 준비했다.","entities":[{"type":"PERSON","text":"윤정민","start_byte":17,"end_byte":26,"start_cp":7,"end_cp":10}]}
+{"id":"g-person-205","category":"person","variant":"zero_width","text":"경​도경님 앞으로 택배가 도착했습니다.","entities":[{"type":"PERSON","text":"경​도경","start_byte":0,"end_byte":12,"start_cp":0,"end_cp":4}]}
+{"id":"g-person-206","category":"person","variant":"title","text":"이주하 감사가 회의를 열었다.","entities":[{"type":"PERSON","text":"이주하","start_byte":0,"end_byte":9,"start_cp":0,"end_cp":3}]}
+{"id":"g-person-207","category":"person","variant":"particle","text":"제예빈은 현장에 남았다.","entities":[{"type":"PERSON","text":"제예빈","start_byte":0,"end_byte":9,"start_cp":0,"end_cp":3}]}
+{"id":"g-person-208","category":"person","variant":"copula","text":"최종 승인자는 조채아다.","entities":[{"type":"PERSON","text":"조채아","start_byte":20,"end_byte":29,"start_cp":8,"end_cp":11}]}
+{"id":"g-person-209","category":"person","variant":"particle","text":"장하엘은 현장에 남았다.","entities":[{"type":"PERSON","text":"장하엘","start_byte":0,"end_byte":9,"start_cp":0,"end_cp":3}]}
+{"id":"g-person-210","category":"person","variant":"particle","text":"임도경을 신규 담당으로 지정했다.","entities":[{"type":"PERSON","text":"임도경","start_byte":0,"end_byte":9,"start_cp":0,"end_cp":3}]}
+{"id":"g-person-211","category":"person","variant":"zero_width","text":"면담 대상: 박​가람","entities":[{"type":"PERSON","text":"박​가람","start_byte":15,"end_byte":27,"start_cp":7,"end_cp":11}]}
+{"id":"g-person-212","category":"person","variant":"nfd","text":"김도원님 앞으로 택배가 도착했습니다.","entities":[{"type":"PERSON","text":"김도원","start_byte":0,"end_byte":24,"start_cp":0,"end_cp":8}]}
+{"id":"g-person-213","category":"person","variant":"particle","text":"사민혁이랑 같이 점심을 먹었다.","entities":[{"type":"PERSON","text":"사민혁","start_byte":0,"end_byte":9,"start_cp":0,"end_cp":3}]}
+{"id":"g-person-214","category":"person","variant":"particle","text":"박시하랑 같이 점심을 먹었다.","entities":[{"type":"PERSON","text":"박시하","start_byte":0,"end_byte":9,"start_cp":0,"end_cp":3}]}
+{"id":"g-person-215","category":"person","variant":"particle","text":"윤지훈에게 결과를 알려 주세요.","entities":[{"type":"PERSON","text":"윤지훈","start_byte":0,"end_byte":9,"start_cp":0,"end_cp":3}]}
+{"id":"g-person-216","category":"person","variant":"copula","text":"최종 승인자는 조윤호다.","entities":[{"type":"PERSON","text":"조윤호","start_byte":20,"end_byte":29,"start_cp":8,"end_cp":11}]}
+{"id":"g-person-217","category":"person","variant":"particle","text":"제규민은 현장에 남았다.","entities":[{"type":"PERSON","text":"제규민","start_byte":0,"end_byte":9,"start_cp":0,"end_cp":3}]}
+{"id":"g-person-218","category":"person","variant":"punctuation","text":"작성: 예우현 (총무)","entities":[{"type":"PERSON","text":"예우현","start_byte":8,"end_byte":17,"start_cp":4,"end_cp":7}]}
+{"id":"g-person-219","category":"person","variant":"punctuation","text":"작성: 최도원 (총무)","entities":[{"type":"PERSON","text":"최도원","start_byte":8,"end_byte":17,"start_cp":4,"end_cp":7}]}
+{"id":"g-person-220","category":"person","variant":"particle","text":"장지훈보다 먼저 도착했다.","entities":[{"type":"PERSON","text":"장지훈","start_byte":0,"end_byte":9,"start_cp":0,"end_cp":3}]}
+{"id":"g-person-221","category":"person","variant":"honorific","text":"여도원씨에게 전화를 돌려 드릴게요.","entities":[{"type":"PERSON","text":"여도원","start_byte":0,"end_byte":9,"start_cp":0,"end_cp":3}]}
+{"id":"g-person-222","category":"person","variant":"particle","text":"발표 자료는 여우현이 준비했다.","entities":[{"type":"PERSON","text":"여우현","start_byte":17,"end_byte":26,"start_cp":7,"end_cp":10}]}
+{"id":"g-person-223","category":"person","variant":"particle","text":"정나연한테서 연락이 왔다.","entities":[{"type":"PERSON","text":"정나연","start_byte":0,"end_byte":9,"start_cp":0,"end_cp":3}]}
+{"id":"g-person-224","category":"person","variant":"english","text":"Daol Choo는 현장에 남았다.","entities":[{"type":"PERSON","text":"Daol Choo","start_byte":0,"end_byte":9,"start_cp":0,"end_cp":9}]}
+{"id":"g-person-225","category":"person","variant":"punctuation","text":"<봉아영> 님의 요청 사항","entities":[{"type":"PERSON","text":"봉아영","start_byte":1,"end_byte":10,"start_cp":1,"end_cp":4}]}
+{"id":"g-person-226","category":"person","variant":"particle","text":"윤도경까지 포함해 다섯 명이다.","entities":[{"type":"PERSON","text":"윤도경","start_byte":0,"end_byte":9,"start_cp":0,"end_cp":3}]}
+{"id":"g-person-227","category":"person","variant":"title","text":"어보영 감사가 회의를 열었다.","entities":[{"type":"PERSON","text":"어보영","start_byte":0,"end_byte":9,"start_cp":0,"end_cp":3}]}
+{"id":"g-person-228","category":"person","variant":"punctuation","text":"<용승현> 님의 요청 사항","entities":[{"type":"PERSON","text":"용승현","start_byte":1,"end_byte":10,"start_cp":1,"end_cp":4}]}
+{"id":"g-person-229","category":"person","variant":"nfd","text":"피소이가 내일부터 휴직한다.","entities":[{"type":"PERSON","text":"피소이","start_byte":0,"end_byte":18,"start_cp":0,"end_cp":6}]}
+{"id":"g-person-230","category":"person","variant":"copula","text":"최종 승인자는 강승현이다.","entities":[{"type":"PERSON","text":"강승현","start_byte":20,"end_byte":29,"start_cp":8,"end_cp":11}]}
+{"id":"g-person-231","category":"person","variant":"honorific","text":"탁현진씨에게 전화를 돌려 드릴게요.","entities":[{"type":"PERSON","text":"탁현진","start_byte":0,"end_byte":9,"start_cp":0,"end_cp":3}]}
+{"id":"g-person-232","category":"person","variant":"particle","text":"발표 자료는 봉주하가 준비했다.","entities":[{"type":"PERSON","text":"봉주하","start_byte":17,"end_byte":26,"start_cp":7,"end_cp":10}]}
+{"id":"g-person-233","category":"person","variant":"particle","text":"제태오가 내일부터 휴직한다.","entities":[{"type":"PERSON","text":"제태오","start_byte":0,"end_byte":9,"start_cp":0,"end_cp":3}]}
+{"id":"g-person-234","category":"person","variant":"title_attached","text":"하윤호감사는 자리를 비웠다.","entities":[{"type":"PERSON","text":"하윤호","start_byte":0,"end_byte":9,"start_cp":0,"end_cp":3}]}
+{"id":"g-person-235","category":"person","variant":"nfd","text":"<추시온> 님의 요청 사항","entities":[{"type":"PERSON","text":"추시온","start_byte":1,"end_byte":22,"start_cp":1,"end_cp":8}]}
+{"id":"g-person-236","category":"person","variant":"zero_width","text":"경​서온이랑 같이 점심을 먹었다.","entities":[{"type":"PERSON","text":"경​서온","start_byte":0,"end_byte":12,"start_cp":0,"end_cp":4}]}
+{"id":"g-person-237","category":"person","variant":"particle","text":"최서온은 현장에 남았다.","entities":[{"type":"PERSON","text":"최서온","start_byte":0,"end_byte":9,"start_cp":0,"end_cp":3}]}
+{"id":"g-person-238","category":"person","variant":"zero_width","text":"면담 대상: 최​도경","entities":[{"type":"PERSON","text":"최​도경","start_byte":15,"end_byte":27,"start_cp":7,"end_cp":11}]}
+{"id":"g-person-239","category":"person","variant":"particle","text":"탁세윤은 현장에 남았다.","entities":[{"type":"PERSON","text":"탁세윤","start_byte":0,"end_byte":9,"start_cp":0,"end_cp":3}]}
+{"id":"g-person-240","category":"person","variant":"copula","text":"최종 승인자는 추서온이다.","entities":[{"type":"PERSON","text":"추서온","start_byte":20,"end_byte":29,"start_cp":8,"end_cp":11}]}
+{"id":"g-person-241","category":"person","variant":"honorific","text":"편규민님 앞으로 택배가 도착했습니다.","entities":[{"type":"PERSON","text":"편규민","start_byte":0,"end_byte":9,"start_cp":0,"end_cp":3}]}
+{"id":"g-person-242","category":"person","variant":"particle","text":"발표 자료는 부단우가 준비했다.","entities":[{"type":"PERSON","text":"부단우","start_byte":17,"end_byte":26,"start_cp":7,"end_cp":10}]}
+{"id":"g-person-243","category":"person","variant":"zero_width","text":"발표 자료는 피​수민이 준비했다.","entities":[{"type":"PERSON","text":"피​수민","start_byte":17,"end_byte":29,"start_cp":7,"end_cp":11}]}
+{"id":"g-person-244","category":"person","variant":"particle","text":"여나연보다 먼저 도착했다.","entities":[{"type":"PERSON","text":"여나연","start_byte":0,"end_byte":9,"start_cp":0,"end_cp":3}]}
+{"id":"g-person-245","category":"person","variant":"punctuation","text":"<도채아> 님의 요청 사항","entities":[{"type":"PERSON","text":"도채아","start_byte":1,"end_byte":10,"start_cp":1,"end_cp":4}]}
+{"id":"g-person-246","category":"person","variant":"particle","text":"부태경에게 결과를 알려 주세요.","entities":[{"type":"PERSON","text":"부태경","start_byte":0,"end_byte":9,"start_cp":0,"end_cp":3}]}
+{"id":"g-person-247","category":"person","variant":"particle","text":"조주하에게 결과를 알려 주세요.","entities":[{"type":"PERSON","text":"조주하","start_byte":0,"end_byte":9,"start_cp":0,"end_cp":3}]}
+{"id":"g-person-248","category":"person","variant":"english","text":"이번 달 우수 사원은 Kyumin Kook 입니다.","entities":[{"type":"PERSON","text":"Kyumin Kook","start_byte":28,"end_byte":39,"start_cp":12,"end_cp":23}]}
+{"id":"g-person-249","category":"person","variant":"plain","text":"이번 달 우수 사원은 나현진 입니다.","entities":[{"type":"PERSON","text":"나현진","start_byte":28,"end_byte":37,"start_cp":12,"end_cp":15}]}
+{"id":"g-person-250","category":"person","variant":"particle","text":"사라온까지 포함해 다섯 명이다.","entities":[{"type":"PERSON","text":"사라온","start_byte":0,"end_byte":9,"start_cp":0,"end_cp":3}]}
+{"id":"g-person-251","category":"person","variant":"particle","text":"윤아영까지 포함해 다섯 명이다.","entities":[{"type":"PERSON","text":"윤아영","start_byte":0,"end_byte":9,"start_cp":0,"end_cp":3}]}
+{"id":"g-person-252","category":"person","variant":"plain","text":"이번 달 우수 사원은 어민혁 입니다.","entities":[{"type":"PERSON","text":"어민혁","start_byte":28,"end_byte":37,"start_cp":12,"end_cp":15}]}
+{"id":"g-person-253","category":"person","variant":"copula","text":"최종 승인자는 어도겸이다.","entities":[{"type":"PERSON","text":"어도겸","start_byte":20,"end_byte":29,"start_cp":8,"end_cp":11}]}
+{"id":"g-person-254","category":"person","variant":"particle","text":"최가람한테서 연락이 왔다.","entities":[{"type":"PERSON","text":"최가람","start_byte":0,"end_byte":9,"start_cp":0,"end_cp":3}]}
+{"id":"g-person-255","category":"person","variant":"particle","text":"어태경은 현장에 남았다.","entities":[{"type":"PERSON","text":"어태경","start_byte":0,"end_byte":9,"start_cp":0,"end_cp":3}]}
+{"id":"g-person-256","category":"person","variant":"particle","text":"이보영은 현장에 남았다.","entities":[{"type":"PERSON","text":"이보영","start_byte":0,"end_byte":9,"start_cp":0,"end_cp":3}]}
+{"id":"g-person-257","category":"person","variant":"particle","text":"추수호까지 포함해 다섯 명이다.","entities":[{"type":"PERSON","text":"추수호","start_byte":0,"end_byte":9,"start_cp":0,"end_cp":3}]}
+{"id":"g-person-258","category":"person","variant":"particle","text":"부아영은 현장에 남았다.","entities":[{"type":"PERSON","text":"부아영","start_byte":0,"end_byte":9,"start_cp":0,"end_cp":3}]}
+{"id":"g-person-259","category":"person","variant":"honorific","text":"편채아님 앞으로 택배가 도착했습니다.","entities":[{"type":"PERSON","text":"편채아","start_byte":0,"end_byte":9,"start_cp":0,"end_cp":3}]}
+{"id":"g-person-260","category":"person","variant":"particle","text":"탁나연은 현장에 남았다.","entities":[{"type":"PERSON","text":"탁나연","start_byte":0,"end_byte":9,"start_cp":0,"end_cp":3}]}
+{"id":"g-person-261","category":"person","variant":"punctuation","text":"<이현진> 님의 요청 사항","entities":[{"type":"PERSON","text":"이현진","start_byte":1,"end_byte":10,"start_cp":1,"end_cp":4}]}
+{"id":"g-person-262","category":"person","variant":"plain","text":"면담 대상: 용시하","entities":[{"type":"PERSON","text":"용시하","start_byte":15,"end_byte":24,"start_cp":7,"end_cp":10}]}
+{"id":"g-person-263","category":"person","variant":"honorific","text":"소도경씨에게 전화를 돌려 드릴게요.","entities":[{"type":"PERSON","text":"소도경","start_byte":0,"end_byte":9,"start_cp":0,"end_cp":3}]}
+{"id":"g-person-264","category":"person","variant":"particle","text":"경정민한테서 연락이 왔다.","entities":[{"type":"PERSON","text":"경정민","start_byte":0,"end_byte":9,"start_cp":0,"end_cp":3}]}
+{"id":"g-person-265","category":"person","variant":"plain","text":"이번 달 우수 사원은 도나연 입니다.","entities":[{"type":"PERSON","text":"도나연","start_byte":28,"end_byte":37,"start_cp":12,"end_cp":15}]}
+{"id":"g-person-266","category":"person","variant":"title","text":"용소이 팀원이 회의를 열었다.","entities":[{"type":"PERSON","text":"용소이","start_byte":0,"end_byte":9,"start_cp":0,"end_cp":3}]}
+{"id":"g-person-267","category":"person","variant":"particle","text":"추단우까지 포함해 다섯 명이다.","entities":[{"type":"PERSON","text":"추단우","start_byte":0,"end_byte":9,"start_cp":0,"end_cp":3}]}
+{"id":"g-person-268","category":"person","variant":"particle","text":"정도원한테서 연락이 왔다.","entities":[{"type":"PERSON","text":"정도원","start_byte":0,"end_byte":9,"start_cp":0,"end_cp":3}]}
+{"id":"g-person-269","category":"person","variant":"particle","text":"이우현에게 결과를 알려 주세요.","entities":[{"type":"PERSON","text":"이우현","start_byte":0,"end_byte":9,"start_cp":0,"end_cp":3}]}
+{"id":"g-person-270","category":"person","variant":"particle","text":"이해인은 현장에 남았다.","entities":[{"type":"PERSON","text":"이해인","start_byte":0,"end_byte":9,"start_cp":0,"end_cp":3}]}
+{"id":"g-person-271","category":"person","variant":"particle","text":"장유리가 내일부터 휴직한다.","entities":[{"type":"PERSON","text":"장유리","start_byte":0,"end_byte":9,"start_cp":0,"end_cp":3}]}
+{"id":"g-person-272","category":"person","variant":"english","text":"<Yeonseo Yong> 님의 요청 사항","entities":[{"type":"PERSON","text":"Yeonseo Yong","start_byte":1,"end_byte":13,"start_cp":1,"end_cp":13}]}
+{"id":"g-person-273","category":"person","variant":"honorific","text":"임세윤씨에게 전화를 돌려 드릴게요.","entities":[{"type":"PERSON","text":"임세윤","start_byte":0,"end_byte":9,"start_cp":0,"end_cp":3}]}
+{"id":"g-person-274","category":"person","variant":"honorific","text":"사라온님 앞으로 택배가 도착했습니다.","entities":[{"type":"PERSON","text":"사라온","start_byte":0,"end_byte":9,"start_cp":0,"end_cp":3}]}
+{"id":"g-person-275","category":"person","variant":"title","text":"윤다올 감사가 회의를 열었다.","entities":[{"type":"PERSON","text":"윤다올","start_byte":0,"end_byte":9,"start_cp":0,"end_cp":3}]}
+{"id":"g-person-276","category":"person","variant":"particle","text":"하가람보다 먼저 도착했다.","entities":[{"type":"PERSON","text":"하가람","start_byte":0,"end_byte":9,"start_cp":0,"end_cp":3}]}
+{"id":"g-person-277","category":"person","variant":"zero_width","text":"경​채아까지 포함해 다섯 명이다.","entities":[{"type":"PERSON","text":"경​채아","start_byte":0,"end_byte":12,"start_cp":0,"end_cp":4}]}
+{"id":"g-person-278","category":"person","variant":"nfd","text":"추승현씨에게 전화를 돌려 드릴게요.","entities":[{"type":"PERSON","text":"추승현","start_byte":0,"end_byte":24,"start_cp":0,"end_cp":8}]}
+{"id":"g-person-279","category":"person","variant":"zero_width","text":"봉​서온님 앞으로 택배가 도착했습니다.","entities":[{"type":"PERSON","text":"봉​서온","start_byte":0,"end_byte":12,"start_cp":0,"end_cp":4}]}
+{"id":"g-person-280","category":"person","variant":"particle","text":"임우현보다 먼저 도착했다.","entities":[{"type":"PERSON","text":"임우현","start_byte":0,"end_byte":9,"start_cp":0,"end_cp":3}]}
+{"id":"g-person-281","category":"person","variant":"honorific","text":"제도경씨에게 전화를 돌려 드릴게요.","entities":[{"type":"PERSON","text":"제도경","start_byte":0,"end_byte":9,"start_cp":0,"end_cp":3}]}
+{"id":"g-person-282","category":"person","variant":"title_attached","text":"장서온회계사는 자리를 비웠다.","entities":[{"type":"PERSON","text":"장서온","start_byte":0,"end_byte":9,"start_cp":0,"end_cp":3}]}
+{"id":"g-person-283","category":"person","variant":"particle","text":"임보영한테서 연락이 왔다.","entities":[{"type":"PERSON","text":"임보영","start_byte":0,"end_byte":9,"start_cp":0,"end_cp":3}]}
+{"id":"g-person-284","category":"person","variant":"particle","text":"조시온이 내일부터 휴직한다.","entities":[{"type":"PERSON","text":"조시온","start_byte":0,"end_byte":9,"start_cp":0,"end_cp":3}]}
+{"id":"g-person-285","category":"person","variant":"particle","text":"부아영이 내일부터 휴직한다.","entities":[{"type":"PERSON","text":"부아영","start_byte":0,"end_byte":9,"start_cp":0,"end_cp":3}]}
+{"id":"g-person-286","category":"person","variant":"copula","text":"최종 승인자는 임다빈이다.","entities":[{"type":"PERSON","text":"임다빈","start_byte":20,"end_byte":29,"start_cp":8,"end_cp":11}]}
+{"id":"g-person-287","category":"person","variant":"title","text":"이정민 감사가 회의를 열었다.","entities":[{"type":"PERSON","text":"이정민","start_byte":0,"end_byte":9,"start_cp":0,"end_cp":3}]}
+{"id":"g-person-288","category":"person","variant":"plain","text":"면담 대상: 윤현진","entities":[{"type":"PERSON","text":"윤현진","start_byte":15,"end_byte":24,"start_cp":7,"end_cp":10}]}
+{"id":"g-person-289","category":"person","variant":"english","text":"Taekyung Yeo가 내일부터 휴직한다.","entities":[{"type":"PERSON","text":"Taekyung Yeo","start_byte":0,"end_byte":12,"start_cp":0,"end_cp":12}]}
+{"id":"g-person-290","category":"person","variant":"english","text":"작성: Suho So (총무)","entities":[{"type":"PERSON","text":"Suho So","start_byte":8,"end_byte":15,"start_cp":4,"end_cp":11}]}
+{"id":"g-person-291","category":"person","variant":"punctuation","text":"작성: 도도원 (총무)","entities":[{"type":"PERSON","text":"도도원","start_byte":8,"end_byte":17,"start_cp":4,"end_cp":7}]}
+{"id":"g-person-292","category":"person","variant":"english","text":"Kyumin Choo까지 포함해 다섯 명이다.","entities":[{"type":"PERSON","text":"Kyumin Choo","start_byte":0,"end_byte":11,"start_cp":0,"end_cp":11}]}
+{"id":"g-person-293","category":"person","variant":"particle","text":"김민혁을 신규 담당으로 지정했다.","entities":[{"type":"PERSON","text":"김민혁","start_byte":0,"end_byte":9,"start_cp":0,"end_cp":3}]}
+{"id":"g-person-294","category":"person","variant":"english","text":"Suho So는 현장에 남았다.","entities":[{"type":"PERSON","text":"Suho So","start_byte":0,"end_byte":7,"start_cp":0,"end_cp":7}]}
+{"id":"g-person-295","category":"person","variant":"particle","text":"강서진까지 포함해 다섯 명이다.","entities":[{"type":"PERSON","text":"강서진","start_byte":0,"end_byte":9,"start_cp":0,"end_cp":3}]}
+{"id":"g-person-296","category":"person","variant":"particle","text":"어채아보다 먼저 도착했다.","entities":[{"type":"PERSON","text":"어채아","start_byte":0,"end_byte":9,"start_cp":0,"end_cp":3}]}
+{"id":"g-person-297","category":"person","variant":"nfd","text":"용다빈씨에게 전화를 돌려 드릴게요.","entities":[{"type":"PERSON","text":"용다빈","start_byte":0,"end_byte":24,"start_cp":0,"end_cp":8}]}
+{"id":"g-person-298","category":"person","variant":"zero_width","text":"부​보영보다 먼저 도착했다.","entities":[{"type":"PERSON","text":"부​보영","start_byte":0,"end_byte":12,"start_cp":0,"end_cp":4}]}
+{"id":"g-person-299","category":"person","variant":"particle","text":"발표 자료는 추규민이 준비했다.","entities":[{"type":"PERSON","text":"추규민","start_byte":17,"end_byte":26,"start_cp":7,"end_cp":10}]}
+{"id":"g-person-300","category":"person","variant":"punctuation","text":"작성: 예수민 (총무)","entities":[{"type":"PERSON","text":"예수민","start_byte":8,"end_byte":17,"start_cp":4,"end_cp":7}]}
+{"id":"g-org-001","category":"organization","variant":"fullwidth","text":"사단법인 Ｂ＆Ｋ랩스는 회원을 모집한다.","entities":[{"type":"ORG","text":"Ｂ＆Ｋ랩스","start_byte":13,"end_byte":28,"start_cp":5,"end_cp":10}]}
+{"id":"g-org-002","category":"organization","variant":"plain","text":"거래처: 푸른솔컴퍼니","entities":[{"type":"ORG","text":"푸른솔컴퍼니","start_byte":11,"end_byte":29,"start_cp":5,"end_cp":11}]}
+{"id":"g-org-003","category":"organization","variant":"particle","text":"푸르미게임즈의 신제품 발표회에 다녀왔다.","entities":[{"type":"ORG","text":"푸르미게임즈","start_byte":0,"end_byte":18,"start_cp":0,"end_cp":6}]}
+{"id":"g-org-004","category":"organization","variant":"particle","text":"다솔자동차가 새 공장을 지었다.","entities":[{"type":"ORG","text":"다솔자동차","start_byte":0,"end_byte":15,"start_cp":0,"end_cp":5}]}
+{"id":"g-org-005","category":"organization","variant":"department","text":"이로운상사 기술지원팀에 요청했다.","entities":[{"type":"ORG","text":"이로운상사","start_byte":0,"end_byte":15,"start_cp":0,"end_cp":5}]}
+{"id":"g-org-006","category":"organization","variant":"department","text":"샛별병원 기술지원팀에 요청했다.","entities":[{"type":"ORG","text":"샛별병원","start_byte":0,"end_byte":12,"start_cp":0,"end_cp":4}]}
+{"id":"g-org-007","category":"organization","variant":"department","text":"단풍연구소 기술지원팀에 요청했다.","entities":[{"type":"ORG","text":"단풍연구소","start_byte":0,"end_byte":15,"start_cp":0,"end_cp":5}]}
+{"id":"g-org-008","category":"organization","variant":"plain","text":"해오름게임즈 측 담당자가 회신했다.","entities":[{"type":"ORG","text":"해오름게임즈","start_byte":0,"end_byte":18,"start_cp":0,"end_cp":6}]}
+{"id":"g-org-009","category":"organization","variant":"particle","text":"솔숲은행을 협력사로 선정했다.","entities":[{"type":"ORG","text":"솔숲은행","start_byte":0,"end_byte":12,"start_cp":0,"end_cp":4}]}
+{"id":"g-org-010","category":"organization","variant":"particle","text":"큰바위컴퍼니가 새 공장을 지었다.","entities":[{"type":"ORG","text":"큰바위컴퍼니","start_byte":0,"end_byte":18,"start_cp":0,"end_cp":6}]}
+{"id":"g-org-011","category":"organization","variant":"particle","text":"단풍전자가 새 공장을 지었다.","entities":[{"type":"ORG","text":"단풍전자","start_byte":0,"end_byte":12,"start_cp":0,"end_cp":4}]}
+{"id":"g-org-012","category":"organization","variant":"plain","text":"거래처: 해오름엔지니어링","entities":[{"type":"ORG","text":"해오름엔지니어링","start_byte":11,"end_byte":35,"start_cp":5,"end_cp":13}]}
+{"id":"g-org-013","category":"organization","variant":"plain","text":"금빛병원 측 담당자가 회신했다.","entities":[{"type":"ORG","text":"금빛병원","start_byte":0,"end_byte":12,"start_cp":0,"end_cp":4}]}
+{"id":"g-org-014","category":"organization","variant":"particle","text":"다솔건축은 지난해 흑자를 냈다.","entities":[{"type":"ORG","text":"다솔건축","start_byte":0,"end_byte":12,"start_cp":0,"end_cp":4}]}
+{"id":"g-org-015","category":"organization","variant":"prefix","text":"(주)금빛협회와 계약을 갱신했다.","entities":[{"type":"ORG","text":"금빛협회","start_byte":5,"end_byte":17,"start_cp":3,"end_cp":7}]}
+{"id":"g-org-016","category":"organization","variant":"plain","text":"거래처: 솔숲상사","entities":[{"type":"ORG","text":"솔숲상사","start_byte":11,"end_byte":23,"start_cp":5,"end_cp":9}]}
+{"id":"g-org-017","category":"organization","variant":"plain","text":"거래처: 드림건축","entities":[{"type":"ORG","text":"드림건축","start_byte":11,"end_byte":23,"start_cp":5,"end_cp":9}]}
+{"id":"g-org-018","category":"organization","variant":"plain","text":"거래처: 미리내전자","entities":[{"type":"ORG","text":"미리내전자","start_byte":11,"end_byte":26,"start_cp":5,"end_cp":10}]}
+{"id":"g-org-019","category":"organization","variant":"department","text":"푸른솔전자 기술지원팀에 요청했다.","entities":[{"type":"ORG","text":"푸른솔전자","start_byte":0,"end_byte":15,"start_cp":0,"end_cp":5}]}
+{"id":"g-org-020","category":"organization","variant":"ascii","text":"B&K모터스가 새 공장을 지었다.","entities":[{"type":"ORG","text":"B&K모터스","start_byte":0,"end_byte":12,"start_cp":0,"end_cp":6}]}
+{"id":"g-org-021","category":"organization","variant":"plain","text":"거래처: 느티컴퍼니","entities":[{"type":"ORG","text":"느티컴퍼니","start_byte":11,"end_byte":26,"start_cp":5,"end_cp":10}]}
+{"id":"g-org-022","category":"organization","variant":"particle","text":"파란건축을 협력사로 선정했다.","entities":[{"type":"ORG","text":"파란건축","start_byte":0,"end_byte":12,"start_cp":0,"end_cp":4}]}
+{"id":"g-org-023","category":"organization","variant":"fullwidth","text":"Ｓ２게임즈가 새 공장을 지었다.","entities":[{"type":"ORG","text":"Ｓ２게임즈","start_byte":0,"end_byte":15,"start_cp":0,"end_cp":5}]}
+{"id":"g-org-024","category":"organization","variant":"prefix","text":"사단법인 단풍전자는 회원을 모집한다.","entities":[{"type":"ORG","text":"단풍전자","start_byte":13,"end_byte":25,"start_cp":5,"end_cp":9}]}
+{"id":"g-org-025","category":"organization","variant":"particle","text":"은빛상사에서 근무한 지 3년이 됐다.","entities":[{"type":"ORG","text":"은빛상사","start_byte":0,"end_byte":12,"start_cp":0,"end_cp":4}]}
+{"id":"g-org-026","category":"organization","variant":"fullwidth","text":"Ａｔｌａｓ모터스에서 근무한 지 3년이 됐다.","entities":[{"type":"ORG","text":"Ａｔｌａｓ모터스","start_byte":0,"end_byte":24,"start_cp":0,"end_cp":8}]}
+{"id":"g-org-027","category":"organization","variant":"fullwidth","text":"Ａｔｌａｓ미디어 측 담당자가 회신했다.","entities":[{"type":"ORG","text":"Ａｔｌａｓ미디어","start_byte":0,"end_byte":24,"start_cp":0,"end_cp":8}]}
+{"id":"g-org-028","category":"organization","variant":"particle","text":"온새미보험에서 근무한 지 3년이 됐다.","entities":[{"type":"ORG","text":"온새미보험","start_byte":0,"end_byte":15,"start_cp":0,"end_cp":5}]}
+{"id":"g-org-029","category":"organization","variant":"punctuation","text":"《모란협회》 연례 보고서","entities":[{"type":"ORG","text":"모란협회","start_byte":3,"end_byte":15,"start_cp":1,"end_cp":5}]}
+{"id":"g-org-030","category":"organization","variant":"particle","text":"노랑병원의 신제품 발표회에 다녀왔다.","entities":[{"type":"ORG","text":"노랑병원","start_byte":0,"end_byte":12,"start_cp":0,"end_cp":4}]}
+{"id":"g-org-031","category":"organization","variant":"particle","text":"새날병원은 지난해 흑자를 냈다.","entities":[{"type":"ORG","text":"새날병원","start_byte":0,"end_byte":12,"start_cp":0,"end_cp":4}]}
+{"id":"g-org-032","category":"organization","variant":"particle","text":"참길건축이 새 공장을 지었다.","entities":[{"type":"ORG","text":"참길건축","start_byte":0,"end_byte":12,"start_cp":0,"end_cp":4}]}
+{"id":"g-org-033","category":"organization","variant":"particle","text":"드림상사를 협력사로 선정했다.","entities":[{"type":"ORG","text":"드림상사","start_byte":0,"end_byte":12,"start_cp":0,"end_cp":4}]}
+{"id":"g-org-034","category":"organization","variant":"punctuation","text":"《푸른솔게임즈》 연례 보고서","entities":[{"type":"ORG","text":"푸른솔게임즈","start_byte":3,"end_byte":21,"start_cp":1,"end_cp":7}]}
+{"id":"g-org-035","category":"organization","variant":"particle","text":"해오름연구소에서 근무한 지 3년이 됐다.","entities":[{"type":"ORG","text":"해오름연구소","start_byte":0,"end_byte":18,"start_cp":0,"end_cp":6}]}
+{"id":"g-org-036","category":"organization","variant":"department","text":"푸른솔건축 기술지원팀에 요청했다.","entities":[{"type":"ORG","text":"푸른솔건축","start_byte":0,"end_byte":15,"start_cp":0,"end_cp":5}]}
+{"id":"g-org-037","category":"organization","variant":"particle","text":"샛별상사가 새 공장을 지었다.","entities":[{"type":"ORG","text":"샛별상사","start_byte":0,"end_byte":12,"start_cp":0,"end_cp":4}]}
+{"id":"g-org-038","category":"organization","variant":"prefix","text":"(주)해오름대학교와 계약을 갱신했다.","entities":[{"type":"ORG","text":"해오름대학교","start_byte":5,"end_byte":23,"start_cp":3,"end_cp":9}]}
+{"id":"g-org-039","category":"organization","variant":"department","text":"꿈나래상사 기술지원팀에 요청했다.","entities":[{"type":"ORG","text":"꿈나래상사","start_byte":0,"end_byte":15,"start_cp":0,"end_cp":5}]}
+{"id":"g-org-040","category":"organization","variant":"particle","text":"들꽃연구소는 지난해 흑자를 냈다.","entities":[{"type":"ORG","text":"들꽃연구소","start_byte":0,"end_byte":15,"start_cp":0,"end_cp":5}]}
+{"id":"g-org-041","category":"organization","variant":"plain","text":"거래처: 새싹엔지니어링","entities":[{"type":"ORG","text":"새싹엔지니어링","start_byte":11,"end_byte":32,"start_cp":5,"end_cp":12}]}
+{"id":"g-org-042","category":"organization","variant":"prefix","text":"사단법인 한마음푸드는 회원을 모집한다.","entities":[{"type":"ORG","text":"한마음푸드","start_byte":13,"end_byte":28,"start_cp":5,"end_cp":10}]}
+{"id":"g-org-043","category":"organization","variant":"ascii","text":"Kite모터스가 새 공장을 지었다.","entities":[{"type":"ORG","text":"Kite모터스","start_byte":0,"end_byte":13,"start_cp":0,"end_cp":7}]}
+{"id":"g-org-044","category":"organization","variant":"particle","text":"바다숲엔지니어링이 새 공장을 지었다.","entities":[{"type":"ORG","text":"바다숲엔지니어링","start_byte":0,"end_byte":24,"start_cp":0,"end_cp":8}]}
+{"id":"g-org-045","category":"organization","variant":"particle","text":"파란엔지니어링이 새 공장을 지었다.","entities":[{"type":"ORG","text":"파란엔지니어링","start_byte":0,"end_byte":21,"start_cp":0,"end_cp":7}]}
+{"id":"g-org-046","category":"organization","variant":"fullwidth","text":"ＭＸ게임즈가 새 공장을 지었다.","entities":[{"type":"ORG","text":"ＭＸ게임즈","start_byte":0,"end_byte":15,"start_cp":0,"end_cp":5}]}
+{"id":"g-org-047","category":"organization","variant":"prefix","text":"(주)은빛재단과 계약을 갱신했다.","entities":[{"type":"ORG","text":"은빛재단","start_byte":5,"end_byte":17,"start_cp":3,"end_cp":7}]}
+{"id":"g-org-048","category":"organization","variant":"particle","text":"물결재단의 신제품 발표회에 다녀왔다.","entities":[{"type":"ORG","text":"물결재단","start_byte":0,"end_byte":12,"start_cp":0,"end_cp":4}]}
+{"id":"g-org-049","category":"organization","variant":"particle","text":"은빛재단은 지난해 흑자를 냈다.","entities":[{"type":"ORG","text":"은빛재단","start_byte":0,"end_byte":12,"start_cp":0,"end_cp":4}]}
+{"id":"g-org-050","category":"organization","variant":"ascii","text":"거래처: Atlas푸드","entities":[{"type":"ORG","text":"Atlas푸드","start_byte":11,"end_byte":22,"start_cp":5,"end_cp":12}]}
+{"id":"g-org-051","category":"organization","variant":"punctuation","text":"《모란보험》 연례 보고서","entities":[{"type":"ORG","text":"모란보험","start_byte":3,"end_byte":15,"start_cp":1,"end_cp":5}]}
+{"id":"g-org-052","category":"organization","variant":"prefix","text":"(주)드림재단과 계약을 갱신했다.","entities":[{"type":"ORG","text":"드림재단","start_byte":5,"end_byte":17,"start_cp":3,"end_cp":7}]}
+{"id":"g-org-053","category":"organization","variant":"ascii","text":"Atlas게임즈 기술지원팀에 요청했다.","entities":[{"type":"ORG","text":"Atlas게임즈","start_byte":0,"end_byte":14,"start_cp":0,"end_cp":8}]}
+{"id":"g-org-054","category":"organization","variant":"ascii","text":"거래처: Kite게임즈","entities":[{"type":"ORG","text":"Kite게임즈","start_byte":11,"end_byte":24,"start_cp":5,"end_cp":12}]}
+{"id":"g-org-055","category":"organization","variant":"particle","text":"들꽃컴퍼니가 새 공장을 지었다.","entities":[{"type":"ORG","text":"들꽃컴퍼니","start_byte":0,"end_byte":15,"start_cp":0,"end_cp":5}]}
+{"id":"g-org-056","category":"organization","variant":"department","text":"느티건축 기술지원팀에 요청했다.","entities":[{"type":"ORG","text":"느티건축","start_byte":0,"end_byte":12,"start_cp":0,"end_cp":4}]}
+{"id":"g-org-057","category":"organization","variant":"prefix","text":"(주)새싹건축과 계약을 갱신했다.","entities":[{"type":"ORG","text":"새싹건축","start_byte":5,"end_byte":17,"start_cp":3,"end_cp":7}]}
+{"id":"g-org-058","category":"organization","variant":"particle","text":"노랑재단에서 근무한 지 3년이 됐다.","entities":[{"type":"ORG","text":"노랑재단","start_byte":0,"end_byte":12,"start_cp":0,"end_cp":4}]}
+{"id":"g-org-059","category":"organization","variant":"plain","text":"거래처: 바다숲연구소","entities":[{"type":"ORG","text":"바다숲연구소","start_byte":11,"end_byte":29,"start_cp":5,"end_cp":11}]}
+{"id":"g-org-060","category":"organization","variant":"plain","text":"은빛엔지니어링 측 담당자가 회신했다.","entities":[{"type":"ORG","text":"은빛엔지니어링","start_byte":0,"end_byte":21,"start_cp":0,"end_cp":7}]}
+{"id":"g-org-061","category":"organization","variant":"particle","text":"솔숲전자의 신제품 발표회에 다녀왔다.","entities":[{"type":"ORG","text":"솔숲전자","start_byte":0,"end_byte":12,"start_cp":0,"end_cp":4}]}
+{"id":"g-org-062","category":"organization","variant":"fullwidth","text":"거래처: Ａｔｌａｓ랩스","entities":[{"type":"ORG","text":"Ａｔｌａｓ랩스","start_byte":11,"end_byte":32,"start_cp":5,"end_cp":12}]}
+{"id":"g-org-063","category":"organization","variant":"ascii","text":"Kite랩스 기술지원팀에 요청했다.","entities":[{"type":"ORG","text":"Kite랩스","start_byte":0,"end_byte":10,"start_cp":0,"end_cp":6}]}
+{"id":"g-org-064","category":"organization","variant":"particle","text":"느티게임즈에서 근무한 지 3년이 됐다.","entities":[{"type":"ORG","text":"느티게임즈","start_byte":0,"end_byte":15,"start_cp":0,"end_cp":5}]}
+{"id":"g-org-065","category":"organization","variant":"punctuation","text":"《드림전자》 연례 보고서","entities":[{"type":"ORG","text":"드림전자","start_byte":3,"end_byte":15,"start_cp":1,"end_cp":5}]}
+{"id":"g-org-066","category":"organization","variant":"particle","text":"드림은행을 협력사로 선정했다.","entities":[{"type":"ORG","text":"드림은행","start_byte":0,"end_byte":12,"start_cp":0,"end_cp":4}]}
+{"id":"g-org-067","category":"organization","variant":"prefix","text":"(주)다솔엔지니어링과 계약을 갱신했다.","entities":[{"type":"ORG","text":"다솔엔지니어링","start_byte":5,"end_byte":26,"start_cp":3,"end_cp":10}]}
+{"id":"g-org-068","category":"organization","variant":"punctuation","text":"《푸르미협회》 연례 보고서","entities":[{"type":"ORG","text":"푸르미협회","start_byte":3,"end_byte":18,"start_cp":1,"end_cp":6}]}
+{"id":"g-org-069","category":"organization","variant":"fullwidth","text":"Ｅｃｈｏ미디어 측 담당자가 회신했다.","entities":[{"type":"ORG","text":"Ｅｃｈｏ미디어","start_byte":0,"end_byte":21,"start_cp":0,"end_cp":7}]}
+{"id":"g-org-070","category":"organization","variant":"prefix","text":"(주)파란대학교와 계약을 갱신했다.","entities":[{"type":"ORG","text":"파란대학교","start_byte":5,"end_byte":20,"start_cp":3,"end_cp":8}]}
+{"id":"g-org-071","category":"organization","variant":"plain","text":"단풍게임즈 측 담당자가 회신했다.","entities":[{"type":"ORG","text":"단풍게임즈","start_byte":0,"end_byte":15,"start_cp":0,"end_cp":5}]}
+{"id":"g-org-072","category":"organization","variant":"prefix","text":"(주)하늘빛증권과 계약을 갱신했다.","entities":[{"type":"ORG","text":"하늘빛증권","start_byte":5,"end_byte":20,"start_cp":3,"end_cp":8}]}
+{"id":"g-org-073","category":"organization","variant":"particle","text":"새싹자동차가 새 공장을 지었다.","entities":[{"type":"ORG","text":"새싹자동차","start_byte":0,"end_byte":15,"start_cp":0,"end_cp":5}]}
+{"id":"g-org-074","category":"organization","variant":"particle","text":"온새미엔지니어링에서 근무한 지 3년이 됐다.","entities":[{"type":"ORG","text":"온새미엔지니어링","start_byte":0,"end_byte":24,"start_cp":0,"end_cp":8}]}
+{"id":"g-org-075","category":"organization","variant":"fullwidth","text":"Ｐｏｌａｒ모터스 기술지원팀에 요청했다.","entities":[{"type":"ORG","text":"Ｐｏｌａｒ모터스","start_byte":0,"end_byte":24,"start_cp":0,"end_cp":8}]}
+{"id":"g-org-076","category":"organization","variant":"punctuation","text":"《맑은물상사》 연례 보고서","entities":[{"type":"ORG","text":"맑은물상사","start_byte":3,"end_byte":18,"start_cp":1,"end_cp":6}]}
+{"id":"g-org-077","category":"organization","variant":"plain","text":"거래처: 이로운재단","entities":[{"type":"ORG","text":"이로운재단","start_byte":11,"end_byte":26,"start_cp":5,"end_cp":10}]}
+{"id":"g-org-078","category":"organization","variant":"particle","text":"참길미디어를 협력사로 선정했다.","entities":[{"type":"ORG","text":"참길미디어","start_byte":0,"end_byte":15,"start_cp":0,"end_cp":5}]}
+{"id":"g-org-079","category":"organization","variant":"plain","text":"거래처: 파란미디어","entities":[{"type":"ORG","text":"파란미디어","start_byte":11,"end_byte":26,"start_cp":5,"end_cp":10}]}
+{"id":"g-org-080","category":"organization","variant":"particle","text":"바다숲병원은 지난해 흑자를 냈다.","entities":[{"type":"ORG","text":"바다숲병원","start_byte":0,"end_byte":15,"start_cp":0,"end_cp":5}]}
+{"id":"g-org-081","category":"organization","variant":"particle","text":"큰바위항공에서 근무한 지 3년이 됐다.","entities":[{"type":"ORG","text":"큰바위항공","start_byte":0,"end_byte":15,"start_cp":0,"end_cp":5}]}
+{"id":"g-org-082","category":"organization","variant":"department","text":"이로운미디어 기술지원팀에 요청했다.","entities":[{"type":"ORG","text":"이로운미디어","start_byte":0,"end_byte":18,"start_cp":0,"end_cp":6}]}
+{"id":"g-org-083","category":"organization","variant":"department","text":"솔숲컴퍼니 기술지원팀에 요청했다.","entities":[{"type":"ORG","text":"솔숲컴퍼니","start_byte":0,"end_byte":15,"start_cp":0,"end_cp":5}]}
+{"id":"g-org-084","category":"organization","variant":"particle","text":"단풍항공이 새 공장을 지었다.","entities":[{"type":"ORG","text":"단풍항공","start_byte":0,"end_byte":12,"start_cp":0,"end_cp":4}]}
+{"id":"g-org-085","category":"organization","variant":"punctuation","text":"《파란증권》 연례 보고서","entities":[{"type":"ORG","text":"파란증권","start_byte":3,"end_byte":15,"start_cp":1,"end_cp":5}]}
+{"id":"g-org-086","category":"organization","variant":"particle","text":"하늘빛건축이 새 공장을 지었다.","entities":[{"type":"ORG","text":"하늘빛건축","start_byte":0,"end_byte":15,"start_cp":0,"end_cp":5}]}
+{"id":"g-org-087","category":"organization","variant":"particle","text":"바다숲은행은 지난해 흑자를 냈다.","entities":[{"type":"ORG","text":"바다숲은행","start_byte":0,"end_byte":15,"start_cp":0,"end_cp":5}]}
+{"id":"g-org-088","category":"organization","variant":"ascii","text":"Vega게임즈의 신제품 발표회에 다녀왔다.","entities":[{"type":"ORG","text":"Vega게임즈","start_byte":0,"end_byte":13,"start_cp":0,"end_cp":7}]}
+{"id":"g-org-089","category":"organization","variant":"punctuation","text":"《해오름컴퍼니》 연례 보고서","entities":[{"type":"ORG","text":"해오름컴퍼니","start_byte":3,"end_byte":21,"start_cp":1,"end_cp":7}]}
+{"id":"g-org-090","category":"organization","variant":"punctuation","text":"《파란협회》 연례 보고서","entities":[{"type":"ORG","text":"파란협회","start_byte":3,"end_byte":15,"start_cp":1,"end_cp":5}]}
+{"id":"g-org-091","category":"organization","variant":"department","text":"큰바위연구소 기술지원팀에 요청했다.","entities":[{"type":"ORG","text":"큰바위연구소","start_byte":0,"end_byte":18,"start_cp":0,"end_cp":6}]}
+{"id":"g-org-092","category":"organization","variant":"plain","text":"은빛제약 측 담당자가 회신했다.","entities":[{"type":"ORG","text":"은빛제약","start_byte":0,"end_byte":12,"start_cp":0,"end_cp":4}]}
+{"id":"g-org-093","category":"organization","variant":"plain","text":"단풍보험 측 담당자가 회신했다.","entities":[{"type":"ORG","text":"단풍보험","start_byte":0,"end_byte":12,"start_cp":0,"end_cp":4}]}
+{"id":"g-org-094","category":"organization","variant":"particle","text":"바다숲건축이 새 공장을 지었다.","entities":[{"type":"ORG","text":"바다숲건축","start_byte":0,"end_byte":15,"start_cp":0,"end_cp":5}]}
+{"id":"g-org-095","category":"organization","variant":"fullwidth","text":"Ｖｅｇａ게임즈의 신제품 발표회에 다녀왔다.","entities":[{"type":"ORG","text":"Ｖｅｇａ게임즈","start_byte":0,"end_byte":21,"start_cp":0,"end_cp":7}]}
+{"id":"g-org-096","category":"organization","variant":"prefix","text":"(주)다솔보험과 계약을 갱신했다.","entities":[{"type":"ORG","text":"다솔보험","start_byte":5,"end_byte":17,"start_cp":3,"end_cp":7}]}
+{"id":"g-org-097","category":"organization","variant":"particle","text":"한마음재단에서 근무한 지 3년이 됐다.","entities":[{"type":"ORG","text":"한마음재단","start_byte":0,"end_byte":15,"start_cp":0,"end_cp":5}]}
+{"id":"g-org-098","category":"organization","variant":"ascii","text":"Atlas랩스를 협력사로 선정했다.","entities":[{"type":"ORG","text":"Atlas랩스","start_byte":0,"end_byte":11,"start_cp":0,"end_cp":7}]}
+{"id":"g-org-099","category":"organization","variant":"department","text":"은빛전자 기술지원팀에 요청했다.","entities":[{"type":"ORG","text":"은빛전자","start_byte":0,"end_byte":12,"start_cp":0,"end_cp":4}]}
+{"id":"g-org-100","category":"organization","variant":"prefix","text":"(주)푸르미병원과 계약을 갱신했다.","entities":[{"type":"ORG","text":"푸르미병원","start_byte":5,"end_byte":20,"start_cp":3,"end_cp":8}]}
+{"id":"g-org-101","category":"organization","variant":"prefix","text":"사단법인 꿈나래엔지니어링은 회원을 모집한다.","entities":[{"type":"ORG","text":"꿈나래엔지니어링","start_byte":13,"end_byte":37,"start_cp":5,"end_cp":13}]}
+{"id":"g-org-102","category":"organization","variant":"plain","text":"거래처: 다솔은행","entities":[{"type":"ORG","text":"다솔은행","start_byte":11,"end_byte":23,"start_cp":5,"end_cp":9}]}
+{"id":"g-org-103","category":"organization","variant":"particle","text":"금빛리테일에서 근무한 지 3년이 됐다.","entities":[{"type":"ORG","text":"금빛리테일","start_byte":0,"end_byte":15,"start_cp":0,"end_cp":5}]}
+{"id":"g-org-104","category":"organization","variant":"fullwidth","text":"Ｐｏｌａｒ모터스에서 근무한 지 3년이 됐다.","entities":[{"type":"ORG","text":"Ｐｏｌａｒ모터스","start_byte":0,"end_byte":24,"start_cp":0,"end_cp":8}]}
+{"id":"g-org-105","category":"organization","variant":"prefix","text":"(주)바다숲리테일과 계약을 갱신했다.","entities":[{"type":"ORG","text":"바다숲리테일","start_byte":5,"end_byte":23,"start_cp":3,"end_cp":9}]}
+{"id":"g-org-106","category":"organization","variant":"particle","text":"한마음재단의 신제품 발표회에 다녀왔다.","entities":[{"type":"ORG","text":"한마음재단","start_byte":0,"end_byte":15,"start_cp":0,"end_cp":5}]}
+{"id":"g-org-107","category":"organization","variant":"department","text":"한마음상사 기술지원팀에 요청했다.","entities":[{"type":"ORG","text":"한마음상사","start_byte":0,"end_byte":15,"start_cp":0,"end_cp":5}]}
+{"id":"g-org-108","category":"organization","variant":"particle","text":"맑은물상사에서 근무한 지 3년이 됐다.","entities":[{"type":"ORG","text":"맑은물상사","start_byte":0,"end_byte":15,"start_cp":0,"end_cp":5}]}
+{"id":"g-org-109","category":"organization","variant":"plain","text":"느티푸드 측 담당자가 회신했다.","entities":[{"type":"ORG","text":"느티푸드","start_byte":0,"end_byte":12,"start_cp":0,"end_cp":4}]}
+{"id":"g-org-110","category":"organization","variant":"plain","text":"거래처: 파란상사","entities":[{"type":"ORG","text":"파란상사","start_byte":11,"end_byte":23,"start_cp":5,"end_cp":9}]}
+{"id":"g-org-111","category":"organization","variant":"prefix","text":"사단법인 해오름푸드는 회원을 모집한다.","entities":[{"type":"ORG","text":"해오름푸드","start_byte":13,"end_byte":28,"start_cp":5,"end_cp":10}]}
+{"id":"g-org-112","category":"organization","variant":"particle","text":"온새미은행의 신제품 발표회에 다녀왔다.","entities":[{"type":"ORG","text":"온새미은행","start_byte":0,"end_byte":15,"start_cp":0,"end_cp":5}]}
+{"id":"g-org-113","category":"organization","variant":"particle","text":"참길재단에서 근무한 지 3년이 됐다.","entities":[{"type":"ORG","text":"참길재단","start_byte":0,"end_byte":12,"start_cp":0,"end_cp":4}]}
+{"id":"g-org-114","category":"organization","variant":"particle","text":"한마음엔지니어링의 신제품 발표회에 다녀왔다.","entities":[{"type":"ORG","text":"한마음엔지니어링","start_byte":0,"end_byte":24,"start_cp":0,"end_cp":8}]}
+{"id":"g-org-115","category":"organization","variant":"particle","text":"바다숲대학교에서 근무한 지 3년이 됐다.","entities":[{"type":"ORG","text":"바다숲대학교","start_byte":0,"end_byte":18,"start_cp":0,"end_cp":6}]}
+{"id":"g-org-116","category":"organization","variant":"particle","text":"새날전자가 새 공장을 지었다.","entities":[{"type":"ORG","text":"새날전자","start_byte":0,"end_byte":12,"start_cp":0,"end_cp":4}]}
+{"id":"g-org-117","category":"organization","variant":"department","text":"모란증권 기술지원팀에 요청했다.","entities":[{"type":"ORG","text":"모란증권","start_byte":0,"end_byte":12,"start_cp":0,"end_cp":4}]}
+{"id":"g-org-118","category":"organization","variant":"prefix","text":"사단법인 맑은물푸드는 회원을 모집한다.","entities":[{"type":"ORG","text":"맑은물푸드","start_byte":13,"end_byte":28,"start_cp":5,"end_cp":10}]}
+{"id":"g-org-119","category":"organization","variant":"plain","text":"새날은행 측 담당자가 회신했다.","entities":[{"type":"ORG","text":"새날은행","start_byte":0,"end_byte":12,"start_cp":0,"end_cp":4}]}
+{"id":"g-org-120","category":"organization","variant":"fullwidth","text":"Ｂ＆Ｋ랩스를 협력사로 선정했다.","entities":[{"type":"ORG","text":"Ｂ＆Ｋ랩스","start_byte":0,"end_byte":15,"start_cp":0,"end_cp":5}]}
+{"id":"g-org-121","category":"organization","variant":"plain","text":"거래처: 새날전자","entities":[{"type":"ORG","text":"새날전자","start_byte":11,"end_byte":23,"start_cp":5,"end_cp":9}]}
+{"id":"g-org-122","category":"organization","variant":"plain","text":"아침해건축 측 담당자가 회신했다.","entities":[{"type":"ORG","text":"아침해건축","start_byte":0,"end_byte":15,"start_cp":0,"end_cp":5}]}
+{"id":"g-org-123","category":"organization","variant":"prefix","text":"사단법인 푸르미게임즈는 회원을 모집한다.","entities":[{"type":"ORG","text":"푸르미게임즈","start_byte":13,"end_byte":31,"start_cp":5,"end_cp":11}]}
+{"id":"g-org-124","category":"organization","variant":"particle","text":"드림은행이 새 공장을 지었다.","entities":[{"type":"ORG","text":"드림은행","start_byte":0,"end_byte":12,"start_cp":0,"end_cp":4}]}
+{"id":"g-org-125","category":"organization","variant":"ascii","text":"Atlas랩스의 신제품 발표회에 다녀왔다.","entities":[{"type":"ORG","text":"Atlas랩스","start_byte":0,"end_byte":11,"start_cp":0,"end_cp":7}]}
+{"id":"g-org-126","category":"organization","variant":"ascii","text":"Atlas게임즈의 신제품 발표회에 다녀왔다.","entities":[{"type":"ORG","text":"Atlas게임즈","start_byte":0,"end_byte":14,"start_cp":0,"end_cp":8}]}
+{"id":"g-org-127","category":"organization","variant":"particle","text":"샛별재단은 지난해 흑자를 냈다.","entities":[{"type":"ORG","text":"샛별재단","start_byte":0,"end_byte":12,"start_cp":0,"end_cp":4}]}
+{"id":"g-org-128","category":"organization","variant":"punctuation","text":"《이로운제약》 연례 보고서","entities":[{"type":"ORG","text":"이로운제약","start_byte":3,"end_byte":18,"start_cp":1,"end_cp":6}]}
+{"id":"g-org-129","category":"organization","variant":"punctuation","text":"《이로운상사》 연례 보고서","entities":[{"type":"ORG","text":"이로운상사","start_byte":3,"end_byte":18,"start_cp":1,"end_cp":6}]}
+{"id":"g-org-130","category":"organization","variant":"particle","text":"꿈나래컴퍼니를 협력사로 선정했다.","entities":[{"type":"ORG","text":"꿈나래컴퍼니","start_byte":0,"end_byte":18,"start_cp":0,"end_cp":6}]}
+{"id":"g-org-131","category":"organization","variant":"particle","text":"은빛보험이 새 공장을 지었다.","entities":[{"type":"ORG","text":"은빛보험","start_byte":0,"end_byte":12,"start_cp":0,"end_cp":4}]}
+{"id":"g-org-132","category":"organization","variant":"particle","text":"드림게임즈의 신제품 발표회에 다녀왔다.","entities":[{"type":"ORG","text":"드림게임즈","start_byte":0,"end_byte":15,"start_cp":0,"end_cp":5}]}
+{"id":"g-org-133","category":"organization","variant":"plain","text":"샛별게임즈 측 담당자가 회신했다.","entities":[{"type":"ORG","text":"샛별게임즈","start_byte":0,"end_byte":15,"start_cp":0,"end_cp":5}]}
+{"id":"g-org-134","category":"organization","variant":"prefix","text":"사단법인 참길증권은 회원을 모집한다.","entities":[{"type":"ORG","text":"참길증권","start_byte":13,"end_byte":25,"start_cp":5,"end_cp":9}]}
+{"id":"g-org-135","category":"organization","variant":"particle","text":"바다숲은행을 협력사로 선정했다.","entities":[{"type":"ORG","text":"바다숲은행","start_byte":0,"end_byte":15,"start_cp":0,"end_cp":5}]}
+{"id":"g-org-136","category":"organization","variant":"particle","text":"푸르미푸드를 협력사로 선정했다.","entities":[{"type":"ORG","text":"푸르미푸드","start_byte":0,"end_byte":15,"start_cp":0,"end_cp":5}]}
+{"id":"g-org-137","category":"organization","variant":"particle","text":"옹달샘대학교는 지난해 흑자를 냈다.","entities":[{"type":"ORG","text":"옹달샘대학교","start_byte":0,"end_byte":18,"start_cp":0,"end_cp":6}]}
+{"id":"g-org-138","category":"organization","variant":"plain","text":"드림미디어 측 담당자가 회신했다.","entities":[{"type":"ORG","text":"드림미디어","start_byte":0,"end_byte":15,"start_cp":0,"end_cp":5}]}
+{"id":"g-org-139","category":"organization","variant":"prefix","text":"사단법인 물결협회는 회원을 모집한다.","entities":[{"type":"ORG","text":"물결협회","start_byte":13,"end_byte":25,"start_cp":5,"end_cp":9}]}
+{"id":"g-org-140","category":"organization","variant":"particle","text":"온새미자동차의 신제품 발표회에 다녀왔다.","entities":[{"type":"ORG","text":"온새미자동차","start_byte":0,"end_byte":18,"start_cp":0,"end_cp":6}]}
+{"id":"g-org-141","category":"organization","variant":"plain","text":"거래처: 단풍자동차","entities":[{"type":"ORG","text":"단풍자동차","start_byte":11,"end_byte":26,"start_cp":5,"end_cp":10}]}
+{"id":"g-org-142","category":"organization","variant":"ascii","text":"MX푸드가 새 공장을 지었다.","entities":[{"type":"ORG","text":"MX푸드","start_byte":0,"end_byte":8,"start_cp":0,"end_cp":4}]}
+{"id":"g-org-143","category":"organization","variant":"particle","text":"참길제약은 지난해 흑자를 냈다.","entities":[{"type":"ORG","text":"참길제약","start_byte":0,"end_byte":12,"start_cp":0,"end_cp":4}]}
+{"id":"g-org-144","category":"organization","variant":"particle","text":"노랑연구소는 지난해 흑자를 냈다.","entities":[{"type":"ORG","text":"노랑연구소","start_byte":0,"end_byte":15,"start_cp":0,"end_cp":5}]}
+{"id":"g-org-145","category":"organization","variant":"department","text":"모란대학교 기술지원팀에 요청했다.","entities":[{"type":"ORG","text":"모란대학교","start_byte":0,"end_byte":15,"start_cp":0,"end_cp":5}]}
+{"id":"g-org-146","category":"organization","variant":"ascii","text":"《Echo푸드》 연례 보고서","entities":[{"type":"ORG","text":"Echo푸드","start_byte":3,"end_byte":13,"start_cp":1,"end_cp":7}]}
+{"id":"g-org-147","category":"organization","variant":"prefix","text":"(주)큰바위건축과 계약을 갱신했다.","entities":[{"type":"ORG","text":"큰바위건축","start_byte":5,"end_byte":20,"start_cp":3,"end_cp":8}]}
+{"id":"g-org-148","category":"organization","variant":"particle","text":"솔숲자동차에서 근무한 지 3년이 됐다.","entities":[{"type":"ORG","text":"솔숲자동차","start_byte":0,"end_byte":15,"start_cp":0,"end_cp":5}]}
+{"id":"g-org-149","category":"organization","variant":"plain","text":"푸르미자동차 측 담당자가 회신했다.","entities":[{"type":"ORG","text":"푸르미자동차","start_byte":0,"end_byte":18,"start_cp":0,"end_cp":6}]}
+{"id":"g-org-150","category":"organization","variant":"particle","text":"온새미건축을 협력사로 선정했다.","entities":[{"type":"ORG","text":"온새미건축","start_byte":0,"end_byte":15,"start_cp":0,"end_cp":5}]}
+{"id":"g-org-151","category":"organization","variant":"plain","text":"거래처: 아침해건축","entities":[{"type":"ORG","text":"아침해건축","start_byte":11,"end_byte":26,"start_cp":5,"end_cp":10}]}
+{"id":"g-org-152","category":"organization","variant":"particle","text":"옹달샘대학교의 신제품 발표회에 다녀왔다.","entities":[{"type":"ORG","text":"옹달샘대학교","start_byte":0,"end_byte":18,"start_cp":0,"end_cp":6}]}
+{"id":"g-org-153","category":"organization","variant":"plain","text":"노랑상사 측 담당자가 회신했다.","entities":[{"type":"ORG","text":"노랑상사","start_byte":0,"end_byte":12,"start_cp":0,"end_cp":4}]}
+{"id":"g-org-154","category":"organization","variant":"plain","text":"미리내협회 측 담당자가 회신했다.","entities":[{"type":"ORG","text":"미리내협회","start_byte":0,"end_byte":15,"start_cp":0,"end_cp":5}]}
+{"id":"g-org-155","category":"organization","variant":"particle","text":"온새미건축이 새 공장을 지었다.","entities":[{"type":"ORG","text":"온새미건축","start_byte":0,"end_byte":15,"start_cp":0,"end_cp":5}]}
+{"id":"g-org-156","category":"organization","variant":"particle","text":"들꽃항공의 신제품 발표회에 다녀왔다.","entities":[{"type":"ORG","text":"들꽃항공","start_byte":0,"end_byte":12,"start_cp":0,"end_cp":4}]}
+{"id":"g-org-157","category":"organization","variant":"prefix","text":"(주)물결리테일과 계약을 갱신했다.","entities":[{"type":"ORG","text":"물결리테일","start_byte":5,"end_byte":20,"start_cp":3,"end_cp":8}]}
+{"id":"g-org-158","category":"organization","variant":"particle","text":"하늘빛상사의 신제품 발표회에 다녀왔다.","entities":[{"type":"ORG","text":"하늘빛상사","start_byte":0,"end_byte":15,"start_cp":0,"end_cp":5}]}
+{"id":"g-org-159","category":"organization","variant":"particle","text":"미리내엔지니어링은 지난해 흑자를 냈다.","entities":[{"type":"ORG","text":"미리내엔지니어링","start_byte":0,"end_byte":24,"start_cp":0,"end_cp":8}]}
+{"id":"g-org-160","category":"organization","variant":"particle","text":"은빛건축을 협력사로 선정했다.","entities":[{"type":"ORG","text":"은빛건축","start_byte":0,"end_byte":12,"start_cp":0,"end_cp":4}]}
+{"id":"g-org-161","category":"organization","variant":"particle","text":"꿈나래항공에서 근무한 지 3년이 됐다.","entities":[{"type":"ORG","text":"꿈나래항공","start_byte":0,"end_byte":15,"start_cp":0,"end_cp":5}]}
+{"id":"g-org-162","category":"organization","variant":"punctuation","text":"《하늘빛제약》 연례 보고서","entities":[{"type":"ORG","text":"하늘빛제약","start_byte":3,"end_byte":18,"start_cp":1,"end_cp":6}]}
+{"id":"g-org-163","category":"organization","variant":"plain","text":"새싹증권 측 담당자가 회신했다.","entities":[{"type":"ORG","text":"새싹증권","start_byte":0,"end_byte":12,"start_cp":0,"end_cp":4}]}
+{"id":"g-org-164","category":"organization","variant":"particle","text":"옹달샘재단의 신제품 발표회에 다녀왔다.","entities":[{"type":"ORG","text":"옹달샘재단","start_byte":0,"end_byte":15,"start_cp":0,"end_cp":5}]}
+{"id":"g-org-165","category":"organization","variant":"ascii","text":"《B&K게임즈》 연례 보고서","entities":[{"type":"ORG","text":"B&K게임즈","start_byte":3,"end_byte":15,"start_cp":1,"end_cp":7}]}
+{"id":"g-org-166","category":"organization","variant":"particle","text":"온새미게임즈에서 근무한 지 3년이 됐다.","entities":[{"type":"ORG","text":"온새미게임즈","start_byte":0,"end_byte":18,"start_cp":0,"end_cp":6}]}
+{"id":"g-org-167","category":"organization","variant":"prefix","text":"(주)미리내항공과 계약을 갱신했다.","entities":[{"type":"ORG","text":"미리내항공","start_byte":5,"end_byte":20,"start_cp":3,"end_cp":8}]}
+{"id":"g-org-168","category":"organization","variant":"particle","text":"푸른솔자동차는 지난해 흑자를 냈다.","entities":[{"type":"ORG","text":"푸른솔자동차","start_byte":0,"end_byte":18,"start_cp":0,"end_cp":6}]}
+{"id":"g-org-169","category":"organization","variant":"fullwidth","text":"ＭＸ푸드 측 담당자가 회신했다.","entities":[{"type":"ORG","text":"ＭＸ푸드","start_byte":0,"end_byte":12,"start_cp":0,"end_cp":4}]}
+{"id":"g-org-170","category":"organization","variant":"prefix","text":"사단법인 아침해항공은 회원을 모집한다.","entities":[{"type":"ORG","text":"아침해항공","start_byte":13,"end_byte":28,"start_cp":5,"end_cp":10}]}
+{"id":"g-org-171","category":"organization","variant":"particle","text":"단풍증권은 지난해 흑자를 냈다.","entities":[{"type":"ORG","text":"단풍증권","start_byte":0,"end_byte":12,"start_cp":0,"end_cp":4}]}
+{"id":"g-org-172","category":"organization","variant":"department","text":"단풍자동차 기술지원팀에 요청했다.","entities":[{"type":"ORG","text":"단풍자동차","start_byte":0,"end_byte":15,"start_cp":0,"end_cp":5}]}
+{"id":"g-org-173","category":"organization","variant":"department","text":"은빛컴퍼니 기술지원팀에 요청했다.","entities":[{"type":"ORG","text":"은빛컴퍼니","start_byte":0,"end_byte":15,"start_cp":0,"end_cp":5}]}
+{"id":"g-org-174","category":"organization","variant":"particle","text":"해오름상사는 지난해 흑자를 냈다.","entities":[{"type":"ORG","text":"해오름상사","start_byte":0,"end_byte":15,"start_cp":0,"end_cp":5}]}
+{"id":"g-org-175","category":"organization","variant":"fullwidth","text":"Ｋｉｔｅ게임즈는 지난해 흑자를 냈다.","entities":[{"type":"ORG","text":"Ｋｉｔｅ게임즈","start_byte":0,"end_byte":21,"start_cp":0,"end_cp":7}]}
+{"id":"g-org-176","category":"organization","variant":"particle","text":"참길항공에서 근무한 지 3년이 됐다.","entities":[{"type":"ORG","text":"참길항공","start_byte":0,"end_byte":12,"start_cp":0,"end_cp":4}]}
+{"id":"g-org-177","category":"organization","variant":"particle","text":"참길증권은 지난해 흑자를 냈다.","entities":[{"type":"ORG","text":"참길증권","start_byte":0,"end_byte":12,"start_cp":0,"end_cp":4}]}
+{"id":"g-org-178","category":"organization","variant":"punctuation","text":"《큰바위엔지니어링》 연례 보고서","entities":[{"type":"ORG","text":"큰바위엔지니어링","start_byte":3,"end_byte":27,"start_cp":1,"end_cp":9}]}
+{"id":"g-org-179","category":"organization","variant":"particle","text":"새싹상사가 새 공장을 지었다.","entities":[{"type":"ORG","text":"새싹상사","start_byte":0,"end_byte":12,"start_cp":0,"end_cp":4}]}
+{"id":"g-org-180","category":"organization","variant":"punctuation","text":"《한마음보험》 연례 보고서","entities":[{"type":"ORG","text":"한마음보험","start_byte":3,"end_byte":18,"start_cp":1,"end_cp":6}]}
+{"id":"g-org-181","category":"organization","variant":"particle","text":"맑은물푸드가 새 공장을 지었다.","entities":[{"type":"ORG","text":"맑은물푸드","start_byte":0,"end_byte":15,"start_cp":0,"end_cp":5}]}
+{"id":"g-org-182","category":"organization","variant":"fullwidth","text":"Ｐｏｌａｒ게임즈 측 담당자가 회신했다.","entities":[{"type":"ORG","text":"Ｐｏｌａｒ게임즈","start_byte":0,"end_byte":24,"start_cp":0,"end_cp":8}]}
+{"id":"g-org-183","category":"organization","variant":"particle","text":"다솔푸드를 협력사로 선정했다.","entities":[{"type":"ORG","text":"다솔푸드","start_byte":0,"end_byte":12,"start_cp":0,"end_cp":4}]}
+{"id":"g-org-184","category":"organization","variant":"particle","text":"노랑협회가 새 공장을 지었다.","entities":[{"type":"ORG","text":"노랑협회","start_byte":0,"end_byte":12,"start_cp":0,"end_cp":4}]}
+{"id":"g-org-185","category":"organization","variant":"fullwidth","text":"(주)Ｓ２미디어와 계약을 갱신했다.","entities":[{"type":"ORG","text":"Ｓ２미디어","start_byte":5,"end_byte":20,"start_cp":3,"end_cp":8}]}
+{"id":"g-org-186","category":"organization","variant":"particle","text":"단풍보험에서 근무한 지 3년이 됐다.","entities":[{"type":"ORG","text":"단풍보험","start_byte":0,"end_byte":12,"start_cp":0,"end_cp":4}]}
+{"id":"g-org-187","category":"organization","variant":"department","text":"새싹재단 기술지원팀에 요청했다.","entities":[{"type":"ORG","text":"새싹재단","start_byte":0,"end_byte":12,"start_cp":0,"end_cp":4}]}
+{"id":"g-org-188","category":"organization","variant":"particle","text":"파란재단의 신제품 발표회에 다녀왔다.","entities":[{"type":"ORG","text":"파란재단","start_byte":0,"end_byte":12,"start_cp":0,"end_cp":4}]}
+{"id":"g-org-189","category":"organization","variant":"particle","text":"바다숲보험을 협력사로 선정했다.","entities":[{"type":"ORG","text":"바다숲보험","start_byte":0,"end_byte":15,"start_cp":0,"end_cp":5}]}
+{"id":"g-org-190","category":"organization","variant":"particle","text":"한마음연구소에서 근무한 지 3년이 됐다.","entities":[{"type":"ORG","text":"한마음연구소","start_byte":0,"end_byte":18,"start_cp":0,"end_cp":6}]}
+{"id":"g-org-191","category":"organization","variant":"prefix","text":"(주)새싹푸드와 계약을 갱신했다.","entities":[{"type":"ORG","text":"새싹푸드","start_byte":5,"end_byte":17,"start_cp":3,"end_cp":7}]}
+{"id":"g-org-192","category":"organization","variant":"particle","text":"해오름게임즈는 지난해 흑자를 냈다.","entities":[{"type":"ORG","text":"해오름게임즈","start_byte":0,"end_byte":18,"start_cp":0,"end_cp":6}]}
+{"id":"g-org-193","category":"organization","variant":"ascii","text":"S2미디어를 협력사로 선정했다.","entities":[{"type":"ORG","text":"S2미디어","start_byte":0,"end_byte":11,"start_cp":0,"end_cp":5}]}
+{"id":"g-org-194","category":"organization","variant":"prefix","text":"사단법인 큰바위엔지니어링은 회원을 모집한다.","entities":[{"type":"ORG","text":"큰바위엔지니어링","start_byte":13,"end_byte":37,"start_cp":5,"end_cp":13}]}
+{"id":"g-org-195","category":"organization","variant":"particle","text":"물결컴퍼니가 새 공장을 지었다.","entities":[{"type":"ORG","text":"물결컴퍼니","start_byte":0,"end_byte":15,"start_cp":0,"end_cp":5}]}
+{"id":"g-org-196","category":"organization","variant":"department","text":"꿈나래협회 기술지원팀에 요청했다.","entities":[{"type":"ORG","text":"꿈나래협회","start_byte":0,"end_byte":15,"start_cp":0,"end_cp":5}]}
+{"id":"g-org-197","category":"organization","variant":"punctuation","text":"《물결항공》 연례 보고서","entities":[{"type":"ORG","text":"물결항공","start_byte":3,"end_byte":15,"start_cp":1,"end_cp":5}]}
+{"id":"g-org-198","category":"organization","variant":"fullwidth","text":"Ｋｉｔｅ랩스 측 담당자가 회신했다.","entities":[{"type":"ORG","text":"Ｋｉｔｅ랩스","start_byte":0,"end_byte":18,"start_cp":0,"end_cp":6}]}
+{"id":"g-org-199","category":"organization","variant":"particle","text":"모란컴퍼니를 협력사로 선정했다.","entities":[{"type":"ORG","text":"모란컴퍼니","start_byte":0,"end_byte":15,"start_cp":0,"end_cp":5}]}
+{"id":"g-org-200","category":"organization","variant":"particle","text":"은빛게임즈가 새 공장을 지었다.","entities":[{"type":"ORG","text":"은빛게임즈","start_byte":0,"end_byte":15,"start_cp":0,"end_cp":5}]}
+{"id":"g-org-201","category":"organization","variant":"particle","text":"하늘빛엔지니어링에서 근무한 지 3년이 됐다.","entities":[{"type":"ORG","text":"하늘빛엔지니어링","start_byte":0,"end_byte":24,"start_cp":0,"end_cp":8}]}
+{"id":"g-org-202","category":"organization","variant":"particle","text":"옹달샘컴퍼니는 지난해 흑자를 냈다.","entities":[{"type":"ORG","text":"옹달샘컴퍼니","start_byte":0,"end_byte":18,"start_cp":0,"end_cp":6}]}
+{"id":"g-org-203","category":"organization","variant":"particle","text":"솔숲컴퍼니에서 근무한 지 3년이 됐다.","entities":[{"type":"ORG","text":"솔숲컴퍼니","start_byte":0,"end_byte":15,"start_cp":0,"end_cp":5}]}
+{"id":"g-org-204","category":"organization","variant":"prefix","text":"(주)미리내상사와 계약을 갱신했다.","entities":[{"type":"ORG","text":"미리내상사","start_byte":5,"end_byte":20,"start_cp":3,"end_cp":8}]}
+{"id":"g-org-205","category":"organization","variant":"ascii","text":"Kite게임즈는 지난해 흑자를 냈다.","entities":[{"type":"ORG","text":"Kite게임즈","start_byte":0,"end_byte":13,"start_cp":0,"end_cp":7}]}
+{"id":"g-org-206","category":"organization","variant":"prefix","text":"(주)솔숲엔지니어링과 계약을 갱신했다.","entities":[{"type":"ORG","text":"솔숲엔지니어링","start_byte":5,"end_byte":26,"start_cp":3,"end_cp":10}]}
+{"id":"g-org-207","category":"organization","variant":"particle","text":"꿈나래연구소가 새 공장을 지었다.","entities":[{"type":"ORG","text":"꿈나래연구소","start_byte":0,"end_byte":18,"start_cp":0,"end_cp":6}]}
+{"id":"g-org-208","category":"organization","variant":"ascii","text":"Kite푸드를 협력사로 선정했다.","entities":[{"type":"ORG","text":"Kite푸드","start_byte":0,"end_byte":10,"start_cp":0,"end_cp":6}]}
+{"id":"g-org-209","category":"organization","variant":"particle","text":"이로운리테일의 신제품 발표회에 다녀왔다.","entities":[{"type":"ORG","text":"이로운리테일","start_byte":0,"end_byte":18,"start_cp":0,"end_cp":6}]}
+{"id":"g-org-210","category":"organization","variant":"department","text":"금빛전자 기술지원팀에 요청했다.","entities":[{"type":"ORG","text":"금빛전자","start_byte":0,"end_byte":12,"start_cp":0,"end_cp":4}]}
+{"id":"g-org-211","category":"organization","variant":"particle","text":"새싹재단을 협력사로 선정했다.","entities":[{"type":"ORG","text":"새싹재단","start_byte":0,"end_byte":12,"start_cp":0,"end_cp":4}]}
+{"id":"g-org-212","category":"organization","variant":"prefix","text":"(주)새날건축과 계약을 갱신했다.","entities":[{"type":"ORG","text":"새날건축","start_byte":5,"end_byte":17,"start_cp":3,"end_cp":7}]}
+{"id":"g-org-213","category":"organization","variant":"plain","text":"맑은물미디어 측 담당자가 회신했다.","entities":[{"type":"ORG","text":"맑은물미디어","start_byte":0,"end_byte":18,"start_cp":0,"end_cp":6}]}
+{"id":"g-org-214","category":"organization","variant":"plain","text":"거래처: 바다숲건축","entities":[{"type":"ORG","text":"바다숲건축","start_byte":11,"end_byte":26,"start_cp":5,"end_cp":10}]}
+{"id":"g-org-215","category":"organization","variant":"plain","text":"드림연구소 측 담당자가 회신했다.","entities":[{"type":"ORG","text":"드림연구소","start_byte":0,"end_byte":15,"start_cp":0,"end_cp":5}]}
+{"id":"g-org-216","category":"organization","variant":"particle","text":"큰바위협회는 지난해 흑자를 냈다.","entities":[{"type":"ORG","text":"큰바위협회","start_byte":0,"end_byte":15,"start_cp":0,"end_cp":5}]}
+{"id":"g-org-217","category":"organization","variant":"particle","text":"솔숲건축이 새 공장을 지었다.","entities":[{"type":"ORG","text":"솔숲건축","start_byte":0,"end_byte":12,"start_cp":0,"end_cp":4}]}
+{"id":"g-org-218","category":"organization","variant":"punctuation","text":"《푸르미건축》 연례 보고서","entities":[{"type":"ORG","text":"푸르미건축","start_byte":3,"end_byte":18,"start_cp":1,"end_cp":6}]}
+{"id":"g-org-219","category":"organization","variant":"prefix","text":"(주)아침해자동차와 계약을 갱신했다.","entities":[{"type":"ORG","text":"아침해자동차","start_byte":5,"end_byte":23,"start_cp":3,"end_cp":9}]}
+{"id":"g-org-220","category":"organization","variant":"ascii","text":"사단법인 Vega랩스는 회원을 모집한다.","entities":[{"type":"ORG","text":"Vega랩스","start_byte":13,"end_byte":23,"start_cp":5,"end_cp":11}]}
+{"id":"g-org-221","category":"organization","variant":"prefix","text":"사단법인 들꽃연구소는 회원을 모집한다.","entities":[{"type":"ORG","text":"들꽃연구소","start_byte":13,"end_byte":28,"start_cp":5,"end_cp":10}]}
+{"id":"g-org-222","category":"organization","variant":"particle","text":"아침해상사에서 근무한 지 3년이 됐다.","entities":[{"type":"ORG","text":"아침해상사","start_byte":0,"end_byte":15,"start_cp":0,"end_cp":5}]}
+{"id":"g-org-223","category":"organization","variant":"prefix","text":"(주)다솔컴퍼니와 계약을 갱신했다.","entities":[{"type":"ORG","text":"다솔컴퍼니","start_byte":5,"end_byte":20,"start_cp":3,"end_cp":8}]}
+{"id":"g-org-224","category":"organization","variant":"fullwidth","text":"《Ａｔｌａｓ모터스》 연례 보고서","entities":[{"type":"ORG","text":"Ａｔｌａｓ모터스","start_byte":3,"end_byte":27,"start_cp":1,"end_cp":9}]}
+{"id":"g-org-225","category":"organization","variant":"ascii","text":"Atlas게임즈는 지난해 흑자를 냈다.","entities":[{"type":"ORG","text":"Atlas게임즈","start_byte":0,"end_byte":14,"start_cp":0,"end_cp":8}]}
+{"id":"g-org-226","category":"organization","variant":"particle","text":"큰바위자동차에서 근무한 지 3년이 됐다.","entities":[{"type":"ORG","text":"큰바위자동차","start_byte":0,"end_byte":18,"start_cp":0,"end_cp":6}]}
+{"id":"g-org-227","category":"organization","variant":"prefix","text":"사단법인 하늘빛자동차는 회원을 모집한다.","entities":[{"type":"ORG","text":"하늘빛자동차","start_byte":13,"end_byte":31,"start_cp":5,"end_cp":11}]}
+{"id":"g-org-228","category":"organization","variant":"particle","text":"새싹자동차에서 근무한 지 3년이 됐다.","entities":[{"type":"ORG","text":"새싹자동차","start_byte":0,"end_byte":15,"start_cp":0,"end_cp":5}]}
+{"id":"g-org-229","category":"organization","variant":"department","text":"드림엔지니어링 기술지원팀에 요청했다.","entities":[{"type":"ORG","text":"드림엔지니어링","start_byte":0,"end_byte":21,"start_cp":0,"end_cp":7}]}
+{"id":"g-org-230","category":"organization","variant":"punctuation","text":"《푸른솔건축》 연례 보고서","entities":[{"type":"ORG","text":"푸른솔건축","start_byte":3,"end_byte":18,"start_cp":1,"end_cp":6}]}
+{"id":"g-org-231","category":"organization","variant":"prefix","text":"사단법인 노랑보험은 회원을 모집한다.","entities":[{"type":"ORG","text":"노랑보험","start_byte":13,"end_byte":25,"start_cp":5,"end_cp":9}]}
+{"id":"g-org-232","category":"organization","variant":"prefix","text":"(주)바다숲협회와 계약을 갱신했다.","entities":[{"type":"ORG","text":"바다숲협회","start_byte":5,"end_byte":20,"start_cp":3,"end_cp":8}]}
+{"id":"g-org-233","category":"organization","variant":"fullwidth","text":"(주)Ｓ２랩스와 계약을 갱신했다.","entities":[{"type":"ORG","text":"Ｓ２랩스","start_byte":5,"end_byte":17,"start_cp":3,"end_cp":7}]}
+{"id":"g-org-234","category":"organization","variant":"particle","text":"들꽃푸드가 새 공장을 지었다.","entities":[{"type":"ORG","text":"들꽃푸드","start_byte":0,"end_byte":12,"start_cp":0,"end_cp":4}]}
+{"id":"g-org-235","category":"organization","variant":"particle","text":"드림전자는 지난해 흑자를 냈다.","entities":[{"type":"ORG","text":"드림전자","start_byte":0,"end_byte":12,"start_cp":0,"end_cp":4}]}
+{"id":"g-org-236","category":"organization","variant":"department","text":"푸르미대학교 기술지원팀에 요청했다.","entities":[{"type":"ORG","text":"푸르미대학교","start_byte":0,"end_byte":18,"start_cp":0,"end_cp":6}]}
+{"id":"g-org-237","category":"organization","variant":"department","text":"솔숲항공 기술지원팀에 요청했다.","entities":[{"type":"ORG","text":"솔숲항공","start_byte":0,"end_byte":12,"start_cp":0,"end_cp":4}]}
+{"id":"g-org-238","category":"organization","variant":"particle","text":"미리내연구소가 새 공장을 지었다.","entities":[{"type":"ORG","text":"미리내연구소","start_byte":0,"end_byte":18,"start_cp":0,"end_cp":6}]}
+{"id":"g-org-239","category":"organization","variant":"particle","text":"들꽃병원에서 근무한 지 3년이 됐다.","entities":[{"type":"ORG","text":"들꽃병원","start_byte":0,"end_byte":12,"start_cp":0,"end_cp":4}]}
+{"id":"g-org-240","category":"organization","variant":"particle","text":"솔숲은행이 새 공장을 지었다.","entities":[{"type":"ORG","text":"솔숲은행","start_byte":0,"end_byte":12,"start_cp":0,"end_cp":4}]}
+{"id":"g-org-241","category":"organization","variant":"prefix","text":"(주)은빛푸드와 계약을 갱신했다.","entities":[{"type":"ORG","text":"은빛푸드","start_byte":5,"end_byte":17,"start_cp":3,"end_cp":7}]}
+{"id":"g-org-242","category":"organization","variant":"prefix","text":"사단법인 단풍미디어는 회원을 모집한다.","entities":[{"type":"ORG","text":"단풍미디어","start_byte":13,"end_byte":28,"start_cp":5,"end_cp":10}]}
+{"id":"g-org-243","category":"organization","variant":"particle","text":"느티병원은 지난해 흑자를 냈다.","entities":[{"type":"ORG","text":"느티병원","start_byte":0,"end_byte":12,"start_cp":0,"end_cp":4}]}
+{"id":"g-org-244","category":"organization","variant":"particle","text":"옹달샘협회는 지난해 흑자를 냈다.","entities":[{"type":"ORG","text":"옹달샘협회","start_byte":0,"end_byte":15,"start_cp":0,"end_cp":5}]}
+{"id":"g-org-245","category":"organization","variant":"prefix","text":"사단법인 옹달샘자동차는 회원을 모집한다.","entities":[{"type":"ORG","text":"옹달샘자동차","start_byte":13,"end_byte":31,"start_cp":5,"end_cp":11}]}
+{"id":"g-org-246","category":"organization","variant":"prefix","text":"사단법인 새날게임즈는 회원을 모집한다.","entities":[{"type":"ORG","text":"새날게임즈","start_byte":13,"end_byte":28,"start_cp":5,"end_cp":10}]}
+{"id":"g-org-247","category":"organization","variant":"ascii","text":"《Vega모터스》 연례 보고서","entities":[{"type":"ORG","text":"Vega모터스","start_byte":3,"end_byte":16,"start_cp":1,"end_cp":8}]}
+{"id":"g-org-248","category":"organization","variant":"particle","text":"파란리테일의 신제품 발표회에 다녀왔다.","entities":[{"type":"ORG","text":"파란리테일","start_byte":0,"end_byte":15,"start_cp":0,"end_cp":5}]}
+{"id":"g-org-249","category":"organization","variant":"fullwidth","text":"사단법인 Ｓ２랩스는 회원을 모집한다.","entities":[{"type":"ORG","text":"Ｓ２랩스","start_byte":13,"end_byte":25,"start_cp":5,"end_cp":9}]}
+{"id":"g-org-250","category":"organization","variant":"particle","text":"단풍협회를 협력사로 선정했다.","entities":[{"type":"ORG","text":"단풍협회","start_byte":0,"end_byte":12,"start_cp":0,"end_cp":4}]}
+{"id":"g-org-251","category":"organization","variant":"prefix","text":"사단법인 바다숲리테일은 회원을 모집한다.","entities":[{"type":"ORG","text":"바다숲리테일","start_byte":13,"end_byte":31,"start_cp":5,"end_cp":11}]}
+{"id":"g-org-252","category":"organization","variant":"prefix","text":"(주)큰바위컴퍼니와 계약을 갱신했다.","entities":[{"type":"ORG","text":"큰바위컴퍼니","start_byte":5,"end_byte":23,"start_cp":3,"end_cp":9}]}
+{"id":"g-org-253","category":"organization","variant":"particle","text":"한마음푸드에서 근무한 지 3년이 됐다.","entities":[{"type":"ORG","text":"한마음푸드","start_byte":0,"end_byte":15,"start_cp":0,"end_cp":5}]}
+{"id":"g-org-254","category":"organization","variant":"prefix","text":"(주)온새미보험과 계약을 갱신했다.","entities":[{"type":"ORG","text":"온새미보험","start_byte":5,"end_byte":20,"start_cp":3,"end_cp":8}]}
+{"id":"g-org-255","category":"organization","variant":"plain","text":"거래처: 푸른솔은행","entities":[{"type":"ORG","text":"푸른솔은행","start_byte":11,"end_byte":26,"start_cp":5,"end_cp":10}]}
+{"id":"g-org-256","category":"organization","variant":"prefix","text":"(주)단풍미디어와 계약을 갱신했다.","entities":[{"type":"ORG","text":"단풍미디어","start_byte":5,"end_byte":20,"start_cp":3,"end_cp":8}]}
+{"id":"g-org-257","category":"organization","variant":"ascii","text":"MX미디어에서 근무한 지 3년이 됐다.","entities":[{"type":"ORG","text":"MX미디어","start_byte":0,"end_byte":11,"start_cp":0,"end_cp":5}]}
+{"id":"g-org-258","category":"organization","variant":"fullwidth","text":"Ｖｅｇａ미디어가 새 공장을 지었다.","entities":[{"type":"ORG","text":"Ｖｅｇａ미디어","start_byte":0,"end_byte":21,"start_cp":0,"end_cp":7}]}
+{"id":"g-org-259","category":"organization","variant":"particle","text":"큰바위건축을 협력사로 선정했다.","entities":[{"type":"ORG","text":"큰바위건축","start_byte":0,"end_byte":15,"start_cp":0,"end_cp":5}]}
+{"id":"g-org-260","category":"organization","variant":"particle","text":"해오름자동차에서 근무한 지 3년이 됐다.","entities":[{"type":"ORG","text":"해오름자동차","start_byte":0,"end_byte":18,"start_cp":0,"end_cp":6}]}
+{"id":"g-org-261","category":"organization","variant":"plain","text":"푸른솔대학교 측 담당자가 회신했다.","entities":[{"type":"ORG","text":"푸른솔대학교","start_byte":0,"end_byte":18,"start_cp":0,"end_cp":6}]}
+{"id":"g-org-262","category":"organization","variant":"particle","text":"푸르미병원을 협력사로 선정했다.","entities":[{"type":"ORG","text":"푸르미병원","start_byte":0,"end_byte":15,"start_cp":0,"end_cp":5}]}
+{"id":"g-org-263","category":"organization","variant":"particle","text":"옹달샘미디어는 지난해 흑자를 냈다.","entities":[{"type":"ORG","text":"옹달샘미디어","start_byte":0,"end_byte":18,"start_cp":0,"end_cp":6}]}
+{"id":"g-org-264","category":"organization","variant":"plain","text":"들꽃상사 측 담당자가 회신했다.","entities":[{"type":"ORG","text":"들꽃상사","start_byte":0,"end_byte":12,"start_cp":0,"end_cp":4}]}
+{"id":"g-org-265","category":"organization","variant":"department","text":"금빛푸드 기술지원팀에 요청했다.","entities":[{"type":"ORG","text":"금빛푸드","start_byte":0,"end_byte":12,"start_cp":0,"end_cp":4}]}
+{"id":"g-org-266","category":"organization","variant":"particle","text":"참길은행이 새 공장을 지었다.","entities":[{"type":"ORG","text":"참길은행","start_byte":0,"end_byte":12,"start_cp":0,"end_cp":4}]}
+{"id":"g-org-267","category":"organization","variant":"department","text":"단풍재단 기술지원팀에 요청했다.","entities":[{"type":"ORG","text":"단풍재단","start_byte":0,"end_byte":12,"start_cp":0,"end_cp":4}]}
+{"id":"g-org-268","category":"organization","variant":"punctuation","text":"《한마음리테일》 연례 보고서","entities":[{"type":"ORG","text":"한마음리테일","start_byte":3,"end_byte":21,"start_cp":1,"end_cp":7}]}
+{"id":"g-org-269","category":"organization","variant":"particle","text":"샛별증권의 신제품 발표회에 다녀왔다.","entities":[{"type":"ORG","text":"샛별증권","start_byte":0,"end_byte":12,"start_cp":0,"end_cp":4}]}
+{"id":"g-org-270","category":"organization","variant":"ascii","text":"Polar게임즈 기술지원팀에 요청했다.","entities":[{"type":"ORG","text":"Polar게임즈","start_byte":0,"end_byte":14,"start_cp":0,"end_cp":8}]}
+{"id":"g-org-271","category":"organization","variant":"particle","text":"은빛리테일은 지난해 흑자를 냈다.","entities":[{"type":"ORG","text":"은빛리테일","start_byte":0,"end_byte":15,"start_cp":0,"end_cp":5}]}
+{"id":"g-org-272","category":"organization","variant":"ascii","text":"Echo미디어의 신제품 발표회에 다녀왔다.","entities":[{"type":"ORG","text":"Echo미디어","start_byte":0,"end_byte":13,"start_cp":0,"end_cp":7}]}
+{"id":"g-org-273","category":"organization","variant":"particle","text":"아침해미디어는 지난해 흑자를 냈다.","entities":[{"type":"ORG","text":"아침해미디어","start_byte":0,"end_byte":18,"start_cp":0,"end_cp":6}]}
+{"id":"g-org-274","category":"organization","variant":"fullwidth","text":"Ｐｏｌａｒ게임즈에서 근무한 지 3년이 됐다.","entities":[{"type":"ORG","text":"Ｐｏｌａｒ게임즈","start_byte":0,"end_byte":24,"start_cp":0,"end_cp":8}]}
+{"id":"g-org-275","category":"organization","variant":"prefix","text":"(주)은빛증권과 계약을 갱신했다.","entities":[{"type":"ORG","text":"은빛증권","start_byte":5,"end_byte":17,"start_cp":3,"end_cp":7}]}
+{"id":"g-org-276","category":"organization","variant":"particle","text":"느티전자의 신제품 발표회에 다녀왔다.","entities":[{"type":"ORG","text":"느티전자","start_byte":0,"end_byte":12,"start_cp":0,"end_cp":4}]}
+{"id":"g-org-277","category":"organization","variant":"punctuation","text":"《노랑항공》 연례 보고서","entities":[{"type":"ORG","text":"노랑항공","start_byte":3,"end_byte":15,"start_cp":1,"end_cp":5}]}
+{"id":"g-org-278","category":"organization","variant":"particle","text":"노랑대학교에서 근무한 지 3년이 됐다.","entities":[{"type":"ORG","text":"노랑대학교","start_byte":0,"end_byte":15,"start_cp":0,"end_cp":5}]}
+{"id":"g-org-279","category":"organization","variant":"plain","text":"단풍병원 측 담당자가 회신했다.","entities":[{"type":"ORG","text":"단풍병원","start_byte":0,"end_byte":12,"start_cp":0,"end_cp":4}]}
+{"id":"g-org-280","category":"organization","variant":"plain","text":"솔숲대학교 측 담당자가 회신했다.","entities":[{"type":"ORG","text":"솔숲대학교","start_byte":0,"end_byte":15,"start_cp":0,"end_cp":5}]}
+{"id":"g-org-281","category":"organization","variant":"plain","text":"해오름미디어 측 담당자가 회신했다.","entities":[{"type":"ORG","text":"해오름미디어","start_byte":0,"end_byte":18,"start_cp":0,"end_cp":6}]}
+{"id":"g-org-282","category":"organization","variant":"particle","text":"샛별건축이 새 공장을 지었다.","entities":[{"type":"ORG","text":"샛별건축","start_byte":0,"end_byte":12,"start_cp":0,"end_cp":4}]}
+{"id":"g-org-283","category":"organization","variant":"prefix","text":"(주)하늘빛제약과 계약을 갱신했다.","entities":[{"type":"ORG","text":"하늘빛제약","start_byte":5,"end_byte":20,"start_cp":3,"end_cp":8}]}
+{"id":"g-org-284","category":"organization","variant":"plain","text":"푸르미상사 측 담당자가 회신했다.","entities":[{"type":"ORG","text":"푸르미상사","start_byte":0,"end_byte":15,"start_cp":0,"end_cp":5}]}
+{"id":"g-org-285","category":"organization","variant":"plain","text":"거래처: 단풍상사","entities":[{"type":"ORG","text":"단풍상사","start_byte":11,"end_byte":23,"start_cp":5,"end_cp":9}]}
+{"id":"g-org-286","category":"organization","variant":"department","text":"온새미건축 기술지원팀에 요청했다.","entities":[{"type":"ORG","text":"온새미건축","start_byte":0,"end_byte":15,"start_cp":0,"end_cp":5}]}
+{"id":"g-org-287","category":"organization","variant":"punctuation","text":"《큰바위푸드》 연례 보고서","entities":[{"type":"ORG","text":"큰바위푸드","start_byte":3,"end_byte":18,"start_cp":1,"end_cp":6}]}
+{"id":"g-org-288","category":"organization","variant":"particle","text":"솔숲대학교를 협력사로 선정했다.","entities":[{"type":"ORG","text":"솔숲대학교","start_byte":0,"end_byte":15,"start_cp":0,"end_cp":5}]}
+{"id":"g-org-289","category":"organization","variant":"particle","text":"느티자동차에서 근무한 지 3년이 됐다.","entities":[{"type":"ORG","text":"느티자동차","start_byte":0,"end_byte":15,"start_cp":0,"end_cp":5}]}
+{"id":"g-org-290","category":"organization","variant":"prefix","text":"(주)한마음게임즈와 계약을 갱신했다.","entities":[{"type":"ORG","text":"한마음게임즈","start_byte":5,"end_byte":23,"start_cp":3,"end_cp":9}]}
+{"id":"g-org-291","category":"organization","variant":"particle","text":"꿈나래전자는 지난해 흑자를 냈다.","entities":[{"type":"ORG","text":"꿈나래전자","start_byte":0,"end_byte":15,"start_cp":0,"end_cp":5}]}
+{"id":"g-org-292","category":"organization","variant":"particle","text":"옹달샘재단은 지난해 흑자를 냈다.","entities":[{"type":"ORG","text":"옹달샘재단","start_byte":0,"end_byte":15,"start_cp":0,"end_cp":5}]}
+{"id":"g-org-293","category":"organization","variant":"department","text":"들꽃리테일 기술지원팀에 요청했다.","entities":[{"type":"ORG","text":"들꽃리테일","start_byte":0,"end_byte":15,"start_cp":0,"end_cp":5}]}
+{"id":"g-org-294","category":"organization","variant":"plain","text":"물결협회 측 담당자가 회신했다.","entities":[{"type":"ORG","text":"물결협회","start_byte":0,"end_byte":12,"start_cp":0,"end_cp":4}]}
+{"id":"g-org-295","category":"organization","variant":"plain","text":"거래처: 푸르미엔지니어링","entities":[{"type":"ORG","text":"푸르미엔지니어링","start_byte":11,"end_byte":35,"start_cp":5,"end_cp":13}]}
+{"id":"g-org-296","category":"organization","variant":"ascii","text":"B&K모터스를 협력사로 선정했다.","entities":[{"type":"ORG","text":"B&K모터스","start_byte":0,"end_byte":12,"start_cp":0,"end_cp":6}]}
+{"id":"g-org-297","category":"organization","variant":"plain","text":"들꽃게임즈 측 담당자가 회신했다.","entities":[{"type":"ORG","text":"들꽃게임즈","start_byte":0,"end_byte":15,"start_cp":0,"end_cp":5}]}
+{"id":"g-org-298","category":"organization","variant":"particle","text":"샛별재단을 협력사로 선정했다.","entities":[{"type":"ORG","text":"샛별재단","start_byte":0,"end_byte":12,"start_cp":0,"end_cp":4}]}
+{"id":"g-org-299","category":"organization","variant":"plain","text":"새싹컴퍼니 측 담당자가 회신했다.","entities":[{"type":"ORG","text":"새싹컴퍼니","start_byte":0,"end_byte":15,"start_cp":0,"end_cp":5}]}
+{"id":"g-org-300","category":"organization","variant":"particle","text":"꿈나래자동차는 지난해 흑자를 냈다.","entities":[{"type":"ORG","text":"꿈나래자동차","start_byte":0,"end_byte":18,"start_cp":0,"end_cp":6}]}
+{"id":"g-neg-001","category":"negative","variant":"plain","text":"게임즈 행사는 조금 바뀌었다.","entities":[]}
+{"id":"g-neg-002","category":"negative","variant":"plain","text":"새날이 생각보다 간단했다.","entities":[]}
+{"id":"g-neg-003","category":"negative","variant":"plain","text":"게임즈 행사는 모두 무사히 끝났다.","entities":[]}
+{"id":"g-neg-004","category":"negative","variant":"plain","text":"아침해가 공지를 확인해 주세요.","entities":[]}
+{"id":"g-neg-005","category":"negative","variant":"plain","text":"들꽃이 안내문을 참고하세요.","entities":[]}
+{"id":"g-neg-006","category":"negative","variant":"plain","text":"연구소 견학은 하루 더 걸린다.","entities":[]}
+{"id":"g-neg-007","category":"negative","variant":"plain","text":"팀원 면담은 안내문을 참고하세요.","entities":[]}
+{"id":"g-neg-008","category":"negative","variant":"plain","text":"고문 위촉은 다음 주로 옮겼다.","entities":[]}
+{"id":"g-neg-009","category":"negative","variant":"plain","text":"항공권 예약은 공지를 확인해 주세요.","entities":[]}
+{"id":"g-neg-010","category":"negative","variant":"plain","text":"재단 장학 공고는 조금 바뀌었다. 게임즈 행사는 하루 더 걸린다.","entities":[]}
+{"id":"g-neg-011","category":"negative","variant":"plain","text":"물결이 아직 정해지지 않았다.","entities":[]}
+{"id":"g-neg-012","category":"negative","variant":"plain","text":"새날이 사진으로 남겼다.","entities":[]}
+{"id":"g-neg-013","category":"negative","variant":"plain","text":"항공권 예약은 조금 바뀌었다.","entities":[]}
+{"id":"g-neg-014","category":"negative","variant":"plain","text":"자동차 정비 일정은 예정보다 빨랐다.","entities":[]}
+{"id":"g-neg-015","category":"negative","variant":"plain","text":"건축 허가는 작년과 같다. 아침해가 공지를 확인해 주세요.","entities":[]}
+{"id":"g-neg-016","category":"negative","variant":"plain","text":"병원 진료 시간은 사진으로 남겼다.","entities":[]}
+{"id":"g-neg-017","category":"negative","variant":"plain","text":"협회 가입 절차는 안내문을 참고하세요.","entities":[]}
+{"id":"g-neg-018","category":"negative","variant":"plain","text":"건축 허가는 다시 검토하기로 했다.","entities":[]}
+{"id":"g-neg-019","category":"negative","variant":"plain","text":"팀원 면담은 다시 검토하기로 했다.","entities":[]}
+{"id":"g-neg-020","category":"negative","variant":"plain","text":"건축 허가는 공지를 확인해 주세요.","entities":[]}
+{"id":"g-neg-021","category":"negative","variant":"plain","text":"협회 가입 절차는 하루 더 걸린다.","entities":[]}
+{"id":"g-neg-022","category":"negative","variant":"plain","text":"새날이 예정보다 빨랐다.","entities":[]}
+{"id":"g-neg-023","category":"negative","variant":"plain","text":"재단 장학 공고는 작년과 같다. 팀원 면담은 모두 무사히 끝났다.","entities":[]}
+{"id":"g-neg-024","category":"negative","variant":"plain","text":"물결이 다음 주로 옮겼다. 팀원 면담은 안내문을 참고하세요.","entities":[]}
+{"id":"g-neg-025","category":"negative","variant":"plain","text":"새날이 작년과 같다.","entities":[]}
+{"id":"g-neg-026","category":"negative","variant":"plain","text":"은행 영업시간은 생각보다 간단했다.","entities":[]}
+{"id":"g-neg-027","category":"negative","variant":"plain","text":"협회 가입 절차는 생각보다 간단했다.","entities":[]}
+{"id":"g-neg-028","category":"negative","variant":"plain","text":"협회 가입 절차는 변경 사항이 없다.","entities":[]}
+{"id":"g-neg-029","category":"negative","variant":"plain","text":"아침해가 안내문을 참고하세요.","entities":[]}
+{"id":"g-neg-030","category":"negative","variant":"plain","text":"증권 계좌 개설은 아직 정해지지 않았다.","entities":[]}
+{"id":"g-neg-031","category":"negative","variant":"plain","text":"대학교 축제는 생각보다 간단했다.","entities":[]}
+{"id":"g-neg-032","category":"negative","variant":"plain","text":"미디어 교육은 안내문을 참고하세요.","entities":[]}
+{"id":"g-neg-033","category":"negative","variant":"plain","text":"재단 장학 공고는 모두 무사히 끝났다.","entities":[]}
+{"id":"g-neg-034","category":"negative","variant":"plain","text":"새날이 다시 검토하기로 했다.","entities":[]}
+{"id":"g-neg-035","category":"negative","variant":"plain","text":"새날이 하루 더 걸린다. 고문 위촉은 안내문을 참고하세요.","entities":[]}
+{"id":"g-neg-036","category":"negative","variant":"plain","text":"미디어 교육은 하루 더 걸린다. 게임즈 행사는 사진으로 남겼다.","entities":[]}
+{"id":"g-neg-037","category":"negative","variant":"plain","text":"건축 허가는 모두 무사히 끝났다.","entities":[]}
+{"id":"g-neg-038","category":"negative","variant":"plain","text":"게임즈 행사는 아직 정해지지 않았다.","entities":[]}
+{"id":"g-neg-039","category":"negative","variant":"plain","text":"보험 청구 서류는 조금 바뀌었다.","entities":[]}
+{"id":"g-neg-040","category":"negative","variant":"plain","text":"아침해가 다음 주로 옮겼다. 건축 허가는 모두 무사히 끝났다.","entities":[]}
+{"id":"g-neg-041","category":"negative","variant":"plain","text":"새날이 이미 마감되었다. 물결이 아직 정해지지 않았다.","entities":[]}
+{"id":"g-neg-042","category":"negative","variant":"plain","text":"병원 진료 시간은 이미 마감되었다. 보험 청구 서류는 오전 중에 끝난다.","entities":[]}
+{"id":"g-neg-043","category":"negative","variant":"plain","text":"은행 영업시간은 공지를 확인해 주세요.","entities":[]}
+{"id":"g-neg-044","category":"negative","variant":"plain","text":"건축 허가는 예정보다 빨랐다.","entities":[]}
+{"id":"g-neg-045","category":"negative","variant":"plain","text":"들꽃이 아직 정해지지 않았다.","entities":[]}
+{"id":"g-neg-046","category":"negative","variant":"plain","text":"병원 진료 시간은 작년과 같다.","entities":[]}
+{"id":"g-neg-047","category":"negative","variant":"plain","text":"팀원 면담은 오전 중에 끝난다.","entities":[]}
+{"id":"g-neg-048","category":"negative","variant":"plain","text":"은행 영업시간은 예정보다 빨랐다.","entities":[]}
+{"id":"g-neg-049","category":"negative","variant":"plain","text":"연구소 견학은 아직 정해지지 않았다.","entities":[]}
+{"id":"g-neg-050","category":"negative","variant":"plain","text":"푸드 트럭은 이미 마감되었다.","entities":[]}
+{"id":"g-neg-051","category":"negative","variant":"plain","text":"미디어 교육은 예정보다 빨랐다. 증권 계좌 개설은 사진으로 남겼다.","entities":[]}
+{"id":"g-neg-052","category":"negative","variant":"plain","text":"보험 청구 서류는 모두 무사히 끝났다.","entities":[]}
+{"id":"g-neg-053","category":"negative","variant":"plain","text":"항공권 예약은 하루 더 걸린다. 들꽃이 이미 마감되었다.","entities":[]}
+{"id":"g-neg-054","category":"negative","variant":"plain","text":"협회 가입 절차는 작년과 같다.","entities":[]}
+{"id":"g-neg-055","category":"negative","variant":"plain","text":"대학교 축제는 다음 주로 옮겼다.","entities":[]}
+{"id":"g-neg-056","category":"negative","variant":"plain","text":"게임즈 행사는 다시 검토하기로 했다.","entities":[]}
+{"id":"g-neg-057","category":"negative","variant":"plain","text":"새날이 공지를 확인해 주세요.","entities":[]}
+{"id":"g-neg-058","category":"negative","variant":"plain","text":"협회 가입 절차는 사진으로 남겼다.","entities":[]}
+{"id":"g-neg-059","category":"negative","variant":"plain","text":"은행 영업시간은 작년과 같다.","entities":[]}
+{"id":"g-neg-060","category":"negative","variant":"plain","text":"연구소 견학은 사진으로 남겼다.","entities":[]}
+{"id":"g-neg-061","category":"negative","variant":"plain","text":"자동차 정비 일정은 사진으로 남겼다.","entities":[]}
+{"id":"g-neg-062","category":"negative","variant":"plain","text":"들꽃이 다음 주로 옮겼다. 들꽃이 조금 바뀌었다.","entities":[]}
+{"id":"g-neg-063","category":"negative","variant":"plain","text":"협회 가입 절차는 다시 검토하기로 했다. 대학교 축제는 생각보다 간단했다.","entities":[]}
+{"id":"g-neg-064","category":"negative","variant":"plain","text":"들꽃이 다시 검토하기로 했다.","entities":[]}
+{"id":"g-neg-065","category":"negative","variant":"plain","text":"증권 계좌 개설은 조금 바뀌었다.","entities":[]}
+{"id":"g-neg-066","category":"negative","variant":"plain","text":"푸드 트럭은 조금 바뀌었다.","entities":[]}
+{"id":"g-neg-067","category":"negative","variant":"plain","text":"건축 허가는 작년과 같다.","entities":[]}
+{"id":"g-neg-068","category":"negative","variant":"plain","text":"병원 진료 시간은 생각보다 간단했다. 증권 계좌 개설은 모두 무사히 끝났다.","entities":[]}
+{"id":"g-neg-069","category":"negative","variant":"plain","text":"자동차 정비 일정은 변경 사항이 없다.","entities":[]}
+{"id":"g-neg-070","category":"negative","variant":"plain","text":"보험 청구 서류는 작년과 같다.","entities":[]}
+{"id":"g-neg-071","category":"negative","variant":"plain","text":"미디어 교육은 아직 정해지지 않았다. 항공권 예약은 모두 무사히 끝났다.","entities":[]}
+{"id":"g-neg-072","category":"negative","variant":"plain","text":"자동차 정비 일정은 이미 마감되었다. 대학교 축제는 변경 사항이 없다.","entities":[]}
+{"id":"g-neg-073","category":"negative","variant":"plain","text":"들꽃이 다음 주로 옮겼다.","entities":[]}
+{"id":"g-neg-074","category":"negative","variant":"plain","text":"병원 진료 시간은 변경 사항이 없다.","entities":[]}
+{"id":"g-neg-075","category":"negative","variant":"plain","text":"연구소 견학은 오전 중에 끝난다.","entities":[]}
+{"id":"g-neg-076","category":"negative","variant":"plain","text":"팀원 면담은 다음 주로 옮겼다. 새날이 안내문을 참고하세요.","entities":[]}
+{"id":"g-neg-077","category":"negative","variant":"plain","text":"팀원 면담은 모두 무사히 끝났다. 연구소 견학은 안내문을 참고하세요.","entities":[]}
+{"id":"g-neg-078","category":"negative","variant":"plain","text":"물결이 안내문을 참고하세요.","entities":[]}
+{"id":"g-neg-079","category":"negative","variant":"plain","text":"협회 가입 절차는 다음 주로 옮겼다.","entities":[]}
+{"id":"g-neg-080","category":"negative","variant":"plain","text":"푸드 트럭은 모두 무사히 끝났다. 자동차 정비 일정은 오전 중에 끝난다.","entities":[]}
+{"id":"g-neg-081","category":"negative","variant":"plain","text":"항공권 예약은 사진으로 남겼다.","entities":[]}
+{"id":"g-neg-082","category":"negative","variant":"plain","text":"게임즈 행사는 작년과 같다.","entities":[]}
+{"id":"g-neg-083","category":"negative","variant":"plain","text":"물결이 하루 더 걸린다.","entities":[]}
+{"id":"g-neg-084","category":"negative","variant":"plain","text":"항공권 예약은 예정보다 빨랐다.","entities":[]}
+{"id":"g-neg-085","category":"negative","variant":"plain","text":"팀원 면담은 아직 정해지지 않았다.","entities":[]}
+{"id":"g-neg-086","category":"negative","variant":"plain","text":"미디어 교육은 오전 중에 끝난다.","entities":[]}
+{"id":"g-neg-087","category":"negative","variant":"plain","text":"푸드 트럭은 사진으로 남겼다.","entities":[]}
+{"id":"g-neg-088","category":"negative","variant":"plain","text":"푸드 트럭은 생각보다 간단했다. 보험 청구 서류는 안내문을 참고하세요.","entities":[]}
+{"id":"g-neg-089","category":"negative","variant":"plain","text":"병원 진료 시간은 다음 주로 옮겼다.","entities":[]}
+{"id":"g-neg-090","category":"negative","variant":"plain","text":"들꽃이 다시 검토하기로 했다. 항공권 예약은 이미 마감되었다.","entities":[]}
+{"id":"g-neg-091","category":"negative","variant":"plain","text":"병원 진료 시간은 하루 더 걸린다. 새날이 모두 무사히 끝났다.","entities":[]}
+{"id":"g-neg-092","category":"negative","variant":"plain","text":"고문 위촉은 생각보다 간단했다.","entities":[]}
+{"id":"g-neg-093","category":"negative","variant":"plain","text":"항공권 예약은 생각보다 간단했다.","entities":[]}
+{"id":"g-neg-094","category":"negative","variant":"plain","text":"푸드 트럭은 모두 무사히 끝났다.","entities":[]}
+{"id":"g-neg-095","category":"negative","variant":"plain","text":"미디어 교육은 변경 사항이 없다. 대학교 축제는 안내문을 참고하세요.","entities":[]}
+{"id":"g-neg-096","category":"negative","variant":"plain","text":"물결이 공지를 확인해 주세요. 새날이 모두 무사히 끝났다.","entities":[]}
+{"id":"g-neg-097","category":"negative","variant":"plain","text":"항공권 예약은 다시 검토하기로 했다. 은행 영업시간은 작년과 같다.","entities":[]}
+{"id":"g-neg-098","category":"negative","variant":"plain","text":"고문 위촉은 공지를 확인해 주세요.","entities":[]}
+{"id":"g-neg-099","category":"negative","variant":"plain","text":"대학교 축제는 다시 검토하기로 했다.","entities":[]}
+{"id":"g-neg-100","category":"negative","variant":"plain","text":"들꽃이 모두 무사히 끝났다.","entities":[]}
+{"id":"g-neg-101","category":"negative","variant":"plain","text":"보험 청구 서류는 아직 정해지지 않았다.","entities":[]}
+{"id":"g-neg-102","category":"negative","variant":"plain","text":"들꽃이 예정보다 빨랐다.","entities":[]}
+{"id":"g-neg-103","category":"negative","variant":"plain","text":"미디어 교육은 변경 사항이 없다. 들꽃이 작년과 같다.","entities":[]}
+{"id":"g-neg-104","category":"negative","variant":"plain","text":"협회 가입 절차는 모두 무사히 끝났다.","entities":[]}
+{"id":"g-neg-105","category":"negative","variant":"plain","text":"협회 가입 절차는 이미 마감되었다. 팀원 면담은 변경 사항이 없다.","entities":[]}
+{"id":"g-neg-106","category":"negative","variant":"plain","text":"재단 장학 공고는 다음 주로 옮겼다.","entities":[]}
+{"id":"g-neg-107","category":"negative","variant":"plain","text":"자동차 정비 일정은 공지를 확인해 주세요. 재단 장학 공고는 모두 무사히 끝났다.","entities":[]}
+{"id":"g-neg-108","category":"negative","variant":"plain","text":"게임즈 행사는 생각보다 간단했다.","entities":[]}
+{"id":"g-neg-109","category":"negative","variant":"plain","text":"미디어 교육은 생각보다 간단했다.","entities":[]}
+{"id":"g-neg-110","category":"negative","variant":"plain","text":"자동차 정비 일정은 생각보다 간단했다.","entities":[]}
+{"id":"g-neg-111","category":"negative","variant":"plain","text":"항공권 예약은 오전 중에 끝난다.","entities":[]}
+{"id":"g-neg-112","category":"negative","variant":"plain","text":"보험 청구 서류는 생각보다 간단했다.","entities":[]}
+{"id":"g-neg-113","category":"negative","variant":"plain","text":"물결이 작년과 같다.","entities":[]}
+{"id":"g-neg-114","category":"negative","variant":"plain","text":"들꽃이 오전 중에 끝난다. 재단 장학 공고는 모두 무사히 끝났다.","entities":[]}
+{"id":"g-neg-115","category":"negative","variant":"plain","text":"팀원 면담은 변경 사항이 없다. 푸드 트럭은 모두 무사히 끝났다.","entities":[]}
+{"id":"g-neg-116","category":"negative","variant":"plain","text":"미디어 교육은 모두 무사히 끝났다.","entities":[]}
+{"id":"g-neg-117","category":"negative","variant":"plain","text":"재단 장학 공고는 오전 중에 끝난다.","entities":[]}
+{"id":"g-neg-118","category":"negative","variant":"plain","text":"재단 장학 공고는 다시 검토하기로 했다. 병원 진료 시간은 하루 더 걸린다.","entities":[]}
+{"id":"g-neg-119","category":"negative","variant":"plain","text":"푸드 트럭은 다음 주로 옮겼다. 새날이 하루 더 걸린다.","entities":[]}
+{"id":"g-neg-120","category":"negative","variant":"plain","text":"은행 영업시간은 모두 무사히 끝났다. 미디어 교육은 조금 바뀌었다.","entities":[]}
+{"id":"g-neg-121","category":"negative","variant":"plain","text":"건축 허가는 사진으로 남겼다.","entities":[]}
+{"id":"g-neg-122","category":"negative","variant":"plain","text":"팀원 면담은 이미 마감되었다.","entities":[]}
+{"id":"g-neg-123","category":"negative","variant":"plain","text":"미디어 교육은 다시 검토하기로 했다. 병원 진료 시간은 사진으로 남겼다.","entities":[]}
+{"id":"g-neg-124","category":"negative","variant":"plain","text":"병원 진료 시간은 이미 마감되었다. 보험 청구 서류는 조금 바뀌었다.","entities":[]}
+{"id":"g-neg-125","category":"negative","variant":"plain","text":"아침해가 다음 주로 옮겼다.","entities":[]}
+{"id":"g-neg-126","category":"negative","variant":"plain","text":"건축 허가는 생각보다 간단했다.","entities":[]}
+{"id":"g-neg-127","category":"negative","variant":"plain","text":"들꽃이 공지를 확인해 주세요.","entities":[]}
+{"id":"g-neg-128","category":"negative","variant":"plain","text":"병원 진료 시간은 생각보다 간단했다.","entities":[]}
+{"id":"g-neg-129","category":"negative","variant":"plain","text":"건축 허가는 이미 마감되었다.","entities":[]}
+{"id":"g-neg-130","category":"negative","variant":"plain","text":"협회 가입 절차는 이미 마감되었다.","entities":[]}
+{"id":"g-neg-131","category":"negative","variant":"plain","text":"은행 영업시간은 조금 바뀌었다.","entities":[]}
+{"id":"g-neg-132","category":"negative","variant":"plain","text":"병원 진료 시간은 생각보다 간단했다. 병원 진료 시간은 공지를 확인해 주세요.","entities":[]}
+{"id":"g-neg-133","category":"negative","variant":"plain","text":"팀원 면담은 다음 주로 옮겼다. 항공권 예약은 다시 검토하기로 했다.","entities":[]}
+{"id":"g-neg-134","category":"negative","variant":"plain","text":"증권 계좌 개설은 모두 무사히 끝났다.","entities":[]}
+{"id":"g-neg-135","category":"negative","variant":"plain","text":"물결이 조금 바뀌었다. 푸드 트럭은 작년과 같다.","entities":[]}
+{"id":"g-neg-136","category":"negative","variant":"plain","text":"자동차 정비 일정은 하루 더 걸린다. 아침해가 작년과 같다.","entities":[]}
+{"id":"g-neg-137","category":"negative","variant":"plain","text":"아침해가 변경 사항이 없다. 팀원 면담은 안내문을 참고하세요.","entities":[]}
+{"id":"g-neg-138","category":"negative","variant":"plain","text":"자동차 정비 일정은 다음 주로 옮겼다.","entities":[]}
+{"id":"g-neg-139","category":"negative","variant":"plain","text":"보험 청구 서류는 오전 중에 끝난다.","entities":[]}
+{"id":"g-neg-140","category":"negative","variant":"plain","text":"항공권 예약은 안내문을 참고하세요.","entities":[]}
+{"id":"g-neg-141","category":"negative","variant":"plain","text":"항공권 예약은 공지를 확인해 주세요. 미디어 교육은 사진으로 남겼다.","entities":[]}
+{"id":"g-neg-142","category":"negative","variant":"plain","text":"아침해가 모두 무사히 끝났다.","entities":[]}
+{"id":"g-neg-143","category":"negative","variant":"plain","text":"건축 허가는 조금 바뀌었다. 건축 허가는 하루 더 걸린다.","entities":[]}
+{"id":"g-neg-144","category":"negative","variant":"plain","text":"대학교 축제는 작년과 같다.","entities":[]}
+{"id":"g-neg-145","category":"negative","variant":"plain","text":"연구소 견학은 공지를 확인해 주세요.","entities":[]}
+{"id":"g-neg-146","category":"negative","variant":"plain","text":"자동차 정비 일정은 예정보다 빨랐다. 미디어 교육은 안내문을 참고하세요.","entities":[]}
+{"id":"g-neg-147","category":"negative","variant":"plain","text":"아침해가 조금 바뀌었다. 푸드 트럭은 다음 주로 옮겼다.","entities":[]}
+{"id":"g-neg-148","category":"negative","variant":"plain","text":"협회 가입 절차는 공지를 확인해 주세요.","entities":[]}
+{"id":"g-neg-149","category":"negative","variant":"plain","text":"고문 위촉은 아직 정해지지 않았다.","entities":[]}
+{"id":"g-neg-150","category":"negative","variant":"plain","text":"아침해가 오전 중에 끝난다.","entities":[]}
+{"id":"g-neg-151","category":"negative","variant":"plain","text":"물결이 조금 바뀌었다.","entities":[]}
+{"id":"g-neg-152","category":"negative","variant":"plain","text":"건축 허가는 오전 중에 끝난다.","entities":[]}
+{"id":"g-neg-153","category":"negative","variant":"plain","text":"병원 진료 시간은 조금 바뀌었다.","entities":[]}
+{"id":"g-neg-154","category":"negative","variant":"plain","text":"들꽃이 조금 바뀌었다.","entities":[]}
+{"id":"g-neg-155","category":"negative","variant":"plain","text":"아침해가 아직 정해지지 않았다. 연구소 견학은 하루 더 걸린다.","entities":[]}
+{"id":"g-neg-156","category":"negative","variant":"plain","text":"자동차 정비 일정은 조금 바뀌었다.","entities":[]}
+{"id":"g-neg-157","category":"negative","variant":"plain","text":"새날이 오전 중에 끝난다. 협회 가입 절차는 모두 무사히 끝났다.","entities":[]}
+{"id":"g-neg-158","category":"negative","variant":"plain","text":"미디어 교육은 생각보다 간단했다. 병원 진료 시간은 이미 마감되었다.","entities":[]}
+{"id":"g-neg-159","category":"negative","variant":"plain","text":"은행 영업시간은 사진으로 남겼다.","entities":[]}
+{"id":"g-neg-160","category":"negative","variant":"plain","text":"들꽃이 오전 중에 끝난다.","entities":[]}
+{"id":"g-neg-161","category":"negative","variant":"plain","text":"게임즈 행사는 이미 마감되었다. 들꽃이 하루 더 걸린다.","entities":[]}
+{"id":"g-neg-162","category":"negative","variant":"plain","text":"항공권 예약은 이미 마감되었다.","entities":[]}
+{"id":"g-neg-163","category":"negative","variant":"plain","text":"물결이 다음 주로 옮겼다.","entities":[]}
+{"id":"g-neg-164","category":"negative","variant":"plain","text":"은행 영업시간은 오전 중에 끝난다.","entities":[]}
+{"id":"g-neg-165","category":"negative","variant":"plain","text":"증권 계좌 개설은 하루 더 걸린다.","entities":[]}
+{"id":"g-neg-166","category":"negative","variant":"plain","text":"재단 장학 공고는 안내문을 참고하세요.","entities":[]}
+{"id":"g-neg-167","category":"negative","variant":"plain","text":"물결이 이미 마감되었다.","entities":[]}
+{"id":"g-neg-168","category":"negative","variant":"plain","text":"병원 진료 시간은 다음 주로 옮겼다. 보험 청구 서류는 오전 중에 끝난다.","entities":[]}
+{"id":"g-neg-169","category":"negative","variant":"plain","text":"증권 계좌 개설은 예정보다 빨랐다. 아침해가 조금 바뀌었다.","entities":[]}
+{"id":"g-neg-170","category":"negative","variant":"plain","text":"팀원 면담은 이미 마감되었다. 은행 영업시간은 작년과 같다.","entities":[]}
+{"id":"g-neg-171","category":"negative","variant":"plain","text":"병원 진료 시간은 안내문을 참고하세요.","entities":[]}
+{"id":"g-neg-172","category":"negative","variant":"plain","text":"증권 계좌 개설은 아직 정해지지 않았다. 아침해가 다음 주로 옮겼다.","entities":[]}
+{"id":"g-neg-173","category":"negative","variant":"plain","text":"대학교 축제는 다음 주로 옮겼다. 게임즈 행사는 생각보다 간단했다.","entities":[]}
+{"id":"g-neg-174","category":"negative","variant":"plain","text":"아침해가 이미 마감되었다.","entities":[]}
+{"id":"g-neg-175","category":"negative","variant":"plain","text":"재단 장학 공고는 다시 검토하기로 했다.","entities":[]}
+{"id":"g-neg-176","category":"negative","variant":"plain","text":"물결이 오전 중에 끝난다.","entities":[]}
+{"id":"g-neg-177","category":"negative","variant":"plain","text":"고문 위촉은 하루 더 걸린다.","entities":[]}
+{"id":"g-neg-178","category":"negative","variant":"plain","text":"게임즈 행사는 하루 더 걸린다.","entities":[]}
+{"id":"g-neg-179","category":"negative","variant":"plain","text":"재단 장학 공고는 사진으로 남겼다.","entities":[]}
+{"id":"g-neg-180","category":"negative","variant":"plain","text":"게임즈 행사는 변경 사항이 없다.","entities":[]}
+{"id":"g-neg-181","category":"negative","variant":"plain","text":"팀원 면담은 예정보다 빨랐다.","entities":[]}
+{"id":"g-neg-182","category":"negative","variant":"plain","text":"증권 계좌 개설은 다시 검토하기로 했다.","entities":[]}
+{"id":"g-neg-183","category":"negative","variant":"plain","text":"병원 진료 시간은 다시 검토하기로 했다.","entities":[]}
+{"id":"g-neg-184","category":"negative","variant":"plain","text":"은행 영업시간은 하루 더 걸린다.","entities":[]}
+{"id":"g-neg-185","category":"negative","variant":"plain","text":"재단 장학 공고는 작년과 같다. 협회 가입 절차는 공지를 확인해 주세요.","entities":[]}
+{"id":"g-neg-186","category":"negative","variant":"plain","text":"푸드 트럭은 예정보다 빨랐다.","entities":[]}
+{"id":"g-neg-187","category":"negative","variant":"plain","text":"연구소 견학은 안내문을 참고하세요.","entities":[]}
+{"id":"g-neg-188","category":"negative","variant":"plain","text":"팀원 면담은 공지를 확인해 주세요. 자동차 정비 일정은 생각보다 간단했다.","entities":[]}
+{"id":"g-neg-189","category":"negative","variant":"plain","text":"아침해가 생각보다 간단했다. 팀원 면담은 변경 사항이 없다.","entities":[]}
+{"id":"g-neg-190","category":"negative","variant":"plain","text":"물결이 변경 사항이 없다. 은행 영업시간은 사진으로 남겼다.","entities":[]}
+{"id":"g-neg-191","category":"negative","variant":"plain","text":"물결이 다시 검토하기로 했다. 팀원 면담은 오전 중에 끝난다.","entities":[]}
+{"id":"g-neg-192","category":"negative","variant":"plain","text":"새날이 조금 바뀌었다.","entities":[]}
+{"id":"g-neg-193","category":"negative","variant":"plain","text":"게임즈 행사는 작년과 같다. 보험 청구 서류는 생각보다 간단했다.","entities":[]}
+{"id":"g-neg-194","category":"negative","variant":"plain","text":"재단 장학 공고는 작년과 같다. 들꽃이 생각보다 간단했다.","entities":[]}
+{"id":"g-neg-195","category":"negative","variant":"plain","text":"은행 영업시간은 이미 마감되었다.","entities":[]}
+{"id":"g-neg-196","category":"negative","variant":"plain","text":"들꽃이 하루 더 걸린다.","entities":[]}
+{"id":"g-neg-197","category":"negative","variant":"plain","text":"게임즈 행사는 이미 마감되었다.","entities":[]}
+{"id":"g-neg-198","category":"negative","variant":"plain","text":"연구소 견학은 작년과 같다. 협회 가입 절차는 생각보다 간단했다.","entities":[]}
+{"id":"g-neg-199","category":"negative","variant":"plain","text":"푸드 트럭은 공지를 확인해 주세요. 고문 위촉은 생각보다 간단했다.","entities":[]}
+{"id":"g-neg-200","category":"negative","variant":"plain","text":"들꽃이 변경 사항이 없다.","entities":[]}
+{"id":"g-neg-201","category":"negative","variant":"plain","text":"대학교 축제는 모두 무사히 끝났다.","entities":[]}
+{"id":"g-neg-202","category":"negative","variant":"plain","text":"물결이 생각보다 간단했다.","entities":[]}
+{"id":"g-neg-203","category":"negative","variant":"plain","text":"팀원 면담은 변경 사항이 없다. 건축 허가는 오전 중에 끝난다.","entities":[]}
+{"id":"g-neg-204","category":"negative","variant":"plain","text":"팀원 면담은 공지를 확인해 주세요. 물결이 안내문을 참고하세요.","entities":[]}
+{"id":"g-neg-205","category":"negative","variant":"plain","text":"항공권 예약은 아직 정해지지 않았다.","entities":[]}
+{"id":"g-neg-206","category":"negative","variant":"plain","text":"들꽃이 작년과 같다.","entities":[]}
+{"id":"g-neg-207","category":"negative","variant":"plain","text":"푸드 트럭은 아직 정해지지 않았다.","entities":[]}
+{"id":"g-neg-208","category":"negative","variant":"plain","text":"푸드 트럭은 사진으로 남겼다. 건축 허가는 생각보다 간단했다.","entities":[]}
+{"id":"g-neg-209","category":"negative","variant":"plain","text":"고문 위촉은 다시 검토하기로 했다. 게임즈 행사는 오전 중에 끝난다.","entities":[]}
+{"id":"g-neg-210","category":"negative","variant":"plain","text":"자동차 정비 일정은 아직 정해지지 않았다.","entities":[]}
+{"id":"g-neg-211","category":"negative","variant":"plain","text":"새날이 조금 바뀌었다. 은행 영업시간은 하루 더 걸린다.","entities":[]}
+{"id":"g-neg-212","category":"negative","variant":"plain","text":"들꽃이 생각보다 간단했다.","entities":[]}
+{"id":"g-neg-213","category":"negative","variant":"plain","text":"고문 위촉은 조금 바뀌었다.","entities":[]}
+{"id":"g-neg-214","category":"negative","variant":"plain","text":"증권 계좌 개설은 이미 마감되었다.","entities":[]}
+{"id":"g-neg-215","category":"negative","variant":"plain","text":"팀원 면담은 조금 바뀌었다. 들꽃이 모두 무사히 끝났다.","entities":[]}
+{"id":"g-neg-216","category":"negative","variant":"plain","text":"팀원 면담은 예정보다 빨랐다. 증권 계좌 개설은 오전 중에 끝난다.","entities":[]}
+{"id":"g-neg-217","category":"negative","variant":"plain","text":"고문 위촉은 이미 마감되었다.","entities":[]}
+{"id":"g-neg-218","category":"negative","variant":"plain","text":"협회 가입 절차는 예정보다 빨랐다. 항공권 예약은 변경 사항이 없다.","entities":[]}
+{"id":"g-neg-219","category":"negative","variant":"plain","text":"재단 장학 공고는 예정보다 빨랐다. 들꽃이 다음 주로 옮겼다.","entities":[]}
+{"id":"g-neg-220","category":"negative","variant":"plain","text":"협회 가입 절차는 안내문을 참고하세요. 새날이 변경 사항이 없다.","entities":[]}
+{"id":"g-neg-221","category":"negative","variant":"plain","text":"증권 계좌 개설은 오전 중에 끝난다.","entities":[]}
+{"id":"g-neg-222","category":"negative","variant":"plain","text":"보험 청구 서류는 작년과 같다. 연구소 견학은 모두 무사히 끝났다.","entities":[]}
+{"id":"g-neg-223","category":"negative","variant":"plain","text":"은행 영업시간은 작년과 같다. 아침해가 모두 무사히 끝났다.","entities":[]}
+{"id":"g-neg-224","category":"negative","variant":"plain","text":"병원 진료 시간은 예정보다 빨랐다. 은행 영업시간은 모두 무사히 끝났다.","entities":[]}
+{"id":"g-neg-225","category":"negative","variant":"plain","text":"자동차 정비 일정은 다시 검토하기로 했다. 협회 가입 절차는 오전 중에 끝난다.","entities":[]}
+{"id":"g-neg-226","category":"negative","variant":"plain","text":"연구소 견학은 이미 마감되었다.","entities":[]}
+{"id":"g-neg-227","category":"negative","variant":"plain","text":"팀원 면담은 하루 더 걸린다.","entities":[]}
+{"id":"g-neg-228","category":"negative","variant":"plain","text":"병원 진료 시간은 모두 무사히 끝났다. 보험 청구 서류는 작년과 같다.","entities":[]}
+{"id":"g-neg-229","category":"negative","variant":"plain","text":"물결이 모두 무사히 끝났다.","entities":[]}
+{"id":"g-neg-230","category":"negative","variant":"plain","text":"협회 가입 절차는 아직 정해지지 않았다.","entities":[]}
+{"id":"g-neg-231","category":"negative","variant":"plain","text":"보험 청구 서류는 작년과 같다. 새날이 하루 더 걸린다.","entities":[]}
+{"id":"g-neg-232","category":"negative","variant":"plain","text":"미디어 교육은 아직 정해지지 않았다. 협회 가입 절차는 하루 더 걸린다.","entities":[]}
+{"id":"g-neg-233","category":"negative","variant":"plain","text":"보험 청구 서류는 예정보다 빨랐다.","entities":[]}
+{"id":"g-neg-234","category":"negative","variant":"plain","text":"건축 허가는 오전 중에 끝난다. 보험 청구 서류는 공지를 확인해 주세요.","entities":[]}
+{"id":"g-neg-235","category":"negative","variant":"plain","text":"병원 진료 시간은 이미 마감되었다.","entities":[]}
+{"id":"g-neg-236","category":"negative","variant":"plain","text":"증권 계좌 개설은 작년과 같다.","entities":[]}
+{"id":"g-neg-237","category":"negative","variant":"plain","text":"고문 위촉은 공지를 확인해 주세요. 재단 장학 공고는 조금 바뀌었다.","entities":[]}
+{"id":"g-neg-238","category":"negative","variant":"plain","text":"고문 위촉은 모두 무사히 끝났다.","entities":[]}
+{"id":"g-neg-239","category":"negative","variant":"plain","text":"연구소 견학은 오전 중에 끝난다. 재단 장학 공고는 다시 검토하기로 했다.","entities":[]}
+{"id":"g-neg-240","category":"negative","variant":"plain","text":"증권 계좌 개설은 공지를 확인해 주세요.","entities":[]}
+{"id":"g-neg-241","category":"negative","variant":"plain","text":"건축 허가는 예정보다 빨랐다. 게임즈 행사는 생각보다 간단했다.","entities":[]}
+{"id":"g-neg-242","category":"negative","variant":"plain","text":"대학교 축제는 사진으로 남겼다.","entities":[]}
+{"id":"g-neg-243","category":"negative","variant":"plain","text":"미디어 교육은 오전 중에 끝난다. 자동차 정비 일정은 다시 검토하기로 했다.","entities":[]}
+{"id":"g-neg-244","category":"negative","variant":"plain","text":"미디어 교육은 하루 더 걸린다.","entities":[]}
+{"id":"g-neg-245","category":"negative","variant":"plain","text":"연구소 견학은 생각보다 간단했다. 게임즈 행사는 오전 중에 끝난다.","entities":[]}
+{"id":"g-neg-246","category":"negative","variant":"plain","text":"아침해가 다시 검토하기로 했다.","entities":[]}
+{"id":"g-neg-247","category":"negative","variant":"plain","text":"대학교 축제는 예정보다 빨랐다.","entities":[]}
+{"id":"g-neg-248","category":"negative","variant":"plain","text":"미디어 교육은 아직 정해지지 않았다.","entities":[]}
+{"id":"g-neg-249","category":"negative","variant":"plain","text":"항공권 예약은 다음 주로 옮겼다.","entities":[]}
+{"id":"g-neg-250","category":"negative","variant":"plain","text":"대학교 축제는 사진으로 남겼다. 대학교 축제는 하루 더 걸린다.","entities":[]}
+{"id":"g-neg-251","category":"negative","variant":"plain","text":"팀원 면담은 작년과 같다. 물결이 모두 무사히 끝났다.","entities":[]}
+{"id":"g-neg-252","category":"negative","variant":"plain","text":"고문 위촉은 생각보다 간단했다. 자동차 정비 일정은 작년과 같다.","entities":[]}
+{"id":"g-neg-253","category":"negative","variant":"plain","text":"아침해가 조금 바뀌었다.","entities":[]}
+{"id":"g-neg-254","category":"negative","variant":"plain","text":"증권 계좌 개설은 다시 검토하기로 했다. 병원 진료 시간은 이미 마감되었다.","entities":[]}
+{"id":"g-neg-255","category":"negative","variant":"plain","text":"건축 허가는 공지를 확인해 주세요. 미디어 교육은 아직 정해지지 않았다.","entities":[]}
+{"id":"g-neg-256","category":"negative","variant":"plain","text":"미디어 교육은 공지를 확인해 주세요.","entities":[]}
+{"id":"g-neg-257","category":"negative","variant":"plain","text":"항공권 예약은 안내문을 참고하세요. 물결이 이미 마감되었다.","entities":[]}
+{"id":"g-neg-258","category":"negative","variant":"plain","text":"대학교 축제는 아직 정해지지 않았다.","entities":[]}
+{"id":"g-neg-259","category":"negative","variant":"plain","text":"항공권 예약은 조금 바뀌었다. 증권 계좌 개설은 오전 중에 끝난다.","entities":[]}
+{"id":"g-neg-260","category":"negative","variant":"plain","text":"들꽃이 사진으로 남겼다. 새날이 예정보다 빨랐다.","entities":[]}
+{"id":"g-neg-261","category":"negative","variant":"plain","text":"협회 가입 절차는 예정보다 빨랐다.","entities":[]}
+{"id":"g-neg-262","category":"negative","variant":"plain","text":"건축 허가는 아직 정해지지 않았다. 보험 청구 서류는 이미 마감되었다.","entities":[]}
+{"id":"g-neg-263","category":"negative","variant":"plain","text":"협회 가입 절차는 하루 더 걸린다. 건축 허가는 오전 중에 끝난다.","entities":[]}
+{"id":"g-neg-264","category":"negative","variant":"plain","text":"푸드 트럭은 다시 검토하기로 했다.","entities":[]}
+{"id":"g-neg-265","category":"negative","variant":"plain","text":"증권 계좌 개설은 예정보다 빨랐다.","entities":[]}
+{"id":"g-neg-266","category":"negative","variant":"plain","text":"건축 허가는 하루 더 걸린다.","entities":[]}
+{"id":"g-neg-267","category":"negative","variant":"plain","text":"들꽃이 사진으로 남겼다.","entities":[]}
+{"id":"g-neg-268","category":"negative","variant":"plain","text":"항공권 예약은 다시 검토하기로 했다.","entities":[]}
+{"id":"g-neg-269","category":"negative","variant":"plain","text":"대학교 축제는 공지를 확인해 주세요.","entities":[]}
+{"id":"g-neg-270","category":"negative","variant":"plain","text":"아침해가 사진으로 남겼다.","entities":[]}
+{"id":"g-neg-271","category":"negative","variant":"plain","text":"건축 허가는 다음 주로 옮겼다.","entities":[]}
+{"id":"g-neg-272","category":"negative","variant":"plain","text":"협회 가입 절차는 안내문을 참고하세요. 아침해가 생각보다 간단했다.","entities":[]}
+{"id":"g-neg-273","category":"negative","variant":"plain","text":"보험 청구 서류는 변경 사항이 없다.","entities":[]}
+{"id":"g-neg-274","category":"negative","variant":"plain","text":"푸드 트럭은 하루 더 걸린다.","entities":[]}
+{"id":"g-neg-275","category":"negative","variant":"plain","text":"아침해가 변경 사항이 없다.","entities":[]}
+{"id":"g-neg-276","category":"negative","variant":"plain","text":"물결이 다시 검토하기로 했다.","entities":[]}
+{"id":"g-neg-277","category":"negative","variant":"plain","text":"증권 계좌 개설은 사진으로 남겼다.","entities":[]}
+{"id":"g-neg-278","category":"negative","variant":"plain","text":"연구소 견학은 생각보다 간단했다. 연구소 견학은 다시 검토하기로 했다.","entities":[]}
+{"id":"g-neg-279","category":"negative","variant":"plain","text":"미디어 교육은 조금 바뀌었다.","entities":[]}
+{"id":"g-neg-280","category":"negative","variant":"plain","text":"미디어 교육은 다시 검토하기로 했다.","entities":[]}
+{"id":"g-neg-281","category":"negative","variant":"plain","text":"연구소 견학은 작년과 같다. 물결이 이미 마감되었다.","entities":[]}
+{"id":"g-neg-282","category":"negative","variant":"plain","text":"협회 가입 절차는 조금 바뀌었다. 팀원 면담은 하루 더 걸린다.","entities":[]}
+{"id":"g-neg-283","category":"negative","variant":"plain","text":"자동차 정비 일정은 작년과 같다.","entities":[]}
+{"id":"g-neg-284","category":"negative","variant":"plain","text":"연구소 견학은 모두 무사히 끝났다.","entities":[]}
+{"id":"g-neg-285","category":"negative","variant":"plain","text":"팀원 면담은 생각보다 간단했다.","entities":[]}
+{"id":"g-neg-286","category":"negative","variant":"plain","text":"고문 위촉은 안내문을 참고하세요. 협회 가입 절차는 사진으로 남겼다.","entities":[]}
+{"id":"g-neg-287","category":"negative","variant":"plain","text":"협회 가입 절차는 사진으로 남겼다. 협회 가입 절차는 생각보다 간단했다.","entities":[]}
+{"id":"g-neg-288","category":"negative","variant":"plain","text":"물결이 사진으로 남겼다.","entities":[]}
+{"id":"g-neg-289","category":"negative","variant":"plain","text":"항공권 예약은 모두 무사히 끝났다.","entities":[]}
+{"id":"g-neg-290","category":"negative","variant":"plain","text":"물결이 예정보다 빨랐다.","entities":[]}
+{"id":"g-neg-291","category":"negative","variant":"plain","text":"협회 가입 절차는 생각보다 간단했다. 항공권 예약은 생각보다 간단했다.","entities":[]}
+{"id":"g-neg-292","category":"negative","variant":"plain","text":"팀원 면담은 모두 무사히 끝났다. 협회 가입 절차는 사진으로 남겼다.","entities":[]}
+{"id":"g-neg-293","category":"negative","variant":"plain","text":"팀원 면담은 모두 무사히 끝났다.","entities":[]}
+{"id":"g-neg-294","category":"negative","variant":"plain","text":"협회 가입 절차는 오전 중에 끝난다.","entities":[]}
+{"id":"g-neg-295","category":"negative","variant":"plain","text":"고문 위촉은 다시 검토하기로 했다.","entities":[]}
+{"id":"g-neg-296","category":"negative","variant":"plain","text":"새날이 오전 중에 끝난다. 건축 허가는 생각보다 간단했다.","entities":[]}
+{"id":"g-neg-297","category":"negative","variant":"plain","text":"아침해가 생각보다 간단했다.","entities":[]}
+{"id":"g-neg-298","category":"negative","variant":"plain","text":"재단 장학 공고는 변경 사항이 없다. 협회 가입 절차는 예정보다 빨랐다.","entities":[]}
+{"id":"g-neg-299","category":"negative","variant":"plain","text":"대학교 축제는 예정보다 빨랐다. 보험 청구 서류는 작년과 같다.","entities":[]}
+{"id":"g-neg-300","category":"negative","variant":"plain","text":"대학교 축제는 조금 바뀌었다.","entities":[]}

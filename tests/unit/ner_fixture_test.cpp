@@ -1,5 +1,5 @@
-// 큰 합성 NER 셋 두 개(개발용 ner-large.jsonl, 판정용 ner-heldout.jsonl)의 무결성.
-// 측정이 이 셋을 믿고 쓰므로 개수, 정답 위치, 두 셋이 서로 겹치지 않는 것을 고정한다.
+// 큰 합성 NER 셋(개발용 ner-large, 1차·2차 판정용 ner-heldout·ner-heldout2)의 무결성.
+// 측정이 이 셋을 믿고 쓰므로 개수, 정답 위치, 셋끼리 문장이 겹치지 않는 것을 고정한다.
 // 셋은 gen-large.mjs 가 만든다. 생성기를 바꾸면 셋을 다시 만들어 함께 커밋한다.
 #include <gtest/gtest.h>
 
@@ -55,10 +55,14 @@ std::set<std::string> check_set(const char* file) {
 
 }  // namespace
 
-TEST(NerFixture, BothSetsHaveTheAgreedCountsExactGoldOffsetsAndNoSharedSentence) {
+TEST(NerFixture, AllSetsHaveTheAgreedCountsExactGoldOffsetsAndNoSharedSentence) {
     const auto dev = check_set("ner-large.jsonl");
     const auto heldout = check_set("ner-heldout.jsonl");
+    const auto heldout2 = check_set("ner-heldout2.jsonl");
     for (const auto& text : heldout) {
-        EXPECT_FALSE(dev.contains(text)) << "판정용 문장이 개발용에도 있다";
+        EXPECT_FALSE(dev.contains(text)) << "1차 판정용 문장이 개발용에도 있다";
+    }
+    for (const auto& text : heldout2) {
+        EXPECT_FALSE(dev.contains(text) || heldout.contains(text)) << "2차 판정용 문장이 다른 셋에도 있다";
     }
 }
