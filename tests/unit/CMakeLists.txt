@@ -60,6 +60,7 @@ target_link_libraries(vault_client_mapping_test PRIVATE prompt_airlock_vault_cli
 find_package(nlohmann_json CONFIG REQUIRED)
 foreach(name IN ITEMS
     ner_model_files_test
+    ner_session_test
     ner_sha256_test
     ner_tokenizer_test)
   pa_add_gtest(${name} ${name}.cpp)
