@@ -109,7 +109,12 @@ struct VaultScope::Generation {
     void check_exited() noexcept {
         std::lock_guard lock(process_mutex);
         if (!is_dead() && process.wait_exit(exit_grace)) {
-            dead.store(true);
+            // lease 는 풀 잠금을 쥔 채 술어를 확인하고 잠든다. 같은 잠금 안에서 바꿔야 알림을 놓치지 않는다.
+            // 잠금 순서는 process_mutex 다음 mutex 하나뿐이다(풀 잠금을 쥔 채 process_mutex 를 잡는 경로는 없다).
+            {
+                std::lock_guard pool(mutex);
+                dead.store(true);
+            }
             available.notify_all();
         }
     }
