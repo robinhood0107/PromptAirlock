@@ -52,6 +52,14 @@ constexpr std::array<std::u32string_view, 12> department_endings = {
     U"사업부", U"연구실", U"협력단", U"사업단", U"사무국", U"본부", U"센터", U"부서", U"지사", U"지점", U"지부", U"팀",
 };
 
+// 일반 업무 낱말. 이것 + 부서 끝말로만 된 구간(영업본부, 고객센터, 보안팀)은 이름이 아니다.
+// 기관명 바로 뒤에 띄어 쓴 부서명을 떼고 나면, 보호한 글을 다시 탐지할 때 모델이 token 옆의 부서명만 기관으로 볼 수 있다.
+// 그대로 두면 정상 요청이 잔여 검사에서 거절된다. "한빛센터" 같은 진짜 기관명은 앞 낱말이 이 목록에 없어 남는다.
+constexpr std::array<std::u32string_view, 27> generic_units = {
+    U"마케팅", U"디자인", U"영업", U"기획", U"인사", U"총무", U"재무", U"회계", U"보안", U"고객", U"기술", U"개발", U"홍보", U"경영",
+    U"전략", U"품질", U"생산", U"구매", U"법무", U"감사", U"연구", U"운영", U"지원", U"정보", U"전산", U"교육", U"상담",
+};
+
 [[nodiscard]] utf8proc_category_t category(char32_t c) noexcept {
     return utf8proc_category(static_cast<utf8proc_int32_t>(c));
 }
@@ -271,6 +279,15 @@ std::optional<pc::ByteSpan> name_span(const detect::DetectionView& view, std::ui
             // 숫자가 붙은 직함(진지우9팀장)에서 직함을 뗀 뒤 남은 숫자. 사람 이름은 숫자로 끝나지 않는다.
             while (span.at(span.last()) >= U'0' && span.at(span.last()) <= U'9' && span.drop_tail(1)) {
                 changed = true;
+            }
+        }
+    }
+    if (!person && !span.last_word_start()) {
+        for (const auto g : generic_units) {
+            for (const auto d : department_endings) {
+                if (span.size() == g.size() + d.size() && span.starts_with(g) && span.ends_with(d)) {
+                    return std::nullopt;  // 부서명뿐이다
+                }
             }
         }
     }

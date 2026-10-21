@@ -70,6 +70,13 @@ TEST(NerBoundary, LegalFormsAndDepartmentsAreDroppedFromOrganizations) {
     EXPECT_EQ(trimmed("하람대학교 산학협력단에 공유했다.", "하람대학교 산학협력단", org), "하람대학교");
 }
 
+TEST(NerBoundary, DepartmentAloneIsNotAnOrganization) {
+    // 보호한 글을 다시 탐지할 때 token 옆 부서명만 기관으로 잡히는 모양.
+    EXPECT_EQ(trimmed("⟦ORGANIZATION_KTSEN3ZBEC⟧ 영업본부가 실적을 발표했다.", "영업본부가", org), "<none>");
+    EXPECT_EQ(trimmed("⟦ORGANIZATION_KTSEN3ZBEC⟧ 고객센터에 문의했다.", "⟧ 고객센터", org), "<none>");
+    EXPECT_EQ(trimmed("한빛센터에서 교육이 열린다.", "한빛센터", org), "한빛센터");  // 앞 낱말이 업무 낱말이 아니면 이름
+}
+
 TEST(NerBoundary, NeverCutsBelowTwoCharactersOrIntoOrganizationNames) {
     EXPECT_EQ(trimmed("김대표가 왔다.", "김대표"), "김대표");          // 떼면 한 글자만 남는다
     EXPECT_EQ(trimmed("가온연구원이 발표했다.", "가온연구원", org), "가온연구원");  // 기관명 끝 '연구원' 은 직함이 아니다
