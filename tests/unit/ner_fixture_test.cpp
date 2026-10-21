@@ -1,4 +1,5 @@
-// 큰 합성 NER 셋(tests/fixtures/ner/ner-large.jsonl)의 무결성. 측정이 이 셋을 믿고 쓰므로 개수와 정답 위치를 고정한다.
+// 큰 합성 NER 셋 두 개(개발용 ner-large.jsonl, 판정용 ner-heldout.jsonl)의 무결성.
+// 측정이 이 셋을 믿고 쓰므로 개수, 정답 위치, 두 셋이 서로 겹치지 않는 것을 고정한다.
 // 셋은 gen-large.mjs 가 만든다. 생성기를 바꾸면 셋을 다시 만들어 함께 커밋한다.
 #include <gtest/gtest.h>
 
@@ -13,9 +14,12 @@
 
 namespace pc = prompt_airlock::core;
 
-TEST(NerFixture, LargeSetHasTheAgreedCountsAndExactGoldOffsets) {
-    std::ifstream in(std::filesystem::path(PA_NER_FIXTURE_DIR) / "ner-large.jsonl", std::ios::binary);
-    ASSERT_TRUE(in);
+namespace {
+
+// 셋 하나를 읽어 확인하고 문장 집합을 돌려준다.
+std::set<std::string> check_set(const char* file) {
+    std::ifstream in(std::filesystem::path(PA_NER_FIXTURE_DIR) / file, std::ios::binary);
+    EXPECT_TRUE(in) << file;
     std::map<std::string, int> entities;
     std::map<std::string, int> sentences;
     std::set<std::string> ids;
@@ -27,13 +31,16 @@ TEST(NerFixture, LargeSetHasTheAgreedCountsAndExactGoldOffsets) {
         const auto text = j.at("text").get<std::string>();
         EXPECT_TRUE(ids.insert(id).second) << id;
         EXPECT_TRUE(texts.insert(text).second) << id;  // 같은 문장이 두 번 들어가면 수치가 부풀려진다
-        ASSERT_TRUE(pc::decode_utf8(text)) << id;
+        EXPECT_TRUE(pc::decode_utf8(text)) << id;
         ++sentences[j.at("category").get<std::string>()];
         for (const auto& e : j.at("entities")) {
             const auto begin = e.at("start_byte").get<std::size_t>();
             const auto end = e.at("end_byte").get<std::size_t>();
-            ASSERT_LT(begin, end) << id;
-            ASSERT_LE(end, text.size()) << id;
+            EXPECT_LT(begin, end) << id;
+            if (end > text.size()) {
+                ADD_FAILURE() << id;
+                continue;
+            }
             EXPECT_EQ(text.substr(begin, end - begin), e.at("text").get<std::string>()) << id;
             ++entities[e.at("type").get<std::string>()];
         }
@@ -43,4 +50,15 @@ TEST(NerFixture, LargeSetHasTheAgreedCountsAndExactGoldOffsets) {
     EXPECT_EQ(sentences["negative"], 300);
     EXPECT_EQ(entities["PERSON"], 300);
     EXPECT_EQ(entities["ORG"], 300);
+    return texts;
+}
+
+}  // namespace
+
+TEST(NerFixture, BothSetsHaveTheAgreedCountsExactGoldOffsetsAndNoSharedSentence) {
+    const auto dev = check_set("ner-large.jsonl");
+    const auto heldout = check_set("ner-heldout.jsonl");
+    for (const auto& text : heldout) {
+        EXPECT_FALSE(dev.contains(text)) << "판정용 문장이 개발용에도 있다";
+    }
 }
