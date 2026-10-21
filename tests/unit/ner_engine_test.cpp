@@ -93,6 +93,14 @@ TEST(NerEngine, SentenceWithoutNamesFindsNothing) {
     EXPECT_TRUE(found("오늘은 날씨가 맑고 바람이 시원합니다.").empty());
 }
 
+// 큰 합성 셋(7-3)에서 모델이 어절 일부만 잡거나 앞 부호까지 잡던 문장이다. 어절 경계로 맞춰 조각이 남지 않는다.
+// 조각이 남으면 보호 뒤 다시 탐지할 때 남은 조각이 걸려 정상 요청이 거절되거나 이름 일부가 그대로 나간다.
+TEST(NerEngine, PartialOrPunctuatedSpansWidenToTheWholeWord) {
+    EXPECT_EQ(found("다음 주에 다온제약을 방문한다."), (std::vector{organization("다온제약")}));
+    EXPECT_EQ(found("「노나래」라는 이름으로 예약했다."), (std::vector{person("노나래")}));
+    EXPECT_EQ(found("(주)누리별대학교 대표이사 명의로 공문을 보냈다."), (std::vector{organization("누리별대학교")}));
+}
+
 // 띄어 쓰지 않은 두 이름은 맞닿은 같은 종류라 하나로 묶인다(결합 규칙 그대로). 가명화 범위가 넓어질 뿐 빠지지는 않는다.
 TEST(NerEngine, TwoNamesWrittenTogetherBecomeOneSpan) {
     EXPECT_EQ(found("김민수이영희가 회의에 왔다."), (std::vector<Found>{person("김민수이영희")}));

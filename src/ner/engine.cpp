@@ -7,7 +7,7 @@
 #include <span>
 #include <string>
 
-#include "prompt_airlock/core/particle.hpp"
+#include "prompt_airlock/ner/boundary.hpp"
 #include "prompt_airlock/ner/windows.hpp"
 
 namespace prompt_airlock::ner {
@@ -183,10 +183,13 @@ std::expected<void, NerError> NerEngine::infer(std::string_view text, pc::Segmen
     }
 
     for (const auto& run : runs) {
-        // 조사는 원문 구간이 정해진 뒤 보기의 글자를 보고 뗀다.
-        const auto whole = detect::source_span(view, base + run.first, base + run.last);
-        const auto bytes = pc::trim_trailing_particles(view.units, whole);
-        const auto entity = pc::EntitySpan::make(text, segment, bytes, run.type, pc::DetectorKind::Ner);
+        // 정답 규칙에 맞춘 경계(결정 #107): 어절로 넓힌 뒤 조사·호칭·직함·서술격 조사·법인 표기·부서명을 뗀다.
+        const auto bytes = name_span(view, base + run.first, base + run.last, run.type);
+        if (!bytes) {
+            continue;  // 부호만 잡은 것은 이름이 아니다
+        }
+        const auto type = corrected_type(view, *bytes, run.type);
+        const auto entity = pc::EntitySpan::make(text, segment, *bytes, type, pc::DetectorKind::Ner);
         if (!entity) {
             return std::unexpected(NerError::InvalidSpan);
         }

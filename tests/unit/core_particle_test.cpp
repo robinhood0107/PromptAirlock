@@ -27,6 +27,16 @@ TEST(CoreParticle, StripsWhenBatchimAgrees) {
     EXPECT_EQ(trim("하늬솔님"), "하늬솔");
     EXPECT_EQ(trim("누리별테크가"), "누리별테크");
     EXPECT_EQ(trim("가온해운과"), "가온해운");
+    EXPECT_EQ(trim("누리별테크에"), "누리별테크");
+    EXPECT_EQ(trim("Minsu Kim는"), "Minsu Kim");  // 영문 뒤는 받침을 가릴 수 없어 짝 조사 둘 다 뗀다
+    EXPECT_EQ(trim("Yejun Kwon를"), "Yejun Kwon");
+    EXPECT_EQ(trim("Lee가"), "Lee");
+    EXPECT_EQ(trim("제윤호한테서"), "제윤호");
+    EXPECT_EQ(trim("가온해운으로부터"), "가온해운");
+    EXPECT_EQ(trim("김하나"), "김하나");  // 짝 없는 '나' 도 3음절 이상 남을 때만
+    EXPECT_EQ(trim("견하랑"), "견하랑");  // 이름 끝 '랑' 은 조사로 떼지 않는다(세 글자 이상 남을 때만)
+    EXPECT_EQ(trim("견하랑과"), "견하랑");
+    EXPECT_EQ(trim("김민수랑"), "김민수");  // NER 구간을 어절까지 넓힌 뒤 붙어 오는 장소 조사
 }
 
 TEST(CoreParticle, KeepsNameWhenAgreementFails) {
@@ -35,6 +45,7 @@ TEST(CoreParticle, KeepsNameWhenAgreementFails) {
     EXPECT_EQ(trim("모가은이"), "모가은");
     EXPECT_EQ(trim("다현도"), "다현도");        // 짝 없는 '도' 는 3음절 이상 남을 때만
     EXPECT_EQ(trim("라온비도"), "라온비");
+    EXPECT_EQ(trim("가온에"), "가온에");        // 짝 없는 '에' 도 3음절 이상 남을 때만
     EXPECT_EQ(trim("가나"), "가나");
 }
 

@@ -106,6 +106,7 @@ std::expected<std::vector<core::EntitySpan>, core::DetectError> Detectors::scan(
     for (const auto& hit : internal_terms_.find(*view)) {
         hits.push_back({hit.first_unit, hit.last_unit, core::EntityType::InternalTerm, core::DetectorKind::InternalTerm});
     }
+    rules::find_organizations(*view, chars, hits);
     if (ner_) {
         const auto names = ner_->scan(text, segment, *view);
         if (!names) {
