@@ -12,3 +12,18 @@ if(PA_WITH_VAULT)
   add_dependencies(vault_measure prompt_airlock_vault)
   pa_copy_runtime_dlls(vault_measure)
 endif()
+# NER 정확도·지연·부하(Phase 7-3). 큰 합성 셋과 모델이 필요하다. Vault 가 있으면 잔여 검사도 잰다.
+find_package(nlohmann_json CONFIG REQUIRED)
+find_package(utf8proc CONFIG REQUIRED)
+add_executable(ner_measure EXCLUDE_FROM_ALL ner_measure.cpp)
+target_link_libraries(ner_measure PRIVATE prompt_airlock_ner prompt_airlock_detect pa_options
+                      nlohmann_json::nlohmann_json utf8proc::utf8proc)
+target_compile_definitions(ner_measure PRIVATE PA_NER_MODEL_DIR="${PA_NER_MODEL_DIR}"
+                           PA_NER_FIXTURE_DIR="${PROJECT_SOURCE_DIR}/tests/fixtures/ner")
+if(PA_WITH_VAULT)
+  target_link_libraries(ner_measure PRIVATE prompt_airlock_vault_client)
+  target_compile_definitions(ner_measure PRIVATE PA_MEASURE_WITH_VAULT
+    "PA_VAULT_EXE=\"${CMAKE_BINARY_DIR}/cargo/release/prompt-airlock-vault${CMAKE_EXECUTABLE_SUFFIX}\"")
+  add_dependencies(ner_measure prompt_airlock_vault)
+endif()
+pa_copy_runtime_dlls(ner_measure)
