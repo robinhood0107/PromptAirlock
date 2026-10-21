@@ -17,11 +17,12 @@ function(pa_add_gtest name)
   add_executable(${name} ${ARGN})
   target_link_libraries(${name} PRIVATE pa_options GTest::gtest GTest::gtest_main)
   pa_copy_runtime_dlls(${name})
+  # 동시성 시험이 멈추면 ctest 가 끝없이 기다리지 않게 시험 하나에 300초 상한을 둔다(sanitizer 빌드 여유 포함).
   if(NOT WIN32 AND PA_SANITIZE MATCHES "address")
     # ONNX Runtime 내부의 한 번짜리 할당만 누수 보고에서 뺀다(tests/lsan.supp).
     gtest_discover_tests(${name} DISCOVERY_MODE PRE_TEST
-      PROPERTIES ENVIRONMENT "LSAN_OPTIONS=suppressions=${PROJECT_SOURCE_DIR}/tests/lsan.supp")
+      PROPERTIES TIMEOUT 300 ENVIRONMENT "LSAN_OPTIONS=suppressions=${PROJECT_SOURCE_DIR}/tests/lsan.supp")
   else()
-    gtest_discover_tests(${name} DISCOVERY_MODE PRE_TEST)
+    gtest_discover_tests(${name} DISCOVERY_MODE PRE_TEST PROPERTIES TIMEOUT 300)
   endif()
 endfunction()
