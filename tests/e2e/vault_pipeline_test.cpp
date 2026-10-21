@@ -1,11 +1,13 @@
-// 실제 탐지기 + core 판정 + 실제 Vault + mock provider 로 요청 하나를 처음부터 끝까지 시험한다. 값은 모두 합성이다.
+// 실제 탐지기(NER 포함) + core 판정 + 실제 Vault + mock provider 로 요청 하나를 처음부터 끝까지 시험한다. 값은 모두 합성이다.
 // 순서: 탐지 → 정책 검사 → Vault 범위 열기 → 보호 → 보호 후 재탐지·잔여 검사 → provider 요청 → 응답 검사 → 복원.
 #include <gtest/gtest.h>
 
 #include <algorithm>
 #include <chrono>
 #include <cstdint>
+#include <filesystem>
 #include <functional>
+#include <memory>
 #include <optional>
 #include <set>
 #include <string>
@@ -22,6 +24,7 @@
 #include "prompt_airlock/core/restore.hpp"
 #include "prompt_airlock/core/token.hpp"
 #include "prompt_airlock/detect/detectors.hpp"
+#include "prompt_airlock/ner/pool.hpp"
 #include "prompt_airlock/vault_client/service.hpp"
 
 #ifdef _WIN32
@@ -32,6 +35,7 @@
 
 namespace pc = prompt_airlock::core;
 namespace pd = prompt_airlock::detect;
+namespace pn = prompt_airlock::ner;
 namespace pv = prompt_airlock::vault_client;
 using namespace std::chrono_literals;
 using pc::EntityType;
@@ -66,7 +70,8 @@ struct Request {
 
 class Gateway {
 public:
-    explicit Gateway(std::chrono::milliseconds restart_min = 0ms) : service_(options(restart_min)) {}
+    explicit Gateway(std::chrono::milliseconds restart_min = 0ms, std::shared_ptr<const pd::NerScanner> ner = {})
+        : detectors_(*pd::Detectors::make({}, std::move(ner))), service_(options(restart_min)) {}
 
     // after_open: 범위를 연 직후 부른다(장애 주입용).
     Request send(const std::vector<Turn>& turns, const std::function<void()>& after_open = {}) {
@@ -158,7 +163,7 @@ private:
         return o;
     }
 
-    pd::Detectors detectors_ = *pd::Detectors::make({});
+    pd::Detectors detectors_;
     pv::VaultService service_;
 };
 
@@ -169,6 +174,25 @@ bool contains(const std::vector<std::string>& sent, std::string_view value) {
 const std::string phone = "010-2345-6789";
 const std::string email = "user1@example.invalid";
 const std::string ip = "192.0.2.10";
+
+// 실제 모델로 띄운 pool. 시험마다 다시 읽지 않도록 하나를 함께 쓴다.
+std::shared_ptr<const pd::NerScanner> real_ner() {
+    static const auto pool = pn::NerPool::make(PA_NER_MODEL_DIR);
+    return pool ? *pool : nullptr;
+}
+
+// 늘 같은 오류를 내는 NER(장애·포화 주입용).
+class FailingNer final : public pd::NerScanner {
+public:
+    explicit FailingNer(pc::DetectError error) : error_(error) {}
+    std::expected<std::vector<pc::EntitySpan>, pc::DetectError> scan(std::string_view, pc::SegmentIndex,
+                                                                     const pd::DetectionView&) const override {
+        return std::unexpected(error_);
+    }
+
+private:
+    pc::DetectError error_;
+};
 
 }  // namespace
 
@@ -294,4 +318,38 @@ TEST(VaultPipelineE2E, VaultKilledBeforeRestoreRejectsTheResponse) {
     // token 이 없는 응답은 Vault 없이도 그대로 돌려준다.
     const auto plain = gateway.restore(request, "연락처를 확인했습니다.");
     ASSERT_TRUE(plain);
+}
+
+TEST(VaultPipelineE2E, NamesFoundByNerNeverLeaveAndComeBack) {
+    ASSERT_TRUE(real_ner());
+    Gateway gateway(0ms, real_ner());
+    const std::string text = "김민수는 누리별테크에 다닌다. 연락처는 " + phone + " 입니다.";
+    auto request = gateway.send({{MessageRole::User, text}});
+    ASSERT_TRUE(request.result) << pc::reason_code_name(request.result.error().code());
+    ASSERT_EQ(request.provider_calls, 1);
+    for (const std::string_view original : {"김민수", "누리별테크", "2345"}) {
+        EXPECT_FALSE(contains(request.sent, original)) << original;
+    }
+    const auto tokens = pc::scan_tokens(request.sent[0]);
+    EXPECT_EQ(tokens.size(), 3U);  // 사람, 기관, 전화
+    const auto restored = gateway.restore(request, "정리했습니다. " + request.sent[0]);
+    ASSERT_TRUE(restored) << pc::reason_code_name(restored.error().code());
+    EXPECT_EQ(restored->view(), "정리했습니다. " + text);
+}
+
+TEST(VaultPipelineE2E, NerFailureOrOverloadSendsNothing) {
+    for (const auto error : {pc::DetectError::Unavailable, pc::DetectError::Overloaded}) {
+        Gateway gateway(0ms, std::make_shared<FailingNer>(error));
+        const auto request = gateway.send({{MessageRole::User, "김민수에게 " + phone + " 로 연락"}});
+        ASSERT_FALSE(request.result);
+        EXPECT_EQ(request.result.error().code(), pc::ReasonCode::DetectorUnavailable);
+        EXPECT_EQ(request.provider_calls, 0);
+        EXPECT_FALSE(request.scope);
+    }
+}
+
+TEST(VaultPipelineE2E, MissingModelMeansNoPoolToStartWith) {
+    // 모델이 없으면 pool 을 만들 수 없어 게이트웨이가 NER 없이 뜨는 일이 없다(조립 단계에서 실패).
+    EXPECT_EQ(pn::NerPool::make(std::filesystem::path(PA_NER_MODEL_DIR) / "none").error(),
+              pc::DetectError::Unavailable);
 }
