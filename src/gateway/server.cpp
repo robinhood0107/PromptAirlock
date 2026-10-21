@@ -24,11 +24,20 @@ namespace beast = boost::beast;
 namespace http = beast::http;
 using tcp = asio::ip::tcp;
 
+namespace {
+// Windows 의 SO_REUSEADDR 은 이미 쓰는 포트를 다른 소켓이 가로채게 허용하므로 끈다. 다른 플랫폼은 재시작 때 TIME_WAIT 를 넘기려고 켠다.
+#ifdef _WIN32
+constexpr bool reuse_address = false;
+#else
+constexpr bool reuse_address = true;
+#endif
+}  // namespace
+
 struct Server::Shared {
     Shared(asio::io_context& io, asio::ssl::context& tls_context, const tcp::endpoint& endpoint, Authenticator& authenticator,
            RequestHandler request_handler, ServerLimits server_limits)
         : tls(tls_context),
-          acceptor(io, endpoint),
+          acceptor(io, endpoint, reuse_address),
           auth(authenticator),
           handler(std::move(request_handler)),
           limits(server_limits) {}
