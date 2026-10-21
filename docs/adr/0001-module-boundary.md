@@ -9,7 +9,7 @@ Gateway는 C++ 프로세스 하나이며 다음 모듈로 나눈다.
 | 모듈 | 책임 | I/O |
 |---|---|---|
 | core | 도메인 타입, prompt 상태 전이, 정책 평가, entity 병합, 가명 치환 계획, 잔여 검사 판정, token scan과 복원 판정, 조사 경계 처리 | 없음 |
-| detect | 결정론 detector(정규식, checksum, secret, 기관 보호어), NER 결과 연결 | 없음 |
+| detect | 결정론 detector(형식 규칙, checksum, secret, 기관 보호어. 정규식 엔진 없이 선형 스캔, ADR 0018), NER 결과 연결 | 없음 |
 | ner | tokenizer, ONNX Runtime session, 크기가 정해진 추론 worker | 모델 파일, 추론 |
 | vault_client | Vault 자식 프로세스 관리, IPC client | 프로세스, IPC |
 | provider | 외부 LLM provider 호출 | 네트워크 |
