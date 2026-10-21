@@ -103,5 +103,8 @@ void find_sensitive(const DetectionView& view, std::u32string_view text, const S
 void find_credentials(std::u32string_view text, const TermMatcher& secret_markers, const TermMatcher& user_markers,
                       const TermMatcher& account_markers, const DetectionView& view, std::vector<Hit>& out);
 void find_secrets(std::u32string_view text, std::vector<Hit>& out);
+// 기관명: 앞말 + 기관 꼬리(바름제약, Bluewave솔루션즈)인 어절과, (주)·주식회사 뒤 어절. NER 이 놓친 기관을 보탠다
+// (Phase 7-3). 꼬리 목록은 organization.hpp.
+void find_organizations(const DetectionView& view, std::u32string_view text, std::vector<Hit>& out);
 
 }  // namespace prompt_airlock::detect::rules
