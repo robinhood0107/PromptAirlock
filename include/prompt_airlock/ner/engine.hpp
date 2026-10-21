@@ -1,5 +1,5 @@
 // NER 엔진(ADR 0006, 0007): 탐지용 보기 한 구간 → 원문 byte 로 돌려준 PERSON·ORGANIZATION 탐지 결과.
-// 흐름: tokenize → 추론 → argmax → BIO 결합 → 인접 병합 → 조사 후처리 → 원문 구간.
+// 흐름: tokenize → 추론 → argmax → BIO 결합 → 인접 병합 → 어절 경계 맞춤 → 조사 후처리 → 원문 구간.
 #pragma once
 
 #include <cstddef>

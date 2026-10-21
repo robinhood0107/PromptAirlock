@@ -4,6 +4,9 @@
 #include <cassert>
 #include <charconv>
 #include <nlohmann/json.hpp>
+#include <optional>
+#include <utf8proc.h>
+#include <utility>
 #include <span>
 #include <string>
 
@@ -52,6 +55,50 @@ namespace pc = core;
     } catch (const nlohmann::json::exception&) {
         return std::unexpected(pc::DetectError::Unavailable);
     }
+}
+
+// 글자·숫자·결합 표지면 어절 안의 글자다. 공백·문장 부호·기호에서 어절이 끊긴다.
+[[nodiscard]] bool is_word_char(char32_t c) noexcept {
+    switch (utf8proc_category(static_cast<utf8proc_int32_t>(c))) {
+        case UTF8PROC_CATEGORY_LU:
+        case UTF8PROC_CATEGORY_LL:
+        case UTF8PROC_CATEGORY_LT:
+        case UTF8PROC_CATEGORY_LM:
+        case UTF8PROC_CATEGORY_LO:
+        case UTF8PROC_CATEGORY_MN:
+        case UTF8PROC_CATEGORY_MC:
+        case UTF8PROC_CATEGORY_ME:
+        case UTF8PROC_CATEGORY_ND:
+        case UTF8PROC_CATEGORY_NL:
+        case UTF8PROC_CATEGORY_NO:
+            return true;
+        default:
+            return false;
+    }
+}
+
+// 모델이 어절 일부만 잡거나("다" ← 다온제약을) 앞뒤 부호까지 잡은(")누리별대학교") 구간을 어절 경계로 맞춘다.
+// 앞뒤 부호를 떼고, 이어지는 글자까지 넓힌다. 조각이 남아 이름 일부가 그대로 나가는 일을 막는다(Phase 7-3 측정).
+// 넓히기만 하므로 가리는 범위는 줄지 않는다. 부호뿐이면 nullopt. 위치는 보기 기준(양 끝 포함).
+[[nodiscard]] std::optional<std::pair<std::uint32_t, std::uint32_t>> to_word(const detect::DetectionView& view,
+                                                                           std::uint32_t first, std::uint32_t last) {
+    const auto word = [&](std::uint32_t i) { return is_word_char(view.units[i].value); };
+    while (first < last && !word(first)) {
+        ++first;
+    }
+    while (last > first && !word(last)) {
+        --last;
+    }
+    if (!word(first)) {
+        return std::nullopt;
+    }
+    while (first > 0 && word(first - 1)) {
+        --first;
+    }
+    while (last + 1 < view.units.size() && word(last + 1)) {
+        ++last;
+    }
+    return std::pair{first, last};
 }
 
 // 같은 종류의 연속 토큰을 묶은 보기 구간(양 끝 포함, 구간 안의 위치).
@@ -183,8 +230,12 @@ std::expected<void, NerError> NerEngine::infer(std::string_view text, pc::Segmen
     }
 
     for (const auto& run : runs) {
-        // 조사는 원문 구간이 정해진 뒤 보기의 글자를 보고 뗀다.
-        const auto whole = detect::source_span(view, base + run.first, base + run.last);
+        const auto word = to_word(view, base + run.first, base + run.last);
+        if (!word) {
+            continue;  // 부호만 잡은 것은 이름이 아니다
+        }
+        // 조사는 어절과 원문 구간이 정해진 뒤 보기의 글자를 보고 뗀다.
+        const auto whole = detect::source_span(view, word->first, word->second);
         const auto bytes = pc::trim_trailing_particles(view.units, whole);
         const auto entity = pc::EntitySpan::make(text, segment, bytes, run.type, pc::DetectorKind::Ner);
         if (!entity) {
