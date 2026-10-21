@@ -22,3 +22,4 @@ CMakeLists.txt text eol=lf
 *.jsonl text eol=lf
 *.proto text eol=lf
 Cargo.lock text eol=lf
+*.dict text eol=lf
