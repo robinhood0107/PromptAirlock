@@ -1,38 +1,38 @@
-//! ?댁젣?섎뒗 硫붾え由щ? 0?쇰줈 吏?곕뒗 ?꾩뿭 ?좊떦湲?ADR 0019). Vault ?먯꽌 unsafe 瑜??덉슜?섎뒗 ??紐⑤뱢 媛?대뜲 ?섎굹??
+//! 해제되는 메모리를 0 으로 지우는 전역 할당기(ADR 0019). Vault 에서 unsafe 를 허용하는 두 모듈 가운데 하나다.
 //!
-//! ?듭떊 ?쇱씠釉뚮윭由??대? 踰꾪띁(Windows Named Pipe ??mio 踰꾪띁), 而щ젆???ы븷?뱀쑝濡?踰꾨젮吏????곸뿭, ?붿퐫???꾩떆
-//! 踰꾪띁泥섎읆 Vault 肄붾뱶媛 吏곸젒 吏?????녿뒗 ?щ낯???댁젣????吏?뚯쭊?? ?ы븷?뱀? GlobalAlloc 湲곕낯 援ы쁽
-//! (?덈줈 ?좊떦 ??蹂듭궗 ????dealloc ?쇰줈 ???곸뿭 ?댁젣)??洹몃?濡??곕?濡????곸뿭??媛숈? 寃쎈줈濡?吏?뚯쭊??
-//! 吏?곗? 紐삵븯??寃? 而ㅻ꼸 踰꾪띁, ?덉??ㅽ꽣, ?ㅽ깮, ?댁젣?섏? ?딆? 梨??⑥? 硫붾え由? 媛뺤젣 醫낅즺 ?쒖젏??硫붾え由?
+//! 통신 라이브러리 내부 버퍼(Windows Named Pipe 와 mio 버퍼), 컬렉션 재할당으로 버려진 옛 영역, 디코더 임시
+//! 버퍼처럼 Vault 코드가 직접 지울 수 없는 사본도 해제될 때 지워진다. 재할당은 GlobalAlloc 기본 구현
+//! (새로 할당, 복사, 옛 영역 dealloc)을 그대로 쓰므로 옛 영역도 같은 경로로 지워진다.
+//! 지우지 못하는 것: 커널 버퍼, 레지스터, 스택, 해제되지 않고 남은 메모리, 강제 종료 시점의 메모리.
 #![allow(unsafe_code)]
 
 use std::alloc::{GlobalAlloc, Layout, System};
 
 use zeroize::Zeroize;
 
-/// ?덉そ ?좊떦湲?湲곕낯 System)???꾩엫?섍퀬, ?댁젣 吏곸쟾??釉붾줉 ?꾩껜瑜?0?쇰줈 ??뒗??
+/// 안쪽 할당기(기본 System)에 위임하고, 해제 직전에 블록 전체를 0 으로 덮는다.
 pub struct WipingAllocator<A = System>(pub A);
 
-// SAFETY: alloc 怨꾩뿴? ?덉そ ?좊떦湲곗뿉 洹몃?濡??꾩엫?쒕떎. dealloc ? ?몄텧?먭? ???좊떦湲곕줈 layout ?ш린留뚰겮 ?좊떦?섍퀬
-// ?꾩쭅 ?댁젣?섏? ?딆? 釉붾줉???섍릿?ㅻ뒗 GlobalAlloc 怨꾩빟??湲곕??? 洹?釉붾줉???곌린 媛?ν븳 ?щ씪?댁뒪濡?蹂닿퀬 吏?????꾩엫?쒕떎.
+// SAFETY: alloc 계열은 안쪽 할당기에 그대로 위임한다. dealloc 은 호출자가 이 할당기로 layout 크기만큼 할당하고
+// 아직 해제하지 않은 블록을 넘긴다는 GlobalAlloc 계약에 기대어, 그 블록을 쓰기 가능한 슬라이스로 보고 지운 뒤 위임한다.
 unsafe impl<A: GlobalAlloc> GlobalAlloc for WipingAllocator<A> {
     unsafe fn alloc(&self, layout: Layout) -> *mut u8 {
-        // SAFETY: 怨꾩빟 洹몃?濡??꾩엫?쒕떎.
+        // SAFETY: 계약 그대로 위임한다.
         unsafe { self.0.alloc(layout) }
     }
 
     unsafe fn alloc_zeroed(&self, layout: Layout) -> *mut u8 {
-        // SAFETY: 怨꾩빟 洹몃?濡??꾩엫?쒕떎.
+        // SAFETY: 계약 그대로 위임한다.
         unsafe { self.0.alloc_zeroed(layout) }
     }
 
     unsafe fn dealloc(&self, ptr: *mut u8, layout: Layout) {
         if layout.size() > 0 {
-            // SAFETY: ptr ? ???좊떦湲곌? layout ?쇰줈 ?좊떦?덇퀬 ?꾩쭅 ?좏슚??釉붾줉?대떎(GlobalAlloc 怨꾩빟).
-            // zeroize ??volatile ?곌린???댁젣 吏곸쟾???곌린媛 理쒖쟻?붾줈 ?щ씪吏吏 ?딅뒗??
+            // SAFETY: ptr 은 이 할당기가 layout 으로 할당했고 아직 유효한 블록이다(GlobalAlloc 계약).
+            // zeroize 는 volatile 쓰기라 해제 직전의 쓰기가 최적화로 사라지지 않는다.
             unsafe { std::slice::from_raw_parts_mut(ptr, layout.size()) }.zeroize();
         }
-        // SAFETY: 怨꾩빟 洹몃?濡??꾩엫?쒕떎.
+        // SAFETY: 계약 그대로 위임한다.
         unsafe { self.0.dealloc(ptr, layout) }
     }
 }
