@@ -145,8 +145,30 @@ protected:
     std::thread thread_;
 };
 
-TEST_F(GatewayHttp, EgressCarriesTokensInsteadOfValues) {
-    (void)post(institution + " " + person + " 주무관에게 " + phone + " 또는 " + email + " 로 회의 일정을 알려 주세요");
+// 시연 시나리오 6개(Phase 8a). 문장과 값은 모두 합성이다.
+
+std::string code_of(const Reply& reply) { return reply.body["error"]["code"].get<std::string>(); }
+std::string_view reason(core::ReasonCode code) { return core::reason_code_name(code); }
+
+TEST_F(GatewayHttp, Scenario1SensitiveGradeIsRejectedBeforeAnyWork) {
+    const auto reply = post("회의 안건 정리", "S");
+    EXPECT_EQ(reply.status, 403u);
+    EXPECT_EQ(code_of(reply), reason(core::ReasonCode::GradeSensitive));
+    EXPECT_TRUE(mock_->received().empty());
+}
+
+TEST_F(GatewayHttp, Scenario2BlockedIdentifiersAreRejectedWithTypeOnly) {
+    const auto reply = post("제 주민번호는 900101-1234567 이고 카드는 4111-1111-1111-1111 입니다");
+    EXPECT_EQ(reply.status, 400u);
+    EXPECT_EQ(code_of(reply), reason(core::ReasonCode::EntityBlocked));
+    EXPECT_EQ(reply.body.dump().find("900101"), std::string::npos);
+    EXPECT_EQ(reply.body["error"]["blocked_types"].size(), 2u);
+    EXPECT_TRUE(mock_->received().empty());
+}
+
+TEST_F(GatewayHttp, Scenario3ValuesLeaveAsTokensAndComeBackRestored) {
+    const auto reply = post(institution + " " + person + " 주무관에게 " + phone + " 또는 " + email + " 로 회의 일정을 알려 주세요");
+    // 밖으로 나간 내용: token 만
     const auto sent = mock_->received();
     ASSERT_EQ(sent.size(), 1u);
     for (const std::string& value : {person, phone, email, institution}) {
@@ -155,17 +177,37 @@ TEST_F(GatewayHttp, EgressCarriesTokensInsteadOfValues) {
     const json body = json::parse(sent.front());
     EXPECT_EQ(body["model"], "demo-alias");
     EXPECT_NE(body["messages"][0]["content"].get<std::string>().find(std::string(core::token_open)), std::string::npos);
+    // 기관 앱이 받은 답: 원래 값
+    ASSERT_EQ(reply.status, 200u) << reply.body.dump();
+    const std::string answer = reply.body["choices"][0]["message"]["content"];
+    for (const std::string& value : {person, phone, email, institution}) {
+        EXPECT_NE(answer.find(value), std::string::npos) << value;
+    }
+    EXPECT_EQ(answer.find(std::string(core::token_open)), std::string::npos);
+    EXPECT_EQ(reply.body["model"], "demo-alias");
 }
 
-TEST_F(GatewayHttp, RejectionsNeverReachProvider) {
-    const auto blocked = post("제 주민번호는 900101-1234567 입니다");
-    EXPECT_EQ(blocked.status, 400u);
-    EXPECT_EQ(blocked.body["error"]["code"].get<std::string>(), core::reason_code_name(core::ReasonCode::EntityBlocked));
-    const auto encoded = post("확인 부탁: OTAwMTAxLTEyMzQ1Njc=");
-    EXPECT_EQ(encoded.status, 400u);
-    const auto sensitive = post("회의 안건 정리", "S");
-    EXPECT_EQ(sensitive.status, 403u);
+TEST_F(GatewayHttp, Scenario4TokenInsideLinkRejectsTheAnswer) {
+    const auto reply = post("[링크] " + person + " 주무관 연락처 " + phone + " 자료 정리");
+    EXPECT_EQ(reply.status, 502u);
+    EXPECT_EQ(code_of(reply), reason(core::ReasonCode::ResponseTokenInLink));
+    EXPECT_EQ(reply.body.dump().find(phone), std::string::npos);
+    EXPECT_EQ(mock_->received().size(), 1u);  // 요청은 가명으로 나갔고, 돌아온 답을 막았다
+}
+
+TEST_F(GatewayHttp, Scenario5EncodedIdentifierIsRejected) {
+    const auto reply = post("확인 부탁: OTAwMTAxLTEyMzQ1Njc=");
+    EXPECT_EQ(reply.status, 400u);
+    EXPECT_EQ(code_of(reply), reason(core::ReasonCode::EncodedTarget));
     EXPECT_TRUE(mock_->received().empty());
+}
+
+TEST_F(GatewayHttp, Scenario6ChangedTokenIsNeverRestored) {
+    const auto reply = post("[변형] " + person + " 주무관 연락처 " + phone + " 전달");
+    EXPECT_EQ(reply.status, 502u);
+    EXPECT_EQ(code_of(reply), reason(core::ReasonCode::ResponseTokenUnresolved));
+    EXPECT_EQ(reply.body.dump().find(person), std::string::npos);
+    EXPECT_EQ(mock_->received().size(), 1u);
 }
 
 }  // namespace

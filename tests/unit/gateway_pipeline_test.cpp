@@ -13,7 +13,9 @@
 #include <string>
 #include <vector>
 
+#include "../../src/gateway/role_name.hpp"
 #include "fake_vault.hpp"
+#include "mock_provider.hpp"
 
 namespace {
 
@@ -67,7 +69,7 @@ protected:
                 if (provider_fails_) {
                     co_return std::unexpected(gw::ProviderError::Timeout);
                 }
-                co_return gw::ProviderReply{200, "{}"};
+                co_return gw::ProviderReply{200, answer_ ? answer_(sent_.back()) : pa_mock::make_answer(sent_.back())};
             },
             *core::OutputTokenCap::make(512), "demo-alias");
     }
@@ -87,6 +89,22 @@ protected:
     }
 
     static std::string code_of(const gw::JsonResponse& r) { return json::parse(r.body)["error"]["code"]; }
+
+    // provider 가 내는 답(content 만 정한다)
+    static std::string answer_with(std::string_view content, json message_extra = json::object()) {
+        json message = {{"role", gw::detail::role_name(core::MessageRole::Model)}, {"content", content}};
+        message.update(message_extra);
+        return json{{"choices", json::array({{{"index", 0}, {"message", message}, {"finish_reason", "stop"}}})}}.dump();
+    }
+
+    // 보낸 본문에서 첫 token 을 꺼낸다
+    static std::string first_token(const std::string& sent) {
+        const auto open = sent.find(core::token_open);
+        const auto close = sent.find(core::token_close, open);
+        return sent.substr(open, close + core::token_close.size() - open);
+    }
+
+    std::function<std::string(const std::string&)> answer_;
 
     detect::Detectors detectors_ = *detect::Detectors::make({});
     std::shared_ptr<pa_test::FakeVault> vault_ = std::make_shared<pa_test::FakeVault>(20261022);
@@ -113,8 +131,15 @@ TEST_F(GatewayPipeline, SendsOnlyPseudonymizedRequestBuiltByGateway) {
     EXPECT_EQ(sent["n"], 1);
     EXPECT_EQ(sent["stream"], false);
     EXPECT_FALSE(sent.contains("store"));
-    // 응답 처리는 다음 단위라 아직 내보내지 않는다
-    EXPECT_EQ(reply.status, 503u);
+    // 답은 같은 범위에서 원래 값으로 되돌아온다
+    ASSERT_EQ(reply.status, 200u) << reply.body;
+    const json answer = json::parse(reply.body);
+    const std::string restored = answer["choices"][0]["message"]["content"];
+    EXPECT_NE(restored.find("010-2345-6789"), std::string::npos);
+    EXPECT_NE(restored.find("kim.demo@example.org"), std::string::npos);
+    EXPECT_EQ(restored.find(std::string(core::token_open)), std::string::npos);
+    EXPECT_EQ(answer["model"], "demo-alias");
+    EXPECT_TRUE(answer["id"].get<std::string>().starts_with("chatcmpl-pa-"));
 }
 
 TEST_F(GatewayPipeline, KeepsContentPartsAndStop) {
@@ -182,6 +207,31 @@ TEST_F(GatewayPipeline, ProviderFailureReturnsFixedError) {
     const auto reply = run(pipeline, ask("회의 안건 정리"));
     EXPECT_EQ(reply.status, 502u);
     EXPECT_EQ(code_of(reply), "provider_error");
+}
+
+TEST_F(GatewayPipeline, ResponseChecksRejectUnsafeAnswers) {
+    const auto pipeline = make(detectors_);
+    const auto code = [&](std::function<std::string(const std::string&)> answer) {
+        answer_ = std::move(answer);
+        return code_of(run(pipeline, ask("연락처 010-2345-6789 로 안내")));
+    };
+    // 링크 주소 안의 token
+    EXPECT_EQ(code([](const std::string& sent) { return answer_with("[자료](https://example.org/?q=" + first_token(sent) + ")"); }),
+              core::reason_code_name(core::ReasonCode::ResponseTokenInLink));
+    // 모델이 바꾼 token: 되돌리지 않고 응답 전체를 거절한다
+    EXPECT_EQ(code([](const std::string& sent) {
+                  std::string token = first_token(sent);
+                  const auto last = token.size() - core::token_close.size() - 1;
+                  token[last] = token[last] == 'A' ? 'B' : 'A';  // 같은 문자 집합 안에서 한 글자만 바꾼다
+                  return answer_with("연락처는 " + token + " 입니다");
+              }),
+              core::reason_code_name(core::ReasonCode::ResponseTokenUnresolved));
+    // 차단 종류 값이 답에 새로 나타남
+    EXPECT_EQ(code([](const std::string&) { return answer_with("예시 번호 900101-1234567"); }),
+              core::reason_code_name(core::ReasonCode::ResponseBlockedValue));
+    // 도구 호출이 담긴 답
+    EXPECT_EQ(code([](const std::string&) { return answer_with("x", {{"tool_calls", json::array({{{"id", "c"}}})}}); }),
+              "provider_error");
 }
 
 }  // namespace

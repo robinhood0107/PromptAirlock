@@ -10,6 +10,7 @@ add_library(prompt_airlock_gateway
   error_body.cpp
   pipeline.cpp
   provider_json.cpp
+  response_json.cpp
   request_json.cpp
   server.cpp)
 target_include_directories(prompt_airlock_gateway PUBLIC "${PROJECT_SOURCE_DIR}/include")

@@ -41,7 +41,8 @@ LLM의 답이 오면 token을 원래 값으로 되돌려 직원에게 준다.
 | `include/prompt_airlock/tls/`, `src/tls/` | TLS 설정. 협상 범위가 고정이고, OpenSSL 설정을 직접 부르는 곳은 여기뿐이다 |
 | `include/prompt_airlock/gateway/`, `src/gateway/` | HTTP 입구: 설정 파일, 출처 인증, 오류 응답, HTTPS 서버, 요청 JSON 읽기, 처리 단계 |
 | `include/prompt_airlock/provider/`, `src/provider/` | provider HTTPS 클라이언트. provider 주소와 자격 증명은 여기만 가진다 |
-| `tools/mock-provider/` | 시험·시연용 mock provider. 받은 요청을 기록하고 질문을 인용해 답한다. 운영 빌드에 넣지 않는다 |
+| `tools/mock-provider/` | 시험·시연용 mock provider. 받은 요청을 기록하고 질문을 인용해 답한다. `[링크]`·`[변형]` 표시어가 있으면 게이트웨이가 막아야 하는 답을 만든다. 운영 빌드에 넣지 않는다 |
+| `apps/prompt-airlock/` | 게이트웨이 실행 파일. `serve <설정>` 으로 기동, `issue-token <출처>` 로 출처 token 발급 |
 | `vault/` | Rust로 만든 Vault 프로세스(Cargo workspace) |
 | `proto/` | Gateway와 Vault가 함께 쓰는 IPC 메시지 정의 |
 | `cmake/` | 빌드 옵션, 검사 스크립트, Vault 빌드 연결 |
@@ -158,8 +159,9 @@ Vault는 처음 범위를 열 때 자식 프로세스로 띄운다. 연결이 �
 | `gateway/error_body.hpp`, `error_body.cpp` | Chat Completions 호환 error 객체. 사유 코드 이름과 차단 종류만 담는다 | `error_response`, `EntryError`, `JsonResponse` |
 | `gateway/server.hpp`, `server.cpp` | Beast HTTPS 서버(coroutine). TLS → 인증 → 경로·메서드·형식 → 등급 헤더 → 본문 상한 → handler 순서 | `Server`, `ServerLimits`, `AcceptedRequest`, `RequestHandler` |
 | `gateway/request_json.hpp`, `request_json.cpp` | 요청 JSON 을 SAX 로 읽어 검사 대상 묶음과 파라미터로. 허용 밖 키·중복 키·깊이 16 초과에서 바로 멈춤 | `parse_request`, `ParsedRequest` |
+| `gateway/response_json.hpp`, `response_json.cpp` | provider 응답에서 첫 choice 의 role·content·finish_reason 과 usage 만 SAX 로 읽고, 클라이언트 응답을 새로 만든다. tool_calls·audio·images·logprobs 가 값을 가지면 거절 | `parse_provider_answer`, `client_response_body`, `ProviderAnswer` |
 | `gateway/provider_json.hpp`, `provider_json.cpp` | 검증된 요청으로 provider 요청 본문을 새로 만든다(고정 모델 별칭, n=1, stream=false) | `provider_request_body` |
-| `gateway/pipeline.hpp`, `pipeline.cpp` | 처리 단계 연결. 어느 단계든 실패하면 provider 를 부르지 않는다 | `Pipeline`, `PseudonymScope`, `ScopeOpener`, `ProviderCall` |
+| `gateway/pipeline.hpp`, `pipeline.cpp` | 처리 단계 연결. 어느 단계든 실패하면 provider 를 부르지 않는다. 응답은 다시 탐지해 검사하고 같은 요청 범위에서만 복원한다 | `Pipeline`, `PseudonymScope`, `ScopeOpener`, `ProviderCall` |
 | `src/gateway/role_name.hpp` | 메시지 역할 이름. 이전 응답 역할 이름은 바이트 배열 상수 한 곳에만 둔다(ADR 0020) | `detail::role_name`, `detail::parse_role` |
 | `provider/https_client.hpp`, `src/provider/https_client.cpp` | 요청마다 검증된 TLS 연결, 응답 1 MiB·120초 상한, 자격 증명 파일 읽기 | `HttpsClient`, `load_credential` |
 
@@ -264,7 +266,6 @@ fuzz 대상
 
 | 항목 | 상태 |
 |---|---|
-| 응답 검사와 복원의 HTTP 연결, 실행 파일(`apps/prompt-airlock/`) | Phase 8a 다음 단위 |
 | 감사 기록(`src/audit/`) | Phase 8. 지금은 `Rejection::for_audit`와 `SensitiveTally`가 기록할 값만 만든다 |
 | 추론 worker와 동시성 제한 | Phase 9 |
 | 실제 provider 연결 | Phase 10. 지금은 mock provider 로만 시험한다 |

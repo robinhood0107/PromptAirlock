@@ -1,5 +1,6 @@
 // 요청 처리 단계. 인증·등급 확정(server) 뒤에 부른다.
-// 순서: JSON 읽기 → 파라미터 → 탐지 → 정책 → 가명 범위 → 가명화 → 잔여 검사 → provider 요청 → provider 호출.
+// 순서: JSON 읽기 → 파라미터 → 탐지 → 정책 → 가명 범위 → 가명화 → 잔여 검사 → provider 요청 → provider 호출
+// → 응답 읽기 → 응답 검사 → 같은 범위에서 복원 → 새로 만든 응답.
 // 어느 단계든 실패하면 거절하고 provider 는 부르지 않는다(fail closed).
 #pragma once
 
