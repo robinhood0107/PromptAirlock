@@ -4,7 +4,7 @@
 #include <string_view>
 #include <system_error>
 
-#include "prompt_airlock/ner/sha256.hpp"
+#include "prompt_airlock/core/sha256.hpp"
 
 #ifdef _WIN32
 #include <windows.h>
@@ -35,7 +35,7 @@ constexpr std::uintmax_t max_file_bytes = 100ULL * 1024 * 1024;
     if (static_cast<std::size_t>(in.gcount()) != bytes.size()) {
         return std::unexpected(ModelFilesError::Missing);
     }
-    if (sha256_hex(bytes) != want_sha256) {
+    if (core::sha256_hex(bytes) != want_sha256) {
         return std::unexpected(ModelFilesError::Mismatch);
     }
     return bytes;

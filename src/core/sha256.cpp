@@ -1,9 +1,9 @@
-#include "prompt_airlock/ner/sha256.hpp"
+#include "prompt_airlock/core/sha256.hpp"
 
 #include <algorithm>
 #include <bit>
 
-namespace prompt_airlock::ner {
+namespace prompt_airlock::core {
 namespace {
 
 constexpr std::array<std::uint32_t, 64> round_constants = {
@@ -96,4 +96,4 @@ std::string sha256_hex(std::span<const std::byte> data) {
     return hash.finish_hex();
 }
 
-}  // namespace prompt_airlock::ner
+}  // namespace prompt_airlock::core

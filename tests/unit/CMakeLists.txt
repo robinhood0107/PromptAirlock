@@ -21,6 +21,7 @@ foreach(name IN ITEMS
     core_request_params_test
     core_restore_test
     core_sensitive_test
+    core_sha256_test
     core_token_test
     core_types_test
     core_utf8_test)
@@ -69,7 +70,6 @@ foreach(name IN ITEMS
     ner_model_files_test
     ner_pool_test
     ner_session_test
-    ner_sha256_test
     ner_tokenizer_test
     ner_windows_test)
   pa_add_gtest(${name} ${name}.cpp)
