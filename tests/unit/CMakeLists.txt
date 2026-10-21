@@ -82,3 +82,10 @@ endforeach()
 # TLS 설정(ADR 0014). 시험 인증서는 실행 때마다 새로 만든다.
 pa_add_gtest(tls_context_test tls_context_test.cpp)
 target_link_libraries(tls_context_test PRIVATE prompt_airlock_tls pa_test_cert)
+
+# HTTP 입구: 설정, 출처 인증, 오류 응답.
+foreach(name IN ITEMS
+    gateway_config_test)
+  pa_add_gtest(${name} ${name}.cpp)
+  target_link_libraries(${name} PRIVATE prompt_airlock_gateway nlohmann_json::nlohmann_json)
+endforeach()
