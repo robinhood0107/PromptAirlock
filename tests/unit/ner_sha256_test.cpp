@@ -3,7 +3,6 @@
 
 #include <gtest/gtest.h>
 
-#include <cstring>
 #include <span>
 #include <string>
 #include <string_view>
@@ -14,8 +13,11 @@ namespace pn = prompt_airlock::ner;
 namespace {
 
 std::vector<std::byte> bytes_of(std::string_view s) {
-    std::vector<std::byte> out(s.size());
-    std::memcpy(out.data(), s.data(), s.size());
+    std::vector<std::byte> out;
+    out.reserve(s.size());
+    for (const char c : s) {
+        out.push_back(static_cast<std::byte>(c));
+    }
     return out;
 }
 
