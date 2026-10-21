@@ -9,7 +9,10 @@
 #include <string>
 #include <vector>
 
+#include "prompt_airlock/detect/view.hpp"
+
 namespace pc = prompt_airlock::core;
+namespace pd = prompt_airlock::detect;
 namespace pn = prompt_airlock::ner;
 
 namespace {
@@ -104,6 +107,44 @@ TEST(NerTokenizer, TokenUnitRangesPointAtTheirOwnCharacters) {
         previous_last = token.last_unit;
         first = false;
     }
+}
+
+// 역검증: 모든 fixture 에서 토큰이 가리키는 보기 글자가 그 토큰의 vocab 문자열과 같다.
+TEST(NerTokenizer, TokenUnitRangesReproduceTheirVocabPieces) {
+    std::ifstream in(fixture_dir / "ner.jsonl", std::ios::binary);
+    std::string line;
+    std::size_t checked = 0;
+    std::size_t errors = 0;
+    while (std::getline(in, line)) {
+        if (line.empty()) {
+            continue;
+        }
+        const auto text = nlohmann::json::parse(line).at("text").get<std::string>();
+        const auto view = pd::make_view(text);
+        ASSERT_TRUE(view);
+        for (const auto& token : tokenizer().encode(view->units)) {
+            if (token.special || token.id == tokenizer().unk_id()) {
+                continue;
+            }
+            std::u32string chars;
+            for (auto i = token.first_unit; i <= token.last_unit; ++i) {
+                chars.push_back(view->units[i].value);
+            }
+            auto want = std::string(tokenizer().piece(token.id));
+            if (want.starts_with("##")) {
+                want.erase(0, 2);
+            }
+            std::u32string got;
+            for (const auto& unit : pc::decode_utf8(want).value()) {
+                got.push_back(unit.value);
+            }
+            ++checked;
+            errors += got == chars ? 0 : 1;
+        }
+    }
+    RecordProperty("tokens_checked", std::to_string(checked));
+    EXPECT_GT(checked, 0u);
+    EXPECT_EQ(errors, 0u);
 }
 
 TEST(NerTokenizer, EmptyInputGivesOnlySpecialTokens) {
