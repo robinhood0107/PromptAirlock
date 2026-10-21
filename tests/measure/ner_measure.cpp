@@ -1,6 +1,7 @@
 // NER 측정(Phase 7-3). 기본 빌드·ctest 에 넣지 않고 직접 실행한다.
 //   cmake --build <빌드 디렉터리> --target ner_measure && <빌드 디렉터리>/tests/measure/ner_measure
-// 큰 합성 셋(tests/fixtures/ner/ner-large.jsonl, 900문장)으로 다음을 잰다.
+// 큰 합성 셋 900문장으로 다음을 잰다. 기본은 개발용(ner-large.jsonl), --set heldout 이면 판정용(ner-heldout.jsonl).
+// 합격 판정은 판정용 셋으로만 한다(결정 #107).
 //   1. 메모리: worker 2개 pool 의 최대 상주 메모리
 //   2. 정확도: 제품 경로(NFKC 보기)의 정확 일치 재현율·정밀도와 위치 오류, 경우별 재현율, NFKC 와 NFC 비교
 //   3. 지연: 짧은 문장, 256 token(합격 기준 길이), 긴 글(창 여러 개), 콜드 스타트
@@ -81,8 +82,8 @@ struct Record {
     std::vector<Gold> gold;
 };
 
-std::vector<Record> load() {
-    std::ifstream in(fs::path(PA_NER_FIXTURE_DIR) / "ner-large.jsonl", std::ios::binary);
+std::vector<Record> load(const char* file) {
+    std::ifstream in(fs::path(PA_NER_FIXTURE_DIR) / file, std::ios::binary);
     std::vector<Record> out;
     std::string line;
     while (std::getline(in, line)) {
@@ -328,11 +329,25 @@ Residual protect(const pd::Detectors& detectors, prompt_airlock::vault_client::V
 }  // namespace
 
 int main(int argc, char** argv) {
-    const bool explain = argc > 1 && std::string_view(argv[1]) == "--explain";
+    bool explain = false;
+    int residual_runs = 1;  // 가명 token 이 무작위라 잔여 검사 결과가 실행마다 다를 수 있어 여러 번 돈다
+    const char* file = "ner-large.jsonl";
+    for (int i = 1; i < argc; ++i) {
+        const std::string_view arg = argv[i];
+        if (arg == "--explain") {
+            explain = true;
+        } else if (arg == "--set" && i + 1 < argc && std::string_view(argv[i + 1]) == "heldout") {
+            file = "ner-heldout.jsonl";
+            ++i;
+        } else if (arg == "--residual-runs" && i + 1 < argc) {
+            residual_runs = std::max(1, std::atoi(argv[i + 1]));
+            ++i;
+        }
+    }
     const fs::path model_dir = PA_NER_MODEL_DIR;
-    const auto records = load();
+    const auto records = load(file);
     bool ok = true;
-    std::printf("records: %zu\n", records.size());
+    std::printf("set: %s, records: %zu\n", file, records.size());
 
     // 1. 메모리: 모델을 읽기 전과 pool(worker 2개)을 띄워 몇 번 돌린 뒤의 최대 상주 메모리.
     const double base_mb = peak_mb();
@@ -541,23 +556,25 @@ int main(int argc, char** argv) {
     const auto detectors = *pd::Detectors::make({}, pool);
     std::size_t rejected = 0, leaked = 0, policy_blocked = 0;
     std::vector<std::string> rejected_ids;
-    for (const auto& r : records) {
-        const auto result = protect(detectors, service, r.text);
-        if (result.policy_blocked) {
-            ++policy_blocked;
-        } else if (!result.verified) {
-            ++rejected;
-            rejected_ids.push_back(r.id + "(" + r.variant + ")");
-            if (explain) {
-                std::printf("REJECT %s %s => %s | %s\n", r.id.c_str(), r.text.c_str(), result.sent.c_str(),
-                            result.why.c_str());
+    for (int run = 0; run < residual_runs; ++run) {
+        for (const auto& r : records) {
+            const auto result = protect(detectors, service, r.text);
+            if (result.policy_blocked) {
+                ++policy_blocked;
+            } else if (!result.verified) {
+                ++rejected;
+                rejected_ids.push_back(r.id + "(" + r.variant + ")");
+                if (explain) {
+                    std::printf("REJECT %s %s => %s | %s\n", r.id.c_str(), r.text.c_str(), result.sent.c_str(),
+                                result.why.c_str());
+                }
+            }
+            for (const auto& g : r.gold) {
+                leaked += run == 0 && result.sent.find(g.text) != std::string::npos;
             }
         }
-        for (const auto& g : r.gold) {
-            leaked += result.sent.find(g.text) != std::string::npos;
-        }
     }
-    std::printf("\n");
+    std::printf("\nresidual runs: %d (requests %zu)\n", residual_runs, records.size() * static_cast<std::size_t>(residual_runs));
     ok &= report("residual check rejections (count)", static_cast<double>(rejected), 0.0);
     std::printf("%-46s %10zu  (참고, 차단 종류가 있어 보호 전에 막힘)\n", "blocked by policy before protection", policy_blocked);
     std::printf("%-46s %10zu  (참고, 재현율에서 놓친 이름이 그대로 나간 수)\n", "gold names left in sent text", leaked);
