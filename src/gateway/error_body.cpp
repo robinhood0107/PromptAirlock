@@ -74,12 +74,12 @@ Shape rejection_shape(ReasonCode code) {
 
 }  // namespace
 
-ErrorResponse error_response(EntryError error) {
+JsonResponse error_response(EntryError error) {
     const Shape shape = entry_shape(error);
     return {shape.status, render(shape, json::array())};
 }
 
-ErrorResponse error_response(const core::UserRejection& rejection) {
+JsonResponse error_response(const core::UserRejection& rejection) {
     const Shape shape = rejection_shape(rejection.code);
     json types = json::array();
     rejection.blocked_types.for_each([&](core::EntityType type) { types.push_back(core::entity_type_name(type)); });

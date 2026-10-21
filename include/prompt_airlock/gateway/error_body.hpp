@@ -21,12 +21,12 @@ enum class EntryError : std::uint8_t {
     Unavailable,           // 503: 처리 단계를 아직 쓸 수 없음
 };
 
-struct ErrorResponse {
+struct JsonResponse {
     unsigned status;
     std::string body;  // JSON
 };
 
-[[nodiscard]] ErrorResponse error_response(EntryError error);
-[[nodiscard]] ErrorResponse error_response(const core::UserRejection& rejection);
+[[nodiscard]] JsonResponse error_response(EntryError error);
+[[nodiscard]] JsonResponse error_response(const core::UserRejection& rejection);
 
 }  // namespace prompt_airlock::gateway

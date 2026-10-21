@@ -91,3 +91,6 @@ foreach(name IN ITEMS
   pa_add_gtest(${name} ${name}.cpp)
   target_link_libraries(${name} PRIVATE prompt_airlock_gateway nlohmann_json::nlohmann_json)
 endforeach()
+pa_add_gtest(gateway_server_test gateway_server_test.cpp)
+target_link_libraries(gateway_server_test PRIVATE prompt_airlock_gateway prompt_airlock_tls pa_test_cert
+                      nlohmann_json::nlohmann_json)

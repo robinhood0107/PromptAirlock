@@ -4,6 +4,7 @@
   "builtin-baseline": "19780d9cdf84d0944cf9a318666703b89ab6629c",
   "dependencies": [
     "boost-asio",
+    "boost-beast",
     "gtest",
     "nlohmann-json",
     "openssl",
