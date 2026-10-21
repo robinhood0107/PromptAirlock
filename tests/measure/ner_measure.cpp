@@ -1,7 +1,7 @@
 // NER 측정(Phase 7-3). 기본 빌드·ctest 에 넣지 않고 직접 실행한다.
 //   cmake --build <빌드 디렉터리> --target ner_measure && <빌드 디렉터리>/tests/measure/ner_measure
-// 큰 합성 셋 900문장으로 다음을 잰다. 기본은 개발용(ner-large.jsonl), --set heldout·heldout2 면 1차·2차 판정용(참고).
-// 합격 판정은 규칙을 고정한 뒤 새로 만든 셋으로만 한다(결정 #107).
+// 큰 합성 셋 900문장으로 다음을 잰다. 기본은 개발용(ner-large.jsonl), --set heldout·heldout2 면 1차·2차 판정용(참고),
+// --set final 이면 최종 판정용(ner-final.jsonl). 합격 판정은 규칙을 고정한 뒤 새로 만든 최종 판정용 셋으로만 한다(결정 #107).
 //   1. 메모리: worker 2개 pool 의 최대 상주 메모리
 //   2. 정확도: NER 엔진(NFKC 보기)의 정확 일치 재현율·정밀도와 위치 오류, 경우별 재현율, NFKC 와 NFC 비교.
 //      탐지기 전체(결정론 기관 규칙 + NER)의 정확 일치 재현율과 이름이 가려진 비율도 함께 잰다.
@@ -343,6 +343,9 @@ int main(int argc, char** argv) {
             ++i;
         } else if (arg == "--set" && i + 1 < argc && std::string_view(argv[i + 1]) == "heldout2") {
             file = "ner-heldout2.jsonl";
+            ++i;
+        } else if (arg == "--set" && i + 1 < argc && std::string_view(argv[i + 1]) == "final") {
+            file = "ner-final.jsonl";
             ++i;
         } else if (arg == "--accuracy-only") {
             accuracy_only = true;
