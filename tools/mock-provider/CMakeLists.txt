@@ -11,3 +11,4 @@ target_link_libraries(pa_mock_provider
 
 add_executable(mock-provider main.cpp)
 target_link_libraries(mock-provider PRIVATE pa_mock_provider prompt_airlock_tls prompt_airlock_provider pa_options)
+pa_copy_runtime_dlls(mock-provider)

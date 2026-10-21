@@ -1,5 +1,6 @@
 // 시험·시연용 mock provider. 운영 빌드에 들어가지 않는다.
 // 받은 요청 본문을 그대로 기록하고(시연: "밖으로 나간 내용"), 마지막 user 메시지를 인용한 답을 돌려준다.
+// 질문에 [링크]·[변형] 표시어가 있으면 게이트웨이가 거절해야 하는 답을 만든다(mock_provider.cpp 의 answer_text).
 #pragma once
 
 #include <boost/asio/io_context.hpp>

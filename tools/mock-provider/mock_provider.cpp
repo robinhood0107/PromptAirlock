@@ -15,6 +15,7 @@
 #include <utility>
 
 #include "../../src/gateway/role_name.hpp"
+#include "prompt_airlock/core/token.hpp"
 
 namespace pa_mock {
 
@@ -112,6 +113,34 @@ asio::awaitable<void> accept_loop(std::shared_ptr<MockProvider::State> state) {
     }
 }
 
+// 질문 속 첫 token(없으면 빈 값).
+std::string first_token(const std::string& text) {
+    const auto open = text.find(prompt_airlock::core::token_open);
+    if (open == std::string::npos) {
+        return {};
+    }
+    const auto close = text.find(prompt_airlock::core::token_close, open);
+    return close == std::string::npos ? std::string() : text.substr(open, close + prompt_airlock::core::token_close.size() - open);
+}
+
+// 시연 답. 질문에 표시어가 있으면 게이트웨이가 막아야 하는 답을 일부러 만든다.
+//   [링크] → 질문의 첫 token 을 링크 주소에 넣는다(ADR 0017 8: 응답 거절)
+//   [변형] → 첫 token 의 마지막 글자를 바꿔 되풀이한다(복원하지 않고 응답 거절)
+//   그 밖 → 질문을 그대로 인용한다(token 이 그대로 돌아와 게이트웨이가 복원)
+std::string answer_text(const std::string& question) {
+    const std::string token = first_token(question);
+    if (!token.empty() && question.find("[링크]") != std::string::npos) {
+        return "자료는 [여기](https://example.org/view?ref=" + token + ") 에 있습니다.";
+    }
+    if (!token.empty() && question.find("[변형]") != std::string::npos) {
+        std::string changed = token;
+        char& last = changed[changed.size() - prompt_airlock::core::token_close.size() - 1];
+        last = last == 'A' ? 'B' : 'A';  // token 문자 집합 안에서 한 글자만 바꾼다
+        return "확인했습니다. " + changed + " 님께 전달하겠습니다.";
+    }
+    return "받은 질문: " + question;
+}
+
 }  // namespace
 
 std::string make_answer(const std::string& request_body) {
@@ -122,7 +151,7 @@ std::string make_answer(const std::string& request_body) {
         {"object", "chat.completion"},
         {"model", request.is_object() ? request.value("model", "") : ""},
         {"choices", json::array({{{"index", 0},
-                                  {"message", {{"role", role_name(MessageRole::Model)}, {"content", "받은 질문: " + question}}},
+                                  {"message", {{"role", role_name(MessageRole::Model)}, {"content", answer_text(question)}}},
                                   {"finish_reason", "stop"}}})},
         {"usage", {{"prompt_tokens", 0}, {"completion_tokens", 0}, {"total_tokens", 0}}},
     };
