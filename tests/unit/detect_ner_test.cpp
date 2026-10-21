@@ -107,6 +107,27 @@ TEST(DetectNer, DecodedTextIsAlsoScanned) {
     EXPECT_TRUE(detection->encoded.front().targets.contains(pc::EntityType::Person));
 }
 
+TEST(DetectNer, NamesInNormalizedTextMapBackToTheOriginalBytes) {
+    // 전각 영문(정규화로 글자가 바뀜), 이름 안의 zero-width 문자(보기에서 빠짐), 분해된 한글 자모(합쳐짐).
+    for (const std::string name : {"\xEF\xBC\xAB\xEF\xBC\xA9\xEF\xBC\xAD", "김\xE2\x80\x8B민수",
+                                   "\xE1\x84\x80\xE1\x85\xB5\xE1\x86\xB7민수"}) {
+        const auto d = with_ner(std::make_shared<FakeNer>(name));
+        const std::string text = "담당은 " + name + " 입니다.";
+        const auto result = found(d, text);
+        ASSERT_EQ(result.size(), 1u) << name;
+        EXPECT_EQ(result.front(), std::make_pair(pc::EntityType::Person, name));
+    }
+}
+
+TEST(DetectNer, SpanThatSplitsAViewCharacterIsRejected) {
+    // 정규화로 합쳐진 글자 한가운데서 끝나는 구간은 보기 글자로 되돌릴 수 없다. 넘기지 않고 거절한다.
+    const std::string jamo = "\xE1\x84\x80\xE1\x85\xB5\xE1\x86\xB7";  // 분해된 "김"(3 자모 → 보기 글자 1개)
+    const auto d = with_ner(std::make_shared<FakeNer>("\xE1\x84\x80"));
+    const auto result = d.detect_segment(jamo + "민수", pc::SegmentIndex{0});
+    ASSERT_FALSE(result);
+    EXPECT_EQ(result.error(), pc::DetectError::InvalidSpan);
+}
+
 TEST(DetectNer, SameInputGivesSameResult) {
     const auto d = with_ner(std::make_shared<FakeNer>("김민수"));
     const std::string text = "김민수와 김민수가 만났다. 010-2345-6789";

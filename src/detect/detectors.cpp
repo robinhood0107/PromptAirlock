@@ -1,6 +1,7 @@
 #include "prompt_airlock/detect/detectors.hpp"
 
 #include <algorithm>
+#include <iterator>
 #include <optional>
 #include <string>
 
@@ -17,13 +18,17 @@ namespace {
 
 // NER 결과(원문 byte)를 보기의 글자 구간으로 되돌린다. 구간 끝이 보기 글자 경계와 맞지 않으면 nullopt.
 [[nodiscard]] std::optional<rules::Hit> to_hit(const DetectionView& view, const core::EntitySpan& entity) {
+    // 보기 글자는 원문 순서대로라 원문 시작 위치로 정렬돼 있다. 정규화로 갈라진 글자들은 같은 원문 구간을 가진다.
     const auto begin = entity.span().begin();
     const auto end = entity.span().end();
-    const auto first = std::ranges::find_if(view.units, [&](const auto& u) { return u.source.begin() == begin; });
-    const auto last = std::ranges::find_if(view.units, [&](const auto& u) { return u.source.end() == end; });
-    if (first == view.units.end() || last == view.units.end() || last < first) {
+    const auto source_begin = [](const core::DecodedCodepoint& u) { return u.source.begin(); };
+    const auto first = std::ranges::lower_bound(view.units, begin, {}, source_begin);
+    const auto after = std::ranges::lower_bound(view.units, end, {}, source_begin);
+    if (first == view.units.end() || first->source.begin() != begin || after == first ||
+        std::prev(after)->source.end() != end) {
         return std::nullopt;
     }
+    const auto last = std::prev(after);
     return rules::Hit{static_cast<std::uint32_t>(first - view.units.begin()),
                       static_cast<std::uint32_t>(last - view.units.begin()), entity.type(), entity.detector()};
 }
