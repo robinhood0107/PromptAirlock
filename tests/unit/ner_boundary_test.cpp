@@ -63,6 +63,15 @@ TEST(NerBoundary, TitlesAttachedOrSpacedAreDropped) {
     EXPECT_EQ(trimmed("Seoyeon Kwon선임과 일정을 논의했다.", "Seoyeon Kwon선"), "Seoyeon Kwon");
 }
 
+TEST(NerBoundary, MoreTitlesParticlesAndTheBareCopula) {
+    EXPECT_EQ(trimmed("박우현학장은 자리를 비웠다.", "박우현학장은"), "박우현");
+    EXPECT_EQ(trimmed("추현진회계사는 자리를 비웠다.", "추현진회계사는"), "추현진");
+    EXPECT_EQ(trimmed("제윤호한테서 연락이 왔다.", "제윤호한테서"), "제윤호");
+    EXPECT_EQ(trimmed("최종 승인자는 편단우다.", "편단우다"), "편단우");      // 받침 없는 이름 뒤 '다'
+    EXPECT_EQ(trimmed("최종 승인자는 Soi Yong다.", "Soi Yong다"), "Soi Yong");
+    EXPECT_EQ(trimmed("담당은 김민준다.", "김민준다"), "김민준다");           // 받침이 있으면 '이다' 라야 서술격이다
+}
+
 TEST(NerBoundary, LegalFormsAndDepartmentsAreDroppedFromOrganizations) {
     EXPECT_EQ(trimmed("주식회사 라온병원에서 견적서를 받았다.", "주식회사 라온병원", org), "라온병원");
     EXPECT_EQ(trimmed("(주)라온대학교 대표이사 명의", "주)라온대학교", org), "라온대학교");
@@ -86,6 +95,8 @@ TEST(NerBoundary, DepartmentAloneIsNotAnOrganization) {
     // 보호한 글을 다시 탐지할 때 token 옆 부서명만 기관으로 잡히는 모양.
     EXPECT_EQ(trimmed("⟦ORGANIZATION_KTSEN3ZBEC⟧ 영업본부가 실적을 발표했다.", "영업본부가", org), "<none>");
     EXPECT_EQ(trimmed("⟦ORGANIZATION_KTSEN3ZBEC⟧ 고객센터에 문의했다.", "⟧ 고객센터", org), "<none>");
+    EXPECT_EQ(trimmed("⟦ORGANIZATION_KTSEN3ZBEC⟧ 기술지원팀에 요청했다.", "기술지원팀에", org), "<none>");  // 업무 낱말 둘을 이어 붙인 부서명
+    EXPECT_EQ(trimmed("모란대학교 기술지원팀에 요청했다.", "모란대학교 기술지원팀", org), "모란대학교");
     EXPECT_EQ(trimmed("한빛센터에서 교육이 열린다.", "한빛센터", org), "한빛센터");  // 앞 낱말이 업무 낱말이 아니면 이름
 }
 

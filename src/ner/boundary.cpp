@@ -34,13 +34,17 @@ constexpr std::array<std::u32string_view, 16> copulas = {
 // 사람 이름 뒤 호칭. 님·씨는 core 조사 후처리가 뗀다.
 constexpr std::array<std::u32string_view, 1> honorifics = {U"께"};
 
-// 직함. 사람 이름에 붙여 쓰거나(신태호주무관) 띄어 쓴다(Jiho Park 대리).
-constexpr std::array<std::u32string_view, 43> titles = {
-    U"부회장", U"부사장", U"대표이사", U"본부장", U"파트장", U"연구위원", U"부교수", U"조교수", U"선생님", U"주무관",
-    U"사무관", U"서기관", U"위원장", U"매니저", U"회장", U"사장", U"대표", U"이사", U"상무", U"전무",
-    U"실장", U"부장", U"차장", U"과장", U"대리", U"주임", U"사원", U"팀장", U"책임", U"선임",
-    U"수석", U"연구원", U"교수", U"박사", U"선생", U"원장", U"소장", U"국장", U"처장", U"청장",
-    U"의원", U"계장", U"반장",
+// 직함. 사람 이름에 붙여 쓰거나(신태호주무관) 띄어 쓴다(Jiho Park 대리). 공공·기업·학교·의료·법률의 일반 직함이다.
+constexpr std::array<std::u32string_view, 85> titles = {
+    U"부이사관", U"대표이사", U"이사장", U"부회장", U"부사장", U"부총장", U"부원장", U"본부장", U"파트장", U"그룹장",
+    U"센터장", U"지점장", U"지사장", U"구청장", U"도지사", U"부의장", U"연구위원", U"연구원", U"부교수", U"조교수",
+    U"선생님", U"주무관", U"사무관", U"서기관", U"이사관", U"위원장", U"매니저", U"간호사", U"변호사", U"회계사",
+    U"세무사", U"변리사", U"노무사", U"관장", U"회장", U"사장", U"대표", U"이사", U"상무", U"전무",
+    U"감사", U"고문", U"실장", U"부장", U"차장", U"과장", U"대리", U"주임", U"사원", U"팀장",
+    U"팀원", U"책임", U"선임", U"수석", U"인턴", U"프로", U"교수", U"강사", U"박사", U"선생",
+    U"총장", U"학장", U"원장", U"소장", U"국장", U"처장", U"청장", U"장관", U"차관", U"시장",
+    U"군수", U"의원", U"의장", U"위원", U"계장", U"반장", U"조장", U"점장", U"의사", U"약사",
+    U"검사", U"판사", U"기자", U"작가", U"감독",
 };
 
 // 기관명 앞 법인 표기. (주) 같은 괄호 약칭은 skip_legal_prefix 가 따로 본다.
@@ -50,17 +54,32 @@ constexpr std::array<std::u32string_view, 8> legal_forms = {
 constexpr std::array<char32_t, 4> legal_short = {U'주', U'유', U'재', U'사'};
 
 // 기관명 뒤에 띄어 쓴 부서명의 끝(다온에너지 보안팀).
-constexpr std::array<std::u32string_view, 12> department_endings = {
+constexpr std::array<std::u32string_view, 13> department_endings = {
     U"사업부", U"연구실", U"협력단", U"사업단", U"사무국", U"본부", U"센터", U"부서", U"지사", U"지점", U"지부", U"팀",
+    U"실",
 };
 
-// 일반 업무 낱말. 이것 + 부서 끝말로만 된 구간(영업본부, 고객센터, 보안팀)은 이름이 아니다.
+// 일반 업무 낱말. 이것들을 이어 붙인 말 + 부서 끝말로만 된 구간(영업본부, 고객센터, 기술지원팀)은 이름이 아니다.
 // 기관명 바로 뒤에 띄어 쓴 부서명을 떼고 나면, 보호한 글을 다시 탐지할 때 모델이 token 옆의 부서명만 기관으로 볼 수 있다.
 // 그대로 두면 정상 요청이 잔여 검사에서 거절된다. "한빛센터" 같은 진짜 기관명은 앞 낱말이 이 목록에 없어 남는다.
-constexpr std::array<std::u32string_view, 27> generic_units = {
-    U"마케팅", U"디자인", U"영업", U"기획", U"인사", U"총무", U"재무", U"회계", U"보안", U"고객", U"기술", U"개발", U"홍보", U"경영",
-    U"전략", U"품질", U"생산", U"구매", U"법무", U"감사", U"연구", U"운영", U"지원", U"정보", U"전산", U"교육", U"상담",
+constexpr std::array<std::u32string_view, 37> generic_units = {
+    U"마케팅", U"디자인", U"영업", U"기획", U"인사", U"총무", U"재무", U"회계", U"보안", U"고객", U"기술", U"개발", U"홍보",
+    U"경영", U"전략", U"품질", U"생산", U"구매", U"법무", U"감사", U"연구", U"운영", U"지원", U"정보", U"전산", U"교육",
+    U"상담", U"관리", U"사업", U"서비스", U"시스템", U"플랫폼", U"제품", U"설계", U"안전", U"환경", U"대외",
 };
+
+// word 가 일반 업무 낱말을 하나 이상 이어 붙인 말인가(기술지원, 영업관리).
+[[nodiscard]] bool is_generic_compound(std::u32string_view word) noexcept {
+    if (word.empty()) {
+        return true;
+    }
+    for (const auto g : generic_units) {
+        if (word.starts_with(g) && is_generic_compound(word.substr(g.size()))) {
+            return true;
+        }
+    }
+    return false;
+}
 
 [[nodiscard]] utf8proc_category_t category(char32_t c) noexcept {
     return utf8proc_category(static_cast<utf8proc_int32_t>(c));
@@ -275,6 +294,13 @@ std::optional<pc::ByteSpan> name_span(const detect::DetectionView& view, std::ui
     for (bool changed = true; changed;) {
         changed = span.trim_particles(view);
         changed = drop_any_tail(span, copulas) || changed;
+        // 받침 없는 이름이나 영문 뒤 서술격 '다'(최종 승인자는 편단우다). 받침이 있으면 '이다' 가 된다.
+        if (span.size() >= min_name + 1 && span.ends_with(U"다")) {
+            const auto prev = span.at(span.last() - 1);
+            const bool open_syllable = prev >= 0xAC00 && prev <= 0xD7A3 && (prev - 0xAC00) % 28 == 0;
+            const bool latin = (prev >= U'a' && prev <= U'z') || (prev >= U'A' && prev <= U'Z');
+            changed = ((open_syllable || latin) && span.drop_tail(1)) || changed;
+        }
         if (const auto start = span.last_word_start()) {
             // 띄어 쓴 직함(사람·기관 모두), 띄어 쓴 부서명(기관).
             Span last_word(view, *start, span.last());
@@ -299,11 +325,13 @@ std::optional<pc::ByteSpan> name_span(const detect::DetectionView& view, std::ui
         }
     }
     if (!person && !span.last_word_start()) {
-        for (const auto g : generic_units) {
-            for (const auto d : department_endings) {
-                if (span.size() == g.size() + d.size() && span.starts_with(g) && span.ends_with(d)) {
-                    return std::nullopt;  // 부서명뿐이다
-                }
+        std::u32string word;
+        for (auto i = span.first(); i <= span.last(); ++i) {
+            word.push_back(span.at(i));
+        }
+        for (const auto d : department_endings) {
+            if (word.size() > d.size() && word.ends_with(d) && is_generic_compound(std::u32string_view(word).substr(0, word.size() - d.size()))) {
+                return std::nullopt;  // 부서명뿐이다
             }
         }
     }
