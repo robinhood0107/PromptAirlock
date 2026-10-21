@@ -7,7 +7,8 @@ add_library(prompt_airlock_ner
   model_files.cpp
   session.cpp
   sha256.cpp
-  tokenizer.cpp)
+  tokenizer.cpp
+  windows.cpp)
 target_include_directories(prompt_airlock_ner PUBLIC "${PROJECT_SOURCE_DIR}/include")
 target_link_libraries(prompt_airlock_ner
   PUBLIC prompt_airlock_core prompt_airlock_detect
