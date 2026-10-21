@@ -63,6 +63,7 @@ find_package(nlohmann_json CONFIG REQUIRED)
 foreach(name IN ITEMS
     ner_engine_test
     ner_model_files_test
+    ner_pool_test
     ner_session_test
     ner_sha256_test
     ner_tokenizer_test
