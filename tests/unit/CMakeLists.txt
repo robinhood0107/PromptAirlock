@@ -62,6 +62,7 @@ target_link_libraries(vault_client_types_test PRIVATE prompt_airlock_vault_clien
 # NER 시험. 모델·tokenizer 는 CMake 가 빌드 디렉터리 models/ner/ 에 받아 둔다(없으면 시험이 실패한다).
 find_package(nlohmann_json CONFIG REQUIRED)
 foreach(name IN ITEMS
+    ner_boundary_test
     ner_engine_test
     ner_fixture_test
     ner_model_files_test
