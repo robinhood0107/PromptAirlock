@@ -144,8 +144,16 @@ Result<VaultConnection> VaultConnection::connect(const Endpoint& ep, const AuthS
     if (!stream) {
         return std::unexpected(stream.error());
     }
+    return handshake(std::move(*stream), secret, opts);
+}
+
+Result<VaultConnection> VaultConnection::handshake(std::unique_ptr<ByteStream> stream, const AuthSecret& secret,
+                                                   const ConnectionOptions& opts) {
+    if (!stream) {
+        return fail(ErrorCode::ConnectFailed);
+    }
     auto impl = std::make_unique<Impl>();
-    impl->stream = std::move(*stream);
+    impl->stream = std::move(stream);
     impl->opts = opts;
     pb::Request req;
     const auto s = secret.bytes();
