@@ -24,7 +24,7 @@ struct Particle {
 };
 
 // 순서가 의미 있다: 긴 조사를 먼저 본다.
-constexpr std::array<Particle, 26> particles = {{
+constexpr std::array<Particle, 27> particles = {{
     {U"에게서", Cond::Any, 2}, {U"에게", Cond::Any, 2}, {U"께서", Cond::Any, 2}, {U"한테", Cond::Any, 2},
     {U"에서", Cond::Any, 2},   {U"까지", Cond::Any, 2}, {U"부터", Cond::Any, 2}, {U"처럼", Cond::Any, 2},
     {U"보다", Cond::Any, 2},   {U"이랑", Cond::NeedBatchim, 2}, {U"으로", Cond::BatchimNotRieul, 2},
@@ -33,7 +33,7 @@ constexpr std::array<Particle, 26> particles = {{
     {U"과", Cond::NeedBatchim, 2}, {U"와", Cond::NoBatchim, 2},   {U"랑", Cond::NoBatchim, 2},
     {U"로", Cond::NoBatchimOrRieul, 2},
     // 짝이 없는 한 음절 조사는 이름 음절과 겹치기 쉬워 더 긴 잔여를 요구한다.
-    {U"의", Cond::Any, 3}, {U"도", Cond::Any, 3}, {U"만", Cond::Any, 3},
+    {U"의", Cond::Any, 3}, {U"도", Cond::Any, 3}, {U"만", Cond::Any, 3}, {U"에", Cond::Any, 3},
     // 호칭
     {U"님", Cond::Any, 2}, {U"씨", Cond::Any, 2},
 }};

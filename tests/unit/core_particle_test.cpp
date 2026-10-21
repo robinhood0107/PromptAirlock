@@ -27,6 +27,7 @@ TEST(CoreParticle, StripsWhenBatchimAgrees) {
     EXPECT_EQ(trim("하늬솔님"), "하늬솔");
     EXPECT_EQ(trim("누리별테크가"), "누리별테크");
     EXPECT_EQ(trim("가온해운과"), "가온해운");
+    EXPECT_EQ(trim("누리별테크에"), "누리별테크");  // NER 구간을 어절까지 넓힌 뒤 붙어 오는 장소 조사
 }
 
 TEST(CoreParticle, KeepsNameWhenAgreementFails) {
@@ -35,6 +36,7 @@ TEST(CoreParticle, KeepsNameWhenAgreementFails) {
     EXPECT_EQ(trim("모가은이"), "모가은");
     EXPECT_EQ(trim("다현도"), "다현도");        // 짝 없는 '도' 는 3음절 이상 남을 때만
     EXPECT_EQ(trim("라온비도"), "라온비");
+    EXPECT_EQ(trim("가온에"), "가온에");        // 짝 없는 '에' 도 3음절 이상 남을 때만
     EXPECT_EQ(trim("가나"), "가나");
 }
 
