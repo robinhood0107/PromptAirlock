@@ -13,8 +13,14 @@ function(pa_add_fuzzer name)
   file(GLOB seeds "${CMAKE_CURRENT_SOURCE_DIR}/corpus/${name}/*")
   file(COPY ${seeds} DESTINATION "${corpus}")
 
+  # 바이너리 seed 는 공개 정책상 올릴 수 없으므로, 필요한 대상은 텍스트 사전(<이름>.dict)으로 시작 재료를 준다.
+  set(dict)
+  if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/${name}.dict")
+    set(dict "-dict=${CMAKE_CURRENT_SOURCE_DIR}/${name}.dict")
+  endif()
+
   add_test(NAME ${name}
-    COMMAND ${name} -max_total_time=${PA_FUZZ_SECONDS} -timeout=5 -rss_limit_mb=2048 -seed=20261005
+    COMMAND ${name} -max_total_time=${PA_FUZZ_SECONDS} -timeout=5 -rss_limit_mb=2048 -seed=20261005 ${dict}
             -artifact_prefix=${artifacts}/${name}- "${corpus}")
   math(EXPR limit "${PA_FUZZ_SECONDS} + 60")
   set_tests_properties(${name} PROPERTIES TIMEOUT ${limit} LABELS fuzz)
@@ -28,3 +34,5 @@ pa_add_fuzzer(fuzz_detect)
 target_link_libraries(fuzz_detect PRIVATE prompt_airlock_detect)
 pa_add_fuzzer(fuzz_encoded)
 target_link_libraries(fuzz_encoded PRIVATE prompt_airlock_detect)
+pa_add_fuzzer(fuzz_vault_frame)
+target_link_libraries(fuzz_vault_frame PRIVATE prompt_airlock_vault_client)
