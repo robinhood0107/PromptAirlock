@@ -20,7 +20,7 @@
 
 `main`에는 PR 요구, 선형 이력, review 대화 해결 요구를 적용하며 force push와 삭제를 금지합니다. 관리자에게도 같은 규칙을 적용합니다.
 
-초기 1인 운영 단계에서는 필수 reviewer 승인 수를 0으로 둡니다. 공개 자료 검사는 `publication-policy` status로 필수화합니다. 제품 build/test CI는 실제 job을 검증한 뒤 추가합니다. 협업자가 참여하면 필수 승인 수와 code ownership을 재검토합니다.
+초기 1인 운영 단계에서는 필수 reviewer 승인 수를 0으로 둡니다. 공개 자료 검사는 `publication-policy` status로 필수화합니다. 제품 build/test CI(`linux-gcc14`)도 필수 status입니다. 협업자가 참여하면 필수 승인 수와 code ownership을 재검토합니다.
 
 ## 공개 자료 검사
 
