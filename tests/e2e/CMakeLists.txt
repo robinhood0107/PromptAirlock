@@ -12,3 +12,10 @@ target_link_libraries(vault_pipeline_test PRIVATE prompt_airlock_detect prompt_a
                       nlohmann_json::nlohmann_json)
 target_compile_definitions(vault_pipeline_test PRIVATE PA_NER_MODEL_DIR="${PA_NER_MODEL_DIR}"
                            PA_NER_FIXTURE_DIR="${PROJECT_SOURCE_DIR}/tests/fixtures/ner")
+
+# HTTP 로 끝까지(HTTPS 게이트웨이 + 실제 Vault·NER + mock provider).
+pa_add_gtest(gateway_http_test gateway_http_test.cpp)
+target_link_libraries(gateway_http_test PRIVATE prompt_airlock_gateway prompt_airlock_provider prompt_airlock_tls
+                      prompt_airlock_vault_client prompt_airlock_ner pa_mock_provider pa_test_cert nlohmann_json::nlohmann_json)
+target_compile_definitions(gateway_http_test PRIVATE "PA_VAULT_EXE=\"${PA_VAULT_EXE}\"" PA_NER_MODEL_DIR="${PA_NER_MODEL_DIR}")
+add_dependencies(gateway_http_test prompt_airlock_vault)
