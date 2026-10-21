@@ -1,6 +1,7 @@
 #include "prompt_airlock/detect/detectors.hpp"
 
 #include <algorithm>
+#include <optional>
 #include <string>
 
 #include "data/account_context_terms.hpp"
@@ -12,9 +13,26 @@
 #include "rules.hpp"
 
 namespace prompt_airlock::detect {
+namespace {
 
-Detectors::Detectors(TermMatcher internal_terms)
+// NER 결과(원문 byte)를 보기의 글자 구간으로 되돌린다. 구간 끝이 보기 글자 경계와 맞지 않으면 nullopt.
+[[nodiscard]] std::optional<rules::Hit> to_hit(const DetectionView& view, const core::EntitySpan& entity) {
+    const auto begin = entity.span().begin();
+    const auto end = entity.span().end();
+    const auto first = std::ranges::find_if(view.units, [&](const auto& u) { return u.source.begin() == begin; });
+    const auto last = std::ranges::find_if(view.units, [&](const auto& u) { return u.source.end() == end; });
+    if (first == view.units.end() || last == view.units.end() || last < first) {
+        return std::nullopt;
+    }
+    return rules::Hit{static_cast<std::uint32_t>(first - view.units.begin()),
+                      static_cast<std::uint32_t>(last - view.units.begin()), entity.type(), entity.detector()};
+}
+
+}  // namespace
+
+Detectors::Detectors(TermMatcher internal_terms, std::shared_ptr<const NerScanner> ner)
     : internal_terms_(std::move(internal_terms)),
+      ner_(std::move(ner)),
       account_context_(TermMatcher::make(data::account_context_terms)),
       secret_markers_(TermMatcher::make(data::secret_markers)),
       user_markers_(TermMatcher::make(data::user_markers)),
@@ -29,7 +47,8 @@ Detectors::Detectors(TermMatcher internal_terms)
       honorifics_(TermMatcher::make(data::honorific_suffixes)),
       self_statements_(TermMatcher::make(data::self_statements)) {}
 
-std::expected<Detectors, core::InputError> Detectors::make(std::span<const std::string_view> internal_terms) {
+std::expected<Detectors, core::InputError> Detectors::make(std::span<const std::string_view> internal_terms,
+                                                         std::shared_ptr<const NerScanner> ner) {
     // 보호어도 보기와 같은 정규화를 거쳐야 같은 글자로 비교된다.
     std::vector<std::u32string> normalized;
     normalized.reserve(internal_terms.size());
@@ -50,7 +69,7 @@ std::expected<Detectors, core::InputError> Detectors::make(std::span<const std::
         normalized.push_back(std::move(text));
     }
     const std::vector<std::u32string_view> views(normalized.begin(), normalized.end());
-    return Detectors(TermMatcher::make(views));
+    return Detectors(TermMatcher::make(views), std::move(ner));
 }
 
 std::expected<std::vector<core::EntitySpan>, core::DetectError> Detectors::detect_segment(
@@ -82,7 +101,20 @@ std::expected<std::vector<core::EntitySpan>, core::DetectError> Detectors::scan(
     for (const auto& hit : internal_terms_.find(*view)) {
         hits.push_back({hit.first_unit, hit.last_unit, core::EntityType::InternalTerm, core::DetectorKind::InternalTerm});
     }
-    // 민감정보는 앞의 결과(식별 정보)를 개인 표지로 쓰므로 마지막에 돈다.
+    if (ner_) {
+        const auto names = ner_->scan(text, segment, *view);
+        if (!names) {
+            return std::unexpected(names.error());
+        }
+        for (const auto& name : *names) {
+            const auto hit = to_hit(*view, name);
+            if (!hit) {
+                return std::unexpected(core::DetectError::InvalidSpan);
+            }
+            hits.push_back(*hit);
+        }
+    }
+    // 민감정보는 앞의 결과(식별 정보, NER 사람 이름 포함)를 개인 표지로 쓰므로 마지막에 돈다.
     const std::vector<rules::Hit> identities = hits;
     rules::find_sensitive(*view, chars, {sensitive_categories_, honorifics_, self_statements_}, identities, hits, tally);
     std::ranges::sort(hits);
