@@ -34,14 +34,14 @@ struct Found {
     bool operator==(const Found&) const = default;
 };
 
-std::expected<std::vector<pc::EntitySpan>, pn::NerError> detect_all(const std::string& text) {
+std::expected<std::vector<pc::EntitySpan>, pn::NerError> detect_once(const std::string& text) {
     const auto view = pd::make_view(text);
     EXPECT_TRUE(view);
     return engine().detect(text, pc::SegmentIndex{0}, *view, {0, static_cast<std::uint32_t>(view->units.size())});
 }
 
 std::vector<Found> found(const std::string& text) {
-    const auto spans = detect_all(text);
+    const auto spans = detect_once(text);
     EXPECT_TRUE(spans);
     std::vector<Found> out;
     for (const auto& e : *spans) {
@@ -100,7 +100,7 @@ TEST(NerEngine, TwoNamesWrittenTogetherBecomeOneSpan) {
 
 TEST(NerEngine, EveryResultIsMarkedNerAndValidAgainstTheText) {
     const std::string text = "푸른바다물산 대표 박서준은 하람대학교를 졸업했다.";
-    const auto spans = detect_all(text);
+    const auto spans = detect_once(text);
     ASSERT_TRUE(spans);
     ASSERT_FALSE(spans->empty());
     for (const auto& e : *spans) {
@@ -121,7 +121,7 @@ TEST(NerEngine, FixtureOffsetsMapBackToOriginalBytes) {
     std::size_t org_gold = 0;
     std::size_t org_hit = 0;
     for (const auto& f : fixtures()) {
-        const auto spans = detect_all(f.text);
+        const auto spans = detect_once(f.text);
         ASSERT_TRUE(spans) << f.id;
         std::vector<Found> got;
         for (const auto& e : *spans) {
@@ -156,7 +156,7 @@ TEST(NerEngine, DecomposedHangulMapsBackToTheOriginalJamo) {
         "\xE1\x84\x89\xE1\x85\xAE"                   // 수
         "\xE1\x84\x80\xE1\x85\xA1";                  // 가
     const std::string text = nfd + " 내일 회의에 참석합니다.";
-    const auto spans = detect_all(text);
+    const auto spans = detect_once(text);
     ASSERT_TRUE(spans);
     ASSERT_EQ(spans->size(), 1u);
     EXPECT_EQ(spans->front().span().begin().value(), 0u);
@@ -193,7 +193,7 @@ TEST(NerEngine, InvalidRangeIsRejected) {
 }
 
 TEST(NerEngine, SpecialTokenTextInThePromptIsJustText) {
-    const auto spans = detect_all("김민수 [SEP] [CLS] [PAD] 이영희가 왔다");
+    const auto spans = detect_once("김민수 [SEP] [CLS] [PAD] 이영희가 왔다");
     ASSERT_TRUE(spans);
     for (const auto& e : *spans) {
         EXPECT_EQ(e.detector(), pc::DetectorKind::Ner);
@@ -205,9 +205,64 @@ TEST(NerEngine, OverTheTokenLimitIsRejectedNotTruncated) {
     for (int i = 0; i < 400; ++i) {
         big += "김민수는 누리별테크에 다닌다. ";
     }
-    const auto spans = detect_all(big);
+    const auto spans = detect_once(big);
     ASSERT_FALSE(spans);
     EXPECT_EQ(spans.error(), pn::NerError::InputTooLong);
+}
+
+std::vector<pc::EntitySpan> detect_windows(const std::string& text) {
+    const auto view = pd::make_view(text);
+    EXPECT_TRUE(view);
+    auto spans = engine().detect_all(text, pc::SegmentIndex{0}, *view);
+    EXPECT_TRUE(spans);
+    return spans.value_or(std::vector<pc::EntitySpan>{});
+}
+
+// 원문에서 needle 이 나온 모든 자리가 같은 종류의 결과 하나에 덮이는지.
+void expect_every_occurrence_found(const std::string& text, const std::vector<pc::EntitySpan>& spans,
+                                   const std::string& needle, pc::EntityType type) {
+    std::size_t count = 0;
+    for (auto at = text.find(needle); at != std::string::npos; at = text.find(needle, at + 1)) {
+        ++count;
+        const bool covered = std::ranges::any_of(spans, [&](const pc::EntitySpan& e) {
+            return e.type() == type && e.span().begin().value() <= at &&
+                   at + needle.size() <= e.span().begin().value() + e.span().size();
+        });
+        EXPECT_TRUE(covered) << needle << " @" << at;
+    }
+    EXPECT_GT(count, 0u);
+}
+
+TEST(NerEngine, LongTextIsSplitIntoSentenceWindows) {
+    std::string big;
+    for (int i = 0; i < 120; ++i) {
+        big += "김민수는 누리별테크에 다닌다.\n";
+    }
+    ASSERT_EQ(detect_once(big).error(), pn::NerError::InputTooLong);  // 한 번에는 못 본다
+    const auto spans = detect_windows(big);
+    expect_every_occurrence_found(big, spans, "김민수", pc::EntityType::Person);
+    expect_every_occurrence_found(big, spans, "누리별테크", pc::EntityType::Organization);
+    EXPECT_EQ(spans.size(), 240u);  // 겹친 창이 없으니 중복도 없다
+}
+
+TEST(NerEngine, LongSentenceWithoutStopsStillFindsNamesAtWindowEdges) {
+    // 문장 끝이 없는 긴 글은 32 토큰씩 겹쳐 밀며 본다. 이름이 창 경계 어디에 걸려도 한 창 안에서 온전히 보인다.
+    std::string big;
+    for (int i = 0; i < 60; ++i) {
+        big += "오늘 회의에서 박서준 씨가 발표를 했고 ";
+    }
+    const auto spans = detect_windows(big);
+    expect_every_occurrence_found(big, spans, "박서준", pc::EntityType::Person);
+}
+
+TEST(NerEngine, TooManyWindowsIsRefusedBeforeInference) {
+    std::string big;
+    for (int i = 0; i < 30'000; ++i) {
+        big += "가 ";
+    }
+    const auto view = pd::make_view(big);
+    ASSERT_TRUE(view);
+    EXPECT_EQ(engine().detect_all(big, pc::SegmentIndex{0}, *view).error(), pn::NerError::TooManyWindows);
 }
 
 TEST(NerEngine, MissingOrChangedModelFilesMeanUnavailable) {
