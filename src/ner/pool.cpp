@@ -47,7 +47,7 @@ struct NerPool::State {
     bool stopping = false;
 };
 
-NerPool::NerPool(std::vector<NerEngine> engines, std::size_t queue_depth)
+NerPool::NerPool(Key, std::vector<NerEngine> engines, std::size_t queue_depth)
     : state_(std::make_unique<State>()), engines_(std::move(engines)) {
     state_->depth = queue_depth;
 }
@@ -75,7 +75,7 @@ std::expected<std::shared_ptr<NerPool>, pc::DetectError> NerPool::make(const std
             engines.push_back(std::move(*engine));
         }
     }
-    std::shared_ptr<NerPool> pool(new NerPool(std::move(engines), queue_depth));
+    auto pool = std::make_shared<NerPool>(Key{}, std::move(engines), queue_depth);
     try {
         pool->threads_.reserve(workers);
         for (auto& engine : pool->engines_) {

@@ -25,17 +25,19 @@ enum class SessionError : std::uint8_t { Load, Run, BadOutput };
 
 // ORT 전역 환경. 프로세스에 하나만 만들어 세션들이 함께 쓴다. 세션이 shared_ptr 로 붙잡아 세션보다 먼저 사라지지 않는다.
 class OrtEnv {
+    struct Impl;
+    struct Key {};  // create 밖에서 생성자를 부르지 못하게 하는 열쇠
+
 public:
     [[nodiscard]] static std::expected<std::shared_ptr<const OrtEnv>, SessionError> create();
 
+    OrtEnv(Key, std::unique_ptr<Impl> impl) noexcept;
     OrtEnv(const OrtEnv&) = delete;
     OrtEnv& operator=(const OrtEnv&) = delete;
     ~OrtEnv();
 
 private:
     friend class OrtSession;
-    struct Impl;
-    explicit OrtEnv(std::unique_ptr<Impl> impl) noexcept;
 
     std::unique_ptr<Impl> impl_;
 };

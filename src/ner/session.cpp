@@ -13,12 +13,12 @@ struct OrtEnv::Impl {
     Ort::Env env{ORT_LOGGING_LEVEL_ERROR, "prompt-airlock-ner"};
 };
 
-OrtEnv::OrtEnv(std::unique_ptr<Impl> impl) noexcept : impl_(std::move(impl)) {}
+OrtEnv::OrtEnv(Key, std::unique_ptr<Impl> impl) noexcept : impl_(std::move(impl)) {}
 OrtEnv::~OrtEnv() = default;
 
 std::expected<std::shared_ptr<const OrtEnv>, SessionError> OrtEnv::create() {
     try {
-        return std::shared_ptr<const OrtEnv>(new OrtEnv(std::make_unique<Impl>()));
+        return std::make_shared<const OrtEnv>(Key{}, std::make_unique<Impl>());
     } catch (const std::exception&) {
         return std::unexpected(SessionError::Load);
     }
