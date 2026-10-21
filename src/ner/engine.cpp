@@ -188,7 +188,8 @@ std::expected<void, NerError> NerEngine::infer(std::string_view text, pc::Segmen
         if (!bytes) {
             continue;  // 부호만 잡은 것은 이름이 아니다
         }
-        const auto entity = pc::EntitySpan::make(text, segment, *bytes, run.type, pc::DetectorKind::Ner);
+        const auto type = corrected_type(view, *bytes, run.type);
+        const auto entity = pc::EntitySpan::make(text, segment, *bytes, type, pc::DetectorKind::Ner);
         if (!entity) {
             return std::unexpected(NerError::InvalidSpan);
         }

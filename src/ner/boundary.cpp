@@ -5,11 +5,13 @@
 #include <array>
 #include <cstddef>
 #include <optional>
+#include <string>
 #include <string_view>
 #include <utility>
 #include <vector>
 
 #include "prompt_airlock/core/particle.hpp"
+#include "prompt_airlock/detect/organization.hpp"
 
 namespace prompt_airlock::ner {
 namespace {
@@ -243,6 +245,20 @@ void skip_legal_prefix(const detect::DetectionView& view, Span& span) {
 }
 
 }  // namespace
+
+pc::EntityType corrected_type(const detect::DetectionView& view, pc::ByteSpan span, pc::EntityType type) {
+    if (type != pc::EntityType::Person) {
+        return type;
+    }
+    std::u32string word;
+    for (const auto& u : view.units) {
+        if (span.contains(u.source)) {
+            word.push_back(u.value);
+        }
+    }
+    const auto tail = detect::org_tail_length(word, detect::OrgTails::Broad);
+    return tail > 0 && word.size() >= tail + min_name ? pc::EntityType::Organization : type;
+}
 
 std::optional<pc::ByteSpan> name_span(const detect::DetectionView& view, std::uint32_t first, std::uint32_t last,
                                       pc::EntityType type) {

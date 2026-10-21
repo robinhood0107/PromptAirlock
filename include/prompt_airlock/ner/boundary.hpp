@@ -20,4 +20,9 @@ namespace prompt_airlock::ner {
 [[nodiscard]] std::optional<core::ByteSpan> name_span(const detect::DetectionView& view, std::uint32_t first,
                                                       std::uint32_t last, core::EntityType type);
 
+// 모델이 사람으로 본 구간이 기관 꼬리(디자인, 제약 등)로 끝나고 앞말이 두 글자 이상이면 기관으로 바꾼다(도담디자인).
+// 이름은 어느 종류로든 가려지지만, 종류가 맞아야 가명 라벨과 정답 비교가 맞는다.
+[[nodiscard]] core::EntityType corrected_type(const detect::DetectionView& view, core::ByteSpan span,
+                                              core::EntityType type);
+
 }  // namespace prompt_airlock::ner

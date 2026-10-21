@@ -70,6 +70,18 @@ TEST(NerBoundary, LegalFormsAndDepartmentsAreDroppedFromOrganizations) {
     EXPECT_EQ(trimmed("하람대학교 산학협력단에 공유했다.", "하람대학교 산학협력단", org), "하람대학교");
 }
 
+TEST(NerBoundary, PersonSpansEndingInAnOrganizationTailBecomeOrganizations) {
+    const auto type_of = [](const std::string& text, const std::string& name) {
+        const auto view = pd::make_view(text);
+        const auto at = text.find(name);
+        const auto span = *pc::ByteSpan::make(pc::Utf8ByteOffset{at}, pc::Utf8ByteOffset{at + name.size()});
+        return pn::corrected_type(*view, span, pc::EntityType::Person);
+    };
+    EXPECT_EQ(type_of("우리 팀은 도담디자인에 다닌다.", "도담디자인"), pc::EntityType::Organization);
+    EXPECT_EQ(type_of("김민수가 왔다.", "김민수"), pc::EntityType::Person);
+    EXPECT_EQ(type_of("이제약을 먹었다.", "이제약"), pc::EntityType::Person);  // 앞말이 한 글자뿐이면 그대로
+}
+
 TEST(NerBoundary, DepartmentAloneIsNotAnOrganization) {
     // 보호한 글을 다시 탐지할 때 token 옆 부서명만 기관으로 잡히는 모양.
     EXPECT_EQ(trimmed("⟦ORGANIZATION_KTSEN3ZBEC⟧ 영업본부가 실적을 발표했다.", "영업본부가", org), "<none>");
