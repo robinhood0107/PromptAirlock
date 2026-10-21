@@ -80,8 +80,12 @@ TEST(DetectNer, WithoutNerOnlyRulesRun) {
 TEST(DetectNer, NerFailureFailsTheWholeDetection) {
     for (const auto error : {pc::DetectError::Unavailable, pc::DetectError::Overloaded}) {
         const auto d = with_ner(std::make_shared<FakeNer>("김민수", error));
-        EXPECT_EQ(d.detect_segment("아무 글", pc::SegmentIndex{0}).error(), error);
-        EXPECT_EQ(d.detect(document("아무 글")).error(), error);
+        const auto segment = d.detect_segment("아무 글", pc::SegmentIndex{0});
+        const auto whole = d.detect(document("아무 글"));
+        ASSERT_FALSE(segment);
+        ASSERT_FALSE(whole);
+        EXPECT_EQ(segment.error(), error);
+        EXPECT_EQ(whole.error(), error);
     }
 }
 
