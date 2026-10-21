@@ -6,6 +6,7 @@
 #include <chrono>
 #include <cstdint>
 #include <filesystem>
+#include <fstream>
 #include <functional>
 #include <memory>
 #include <optional>
@@ -14,6 +15,8 @@
 #include <string_view>
 #include <utility>
 #include <vector>
+
+#include <nlohmann/json.hpp>
 
 #include "prng.hpp"
 #include "prompt_airlock/core/grade.hpp"
@@ -352,4 +355,37 @@ TEST(VaultPipelineE2E, MissingModelMeansNoPoolToStartWith) {
     // 모델이 없으면 pool 을 만들 수 없어 게이트웨이가 NER 없이 뜨는 일이 없다(조립 단계에서 실패).
     EXPECT_EQ(pn::NerPool::make(std::filesystem::path(PA_NER_MODEL_DIR) / "none").error(),
               pc::DetectError::Unavailable);
+}
+
+TEST(VaultPipelineE2E, EveryNerFixturePassesTheResidualCheck) {
+    // 이름을 token 으로 바꾸면 문맥이 달라진다. 보호 뒤 다시 돌린 NER 이 token 주변을 새 이름으로 보면
+    // 정상 요청이 잔여 검사에서 거절된다. 합성 60문장 전부가 통과하는지 본다.
+    // 정답 이름 원문이 그대로 밖으로 나간 수도 센다. 7-1 측정에서 놓친 3개(사람 1, 기관 2)는 경계가 다른 것이라
+    // 원문 전체가 나가지는 않아 지금은 0 이다. 모델과 입력이 고정이라 결과도 고정이므로 0 을 기준으로 둔다.
+    ASSERT_TRUE(real_ner());
+    Gateway gateway(0ms, real_ner());
+    std::ifstream in(std::filesystem::path(PA_NER_FIXTURE_DIR) / "ner.jsonl", std::ios::binary);
+    std::string line;
+    int checked = 0;
+    int missed = 0;
+    while (std::getline(in, line)) {
+        if (line.empty()) {
+            continue;
+        }
+        const auto j = nlohmann::json::parse(line);
+        const auto text = j.at("text").get<std::string>();
+        auto request = gateway.send({{MessageRole::User, text}});
+        ++checked;
+        if (!request.result) {
+            ADD_FAILURE() << j.at("id").get<std::string>() << " " << pc::reason_code_name(request.result.error().code());
+            continue;
+        }
+        for (const auto& e : j.at("entities")) {
+            const auto name = e.at("text").get<std::string>();
+            missed += contains(request.sent, name) ? 1 : 0;
+        }
+    }
+    EXPECT_EQ(checked, 60);
+    RecordProperty("missed_names", missed);
+    EXPECT_EQ(missed, 0);
 }
