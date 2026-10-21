@@ -66,19 +66,21 @@ NerEngine::NerEngine(WordPieceTokenizer tokenizer, OrtSession session, std::vect
 
 std::expected<NerEngine, pc::DetectError> NerEngine::make(const std::filesystem::path& dir) {
     const auto files = read_verified_model_files(dir);
-    if (!files) {
+    auto env = OrtEnv::create();
+    if (!files || !env) {
         return std::unexpected(pc::DetectError::Unavailable);
     }
-    return make(*files);
+    return make(*files, std::move(*env));
 }
 
-std::expected<NerEngine, pc::DetectError> NerEngine::make(const VerifiedModelFiles& files) {
+std::expected<NerEngine, pc::DetectError> NerEngine::make(const VerifiedModelFiles& files,
+                                                          std::shared_ptr<const OrtEnv> env) {
     auto tokenizer = WordPieceTokenizer::parse(files.tokenizer);
     auto labels = parse_labels(files.config);
     if (!tokenizer || !labels) {
         return std::unexpected(pc::DetectError::Unavailable);
     }
-    auto session = OrtSession::create(files.model);
+    auto session = OrtSession::create(std::move(env), files.model);
     if (!session) {
         return std::unexpected(pc::DetectError::Unavailable);
     }

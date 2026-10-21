@@ -18,6 +18,11 @@ const pn::VerifiedModelFiles& files() {
     return *loaded;
 }
 
+std::shared_ptr<const pn::OrtEnv> env() {
+    static const auto made = pn::OrtEnv::create();
+    return *made;
+}
+
 std::vector<std::int64_t> ids_for(std::string_view text) {
     static const auto tokenizer = pn::WordPieceTokenizer::parse(files().tokenizer);
     const auto units = pc::decode_utf8(text);
@@ -31,7 +36,7 @@ std::vector<std::int64_t> ids_for(std::string_view text) {
 }  // namespace
 
 TEST(NerSession, RunsTheVerifiedModel) {
-    auto session = pn::OrtSession::create(files().model);
+    auto session = pn::OrtSession::create(env(), files().model);
     ASSERT_TRUE(session);
     const auto ids = ids_for("김민수가 내일 회의에 참석합니다.");
     const auto logits = session->run(ids);
@@ -45,7 +50,7 @@ TEST(NerSession, RunsTheVerifiedModel) {
 }
 
 TEST(NerSession, SameInputGivesSameLogits) {
-    auto session = pn::OrtSession::create(files().model);
+    auto session = pn::OrtSession::create(env(), files().model);
     ASSERT_TRUE(session);
     const auto ids = ids_for("박서준을 만났다.");
     const auto first = session->run(ids);
@@ -56,21 +61,31 @@ TEST(NerSession, SameInputGivesSameLogits) {
 }
 
 TEST(NerSession, MovedSessionStillRuns) {
-    auto created = pn::OrtSession::create(files().model);
+    auto created = pn::OrtSession::create(env(), files().model);
     ASSERT_TRUE(created);
     pn::OrtSession moved = std::move(*created);
     EXPECT_TRUE(moved.run(ids_for("이영희는 보고서를 제출했다.")));
 }
 
+TEST(NerSession, SessionsShareOneEnvironment) {
+    auto first = pn::OrtSession::create(env(), files().model);
+    auto second = pn::OrtSession::create(env(), files().model);
+    ASSERT_TRUE(first);
+    ASSERT_TRUE(second);
+    const auto ids = ids_for("김민수가 왔다.");
+    EXPECT_EQ(first->run(ids)->values, second->run(ids)->values);
+    EXPECT_EQ(pn::OrtSession::create(nullptr, files().model).error(), pn::SessionError::Load);
+}
+
 TEST(NerSession, InvalidModelBytesAreRejectedAsValues) {
     const std::vector<std::byte> garbage(64, std::byte{0x42});
-    ASSERT_FALSE(pn::OrtSession::create(garbage));
-    EXPECT_EQ(pn::OrtSession::create(garbage).error(), pn::SessionError::Load);
-    EXPECT_EQ(pn::OrtSession::create({}).error(), pn::SessionError::Load);
+    ASSERT_FALSE(pn::OrtSession::create(env(), garbage));
+    EXPECT_EQ(pn::OrtSession::create(env(), garbage).error(), pn::SessionError::Load);
+    EXPECT_EQ(pn::OrtSession::create(env(), {}).error(), pn::SessionError::Load);
 }
 
 TEST(NerSession, EmptyInputFailsAsAValue) {
-    auto session = pn::OrtSession::create(files().model);
+    auto session = pn::OrtSession::create(env(), files().model);
     ASSERT_TRUE(session);
     const std::vector<std::int64_t> none;
     const auto logits = session->run(none);
@@ -79,7 +94,7 @@ TEST(NerSession, EmptyInputFailsAsAValue) {
 }
 
 TEST(NerSession, OutOfVocabIdFailsAsAValue) {
-    auto session = pn::OrtSession::create(files().model);
+    auto session = pn::OrtSession::create(env(), files().model);
     ASSERT_TRUE(session);
     const std::vector<std::int64_t> ids{2, 9'999'999, 3};
     EXPECT_FALSE(session->run(ids));

@@ -45,8 +45,10 @@ struct NerLabel {
 class NerEngine {
 public:
     // dir 의 세 파일이 고정 해시와 같고 모델을 읽을 수 있어야 한다. 아니면 DetectError::Unavailable.
+    // 엔진 하나짜리 편의 함수라 ORT 환경을 따로 만든다. 여러 엔진은 아래 함수로 환경을 함께 쓴다.
     [[nodiscard]] static std::expected<NerEngine, core::DetectError> make(const std::filesystem::path& dir);
-    [[nodiscard]] static std::expected<NerEngine, core::DetectError> make(const VerifiedModelFiles& files);
+    [[nodiscard]] static std::expected<NerEngine, core::DetectError> make(const VerifiedModelFiles& files,
+                                                                          std::shared_ptr<const OrtEnv> env);
 
     // text 는 view 를 만든 원문, segment 는 그 순번이다. 결과는 위치 순이며 모두 DetectorKind::Ner 다.
     // 한 세션은 한 번에 한 스레드만 쓰므로 호출자가 직렬화한다.

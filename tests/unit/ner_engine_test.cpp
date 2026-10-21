@@ -227,7 +227,7 @@ TEST(NerEngine, UnreadableLabelConfigMeansUnavailable) {
                                      R"({"id2label":{"x":"O"}})", "not json"}) {
         auto changed = *files;
         changed.config = config;  // 확인 뒤에 바뀐 값을 넣어 label 해석만 따로 시험한다
-        EXPECT_EQ(pn::NerEngine::make(changed).error(), pc::DetectError::Unavailable) << config;
+        EXPECT_EQ(pn::NerEngine::make(changed, *pn::OrtEnv::create()).error(), pc::DetectError::Unavailable) << config;
     }
 }
 
@@ -236,7 +236,7 @@ TEST(NerEngine, LabelCountMismatchIsUnavailable) {
     ASSERT_TRUE(files);
     // 모델은 label 59개를 낸다. 설정이 다른 개수를 말하면 추론 결과를 해석하지 않고 거절한다.
     files->config = R"({"id2label":{"0":"O","1":"B-NAME","2":"I-NAME","3":"B-ORGANIZATION","4":"I-ORGANIZATION"}})";
-    auto small = pn::NerEngine::make(*files);
+    auto small = pn::NerEngine::make(*files, *pn::OrtEnv::create());
     ASSERT_TRUE(small);
     const std::string text = "김민수가 왔다";
     const auto view = pd::make_view(text);
