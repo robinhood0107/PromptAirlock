@@ -27,3 +27,15 @@ if(PA_WITH_VAULT)
   add_dependencies(ner_measure prompt_airlock_vault)
 endif()
 pa_copy_runtime_dlls(ner_measure)
+
+# HTTP 로 끝까지 지연·처리량(Phase 8a). 실제 Vault 와 NER 모델, 같은 프로세스의 mock provider 를 쓴다.
+if(PA_WITH_VAULT)
+  add_executable(gateway_measure EXCLUDE_FROM_ALL gateway_measure.cpp)
+  target_link_libraries(gateway_measure PRIVATE prompt_airlock_gateway prompt_airlock_provider prompt_airlock_tls
+                        prompt_airlock_vault_client prompt_airlock_ner pa_mock_provider pa_test_cert pa_options
+                        nlohmann_json::nlohmann_json)
+  target_compile_definitions(gateway_measure PRIVATE PA_NER_MODEL_DIR="${PA_NER_MODEL_DIR}"
+    "PA_VAULT_EXE=\"${CMAKE_BINARY_DIR}/cargo/release/prompt-airlock-vault${CMAKE_EXECUTABLE_SUFFIX}\"")
+  add_dependencies(gateway_measure prompt_airlock_vault)
+  pa_copy_runtime_dlls(gateway_measure)
+endif()
