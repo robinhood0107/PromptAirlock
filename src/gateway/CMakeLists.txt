@@ -1,8 +1,9 @@
 find_package(nlohmann_json CONFIG REQUIRED)
 find_package(boost_asio CONFIG REQUIRED)
 
-# HTTP 입구(ADR 0020): 설정.
+# HTTP 입구(ADR 0020): 설정, 출처 인증.
 add_library(prompt_airlock_gateway
+  auth.cpp
   config.cpp)
 target_include_directories(prompt_airlock_gateway PUBLIC "${PROJECT_SOURCE_DIR}/include")
 target_link_libraries(prompt_airlock_gateway
