@@ -43,6 +43,8 @@ Shape entry_shape(EntryError error) {
             return {400, "invalid_request_error", "bad_request", "Malformed HTTP request."};
         case EntryError::Unavailable:
             return {503, "api_error", "unavailable", "The gateway cannot process requests right now."};
+        case EntryError::ProviderFailed:
+            return {502, "api_error", "provider_error", "The upstream model did not return a usable response."};
     }
     return {500, "api_error", "internal_error", "Internal error."};
 }
