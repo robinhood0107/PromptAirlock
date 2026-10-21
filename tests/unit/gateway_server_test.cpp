@@ -69,7 +69,8 @@ protected:
         if (server_) {
             server_->stop();
         }
-        io_.stop();
+        // io 를 강제로 멈추지 않고 남은 연결이 끝나 io.run 이 스스로 돌아오기를 기다린다.
+        // 강제로 멈추면 Windows 에서 다음 시험의 listen 이 드물게 WSAEFAULT 로 실패했다(100회 중 6~7회).
         if (thread_.joinable()) {
             thread_.join();
         }
