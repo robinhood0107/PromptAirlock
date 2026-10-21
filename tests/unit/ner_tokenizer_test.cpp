@@ -135,7 +135,10 @@ TEST(NerTokenizer, TokenUnitRangesReproduceTheirVocabPieces) {
                 want.erase(0, 2);
             }
             std::u32string got;
-            for (const auto& unit : pc::decode_utf8(want).value()) {
+            // 임시 expected 의 값을 직접 돌면 gcc-14 에서 매달린다(범위 for 의 임시 수명 연장은 C++23 부터).
+            const auto decoded = pc::decode_utf8(want);
+            ASSERT_TRUE(decoded);
+            for (const auto& unit : *decoded) {
                 got.push_back(unit.value);
             }
             ++checked;
