@@ -15,7 +15,19 @@
 | abseil(protobuf 가 씀) | 20260107.1 | Apache-2.0 | protobuf 내부 | Windows DLL, Linux 정적 |
 | utf8-range(protobuf 가 씀) | 6.33.4 | MIT | protobuf 내부 | 정적 |
 | boost-asio(와 Boost 하위 라이브러리) | 1.92.0 | BSL-1.0 | `src/vault_client`(Named Pipe·UDS 입출력) | 대부분 헤더, 일부 하위 라이브러리 링크 |
+| nlohmann-json | 3.12.0 | MIT | `src/ner`(tokenizer.json 읽기) | 헤더만 |
 | gtest | 1.18.0 | BSD-3-Clause | 시험만 | 배포하지 않음 |
+
+## 공식 배포본과 모델(CMake 가 고정 해시로 받음)
+
+vcpkg 포트가 아니라 고정 주소에서 받아 SHA-256 을 확인한 뒤에만 씁니다(ADR 0005, 0006). 실행 중에는 내려받지 않습니다.
+
+| 이름 | 판 | 라이선스 | 쓰는 곳 | 연결 방식 |
+|---|---|---|---|---|
+| ONNX Runtime(공식 배포본, Windows x64·Linux x64) | 1.30.0 | MIT | `src/ner`(NER 추론, CPU) | 공유 라이브러리(`cmake/OnnxRuntime.cmake`) |
+| NER 모델 `atonlee/koelectra-ko-pii-ner`(model.onnx fp32, tokenizer.json, config.json) | 커밋 `1e75c01e707232401883cf364151bbe2e560c708` | Apache-2.0 | `src/ner`(사람·기관 이름 찾기) | 데이터 파일, 실행 파일 옆 `models/ner/`(`cmake/NerModel.cmake`) |
+
+- 배포 묶음에는 ONNX Runtime 의 ThirdPartyNotices 와 모델 출처·저작자 고지를 함께 넣습니다. 모델 학습 데이터와 백본 가중치에 관한 남은 확인은 배포 전에 닫습니다.
 
 ## Rust Vault(`vault/crates/prompt-airlock-vault`)
 
