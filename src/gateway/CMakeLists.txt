@@ -8,6 +8,7 @@ add_library(prompt_airlock_gateway
   auth.cpp
   config.cpp
   error_body.cpp
+  request_json.cpp
   server.cpp)
 target_include_directories(prompt_airlock_gateway PUBLIC "${PROJECT_SOURCE_DIR}/include")
 target_link_libraries(prompt_airlock_gateway

@@ -87,7 +87,8 @@ target_link_libraries(tls_context_test PRIVATE prompt_airlock_tls pa_test_cert)
 foreach(name IN ITEMS
     gateway_auth_test
     gateway_config_test
-    gateway_error_body_test)
+    gateway_error_body_test
+    gateway_request_json_test)
   pa_add_gtest(${name} ${name}.cpp)
   target_link_libraries(${name} PRIVATE prompt_airlock_gateway nlohmann_json::nlohmann_json)
 endforeach()
