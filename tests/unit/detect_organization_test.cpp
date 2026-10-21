@@ -47,7 +47,7 @@ TEST(DetectOrganization, WordAfterALegalForm) {
 
 TEST(DetectOrganization, GenericWordsWithATailAreNotNames) {
     for (const std::string_view text : {"종합병원에 다녀왔다.", "시중은행 금리가 올랐다.", "병원 예약 시스템은 맑다.",
-                                        "국립대학교 입학 설명회", "신용카드 사용 내역", "대학교 입학 설명회", "제약 회사"}) {
+                                        "국립대학교 입학 설명회", "신용카드 사용 내역", "대학교 입학 설명회", "제약 회사", "목조건축 양식", "패스트푸드 매장"}) {
         EXPECT_TRUE(organizations(text).empty()) << text;
     }
 }

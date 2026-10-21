@@ -9,7 +9,9 @@ namespace prompt_airlock::detect {
 namespace {
 
 // 앞말 + 꼬리로만 기관이라고 정해도 되는 꼬리. 긴 것을 먼저 둔다.
-constexpr std::array<std::u32string_view, 38> strict_tails = {
+constexpr std::array<std::u32string_view, 51> strict_tails = {
+    U"인터내셔널", U"테크놀로지", U"커뮤니케이션즈", U"게임즈", U"리테일", U"미디어", U"스튜디오", U"인베스트", U"캐피탈",
+    U"자산운용", U"글로벌", U"건축", U"푸드",
     U"엔터테인먼트", U"정보기술", U"네트웍스", U"솔루션즈", U"시스템즈", U"파트너스", U"엔지니어링", U"대학교", U"대학원",
     U"의료원", U"연구소", U"연구원", U"홀딩스", U"컨설팅", U"컴퍼니", U"중공업", U"모터스", U"솔루션", U"시스템", U"바이오",
     U"코리아", U"소프트", U"랩스", U"병원", U"은행", U"증권", U"재단", U"협회", U"학회", U"공사", U"공단", U"그룹", U"전자",
@@ -17,13 +19,15 @@ constexpr std::array<std::u32string_view, 38> strict_tails = {
 };
 
 // 모델이 이미 찾은 구간의 종류만 바로잡을 때 더 받는 꼬리. 일반어와 붙어 쓰이기 쉬워 규칙 단독으로는 쓰지 않는다.
-constexpr std::array<std::u32string_view, 15> broad_extra_tails = {
+constexpr std::array<std::u32string_view, 19> broad_extra_tails = {
+    U"상사", U"자동차", U"엔터", U"제과",
     U"디자인", U"에너지", U"보험", U"카드", U"산업", U"통신", U"화학", U"물류", U"식품", U"항공", U"호텔", U"신문",
     U"방송", U"출판", U"학원",
 };
 
 // 꼬리 앞에 와도 고유한 이름이 아닌 일반어(종합병원, 시중은행, 국립대학교 등).
-constexpr std::array<std::u32string_view, 58> generic_heads = {
+constexpr std::array<std::u32string_view, 70> generic_heads = {
+    U"목조", U"현대", U"고층", U"친환경", U"전통", U"한옥", U"패스트", U"슬로", U"비건", U"건강", U"길거리", U"퓨전",
     U"종합", U"대형", U"중소", U"중견", U"시중", U"국책", U"지방", U"지역", U"국립", U"사립", U"공립", U"시립", U"도립",
     U"구립", U"민간", U"공공", U"정부", U"국영", U"해외", U"국내", U"외국", U"외국계", U"동네", U"근처", U"인근", U"주변",
     U"해당", U"일반", U"전문", U"주요", U"대학", U"부속", U"협력", U"관련", U"소속", U"거래", U"경쟁", U"신규", U"기존",
