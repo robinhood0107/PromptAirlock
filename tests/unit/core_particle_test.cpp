@@ -33,7 +33,10 @@ TEST(CoreParticle, StripsWhenBatchimAgrees) {
     EXPECT_EQ(trim("Lee가"), "Lee");
     EXPECT_EQ(trim("제윤호한테서"), "제윤호");
     EXPECT_EQ(trim("가온해운으로부터"), "가온해운");
-    EXPECT_EQ(trim("김하나"), "김하나");  // 짝 없는 '나' 도 3음절 이상 남을 때만  // NER 구간을 어절까지 넓힌 뒤 붙어 오는 장소 조사
+    EXPECT_EQ(trim("김하나"), "김하나");  // 짝 없는 '나' 도 3음절 이상 남을 때만
+    EXPECT_EQ(trim("견하랑"), "견하랑");  // 이름 끝 '랑' 은 조사로 떼지 않는다(세 글자 이상 남을 때만)
+    EXPECT_EQ(trim("견하랑과"), "견하랑");
+    EXPECT_EQ(trim("김민수랑"), "김민수");  // NER 구간을 어절까지 넓힌 뒤 붙어 오는 장소 조사
 }
 
 TEST(CoreParticle, KeepsNameWhenAgreementFails) {
