@@ -23,17 +23,24 @@ struct Particle {
     std::size_t min_remain;  // 잘라 낸 뒤 남아야 하는 최소 음절 수
 };
 
-// 순서가 의미 있다: 긴 조사를 먼저 본다.
-constexpr std::array<Particle, 27> particles = {{
-    {U"에게서", Cond::Any, 2}, {U"에게", Cond::Any, 2}, {U"께서", Cond::Any, 2}, {U"한테", Cond::Any, 2},
+// 순서가 의미 있다: 긴 조사를 먼저 본다. 목록은 표준 문법의 격조사·보조사 중 이름 뒤에 붙는 것이다.
+constexpr std::array<Particle, 47> particles = {{
+    {U"으로부터", Cond::BatchimNotRieul, 2}, {U"에서부터", Cond::Any, 2}, {U"에게서", Cond::Any, 2},
+    {U"한테서", Cond::Any, 2}, {U"로부터", Cond::NoBatchimOrRieul, 2}, {U"이라도", Cond::NeedBatchim, 2},
+    {U"에게", Cond::Any, 2}, {U"께서", Cond::Any, 2}, {U"한테", Cond::Any, 2},
     {U"에서", Cond::Any, 2},   {U"까지", Cond::Any, 2}, {U"부터", Cond::Any, 2}, {U"처럼", Cond::Any, 2},
-    {U"보다", Cond::Any, 2},   {U"이랑", Cond::NeedBatchim, 2}, {U"으로", Cond::BatchimNotRieul, 2},
+    {U"보다", Cond::Any, 2},   {U"마저", Cond::Any, 2}, {U"조차", Cond::Any, 2}, {U"밖에", Cond::Any, 2},
+    {U"만큼", Cond::Any, 2},   {U"하고", Cond::Any, 2}, {U"라도", Cond::NoBatchim, 2}, {U"이나", Cond::NeedBatchim, 2},
+    {U"이며", Cond::NeedBatchim, 2}, {U"이든", Cond::NeedBatchim, 2}, {U"이란", Cond::NeedBatchim, 2},
+    {U"이랑", Cond::NeedBatchim, 2}, {U"으로", Cond::BatchimNotRieul, 2},
     {U"은", Cond::NeedBatchim, 2}, {U"는", Cond::NoBatchim, 2}, {U"이", Cond::NeedBatchim, 2},
     {U"가", Cond::NoBatchim, 2},   {U"을", Cond::NeedBatchim, 2}, {U"를", Cond::NoBatchim, 2},
     {U"과", Cond::NeedBatchim, 2}, {U"와", Cond::NoBatchim, 2},   {U"랑", Cond::NoBatchim, 2},
     {U"로", Cond::NoBatchimOrRieul, 2},
     // 짝이 없는 한 음절 조사는 이름 음절과 겹치기 쉬워 더 긴 잔여를 요구한다.
     {U"의", Cond::Any, 3}, {U"도", Cond::Any, 3}, {U"만", Cond::Any, 3}, {U"에", Cond::Any, 3},
+    {U"께", Cond::Any, 3}, {U"나", Cond::NoBatchim, 3}, {U"며", Cond::NoBatchim, 3}, {U"든", Cond::NoBatchim, 3},
+    {U"란", Cond::NoBatchim, 3},
     // 호칭
     {U"님", Cond::Any, 2}, {U"씨", Cond::Any, 2},
 }};
