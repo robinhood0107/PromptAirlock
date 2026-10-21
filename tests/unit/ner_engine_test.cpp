@@ -93,6 +93,11 @@ TEST(NerEngine, SentenceWithoutNamesFindsNothing) {
     EXPECT_TRUE(found("오늘은 날씨가 맑고 바람이 시원합니다.").empty());
 }
 
+// 띄어 쓰지 않은 두 이름은 맞닿은 같은 종류라 하나로 묶인다(결합 규칙 그대로). 가명화 범위가 넓어질 뿐 빠지지는 않는다.
+TEST(NerEngine, TwoNamesWrittenTogetherBecomeOneSpan) {
+    EXPECT_EQ(found("김민수이영희가 회의에 왔다."), (std::vector<Found>{person("김민수이영희")}));
+}
+
 TEST(NerEngine, EveryResultIsMarkedNerAndValidAgainstTheText) {
     const std::string text = "푸른바다물산 대표 박서준은 하람대학교를 졸업했다.";
     const auto spans = detect_all(text);
