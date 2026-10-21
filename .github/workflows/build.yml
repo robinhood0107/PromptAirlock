@@ -47,6 +47,13 @@ jobs:
           # 의존성이 바뀌어도 이전 캐시의 패키지(gtest 등)는 다시 쓴다. vcpkg 는 패키지마다 따로 캐시한다.
           restore-keys: vcpkg-ubuntu-24.04-gcc14-
 
+      # ONNX Runtime 배포본과 NER 모델(약 70 MB)은 configure 때 _deps/ 에 받는다. 고정 해시라 캐시해 다시 받지 않는다.
+      - name: Restore model and runtime downloads
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9
+        with:
+          path: _deps
+          key: deps-ubuntu-24.04-${{ hashFiles('cmake/OnnxRuntime.cmake', 'cmake/NerModel.cmake') }}
+
       - name: Configure, build and test
         shell: bash
         run: cmake --workflow --preset linux-gcc14
