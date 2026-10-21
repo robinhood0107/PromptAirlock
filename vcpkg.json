@@ -6,6 +6,7 @@
     "boost-asio",
     "gtest",
     "nlohmann-json",
+    "openssl",
     "protobuf",
     "utf8proc"
   ]

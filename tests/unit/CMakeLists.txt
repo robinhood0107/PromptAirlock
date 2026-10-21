@@ -78,3 +78,7 @@ foreach(name IN ITEMS
     PA_NER_MODEL_DIR="${PA_NER_MODEL_DIR}"
     PA_NER_FIXTURE_DIR="${PROJECT_SOURCE_DIR}/tests/fixtures/ner")
 endforeach()
+
+# TLS 설정(ADR 0014). 시험 인증서는 실행 때마다 새로 만든다.
+pa_add_gtest(tls_context_test tls_context_test.cpp)
+target_link_libraries(tls_context_test PRIVATE prompt_airlock_tls pa_test_cert)
