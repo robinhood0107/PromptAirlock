@@ -85,8 +85,11 @@ Result<AuthSecret> AuthSecret::from_hex(std::string_view hex) {
 AuthSecret::AuthSecret(AuthSecret&& o) noexcept : bytes_(o.bytes_) { wipe_bytes(o.bytes_); }
 
 AuthSecret& AuthSecret::operator=(AuthSecret&& o) noexcept {
-    bytes_ = o.bytes_;
-    wipe_bytes(o.bytes_);
+    // 자기 이동이면 아래 wipe 가 자기 값을 지우므로 건너뛴다.
+    if (this != &o) {
+        bytes_ = o.bytes_;
+        wipe_bytes(o.bytes_);
+    }
     return *this;
 }
 

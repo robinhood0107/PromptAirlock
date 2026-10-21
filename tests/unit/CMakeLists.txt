@@ -52,9 +52,11 @@ foreach(name IN ITEMS
   target_link_libraries(${name} PRIVATE prompt_airlock_detect pa_test_support)
 endforeach()
 
-# Vault 클라이언트 오류 대응표(실제 Vault 없이).
+# Vault 클라이언트 오류 대응표와 값 타입(실제 Vault 없이).
 pa_add_gtest(vault_client_mapping_test vault_client_mapping_test.cpp)
 target_link_libraries(vault_client_mapping_test PRIVATE prompt_airlock_vault_client)
+pa_add_gtest(vault_client_types_test vault_client_types_test.cpp)
+target_link_libraries(vault_client_types_test PRIVATE prompt_airlock_vault_client)
 
 # NER 시험. 모델·tokenizer 는 CMake 가 빌드 디렉터리 models/ner/ 에 받아 둔다(없으면 시험이 실패한다).
 find_package(nlohmann_json CONFIG REQUIRED)
