@@ -25,6 +25,9 @@ class VaultConnection {
 public:
     [[nodiscard]] static Result<VaultConnection> connect(const Endpoint& ep, const AuthSecret& secret,
                                                          const ConnectionOptions& opts = {});
+    // 이미 연(서버 신원을 확인한) 바이트 연결 위에서 인증한다. connect 가 쓰고, fuzz 시험이 가짜 연결로 쓴다.
+    [[nodiscard]] static Result<VaultConnection> handshake(std::unique_ptr<ByteStream> stream, const AuthSecret& secret,
+                                                           const ConnectionOptions& opts = {});
 
     VaultConnection(VaultConnection&&) noexcept;
     VaultConnection& operator=(VaultConnection&&) noexcept;
