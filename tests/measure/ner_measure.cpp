@@ -3,7 +3,8 @@
 // 큰 합성 셋 900문장으로 다음을 잰다. 기본은 개발용(ner-large.jsonl), --set heldout 이면 판정용(ner-heldout.jsonl).
 // 합격 판정은 판정용 셋으로만 한다(결정 #107).
 //   1. 메모리: worker 2개 pool 의 최대 상주 메모리
-//   2. 정확도: 제품 경로(NFKC 보기)의 정확 일치 재현율·정밀도와 위치 오류, 경우별 재현율, NFKC 와 NFC 비교
+//   2. 정확도: NER 엔진(NFKC 보기)의 정확 일치 재현율·정밀도와 위치 오류, 경우별 재현율, NFKC 와 NFC 비교.
+//      탐지기 전체(결정론 기관 규칙 + NER)의 정확 일치 재현율과 이름이 가려진 비율도 함께 잰다.
 //   3. 지연: 짧은 문장, 256 token(합격 기준 길이), 긴 글(창 여러 개), 콜드 스타트
 //   4. 부하: 동시 8개 꾸준한 요청, 동시 32개 몰림, 가장 큰 일 8개 몰림(대기 상한 10초 확인)
 //   5. 잔여 검사(Vault 가 있을 때): 900문장을 실제 Vault 로 보호한 뒤 다시 탐지해 거절 수와 이름 원문 유출 수
@@ -331,6 +332,7 @@ Residual protect(const pd::Detectors& detectors, prompt_airlock::vault_client::V
 int main(int argc, char** argv) {
     bool explain = false;
     int residual_runs = 1;  // 가명 token 이 무작위라 잔여 검사 결과가 실행마다 다를 수 있어 여러 번 돈다
+    bool accuracy_only = false;  // 지연·부하·잔여 검사를 건너뛴다(개발용 셋으로 후처리를 다듬을 때)
     const char* file = "ner-large.jsonl";
     for (int i = 1; i < argc; ++i) {
         const std::string_view arg = argv[i];
@@ -339,6 +341,8 @@ int main(int argc, char** argv) {
         } else if (arg == "--set" && i + 1 < argc && std::string_view(argv[i + 1]) == "heldout") {
             file = "ner-heldout.jsonl";
             ++i;
+        } else if (arg == "--accuracy-only") {
+            accuracy_only = true;
         } else if (arg == "--residual-runs" && i + 1 < argc) {
             residual_runs = std::max(1, std::atoi(argv[i + 1]));
             ++i;
@@ -475,6 +479,71 @@ int main(int argc, char** argv) {
         std::printf("%s ", misses[i].c_str());
     }
     std::printf("%s\n", misses.size() > 40 ? "..." : "");
+
+    // 2-2. 탐지기 전체. 사용자 요청에서 이름이 실제로 가려지는지는 이 값이 정한다.
+    {
+        const auto product = *pd::Detectors::make({}, pool);
+        std::map<pc::EntityType, std::pair<std::size_t, std::size_t>> hit, masked;  // (맞음, 전체)
+        std::size_t product_negative = 0;
+        std::vector<std::string> product_misses;
+        for (const auto& r : records) {
+            const auto found = product.detect_segment(r.text, pc::SegmentIndex{0});
+            if (!found) {
+                ok = false;
+                continue;
+            }
+            std::vector<pc::EntitySpan> names;
+            for (const auto& e : *found) {
+                if (e.type() == pc::EntityType::Person || e.type() == pc::EntityType::Organization) {
+                    names.push_back(e);
+                }
+            }
+            if (r.gold.empty()) {
+                product_negative += names.size();
+            }
+            for (const auto& g : r.gold) {
+                const bool exact_hit = std::ranges::any_of(names, [&](const pc::EntitySpan& e) {
+                    return e.type() == g.type && e.span().begin().value() == g.begin && e.span().end().value() == g.end;
+                });
+                // 가려짐: 종류와 상관없이 어떤 탐지 구간이 정답 전체를 덮는다(가명화되어 원문이 나가지 않는다).
+                const bool cover = std::ranges::any_of(*found, [&](const pc::EntitySpan& e) {
+                    return e.span().begin().value() <= g.begin && g.end <= e.span().end().value();
+                });
+                hit[g.type].first += exact_hit;
+                ++hit[g.type].second;
+                masked[g.type].first += cover;
+                ++masked[g.type].second;
+                if (!cover) {
+                    product_misses.push_back(r.id + "(" + r.variant + ")");
+                    if (explain) {
+                        std::printf("LEAK %s %s gold[%s]\n", r.id.c_str(), r.text.c_str(), g.text.c_str());
+                    }
+                }
+            }
+        }
+        const auto rate = [](const std::pair<std::size_t, std::size_t>& v) {
+            return static_cast<double>(v.first) / static_cast<double>(std::max<std::size_t>(v.second, 1));
+        };
+        std::printf("\n");
+        ok &= report("product PERSON recall (exact)", rate(hit[pc::EntityType::Person]), 0.9, false);
+        ok &= report("product ORG recall (exact)", rate(hit[pc::EntityType::Organization]), 0.8, false);
+        std::printf("%-46s %10.3f  (%zu / %zu, 원문이 그대로 나가지 않음)\n", "product PERSON masked",
+                    rate(masked[pc::EntityType::Person]), masked[pc::EntityType::Person].first,
+                    masked[pc::EntityType::Person].second);
+        std::printf("%-46s %10.3f  (%zu / %zu)\n", "product ORG masked", rate(masked[pc::EntityType::Organization]),
+                    masked[pc::EntityType::Organization].first, masked[pc::EntityType::Organization].second);
+        std::printf("%-46s %10zu  (참고, 이름 없는 문장 300개에서 사람·기관으로 찾은 수)\n", "product names in negatives",
+                    product_negative);
+        std::printf("product not masked (id, case): ");
+        for (const auto& m : product_misses) {
+            std::printf("%s ", m.c_str());
+        }
+        std::printf("\n");
+    }
+
+    if (accuracy_only) {
+        return ok ? 0 : 1;
+    }
 
     // 3. 지연(단일 스레드, 정규화 + tokenize + 추론 + 결과 묶기 전체).
     const auto files = *pn::read_verified_model_files(model_dir);
