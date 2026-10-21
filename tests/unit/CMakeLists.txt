@@ -63,6 +63,7 @@ target_link_libraries(vault_client_types_test PRIVATE prompt_airlock_vault_clien
 find_package(nlohmann_json CONFIG REQUIRED)
 foreach(name IN ITEMS
     ner_engine_test
+    ner_fixture_test
     ner_model_files_test
     ner_pool_test
     ner_session_test
