@@ -87,10 +87,17 @@ target_link_libraries(tls_context_test PRIVATE prompt_airlock_tls pa_test_cert)
 foreach(name IN ITEMS
     gateway_auth_test
     gateway_config_test
-    gateway_error_body_test)
+    gateway_error_body_test
+    gateway_pipeline_test
+    gateway_request_json_test)
   pa_add_gtest(${name} ${name}.cpp)
-  target_link_libraries(${name} PRIVATE prompt_airlock_gateway nlohmann_json::nlohmann_json)
+  target_link_libraries(${name} PRIVATE prompt_airlock_gateway pa_test_support nlohmann_json::nlohmann_json)
 endforeach()
 pa_add_gtest(gateway_server_test gateway_server_test.cpp)
 target_link_libraries(gateway_server_test PRIVATE prompt_airlock_gateway prompt_airlock_tls pa_test_cert
+                      nlohmann_json::nlohmann_json)
+
+# provider HTTPS 클라이언트. 같은 프로세스에 mock provider 를 띄운다.
+pa_add_gtest(provider_client_test provider_client_test.cpp)
+target_link_libraries(provider_client_test PRIVATE prompt_airlock_provider prompt_airlock_tls pa_mock_provider pa_test_cert
                       nlohmann_json::nlohmann_json)

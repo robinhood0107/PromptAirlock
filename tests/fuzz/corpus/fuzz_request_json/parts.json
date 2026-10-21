@@ -1,0 +1,1 @@
+{"messages":[{"role":"system","content":"a"},{"role":"user","content":[{"type":"text","text":"b"}]}],"response_format":{"type":"text"},"temperature":0.5}
