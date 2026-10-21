@@ -2,13 +2,30 @@
 
 #include "prompt_airlock/core/provider_boundary.hpp"
 #include "prompt_airlock/core/residual.hpp"
+#include "prompt_airlock/core/restore.hpp"
 #include "prompt_airlock/gateway/provider_json.hpp"
 #include "prompt_airlock/gateway/request_json.hpp"
+#include "prompt_airlock/gateway/response_json.hpp"
+
+#include <chrono>
+#include <random>
+#include <string_view>
 
 namespace prompt_airlock::gateway {
 namespace {
 
 JsonResponse reject(const core::Rejection& rejection) { return error_response(rejection.for_user()); }
+
+// 게이트웨이 요청 ID. provider 의 id 대신 클라이언트에 준다.
+std::string new_request_id() {
+    std::random_device device;
+    std::string id = "chatcmpl-pa-";
+    constexpr std::string_view hex = "0123456789abcdef";
+    for (int i = 0; i < 24; ++i) {
+        id.push_back(hex[device() % 16]);
+    }
+    return id;
+}
 
 }  // namespace
 
@@ -66,8 +83,36 @@ boost::asio::awaitable<JsonResponse> Pipeline::handle(AcceptedRequest request) c
     if (!reply || reply->status != 200) {
         co_return error_response(EntryError::ProviderFailed);  // provider 오류 본문은 넘기지 않는다
     }
-    // 응답 검사와 복원은 다음 단위(8a-3)에서 붙인다. 그 전까지는 응답을 내보내지 않는다.
-    co_return error_response(EntryError::Unavailable);
+    auto answer = parse_provider_answer(reply->body);
+    if (!answer) {
+        co_return error_response(EntryError::ProviderFailed);
+    }
+    // 응답 검사(ADR 0017 7~9): 다시 탐지 → 차단 값·링크 속 token 이면 거절 → 같은 범위의 token 만 복원
+    std::string restored;
+    if (!answer->content.empty()) {
+        const auto found = detectors_.detect_segment(answer->content.view(), core::SegmentIndex{0});
+        if (!found) {
+            co_return reject(core::Rejection::from_error(found.error()));
+        }
+        auto checked = core::check_response(std::move(answer->content), *found);
+        if (!checked) {
+            co_return reject(checked.error());
+        }
+        const auto plan = core::plan_restore(*checked);
+        if (!plan) {
+            co_return reject(plan.error());
+        }
+        auto text = core::apply_restore(std::move(*checked), *plan, *scope);
+        if (!text) {
+            co_return reject(text.error());
+        }
+        restored = std::string(text->view());
+    }
+    const auto created = std::chrono::duration_cast<std::chrono::seconds>(
+                             std::chrono::system_clock::now().time_since_epoch())
+                             .count();
+    co_return JsonResponse{200, client_response_body(new_request_id(), created, model_alias_, restored,
+                                                     answer->finish_reason, answer->usage)};
 }
 
 }  // namespace prompt_airlock::gateway
