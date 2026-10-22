@@ -1,11 +1,9 @@
-// 시험 전용: Windows 에서 포트 0 listen 이 드물게 WSAEFAULT(10014)로 실패하는 현상(#118)을 피해 몇 번 다시 시도한다.
-// 순수 asio 실험에서도 2000번 중 20번이 연달아 몰려 실패했다(환경 쪽 일시 현상). 잠깐 쉬었다가 다시 시도한다.
-// 운영 코드는 다시 시도하지 않는다(실패하면 기동하지 않는다).
+// 시험 전용: Windows 에서 포트 0 listen·bind 가 WSAEFAULT(10014)로 연달아 실패하는 현상(#118)을 피해 다시 시도한다.
+// 임시 포트는 거의 순서대로 배정되는데, 관리자 예약 범위(이 PC 는 50000~50059, 60개)를 지나는 동안 연속으로 실패하는 것으로 본다.
+// 다음 시도는 다음 포트를 받으므로 기다리지 않고 예약 범위보다 많이 다시 시도한다. 운영 코드는 다시 시도하지 않는다.
 #pragma once
 
-#include <chrono>
-#include <system_error>
-#include <thread>
+#include <exception>
 
 namespace pa_test {
 
@@ -15,11 +13,10 @@ void retry_listen(F&& make) {
         try {
             make();
             return;
-        } catch (const std::system_error&) {
-            if (attempt == 20) {
+        } catch (const std::exception&) {  // asio 는 boost::system::system_error(std::runtime_error 계열)를 던진다
+            if (attempt == 100) {
                 throw;
             }
-            std::this_thread::sleep_for(std::chrono::milliseconds(50));  // 재시도 간격(동기화 용도 아님)
         }
     }
 }
