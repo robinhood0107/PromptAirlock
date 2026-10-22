@@ -281,7 +281,7 @@ std::expected<Config, ConfigError> parse_config(std::string_view json_text, cons
     if (guard.found()) {
         return fail(ConfigProblem::Duplicate, "");
     }
-    if (auto r = only_keys(root, {"listen", "provider", "origins", "internal_terms", "output_token_cap"}, ""); !r) {
+    if (auto r = only_keys(root, {"listen", "provider", "origins", "internal_terms", "output_token_cap", "history_retention_days"}, ""); !r) {
         return std::unexpected(r.error());
     }
     Config config;
@@ -299,6 +299,17 @@ std::expected<Config, ConfigError> parse_config(std::string_view json_text, cons
             return fail(ConfigProblem::InvalidValue, "output_token_cap");
         }
         config.output_token_cap = *core::OutputTokenCap::make(static_cast<std::uint32_t>(n));
+    }
+    if (root.contains("history_retention_days")) {
+        auto value = member(root, "history_retention_days", "", json::value_t::number_unsigned);
+        if (!value) {
+            return std::unexpected(value.error());
+        }
+        const auto n = (*value)->get<std::int64_t>();
+        if (n < 365 || n > 36500) {
+            return fail(ConfigProblem::InvalidValue, "history_retention_days");
+        }
+        config.history_retention_days = static_cast<int>(n);
     }
     return config;
 }

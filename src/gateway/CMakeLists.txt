@@ -15,7 +15,7 @@ add_library(prompt_airlock_gateway
   server.cpp)
 target_include_directories(prompt_airlock_gateway PUBLIC "${PROJECT_SOURCE_DIR}/include")
 target_link_libraries(prompt_airlock_gateway
-  PUBLIC prompt_airlock_core prompt_airlock_detect Boost::asio OpenSSL::SSL
+  PUBLIC prompt_airlock_core prompt_airlock_detect prompt_airlock_audit Boost::asio OpenSSL::SSL
   PRIVATE nlohmann_json::nlohmann_json Boost::beast pa_options)
 if(MSVC)
   target_compile_options(prompt_airlock_gateway PRIVATE /WX)
