@@ -9,12 +9,21 @@
 
 #include <nlohmann/json.hpp>
 
+#include <algorithm>
 #include <chrono>
 #include <random>
 #include <string_view>
 
 namespace prompt_airlock::gateway {
 namespace {
+
+// 응답 능동 콘텐츠(ADR 0021): 기관 앱이 그대로 그리면 실행될 수 있는 표지. 대소문자를 가리지 않는다.
+bool has_active_content(std::string_view text) {
+    std::string lower(text);
+    std::ranges::transform(lower, lower.begin(), [](char c) { return c >= 0x41 && c <= 0x5a ? static_cast<char>(c + 32) : c; });
+    return lower.find("<script") != std::string::npos || lower.find("javascript:") != std::string::npos ||
+           lower.find("vbscript:") != std::string::npos;
+}
 
 // 게이트웨이 요청 ID. provider 의 id 대신 클라이언트에 준다.
 std::string new_request_id() {
@@ -146,6 +155,9 @@ boost::asio::awaitable<JsonResponse> Pipeline::run(AcceptedRequest request, Trac
         co_return trace.fail(EntryError::ProviderFailed);
     }
     // 응답 검사(ADR 0017 7~9): 다시 탐지 → 차단 값·링크 속 token 이면 거절 → 같은 범위의 token 만 복원
+    if (has_active_content(answer->content.view())) {
+        co_return trace.reject(core::Rejection::of(core::ReasonCode::ResponseActiveContent));
+    }
     std::string restored;
     if (!answer->content.empty()) {
         const auto found = detectors_.detect_segment(answer->content.view(), core::SegmentIndex{0});
