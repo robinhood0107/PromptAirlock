@@ -42,7 +42,7 @@ LLM의 답이 오면 token을 원래 값으로 되돌려 직원에게 준다.
 | `include/prompt_airlock/gateway/`, `src/gateway/` | HTTP 입구: 설정 파일, 출처 인증, 오류 응답, HTTPS 서버, 요청 JSON 읽기, 처리 단계 |
 | `include/prompt_airlock/provider/`, `src/provider/` | provider HTTPS 클라이언트. provider 주소와 자격 증명은 여기만 가진다 |
 | `tools/mock-provider/` | 시험·시연용 mock provider. 받은 요청을 기록하고 질문을 인용해 답한다. `[링크]`·`[변형]` 표시어가 있으면 게이트웨이가 막아야 하는 답을 만든다. 운영 빌드에 넣지 않는다 |
-| `apps/prompt-airlock/` | 게이트웨이 실행 파일. `serve <설정>` 으로 기동, `issue-token <출처>` 로 출처 token 발급 |
+| `apps/prompt-airlock/` | 게이트웨이 실행 파일. `serve <설정>` 기동, `issue-token <출처>` 출처 token 발급, `protect-credential` 자격 증명 보호 저장, `audit verify|list` 감사 기록 로컬 검증·열람 |
 | `include/prompt_airlock/audit/`, `src/audit/` | 감사 기록: 로컬 JSON lines, 해시 연결, 하루 단위 세그먼트와 checkpoint, 만료 삭제(ADR 0021) |
 | `vault/` | Rust로 만든 Vault 프로세스(Cargo workspace) |
 | `proto/` | Gateway와 Vault가 함께 쓰는 IPC 메시지 정의 |
