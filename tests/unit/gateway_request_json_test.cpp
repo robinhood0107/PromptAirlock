@@ -34,7 +34,7 @@ TEST(GatewayRequestJson, ReadsAllowedFields) {
     ASSERT_EQ(parsed->document.segments().size(), 6u);
     EXPECT_EQ(parsed->document.segments()[2].text(), "둘째");
     EXPECT_EQ(parsed->document.content_form(1), core::ContentForm::TextParts);
-    const auto& source = std::get<core::MessageSource>(parsed->document.segments()[3].source());
+    const auto source = std::get<core::MessageSource>(parsed->document.segments()[3].source());  // source() 는 값을 돌려준다
     EXPECT_EQ(source.role, core::MessageRole::Model);
     EXPECT_EQ(parsed->params.max_tokens, 100);
     EXPECT_FALSE(parsed->params.max_completion_tokens.has_value());
