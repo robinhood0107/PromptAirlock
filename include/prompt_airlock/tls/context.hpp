@@ -28,4 +28,7 @@ enum class TlsError : std::uint8_t {
 [[nodiscard]] std::expected<boost::asio::ssl::context, TlsError> make_client_context(
     std::optional<std::string_view> trust_pem);
 
+// 인증서 체인 첫 인증서의 만료까지 남은 날(지났으면 음수). 읽을 수 없으면 nullopt. 만료 경고(ADR 0021)에 쓴다.
+[[nodiscard]] std::optional<int> certificate_days_left(std::string_view certificate_chain_pem);
+
 }  // namespace prompt_airlock::tls
