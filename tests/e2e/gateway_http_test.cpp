@@ -24,6 +24,7 @@
 #include "prompt_airlock/provider/https_client.hpp"
 #include "prompt_airlock/tls/context.hpp"
 #include "prompt_airlock/vault_client/service.hpp"
+#include "listen_retry.hpp"
 #include "test_cert.hpp"
 
 namespace {
@@ -83,7 +84,7 @@ protected:
         audit_ = std::move(*prompt_airlock::audit::AuditLog::open(audit_dir_, std::chrono::days(365)));
 
         const tcp::endpoint loopback(asio::ip::make_address("127.0.0.1"), 0);
-        mock_.emplace(io_, *server_tls_, loopback, pa_mock::MockOptions{"provider-secret", {}});
+        pa_test::retry_listen([&] { mock_.emplace(io_, *server_tls_, loopback, pa_mock::MockOptions{"provider-secret", {}}); });
         mock_->start();
         provider_.emplace(*client_tls_,
                           prompt_airlock::provider::Endpoint{"127.0.0.1", mock_->local_endpoint().port(),
@@ -100,9 +101,9 @@ protected:
             },
             [this](std::string body) { return provider_->send(std::move(body)); }, core::OutputTokenCap::standard(),
             "demo-alias", audit_.get());
-        server_.emplace(io_, *server_tls_, loopback, auth_,
+        pa_test::retry_listen([&] { server_.emplace(io_, *server_tls_, loopback, auth_,
                         [this](gw::AcceptedRequest request) { return pipeline_->handle(std::move(request)); },
-                        gw::ServerLimits{}, audit_.get());
+                        gw::ServerLimits{}, audit_.get()); });
         server_->start();
         thread_ = std::thread([this] { io_.run(); });
     }
