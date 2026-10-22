@@ -43,6 +43,7 @@ LLM의 답이 오면 token을 원래 값으로 되돌려 직원에게 준다.
 | `include/prompt_airlock/provider/`, `src/provider/` | provider HTTPS 클라이언트. provider 주소와 자격 증명은 여기만 가진다 |
 | `tools/mock-provider/` | 시험·시연용 mock provider. 받은 요청을 기록하고 질문을 인용해 답한다. `[링크]`·`[변형]` 표시어가 있으면 게이트웨이가 막아야 하는 답을 만든다. 운영 빌드에 넣지 않는다 |
 | `apps/prompt-airlock/` | 게이트웨이 실행 파일. `serve <설정>` 으로 기동, `issue-token <출처>` 로 출처 token 발급 |
+| `include/prompt_airlock/audit/`, `src/audit/` | 감사 기록: 로컬 JSON lines, 해시 연결, 하루 단위 세그먼트와 checkpoint, 만료 삭제(ADR 0021) |
 | `vault/` | Rust로 만든 Vault 프로세스(Cargo workspace) |
 | `proto/` | Gateway와 Vault가 함께 쓰는 IPC 메시지 정의 |
 | `cmake/` | 빌드 옵션, 검사 스크립트, Vault 빌드 연결 |
@@ -266,7 +267,6 @@ fuzz 대상
 
 | 항목 | 상태 |
 |---|---|
-| 감사 기록(`src/audit/`) | Phase 8. 지금은 `Rejection::for_audit`와 `SensitiveTally`가 기록할 값만 만든다 |
 | 추론 worker와 동시성 제한 | Phase 9 |
 | 실제 provider 연결 | Phase 10. 지금은 mock provider 로만 시험한다 |
 | 연구 평가 | Phase 11. 지금은 `ResearchOnly` 열쇠와 연구용 전략만 있다 |
