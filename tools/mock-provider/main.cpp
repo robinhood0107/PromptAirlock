@@ -10,7 +10,6 @@
 #include <string>
 
 #include "mock_provider.hpp"
-#include "prompt_airlock/provider/https_client.hpp"
 #include "prompt_airlock/tls/context.hpp"
 
 namespace {
@@ -30,15 +29,19 @@ int main(int argc, char** argv) try {
     }
     namespace asio = boost::asio;
     auto tls = prompt_airlock::tls::make_server_context(read_file(argv[3]), read_file(argv[4]));
-    const auto credential = prompt_airlock::provider::load_credential(argv[5]);
-    if (!tls || !credential) {
+    // mock 은 시험용 가짜 자격 증명을 평문 파일에서 읽는다(운영 클라이언트의 보호 저장 규칙과 별개)
+    std::string credential = read_file(argv[5]);
+    while (!credential.empty() && (credential.back() == 0x0a || credential.back() == 0x0d)) {
+        credential.pop_back();
+    }
+    if (!tls || credential.empty()) {
         std::fputs("mock-provider: certificate, key or credential file is not usable\n", stderr);
         return 1;
     }
     asio::io_context io;
     const asio::ip::tcp::endpoint endpoint(asio::ip::make_address(argv[1]),
                                            static_cast<unsigned short>(std::stoul(argv[2])));
-    pa_mock::MockProvider mock(io, *tls, endpoint, {std::string(credential->view()), argv[6]});
+    pa_mock::MockProvider mock(io, *tls, endpoint, {credential, argv[6]});
     mock.start();
     asio::signal_set signals(io, SIGINT, SIGTERM);
     signals.async_wait([&](auto, auto) { io.stop(); });

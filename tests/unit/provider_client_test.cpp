@@ -12,6 +12,7 @@
 
 #include "mock_provider.hpp"
 #include "prompt_airlock/tls/context.hpp"
+#include "listen_retry.hpp"
 #include "test_cert.hpp"
 
 namespace {
@@ -31,8 +32,8 @@ protected:
         ASSERT_TRUE(server && client);
         server_tls_.emplace(std::move(*server));
         client_tls_.emplace(std::move(*client));
-        mock_.emplace(io_, *server_tls_, tcp::endpoint(asio::ip::make_address("127.0.0.1"), 0),
-                      pa_mock::MockOptions{"provider-secret", {}});
+        pa_test::retry_listen([&] { mock_.emplace(io_, *server_tls_, tcp::endpoint(asio::ip::make_address("127.0.0.1"), 0),
+                      pa_mock::MockOptions{"provider-secret", {}}); });
         mock_->start();
         thread_ = std::thread([this] { io_.run(); });
     }
@@ -97,17 +98,30 @@ TEST_F(ProviderClient, WrongCredentialIsAnErrorStatus) {
     EXPECT_TRUE(mock_->received().empty());
 }
 
-TEST(ProviderCredential, LoadsOneVisibleLine) {
+TEST(ProviderCredential, ReadsOnlyProtectedFiles) {
     const auto dir = std::filesystem::temp_directory_path();
-    const auto write = [&](const char* name, std::string_view text) {
-        std::ofstream(dir / name, std::ios::binary) << text;
-        return dir / name;
+    const auto write = [&](const char* name, std::string_view bytes, bool owner_only) {
+        const auto path = dir / name;
+        std::ofstream(path, std::ios::binary | std::ios::trunc) << bytes;
+        if (owner_only) {
+            std::filesystem::permissions(path, std::filesystem::perms::owner_read | std::filesystem::perms::owner_write,
+                                         std::filesystem::perm_options::replace);
+        }
+        return path;
     };
-    const auto ok = pv::load_credential(write("pa-cred-ok.txt", "sk-test-123\r\n"));
+    // 보호하지 않은 평문 파일은 읽지 않는다(Windows: DPAPI 아님, Linux: 다른 사용자 권한 있음)
+    std::filesystem::remove(dir / "pa-cred-plain.txt");
+    EXPECT_EQ(pv::load_credential(write("pa-cred-plain.txt", "sk-test-123\n", false)).error(),
+              pv::CredentialError::NotProtected);
+    const auto sealed = pv::protect_credential("sk-test-123\r\n");
+    ASSERT_TRUE(sealed.has_value());
+    std::filesystem::remove(dir / "pa-cred-ok.bin");
+    const auto ok = pv::load_credential(write("pa-cred-ok.bin", *sealed, true));
     ASSERT_TRUE(ok.has_value());
     EXPECT_EQ(ok->view(), "sk-test-123");
-    EXPECT_EQ(pv::load_credential(write("pa-cred-empty.txt", "\n")).error(), pv::CredentialError::Empty);
-    EXPECT_EQ(pv::load_credential(write("pa-cred-space.txt", "a b")).error(), pv::CredentialError::InvalidCharacter);
+    std::filesystem::remove(dir / "pa-cred-space.bin");
+    EXPECT_EQ(pv::load_credential(write("pa-cred-space.bin", *pv::protect_credential("a b"), true)).error(),
+              pv::CredentialError::InvalidCharacter);
     EXPECT_EQ(pv::load_credential(dir / "pa-cred-missing.txt").error(), pv::CredentialError::Unreadable);
 }
 

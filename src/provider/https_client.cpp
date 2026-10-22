@@ -10,6 +10,13 @@
 #include <openssl/ssl.h>
 #include <openssl/x509v3.h>
 
+#ifdef _WIN32
+#include <windows.h>
+#include <dpapi.h>
+#else
+#include <sys/stat.h>
+#endif
+
 #include <algorithm>
 #include <fstream>
 #include <iterator>
@@ -38,7 +45,24 @@ std::expected<core::SensitiveText, CredentialError> load_credential(const std::f
         return std::unexpected(CredentialError::Unreadable);
     }
     std::string value((std::istreambuf_iterator<char>(in)), std::istreambuf_iterator<char>());
+#ifdef _WIN32
+    DATA_BLOB sealed{static_cast<DWORD>(value.size()), reinterpret_cast<BYTE*>(value.data())};
+    DATA_BLOB opened{};
+    if (CryptUnprotectData(&sealed, nullptr, nullptr, nullptr, nullptr, CRYPTPROTECT_UI_FORBIDDEN, &opened) == FALSE) {
+        return std::unexpected(CredentialError::NotProtected);
+    }
+    std::string plain(reinterpret_cast<const char*>(opened.pbData), opened.cbData);
+    SecureZeroMemory(opened.pbData, opened.cbData);
+    LocalFree(opened.pbData);
+    core::SensitiveText owned(std::move(plain));  // 푼 값을 넘겨 지우게 한다
+#else
+    struct stat st {};
+    if (::stat(path.c_str(), &st) != 0 || (st.st_mode & 077) != 0) {
+        core::SensitiveText discard(std::move(value));
+        return std::unexpected(CredentialError::NotProtected);
+    }
     core::SensitiveText owned(std::move(value));  // 읽은 버퍼를 넘겨 지우게 한다
+#endif
     std::string_view text = owned.view();
     while (!text.empty() && (text.back() == '\n' || text.back() == '\r')) {
         text.remove_suffix(1);
@@ -50,6 +74,22 @@ std::expected<core::SensitiveText, CredentialError> load_credential(const std::f
         return std::unexpected(CredentialError::InvalidCharacter);
     }
     return core::SensitiveText::copy_of(text);
+}
+
+std::expected<std::string, CredentialError> protect_credential(std::string_view plain) {
+#ifdef _WIN32
+    DATA_BLOB in{static_cast<DWORD>(plain.size()), reinterpret_cast<BYTE*>(const_cast<char*>(plain.data()))};
+    DATA_BLOB out{};
+    if (CryptProtectData(&in, L"prompt-airlock provider credential", nullptr, nullptr, nullptr, CRYPTPROTECT_UI_FORBIDDEN,
+                         &out) == FALSE) {
+        return std::unexpected(CredentialError::NotProtected);
+    }
+    std::string sealed(reinterpret_cast<const char*>(out.pbData), out.cbData);
+    LocalFree(out.pbData);
+    return sealed;
+#else
+    return std::string(plain);
+#endif
 }
 
 HttpsClient::HttpsClient(asio::ssl::context& tls, Endpoint endpoint, core::SensitiveText credential,
