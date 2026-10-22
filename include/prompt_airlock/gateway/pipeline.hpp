@@ -14,6 +14,7 @@
 #include <string_view>
 #include <utility>
 
+#include "prompt_airlock/audit/log.hpp"
 #include "prompt_airlock/core/error.hpp"
 #include "prompt_airlock/core/policy.hpp"
 #include "prompt_airlock/core/privacy.hpp"
@@ -76,16 +77,21 @@ class Pipeline {
 public:
     // detectors 는 Pipeline 보다 오래 살아야 한다. 여러 연결이 함께 부르므로 open_scope·provider 는 스레드 안전해야 한다.
     Pipeline(const detect::Detectors& detectors, ScopeOpener open_scope, ProviderCall provider,
-             core::OutputTokenCap output_cap, std::string model_alias);
+             core::OutputTokenCap output_cap, std::string model_alias, audit::AuditLog* audit = nullptr);
 
+    // audit 가 있으면 요청 결과와 외부 전송 이력을 남긴다. 기록하지 못하면 거절한다(ADR 0021).
     [[nodiscard]] boost::asio::awaitable<JsonResponse> handle(AcceptedRequest request) const;
 
 private:
+    struct Trace;
+    boost::asio::awaitable<JsonResponse> run(AcceptedRequest request, Trace& trace) const;
+
     const detect::Detectors& detectors_;
     ScopeOpener open_scope_;
     ProviderCall provider_;
     core::OutputTokenCap output_cap_;
     std::string model_alias_;
+    audit::AuditLog* audit_;
 };
 
 }  // namespace prompt_airlock::gateway

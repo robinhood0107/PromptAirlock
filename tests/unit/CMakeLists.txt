@@ -102,3 +102,7 @@ target_link_libraries(gateway_server_test PRIVATE prompt_airlock_gateway prompt_
 pa_add_gtest(provider_client_test provider_client_test.cpp)
 target_link_libraries(provider_client_test PRIVATE prompt_airlock_provider prompt_airlock_tls pa_mock_provider pa_test_cert
                       nlohmann_json::nlohmann_json)
+
+# 감사 기록(ADR 0021).
+pa_add_gtest(audit_log_test audit_log_test.cpp)
+target_link_libraries(audit_log_test PRIVATE prompt_airlock_audit)

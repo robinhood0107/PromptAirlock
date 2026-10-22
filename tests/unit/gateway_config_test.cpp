@@ -127,6 +127,8 @@ TEST(GatewayConfig, RejectsBadValues) {
     expect_error(with("/output_token_cap"_json_pointer, 0), ConfigProblem::InvalidValue, "output_token_cap");
     expect_error(with("/output_token_cap"_json_pointer, 65537), ConfigProblem::InvalidValue, "output_token_cap");
     expect_error(with("/output_token_cap"_json_pointer, -1), ConfigProblem::InvalidValue, "output_token_cap");
+    expect_error(with("/history_retention_days"_json_pointer, 364), ConfigProblem::InvalidValue, "history_retention_days");
+    EXPECT_EQ(parse(with("/history_retention_days"_json_pointer, 730))->history_retention_days, 730);
 }
 
 }  // namespace

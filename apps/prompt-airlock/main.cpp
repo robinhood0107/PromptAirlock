@@ -98,6 +98,16 @@ int serve(const std::filesystem::path& config_path) {
     vault_options.exe = PA_VAULT_EXE;
     prompt_airlock::vault_client::VaultService vault(vault_options);
 
+    // 감사 기록은 설정 파일 옆 audit/ 에 둔다(ADR 0021). 열지 못하면 기동하지 않는다.
+    auto audit_log = prompt_airlock::audit::AuditLog::open(config_path.parent_path() / "audit",
+                                                           std::chrono::days(config->history_retention_days));
+    if (!audit_log) {
+        return fail("cannot open the audit directory");
+    }
+    const std::string config_hash = core::sha256_hex(std::as_bytes(std::span(text->data(), text->size())));
+    if (!(*audit_log)->append("start", "info", {{"config_sha256", config_hash}, {"origins", config->origins.size()}})) {
+        return fail("cannot write the audit log");
+    }
     prompt_airlock::provider::HttpsClient provider(
         *client_tls, {config->provider.host, config->provider.port, config->provider.target}, std::move(*credential));
     gw::Pipeline pipeline(
@@ -110,13 +120,14 @@ int serve(const std::filesystem::path& config_path) {
             return gw::PseudonymScope(std::move(*scope));
         },
         [&provider](std::string body) { return provider.send(std::move(body)); }, config->output_token_cap,
-        config->provider.model);
+        config->provider.model, audit_log->get());
     gw::Authenticator auth(config->origins);
 
     asio::io_context io(static_cast<int>(io_threads));
     const asio::ip::tcp::endpoint endpoint(asio::ip::make_address(config->listen.address), config->listen.port);
     gw::Server server(io, *server_tls, endpoint, auth,
-                      [&pipeline](gw::AcceptedRequest request) { return pipeline.handle(std::move(request)); });
+                      [&pipeline](gw::AcceptedRequest request) { return pipeline.handle(std::move(request)); },
+                      gw::ServerLimits{}, audit_log->get());
     server.start();
     asio::signal_set signals(io, SIGINT, SIGTERM);
     signals.async_wait([&](auto, auto) {
@@ -132,6 +143,8 @@ int serve(const std::filesystem::path& config_path) {
         workers.emplace_back([&io] { io.run(); });
     }
     io.run();
+    workers.clear();
+    (void)(*audit_log)->append("stop", "info", {});
     return 0;
 }
 

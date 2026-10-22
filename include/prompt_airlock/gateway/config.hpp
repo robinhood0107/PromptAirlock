@@ -43,6 +43,7 @@ struct Config {
     std::vector<Origin> origins;
     std::vector<std::string> internal_terms;  // 기관 보호어: 자기 기관·계열사·거래처 이름
     core::OutputTokenCap output_token_cap = core::OutputTokenCap::standard();
+    int history_retention_days = 365;  // 감사·이력 보존 기간, 365 이상(ADR 0021)
 };
 
 enum class ConfigProblem : std::uint8_t {

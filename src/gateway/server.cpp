@@ -35,18 +35,20 @@ constexpr bool reuse_address = true;
 
 struct Server::Shared {
     Shared(asio::io_context& io, asio::ssl::context& tls_context, const tcp::endpoint& endpoint, Authenticator& authenticator,
-           RequestHandler request_handler, ServerLimits server_limits)
+           RequestHandler request_handler, ServerLimits server_limits, audit::AuditLog* audit_log)
         : tls(tls_context),
           acceptor(io, endpoint, reuse_address),
           auth(authenticator),
           handler(std::move(request_handler)),
-          limits(server_limits) {}
+          limits(server_limits),
+          audit(audit_log) {}
 
     asio::ssl::context& tls;
     tcp::acceptor acceptor;
     Authenticator& auth;
     RequestHandler handler;
     ServerLimits limits;
+    audit::AuditLog* audit;
     std::atomic<std::size_t> connections{0};
 };
 
@@ -97,12 +99,16 @@ http::response<http::string_body> make_reply(JsonResponse reply, unsigned versio
 
 // 헤더만 보고 끝낼 수 있는 검사. 통과하면 등급이 확정된 출처를 돌려준다.
 std::expected<std::pair<const Origin*, core::OpenGrade>, JsonResponse> check_headers(
-    const http::request_header<>& head, Authenticator& auth, std::string_view client) {
+    const http::request_header<>& head, Authenticator& auth, std::string_view client, audit::AuditLog* audit) {
     if (head.count(http::field::authorization) > 1) {
         return std::unexpected(error_response(EntryError::BadRequest));
     }
     const auto origin = auth.authenticate(head[http::field::authorization], client, Authenticator::Clock::now());
     if (!origin) {
+        if (audit != nullptr) {
+            // 기록 실패여도 응답은 같은 거절이다
+            (void)audit->append("auth", "warn", {{"client", client}, {"result", auth_failure_name(origin.error())}});
+        }
         return std::unexpected(error_response(origin.error() == AuthFailure::Locked ? EntryError::TooManyFailures
                                                                                      : EntryError::Unauthorized));
     }
@@ -121,6 +127,12 @@ std::expected<std::pair<const Origin*, core::OpenGrade>, JsonResponse> check_hea
     }
     auto grade = core::resolve_grade((*origin)->grade_policy, marks);
     if (!grade) {
+        if (audit != nullptr) {
+            // 등급 거절도 요청 결과로 남긴다(본문은 읽지 않았으므로 메타데이터만)
+            (void)audit->append("request", "warn",
+                                {{"origin", (*origin)->name}, {"client", client}, {"result", "reject"},
+                                 {"reason", core::reason_code_name(grade.error().code())}});
+        }
         return std::unexpected(error_response(grade.error().for_user()));
     }
     return std::pair{*origin, *grade};
@@ -166,7 +178,7 @@ asio::awaitable<void> session(std::shared_ptr<Server::Shared> shared, tcp::socke
         const unsigned version = head.version();
 
         std::optional<JsonResponse> reply;
-        auto accepted = check_headers(head, shared->auth, client);
+        auto accepted = check_headers(head, shared->auth, client, shared->audit);
         if (!accepted) {
             reply = std::move(accepted.error());
         } else if (const auto length = parser.content_length(); length && *length > shared->limits.body_bytes) {
@@ -182,7 +194,7 @@ asio::awaitable<void> session(std::shared_ptr<Server::Shared> shared, tcp::socke
             } else {
                 try {
                     reply = co_await shared->handler(
-                        AcceptedRequest{accepted->first, accepted->second, std::move(parser.get().body())});
+                        AcceptedRequest{accepted->first, accepted->second, std::move(parser.get().body()), client});
                 } catch (const std::exception&) {
                     reply = error_response(core::UserRejection{core::ReasonCode::InternalError, {}});
                 }
@@ -223,8 +235,8 @@ asio::awaitable<void> accept_loop(std::shared_ptr<Server::Shared> shared) {
 }  // namespace
 
 Server::Server(asio::io_context& io, asio::ssl::context& tls, const tcp::endpoint& endpoint, Authenticator& auth,
-               RequestHandler handler, ServerLimits limits)
-    : shared_(std::make_shared<Shared>(io, tls, endpoint, auth, std::move(handler), limits)) {}
+               RequestHandler handler, ServerLimits limits, audit::AuditLog* audit)
+    : shared_(std::make_shared<Shared>(io, tls, endpoint, auth, std::move(handler), limits, audit)) {}
 
 void Server::start() { asio::co_spawn(shared_->acceptor.get_executor(), accept_loop(shared_), asio::detached); }
 

@@ -18,7 +18,7 @@
 | boost-asio(와 Boost 하위 라이브러리) | 1.92.0 | BSL-1.0 | `src/vault_client`(Named Pipe·UDS 입출력) | 대부분 헤더, 일부 하위 라이브러리 링크 |
 | boost-beast | 1.92.0 | BSL-1.0 | `src/gateway`(HTTPS 서버) | 헤더만 |
 | OpenSSL | 3.6.5 | Apache-2.0 | `src/tls`(TLS 협상 범위, ADR 0014), `src/gateway`(HTTPS 입출력) | Windows DLL, Linux 정적 |
-| nlohmann-json | 3.12.0 | MIT | `src/ner`(tokenizer.json 읽기), `src/gateway`(설정·오류 응답, ADR 0020) | 헤더만 |
+| nlohmann-json | 3.12.0 | MIT | `src/ner`(tokenizer.json 읽기), `src/gateway`(설정·오류 응답, ADR 0020), `src/audit`(감사 기록) | 헤더만 |
 | gtest | 1.18.0 | BSD-3-Clause | 시험만 | 배포하지 않음 |
 
 ## 공식 배포본과 모델(CMake 가 고정 해시로 받음)
