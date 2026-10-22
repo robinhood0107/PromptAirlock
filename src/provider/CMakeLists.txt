@@ -11,3 +11,6 @@ if(MSVC)
 else()
   target_compile_options(prompt_airlock_provider PRIVATE -Werror)
 endif()
+if(WIN32)
+  target_link_libraries(prompt_airlock_provider PRIVATE crypt32)  # DPAPI
+endif()

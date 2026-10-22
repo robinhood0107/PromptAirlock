@@ -118,6 +118,15 @@ TEST(TlsContext, ServerRejectsBrokenOrMismatchedInput) {
     EXPECT_EQ(no_key.error(), tls::TlsError::InvalidKey);
 }
 
+TEST(TlsContext, ReportsDaysUntilExpiry) {
+    // 시험 인증서는 하루짜리라 남은 날은 0 또는 1 이다(초 단위 반올림)
+    const auto days = tls::certificate_days_left(make_test_certificate().certificate_pem);
+    ASSERT_TRUE(days.has_value());
+    EXPECT_GE(*days, 0);
+    EXPECT_LE(*days, 1);
+    EXPECT_FALSE(tls::certificate_days_left("not a certificate").has_value());
+}
+
 TEST(TlsContext, ClientRejectsEmptyTrustStore) {
     const auto ctx = tls::make_client_context(std::string_view{"no certificates here"});
     ASSERT_FALSE(ctx.has_value());

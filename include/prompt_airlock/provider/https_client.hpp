@@ -28,10 +28,14 @@ struct ClientLimits {
     std::size_t response_bytes = 1024 * 1024;
 };
 
-enum class CredentialError : std::uint8_t { Unreadable, Empty, InvalidCharacter };
+enum class CredentialError : std::uint8_t { Unreadable, Empty, InvalidCharacter, NotProtected };
 
-// 자격 증명 파일 한 줄(끝 줄바꿈은 뗀다). 보이는 ASCII 만 받는다(헤더에 그대로 들어가므로).
+// 자격 증명 파일(ADR 0021). Windows 는 DPAPI(현재 사용자)로 보호한 파일만, Linux 는 권한 0600(그룹·다른 사용자 권한 없음) 파일만 읽는다.
+// 내용은 한 줄(끝 줄바꿈은 뗀다), 보이는 ASCII 만(헤더에 그대로 들어가므로).
 [[nodiscard]] std::expected<core::SensitiveText, CredentialError> load_credential(const std::filesystem::path& path);
+
+// 평문 자격 증명을 파일에 쓸 바이트로 바꾼다. Windows 는 DPAPI 로 암호화하고, Linux 는 그대로 둔다(쓰는 쪽이 0600 으로 쓴다).
+[[nodiscard]] std::expected<std::string, CredentialError> protect_credential(std::string_view plain);
 
 class HttpsClient {
 public:

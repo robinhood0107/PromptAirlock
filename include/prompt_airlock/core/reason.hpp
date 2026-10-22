@@ -33,6 +33,7 @@ enum class ReasonCode : std::uint16_t {
     ResponseTokenInLink = 500,
     ResponseBlockedValue = 501,
     ResponseTokenUnresolved = 502,
+    ResponseActiveContent = 503,  // 응답에 스크립트·스크립트 주소(ADR 0021)
     DetectorUnavailable = 900,
     ProtectionUnavailable = 901,
     InternalError = 902,

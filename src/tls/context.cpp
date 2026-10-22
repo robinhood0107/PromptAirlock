@@ -133,4 +133,15 @@ std::expected<ssl::context, TlsError> make_client_context(std::optional<std::str
     return ctx;
 }
 
+std::optional<int> certificate_days_left(std::string_view certificate_chain_pem) {
+    auto bio = memory_bio(certificate_chain_pem);
+    std::unique_ptr<X509, CertDeleter> leaf(PEM_read_bio_X509(bio.get(), nullptr, nullptr, nullptr));
+    int days = 0;
+    int seconds = 0;
+    if (!leaf || ASN1_TIME_diff(&days, &seconds, nullptr, X509_get0_notAfter(leaf.get())) != 1) {
+        return std::nullopt;
+    }
+    return days;
+}
+
 }  // namespace prompt_airlock::tls

@@ -229,6 +229,11 @@ TEST_F(GatewayPipeline, ResponseChecksRejectUnsafeAnswers) {
     // 차단 종류 값이 답에 새로 나타남
     EXPECT_EQ(code([](const std::string&) { return answer_with("예시 번호 900101-1234567"); }),
               core::reason_code_name(core::ReasonCode::ResponseBlockedValue));
+    // 스크립트가 담긴 답(대소문자 섞어도)
+    EXPECT_EQ(code([](const std::string&) { return answer_with("<ScRiPt>alert(1)</script>"); }),
+              core::reason_code_name(core::ReasonCode::ResponseActiveContent));
+    EXPECT_EQ(code([](const std::string&) { return answer_with("[x](JavaScript:alert(1))"); }),
+              core::reason_code_name(core::ReasonCode::ResponseActiveContent));
     // 도구 호출이 담긴 답
     EXPECT_EQ(code([](const std::string&) { return answer_with("x", {{"tool_calls", json::array({{{"id", "c"}}})}}); }),
               "provider_error");

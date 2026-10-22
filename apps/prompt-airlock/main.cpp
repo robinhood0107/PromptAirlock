@@ -1,10 +1,14 @@
 // 게이트웨이 실행 파일.
 //   prompt-airlock serve <config.json>      설정 하나로 Vault, NER pool, HTTPS 서버를 띄운다
 //   prompt-airlock issue-token <origin>      출처 token 을 발급한다(원문은 이때 한 번만 출력, 설정에는 해시만)
+//   prompt-airlock protect-credential <평문 파일> <출력 파일>   provider 자격 증명을 보호 저장한다(Windows DPAPI, Linux 0600)
+//   prompt-airlock audit verify|list <감사 폴더> [줄 수]       감사 기록을 로컬에서 검증·열람한다(관리 기록은 admin/ 에)
 #include <boost/asio/io_context.hpp>
 #include <boost/asio/signal_set.hpp>
 
+#include <algorithm>
 #include <array>
+#include <cstdlib>
 #include <cstdio>
 #include <exception>
 #include <fstream>
@@ -70,6 +74,7 @@ int serve(const std::filesystem::path& config_path) {
     if (!server_tls) {
         return fail("listen certificate or key rejected (weak key, bad PEM or mismatched pair)");
     }
+    const auto cert_days = prompt_airlock::tls::certificate_days_left(*cert);
     std::optional<std::string> trust;
     if (!config->provider.trust_file.empty() && !(trust = read_file(config->provider.trust_file))) {
         return fail("cannot read the provider trust file");
@@ -121,6 +126,10 @@ int serve(const std::filesystem::path& config_path) {
         },
         [&provider](std::string body) { return provider.send(std::move(body)); }, config->output_token_cap,
         config->provider.model, audit_log->get());
+    if (cert_days && *cert_days < 30) {
+        std::fprintf(stderr, "prompt-airlock: warning: listen certificate expires in %d days\n", *cert_days);
+        (void)(*audit_log)->append("cert_expiry", "warn", {{"days_left", *cert_days}});
+    }
     gw::Authenticator auth(config->origins);
 
     asio::io_context io(static_cast<int>(io_threads));
@@ -185,6 +194,76 @@ int issue_token(std::string_view origin) {
     return 0;
 }
 
+int protect_credential_file(const std::filesystem::path& in, const std::filesystem::path& out) {
+    auto plain = read_file(in);
+    if (!plain) {
+        return fail("cannot read the plain credential file");
+    }
+    const prompt_airlock::core::SensitiveText owned(std::move(*plain));
+    auto sealed = prompt_airlock::provider::protect_credential(owned.view());
+    if (!sealed) {
+        return fail("cannot protect the credential");
+    }
+    {
+        std::ofstream file(out, std::ios::binary | std::ios::trunc);
+        file << *sealed;
+        if (!file) {
+            return fail("cannot write the protected credential file");
+        }
+    }
+    std::error_code ec;
+    std::filesystem::permissions(out, std::filesystem::perms::owner_read | std::filesystem::perms::owner_write,
+                                 std::filesystem::perm_options::replace, ec);
+    std::printf("protected credential written to %s; delete the plain file\n", out.string().c_str());
+    return 0;
+}
+
+// 감사 기록 로컬 열람·검증. 서버와 같은 줄에 쓰지 않도록 관리 기록은 admin/ 아래 따로 이어 붙인다.
+int audit_command(std::string_view action, const std::filesystem::path& dir, int lines) {
+    namespace audit = prompt_airlock::audit;
+    auto admin = audit::AuditLog::open(dir / "admin", audit::minimum_retention);
+    if (!admin) {
+        return fail("cannot open the admin log");
+    }
+    if (action == "verify") {
+        const auto main_log = audit::verify(dir);
+        const auto admin_log = audit::verify(dir / "admin");
+        (void)(*admin)->append("audit_verify", "info", {{"ok", main_log.has_value() && admin_log.has_value()}});
+        if (!main_log) {
+            std::printf("audit: FAILED (%s)\n", std::string(audit::audit_error_name(main_log.error())).c_str());
+            return 1;
+        }
+        std::printf("audit: ok, %d segments, %llu lines\n", main_log->segments,
+                    static_cast<unsigned long long>(main_log->lines));
+        return admin_log ? 0 : 1;
+    }
+    if (action == "list") {
+        std::vector<std::filesystem::path> files;
+        for (const auto& entry : std::filesystem::directory_iterator(dir)) {
+            if (entry.path().extension() == ".jsonl") {
+                files.push_back(entry.path());
+            }
+        }
+        std::ranges::sort(files);
+        if (files.empty()) {
+            return fail("no audit segments");
+        }
+        std::ifstream in(files.back(), std::ios::binary);
+        std::vector<std::string> all;
+        for (std::string line; std::getline(in, line);) {
+            all.push_back(line);
+        }
+        const auto first = all.size() > static_cast<std::size_t>(lines) ? all.size() - static_cast<std::size_t>(lines) : 0;
+        for (auto i = first; i < all.size(); ++i) {
+            std::printf("%s\n", all[i].c_str());
+        }
+        (void)(*admin)->append("audit_view", "info",
+                               {{"segment", files.back().filename().string()}, {"lines", all.size() - first}});
+        return 0;
+    }
+    return fail("unknown audit action");
+}
+
 }  // namespace
 
 int main(int argc, char** argv) try {
@@ -195,7 +274,16 @@ int main(int argc, char** argv) try {
     if (command == "issue-token" && argc == 3) {
         return issue_token(argv[2]);
     }
-    std::fputs("usage: prompt-airlock serve <config.json>\n       prompt-airlock issue-token <origin-name>\n", stderr);
+    if (command == "protect-credential" && argc == 4) {
+        return protect_credential_file(argv[2], argv[3]);
+    }
+    if (command == "audit" && (argc == 4 || argc == 5)) {
+        return audit_command(argv[2], argv[3], argc == 5 ? std::atoi(argv[4]) : 20);
+    }
+    std::fputs("usage: prompt-airlock serve <config.json>\n       prompt-airlock issue-token <origin-name>\n"
+               "       prompt-airlock protect-credential <plain-file> <out-file>\n"
+               "       prompt-airlock audit verify|list <audit-dir> [lines]\n",
+               stderr);
     return 2;
 } catch (const std::exception& e) {
     std::fprintf(stderr, "prompt-airlock: %s\n", e.what());

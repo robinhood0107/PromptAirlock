@@ -57,6 +57,7 @@ std::string_view reason_code_name(ReasonCode code) noexcept {
         case ReasonCode::ResponseTokenInLink: return "response_token_in_link";
         case ReasonCode::ResponseBlockedValue: return "response_blocked_value";
         case ReasonCode::ResponseTokenUnresolved: return "response_token_unresolved";
+        case ReasonCode::ResponseActiveContent: return "response_active_content";
         case ReasonCode::DetectorUnavailable: return "detector_unavailable";
         case ReasonCode::ProtectionUnavailable: return "protection_unavailable";
         case ReasonCode::InternalError: return "internal_error";

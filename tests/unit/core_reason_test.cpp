@@ -25,6 +25,7 @@ const std::vector<ReasonCode>& all_codes() {
         ReasonCode::ParameterOutOfRange,  ReasonCode::StreamNotAllowed,    ReasonCode::EntityBlocked,
         ReasonCode::EncodedTarget,        ReasonCode::OpaqueEncodedBlob,   ReasonCode::ResidualFound,
         ReasonCode::ResponseTokenInLink,  ReasonCode::ResponseBlockedValue, ReasonCode::ResponseTokenUnresolved,
+        ReasonCode::ResponseActiveContent,
         ReasonCode::DetectorUnavailable,  ReasonCode::ProtectionUnavailable, ReasonCode::InternalError,
     };
     return codes;

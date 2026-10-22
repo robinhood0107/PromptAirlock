@@ -18,6 +18,7 @@
 
 #include "prompt_airlock/core/sha256.hpp"
 #include "prompt_airlock/tls/context.hpp"
+#include "listen_retry.hpp"
 #include "test_cert.hpp"
 
 namespace {
@@ -51,7 +52,7 @@ protected:
         gw::ServerLimits limits;
         limits.body_bytes = 1024;
         limits.io_timeout = std::chrono::seconds(5);
-        server_.emplace(io_, *server_tls_, tcp::endpoint(asio::ip::make_address("127.0.0.1"), 0), auth_,
+        pa_test::retry_listen([&] { server_.emplace(io_, *server_tls_, tcp::endpoint(asio::ip::make_address("127.0.0.1"), 0), auth_,
                         [this](gw::AcceptedRequest request) -> asio::awaitable<gw::JsonResponse> {
                             std::scoped_lock lock(mutex_);
                             ++handled_;
@@ -59,7 +60,7 @@ protected:
                             last_body_ = request.body;
                             co_return gw::JsonResponse{200, R"({"ok":true})"};
                         },
-                        limits);
+                        limits); });
         server_->start();
         port_ = server_->local_endpoint().port();
         thread_ = std::thread([this] { io_.run(); });
