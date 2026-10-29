@@ -28,6 +28,10 @@ function(pa_add_gtest name)
     # ONNX Runtime 내부의 한 번짜리 할당만 누수 보고에서 뺀다(tests/lsan.supp).
     gtest_discover_tests(${name} DISCOVERY_MODE PRE_TEST
       PROPERTIES TIMEOUT 300 ENVIRONMENT "LSAN_OPTIONS=suppressions=${PROJECT_SOURCE_DIR}/tests/lsan.supp")
+  elseif(NOT WIN32 AND PA_SANITIZE STREQUAL "thread")
+    # ONNX Runtime 종료 처리 중 경합만 뺀다(tests/tsan.supp).
+    gtest_discover_tests(${name} DISCOVERY_MODE PRE_TEST
+      PROPERTIES TIMEOUT 300 ENVIRONMENT "TSAN_OPTIONS=suppressions=${PROJECT_SOURCE_DIR}/tests/tsan.supp")
   else()
     gtest_discover_tests(${name} DISCOVERY_MODE PRE_TEST PROPERTIES TIMEOUT 300)
   endif()
