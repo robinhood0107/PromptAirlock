@@ -24,7 +24,7 @@
 #include "prompt_airlock/provider/https_client.hpp"
 #include "prompt_airlock/tls/context.hpp"
 #include "prompt_airlock/vault_client/service.hpp"
-#include "listen_retry.hpp"
+#include "socket_retry.hpp"
 #include "test_cert.hpp"
 
 namespace {
@@ -131,8 +131,10 @@ protected:
         beast::ssl_stream<beast::tcp_stream> stream(io, *client_tls_);
         SSL_set1_host(stream.native_handle(), "localhost");
         beast::get_lowest_layer(stream).expires_after(30s);
-        beast::get_lowest_layer(stream).connect(tcp::endpoint(asio::ip::make_address("127.0.0.1"),
-                                                              server_->local_endpoint().port()));
+        const tcp::endpoint server(asio::ip::make_address("127.0.0.1"), server_->local_endpoint().port());
+        if (const auto ec = pa_test::retry_connect(beast::get_lowest_layer(stream), server)) {
+            throw boost::system::system_error(ec, "connect");
+        }
         stream.handshake(asio::ssl::stream_base::client);
         http::request<http::string_body> req{http::verb::post, "/v1/chat/completions", 11};
         req.set(http::field::host, "localhost");

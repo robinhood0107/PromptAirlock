@@ -12,7 +12,7 @@
 
 #include "mock_provider.hpp"
 #include "prompt_airlock/tls/context.hpp"
-#include "listen_retry.hpp"
+#include "socket_retry.hpp"
 #include "test_cert.hpp"
 
 namespace {
