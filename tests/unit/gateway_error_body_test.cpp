@@ -20,6 +20,9 @@ TEST(GatewayErrorBody, EntryErrorsUseCompatibleShape) {
     EXPECT_FALSE(body["error"].contains("blocked_types"));
     EXPECT_EQ(gw::error_response(gw::EntryError::BodyTooLarge).status, 413u);
     EXPECT_EQ(gw::error_response(gw::EntryError::TooManyFailures).status, 429u);
+    const auto busy = gw::error_response(gw::EntryError::Overloaded);
+    EXPECT_EQ(busy.status, 503u);
+    EXPECT_EQ(json::parse(busy.body)["error"]["code"], "overloaded");
 }
 
 TEST(GatewayErrorBody, RejectionCarriesOnlyCodeAndTypes) {

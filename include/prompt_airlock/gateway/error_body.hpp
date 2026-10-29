@@ -19,6 +19,7 @@ enum class EntryError : std::uint8_t {
     UnsupportedMediaType,  // 415: application/json 이 아님
     BadRequest,            // 400: HTTP 형식 오류
     Unavailable,           // 503: 처리 단계를 아직 쓸 수 없음
+    Overloaded,            // 503: 처리 중 요청이 상한에 닿음
     ProviderFailed,        // 502: provider 연결 실패·시간 초과·오류 응답
 };
 
