@@ -1,6 +1,7 @@
 // HTTP 로 끝까지: 기관 앱(시험 클라이언트) → HTTPS 게이트웨이 → 실제 탐지기(NER 포함)·실제 Vault → mock provider.
 // 값은 모두 합성이다. mock provider 가 받은 본문(밖으로 나간 내용)에 원문이 없는지와, 거절 때 provider 호출이 0 인지를 본다.
 #include <boost/asio/io_context.hpp>
+#include <boost/asio/thread_pool.hpp>
 #include <boost/asio/ssl.hpp>
 #include <boost/beast/core.hpp>
 #include <boost/beast/http.hpp>
@@ -100,7 +101,7 @@ protected:
                 return gw::PseudonymScope(std::move(*scope));
             },
             [this](std::string body) { return provider_->send(std::move(body)); }, core::OutputTokenCap::standard(),
-            "demo-alias", audit_.get());
+            "demo-alias", work_.get_executor(), audit_.get());
         pa_test::retry_listen([&] { server_.emplace(io_, *server_tls_, loopback, auth_,
                         [this](gw::AcceptedRequest request) { return pipeline_->handle(std::move(request)); },
                         gw::ServerLimits{}, audit_.get()); });
@@ -162,6 +163,7 @@ protected:
     std::optional<prompt_airlock::vault_client::VaultService> vault_;
     gw::Authenticator auth_{{{"desk", hash_of("desk-token"), core::GradePolicy::OOnly}}};
     asio::io_context io_;
+    asio::thread_pool work_{2};
     std::optional<pa_mock::MockProvider> mock_;
     std::optional<prompt_airlock::provider::HttpsClient> provider_;
     std::optional<gw::Pipeline> pipeline_;
