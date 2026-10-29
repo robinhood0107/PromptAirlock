@@ -2,6 +2,7 @@
 // 요청마다 TLS 연결을 새로 연다(게이트웨이 → mock 도 같다). 문장은 모두 합성이다.
 //   gateway_measure [--no-ner] [--sequential N] [--clients C] [--per-client K]
 #include <boost/asio/io_context.hpp>
+#include <boost/asio/thread_pool.hpp>
 #include <boost/asio/ssl.hpp>
 #include <boost/beast/core.hpp>
 #include <boost/beast/http.hpp>
@@ -109,7 +110,7 @@ public:
                 return gw::PseudonymScope(std::move(*scope));
             },
             [this](std::string body) { return provider_->send(std::move(body)); }, core::OutputTokenCap::standard(),
-            "demo-alias");
+            "demo-alias", work_.get_executor());
         server_.emplace(io_, *server_tls_, loopback, auth_,
                         [this](gw::AcceptedRequest request) { return pipeline_->handle(std::move(request)); });
         server_->start();
@@ -170,6 +171,7 @@ private:
     std::optional<prompt_airlock::vault_client::VaultService> vault_;
     gw::Authenticator auth_{{{"desk", hash_of("desk-token"), core::GradePolicy::OOnly}}};
     asio::io_context io_;
+    asio::thread_pool work_{gw::pipeline_work_threads};
     std::optional<pa_mock::MockProvider> mock_;
     std::optional<prompt_airlock::provider::HttpsClient> provider_;
     std::optional<gw::Pipeline> pipeline_;

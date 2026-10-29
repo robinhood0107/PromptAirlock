@@ -4,6 +4,7 @@
 //   prompt-airlock protect-credential <평문 파일> <출력 파일>   provider 자격 증명을 보호 저장한다(Windows DPAPI, Linux 0600)
 //   prompt-airlock audit verify|list <감사 폴더> [줄 수]       감사 기록을 로컬에서 검증·열람한다(관리 기록은 admin/ 에)
 #include <boost/asio/io_context.hpp>
+#include <boost/asio/thread_pool.hpp>
 #include <boost/asio/signal_set.hpp>
 
 #include <algorithm>
@@ -115,6 +116,7 @@ int serve(const std::filesystem::path& config_path) {
     }
     prompt_airlock::provider::HttpsClient provider(
         *client_tls, {config->provider.host, config->provider.port, config->provider.target}, std::move(*credential));
+    asio::thread_pool work(gw::pipeline_work_threads);
     gw::Pipeline pipeline(
         *detectors,
         [&vault]() -> std::expected<gw::PseudonymScope, core::VaultError> {
@@ -125,7 +127,7 @@ int serve(const std::filesystem::path& config_path) {
             return gw::PseudonymScope(std::move(*scope));
         },
         [&provider](std::string body) { return provider.send(std::move(body)); }, config->output_token_cap,
-        config->provider.model, audit_log->get());
+        config->provider.model, work.get_executor(), audit_log->get());
     if (cert_days && *cert_days < 30) {
         std::fprintf(stderr, "prompt-airlock: warning: listen certificate expires in %d days\n", *cert_days);
         (void)(*audit_log)->append("cert_expiry", "warn", {{"days_left", *cert_days}});
@@ -153,6 +155,8 @@ int serve(const std::filesystem::path& config_path) {
     }
     io.run();
     workers.clear();
+    work.stop();  // 남은 작업은 버리고 돌고 있는 것만 끝낸다(pipeline 보다 먼저)
+    work.join();
     (void)(*audit_log)->append("stop", "info", {});
     return 0;
 }

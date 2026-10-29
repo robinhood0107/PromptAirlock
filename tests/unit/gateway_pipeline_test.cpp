@@ -4,11 +4,15 @@
 
 #include <boost/asio/co_spawn.hpp>
 #include <boost/asio/io_context.hpp>
+#include <boost/asio/post.hpp>
+#include <boost/asio/thread_pool.hpp>
 #include <boost/asio/use_future.hpp>
 #include <gtest/gtest.h>
 #include <nlohmann/json.hpp>
 
 #include <atomic>
+#include <chrono>
+#include <future>
 #include <memory>
 #include <string>
 #include <vector>
@@ -52,9 +56,31 @@ public:
     }
 };
 
+// 문이 열릴 때까지(최대 5초) 기다렸다가 아무것도 찾지 않는다. 기다리다 시간이 다 됐는지를 남긴다.
+class GatedNer final : public detect::NerScanner {
+public:
+    std::expected<std::vector<core::EntitySpan>, core::DetectError> scan(std::string_view, core::SegmentIndex,
+                                                                        const detect::DetectionView&) const override {
+        ++calls_;
+        if (gate_.wait_for(std::chrono::seconds(5)) != std::future_status::ready) {
+            timed_out_ = true;
+        }
+        return std::vector<core::EntitySpan>{};
+    }
+    void open() { opener_.set_value(); }
+    int calls() const { return calls_; }
+    bool timed_out() const { return timed_out_; }
+
+private:
+    std::promise<void> opener_;
+    std::shared_future<void> gate_ = opener_.get_future().share();
+    mutable std::atomic<int> calls_{0};
+    mutable std::atomic<bool> timed_out_{false};
+};
+
 class GatewayPipeline : public ::testing::Test {
 protected:
-    gw::Pipeline make(const detect::Detectors& detectors) {
+    gw::Pipeline make(const detect::Detectors& detectors, std::size_t in_flight_limit = gw::pipeline_in_flight_limit) {
         return gw::Pipeline(
             detectors,
             [this]() -> std::expected<gw::PseudonymScope, core::VaultError> {
@@ -66,12 +92,15 @@ protected:
             [this](std::string body) -> asio::awaitable<std::expected<gw::ProviderReply, gw::ProviderError>> {
                 ++provider_calls_;
                 sent_.push_back(std::move(body));
+                if (during_first_provider_call_ && provider_calls_ == 1) {
+                    co_await during_first_provider_call_();
+                }
                 if (provider_fails_) {
                     co_return std::unexpected(gw::ProviderError::Timeout);
                 }
                 co_return gw::ProviderReply{200, answer_ ? answer_(sent_.back()) : pa_mock::make_answer(sent_.back())};
             },
-            *core::OutputTokenCap::make(512), "demo-alias");
+            *core::OutputTokenCap::make(512), "demo-alias", work_.get_executor(), nullptr, in_flight_limit);
     }
 
     gw::JsonResponse run(const gw::Pipeline& pipeline, std::string body,
@@ -105,6 +134,9 @@ protected:
     }
 
     std::function<std::string(const std::string&)> answer_;
+    std::function<asio::awaitable<void>()> during_first_provider_call_;  // 첫 요청이 provider 를 기다리는 동안 할 일
+
+    asio::thread_pool work_{2};
 
     detect::Detectors detectors_ = *detect::Detectors::make({});
     std::shared_ptr<pa_test::FakeVault> vault_ = std::make_shared<pa_test::FakeVault>(20261022);
@@ -207,6 +239,40 @@ TEST_F(GatewayPipeline, ProviderFailureReturnsFixedError) {
     const auto reply = run(pipeline, ask("회의 안건 정리"));
     EXPECT_EQ(reply.status, 502u);
     EXPECT_EQ(code_of(reply), "provider_error");
+}
+
+TEST_F(GatewayPipeline, RejectsOverLimitRightAwayWithoutProvider) {
+    const auto pipeline = make(detectors_, 1);
+    gw::JsonResponse second{};
+    during_first_provider_call_ = [&]() -> asio::awaitable<void> {
+        second = co_await pipeline.handle(
+            gw::AcceptedRequest{nullptr, *core::resolve_grade(core::GradePolicy::OOnly, {}), ask("연락처 010-2345-6789")});
+    };
+    const auto first = run(pipeline, ask("연락처 010-2345-6789"));
+    EXPECT_EQ(first.status, 200u) << first.body;
+    EXPECT_EQ(second.status, 503u);
+    EXPECT_EQ(code_of(second), "overloaded");
+    EXPECT_EQ(provider_calls_, 1);
+    // 끝난 요청은 자리를 돌려주므로 다음 요청은 다시 받는다
+    EXPECT_EQ(run(pipeline, ask("회의 안건 정리")).status, 200u);
+    EXPECT_EQ(provider_calls_, 2);
+}
+
+TEST_F(GatewayPipeline, DetectionDoesNotHoldTheIoThread) {
+    const auto ner = std::make_shared<GatedNer>();
+    const auto gated = detect::Detectors::make({}, ner);
+    ASSERT_TRUE(gated.has_value());
+    const auto pipeline = make(*gated);
+    asio::io_context io;  // io 스레드 하나
+    auto reply = asio::co_spawn(
+        io, pipeline.handle(gw::AcceptedRequest{nullptr, *core::resolve_grade(core::GradePolicy::OOnly, {}), ask("회의 안건 정리")}),
+        asio::use_future);
+    // 요청이 탐지에서 기다리는 동안에도 같은 io 스레드에 올린 일이 돌아 문을 연다. 탐지가 io 스레드를 막으면 5초를 다 기다린다.
+    asio::post(io, [&] { ner->open(); });
+    io.run();
+    EXPECT_EQ(reply.get().status, 200u);
+    EXPECT_GT(ner->calls(), 0);
+    EXPECT_FALSE(ner->timed_out());
 }
 
 TEST_F(GatewayPipeline, ResponseChecksRejectUnsafeAnswers) {

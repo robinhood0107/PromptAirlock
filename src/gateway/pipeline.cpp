@@ -7,15 +7,27 @@
 #include "prompt_airlock/gateway/request_json.hpp"
 #include "prompt_airlock/gateway/response_json.hpp"
 
+#include <boost/asio/co_spawn.hpp>
+#include <boost/asio/use_awaitable.hpp>
 #include <nlohmann/json.hpp>
 
 #include <algorithm>
+#include <type_traits>
 #include <chrono>
 #include <random>
 #include <string_view>
 
 namespace prompt_airlock::gateway {
 namespace {
+
+namespace asio = boost::asio;
+
+// 동기 작업 f 를 작업 풀에서 돌리고, 끝나면 이 coroutine 의 실행기로 돌아온다(asio coroutine 은 자기 실행기에서 이어진다).
+template <class F>
+asio::awaitable<std::invoke_result_t<F&>> on_pool(const asio::any_io_executor& pool, F f) {
+    co_return co_await asio::co_spawn(
+        pool, [&f]() -> asio::awaitable<std::invoke_result_t<F&>> { co_return f(); }, asio::use_awaitable);
+}
 
 // 응답 능동 콘텐츠(ADR 0021): 기관 앱이 그대로 그리면 실행될 수 있는 표지. 대소문자를 가리지 않는다.
 bool has_active_content(std::string_view text) {
@@ -59,20 +71,32 @@ struct Pipeline::Trace {
 };
 
 Pipeline::Pipeline(const detect::Detectors& detectors, ScopeOpener open_scope, ProviderCall provider,
-                   core::OutputTokenCap output_cap, std::string model_alias, audit::AuditLog* audit)
+                   core::OutputTokenCap output_cap, std::string model_alias, asio::any_io_executor work,
+                   audit::AuditLog* audit, std::size_t in_flight_limit)
     : detectors_(detectors),
       open_scope_(std::move(open_scope)),
       provider_(std::move(provider)),
       output_cap_(output_cap),
       model_alias_(std::move(model_alias)),
-      audit_(audit) {}
+      work_(std::move(work)),
+      audit_(audit),
+      in_flight_limit_(in_flight_limit) {}
 
-boost::asio::awaitable<JsonResponse> Pipeline::handle(AcceptedRequest request) const {
+asio::awaitable<JsonResponse> Pipeline::handle(AcceptedRequest request) const {
     const auto start = std::chrono::steady_clock::now();
     Trace trace;
     const std::string origin = request.origin != nullptr ? request.origin->name : std::string();
     const std::string client = request.client;
-    JsonResponse reply = co_await run(std::move(request), trace);
+    struct Slot {
+        std::atomic<std::size_t>& count;
+        ~Slot() { --count; }
+    } slot{in_flight_};
+    JsonResponse reply;
+    if (in_flight_.fetch_add(1) >= in_flight_limit_) {
+        reply = trace.fail(EntryError::Overloaded);  // 기다리게 하지 않는다. 탐지·Vault·provider 모두 0
+    } else {
+        reply = co_await run(std::move(request), trace);
+    }
     if (audit_ != nullptr) {
         const auto ms = std::chrono::duration<double, std::milli>(std::chrono::steady_clock::now() - start).count();
         nlohmann::json fields = {{"request_id", trace.id}, {"origin", origin},       {"client", client},
@@ -89,21 +113,35 @@ boost::asio::awaitable<JsonResponse> Pipeline::handle(AcceptedRequest request) c
     co_return reply;
 }
 
-// shortcut: 탐지·Vault 호출은 동기라 이 coroutine 을 돌리는 io 스레드를 잠시 막는다. 동시 처리 수는 io 스레드 수로 묶인다.
-// 요청 단위 시간 상한과 취소는 Phase 9 에서 붙인다.
-boost::asio::awaitable<JsonResponse> Pipeline::run(AcceptedRequest request, Trace& trace) const {
+// 동기 단계는 작업 풀에서, provider 호출만 io 실행기에서 한다. 가명 범위를 닫는 Vault 호출도 작업 풀에서 한다.
+// 요청 단위 시간 상한과 취소는 Phase 9-2 에서 붙인다.
+asio::awaitable<JsonResponse> Pipeline::run(AcceptedRequest request, Trace& trace) const {
+    auto outbound = co_await on_pool(work_, [&] { return prepare(std::move(request), trace); });
+    if (!outbound) {
+        co_return std::move(outbound.error());
+    }
+    const auto reply = co_await provider_(std::move(outbound->body));
+    co_return co_await on_pool(work_, [&] {
+        auto response = finish(reply, *outbound->scope, trace);
+        outbound->scope.reset();
+        return response;
+    });
+}
+
+// JSON 읽기부터 외부 전송 이력까지. 거절이면 그 응답을 돌려준다.
+std::expected<Pipeline::Outbound, JsonResponse> Pipeline::prepare(AcceptedRequest request, Trace& trace) const {
     auto parsed = parse_request(request.body);
     if (!parsed) {
-        co_return trace.reject(parsed.error());
+        return std::unexpected(trace.reject(parsed.error()));
     }
     auto params = core::RequestParams::create(parsed->params, output_cap_);
     if (!params) {
-        co_return trace.reject(params.error());
+        return std::unexpected(trace.reject(params.error()));
     }
     auto raw = core::RawPrompt::create(std::move(parsed->document), *params, request.grade);
     const auto detected = detectors_.detect(raw.document());
     if (!detected) {
-        co_return trace.reject(core::Rejection::from_error(detected.error()));
+        return std::unexpected(trace.reject(core::Rejection::from_error(detected.error())));
     }
     for (const auto& entity : detected->entities) {
         auto& count = trace.entities[std::string(core::entity_type_name(entity.type()))];
@@ -111,78 +149,82 @@ boost::asio::awaitable<JsonResponse> Pipeline::run(AcceptedRequest request, Trac
     }
     auto checked = core::check_policy(std::move(raw), detected->entities, core::Policy::standard(output_cap_));
     if (!checked) {
-        co_return trace.reject(checked.error());
+        return std::unexpected(trace.reject(checked.error()));
     }
-    // 가명 범위는 이 요청이 끝날 때까지 산다(응답 복원도 같은 범위에서만 한다)
     auto scope = open_scope_();
     if (!scope) {
-        co_return trace.reject(core::Rejection::from_error(scope.error()));
+        return std::unexpected(trace.reject(core::Rejection::from_error(scope.error())));
     }
     auto protected_prompt = core::protect(std::move(*checked), *scope);
     if (!protected_prompt) {
-        co_return trace.reject(protected_prompt.error());
+        return std::unexpected(trace.reject(protected_prompt.error()));
     }
     const auto residual = detectors_.detect(protected_prompt->document());
     if (!residual) {
-        co_return trace.reject(core::Rejection::from_error(residual.error()));
+        return std::unexpected(trace.reject(core::Rejection::from_error(residual.error())));
     }
     auto verified =
         core::verify_residual(std::move(*protected_prompt), core::ResidualReport{residual->entities, residual->encoded});
     if (!verified) {
-        co_return trace.reject(verified.error());
+        return std::unexpected(trace.reject(verified.error()));
     }
     const auto provider_request = core::make_provider_request(*verified);
     if (!provider_request) {
-        co_return trace.reject(provider_request.error());
+        return std::unexpected(trace.reject(provider_request.error()));
     }
-    std::string body = provider_request_body(*provider_request, model_alias_);
+    Outbound outbound{std::move(*scope), provider_request_body(*provider_request, model_alias_)};
     // 외부 전송 이력: 실제로 보내는 가명 상태 본문(ADR 0021). 남기지 못하면 보내지 않는다.
-    if (audit_ != nullptr &&
-        !audit_->append("egress", "info", {{"request_id", trace.id}, {"sent", nlohmann::json::parse(body)}})) {
-        co_return trace.fail(EntryError::Unavailable);
+    if (audit_ != nullptr && !audit_->append("egress", "info",
+                                             {{"request_id", trace.id}, {"sent", nlohmann::json::parse(outbound.body)}})) {
+        return std::unexpected(trace.fail(EntryError::Unavailable));
     }
-    const auto reply = co_await provider_(std::move(body));
+    return outbound;
+}
+
+// provider 답 검사부터 복원한 응답까지.
+JsonResponse Pipeline::finish(const std::expected<ProviderReply, ProviderError>& reply, PseudonymScope& scope,
+                              Trace& trace) const {
     if (!reply || reply->status != 200) {
-        co_return trace.fail(EntryError::ProviderFailed);  // provider 오류 본문은 넘기지 않는다
+        return trace.fail(EntryError::ProviderFailed);  // provider 오류 본문은 넘기지 않는다
     }
     // 복원 전 응답. provider 오류 본문은 남기지 않는다(200 일 때만)
     if (audit_ != nullptr &&
         !audit_->append("egress_answer", "info", {{"request_id", trace.id}, {"answer", reply->body}})) {
-        co_return trace.fail(EntryError::Unavailable);
+        return trace.fail(EntryError::Unavailable);
     }
     auto answer = parse_provider_answer(reply->body);
     if (!answer) {
-        co_return trace.fail(EntryError::ProviderFailed);
+        return trace.fail(EntryError::ProviderFailed);
     }
     // 응답 검사(ADR 0017 7~9): 다시 탐지 → 차단 값·링크 속 token 이면 거절 → 같은 범위의 token 만 복원
     if (has_active_content(answer->content.view())) {
-        co_return trace.reject(core::Rejection::of(core::ReasonCode::ResponseActiveContent));
+        return trace.reject(core::Rejection::of(core::ReasonCode::ResponseActiveContent));
     }
     std::string restored;
     if (!answer->content.empty()) {
         const auto found = detectors_.detect_segment(answer->content.view(), core::SegmentIndex{0});
         if (!found) {
-            co_return trace.reject(core::Rejection::from_error(found.error()));
+            return trace.reject(core::Rejection::from_error(found.error()));
         }
         auto checked = core::check_response(std::move(answer->content), *found);
         if (!checked) {
-            co_return trace.reject(checked.error());
+            return trace.reject(checked.error());
         }
         const auto plan = core::plan_restore(*checked);
         if (!plan) {
-            co_return trace.reject(plan.error());
+            return trace.reject(plan.error());
         }
-        auto text = core::apply_restore(std::move(*checked), *plan, *scope);
+        auto text = core::apply_restore(std::move(*checked), *plan, scope);
         if (!text) {
-            co_return trace.reject(text.error());
+            return trace.reject(text.error());
         }
         restored = std::string(text->view());
     }
     const auto created = std::chrono::duration_cast<std::chrono::seconds>(
                              std::chrono::system_clock::now().time_since_epoch())
                              .count();
-    co_return JsonResponse{200, client_response_body(trace.id, created, model_alias_, restored,
-                                                     answer->finish_reason, answer->usage)};
+    return JsonResponse{200, client_response_body(trace.id, created, model_alias_, restored, answer->finish_reason,
+                                                  answer->usage)};
 }
 
 }  // namespace prompt_airlock::gateway
