@@ -18,7 +18,7 @@
 
 #include "prompt_airlock/core/sha256.hpp"
 #include "prompt_airlock/tls/context.hpp"
-#include "listen_retry.hpp"
+#include "socket_retry.hpp"
 #include "test_cert.hpp"
 
 namespace {
@@ -90,7 +90,7 @@ protected:
         SSL_set1_host(stream.native_handle(), "localhost");
         beast::error_code ec;
         beast::get_lowest_layer(stream).expires_after(std::chrono::seconds(5));
-        beast::get_lowest_layer(stream).connect(tcp::endpoint(asio::ip::make_address("127.0.0.1"), port_), ec);
+        ec = pa_test::retry_connect(beast::get_lowest_layer(stream), tcp::endpoint(asio::ip::make_address("127.0.0.1"), port_));
         if (ec) {
             return std::nullopt;
         }
