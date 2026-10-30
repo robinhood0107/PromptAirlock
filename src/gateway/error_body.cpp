@@ -47,6 +47,11 @@ Shape entry_shape(EntryError error) {
             return {503, "api_error", "overloaded", "The gateway is busy. Try again later."};
         case EntryError::ProviderFailed:
             return {502, "api_error", "provider_error", "The upstream model did not return a usable response."};
+        case EntryError::Timeout:
+            return {504, "api_error", "timeout", "The request took too long and was stopped."};
+        case EntryError::Cancelled:
+            // 표준 번호가 없어 흔히 쓰는 499(client closed request)를 쓴다
+            return {499, "api_error", "cancelled", "The client closed the connection."};
     }
     return {500, "api_error", "internal_error", "Internal error."};
 }
