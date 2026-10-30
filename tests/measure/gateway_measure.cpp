@@ -74,6 +74,7 @@ const std::vector<std::string> raw_values = {"010-2345-6789", "example.invalid"}
 struct Stats {
     std::vector<double> ms;
     int errors = 0;
+    std::map<std::string, int> reasons;  // 오류의 상태와 사유("502 provider_error", "0 system 10014" 처럼)
 };
 
 void report(const std::string& name, Stats stats) {
@@ -87,6 +88,9 @@ void report(const std::string& name, Stats stats) {
     };
     std::printf("%-44s p50 %9.3f  p95 %9.3f  max %9.3f  (n=%zu, errors %d)\n", name.c_str(), at(0.5), at(0.95),
                 at(1.0), stats.ms.size(), stats.errors);
+    for (const auto& [reason, count] : stats.reasons) {
+        std::printf("%-44s %d\n", ("  error " + reason).c_str(), count);
+    }
 }
 
 // 여러 스레드가 시간을 적는 곳. 순차 측정에서는 요청 순서대로 쌓인다.
@@ -180,7 +184,7 @@ public:
 
     struct Reply {
         unsigned status = 0;  // 0 은 연결·읽기 실패
-        std::string code;     // 200 이 아닐 때 오류 사유
+        std::string code;     // 200 이 아닐 때 오류 사유, 상태 0 이면 소켓 오류 번호
         double ms = 0;
     };
 
@@ -214,17 +218,15 @@ public:
                     reply.code = body["error"].value("code", "");
                 }
             }
+        } catch (const boost::system::system_error& e) {
+            reply.status = 0;
+            reply.code = "system " + std::to_string(e.code().value());  // 10014 는 이 PC 의 소켓 오류(#118)
         } catch (const std::exception&) {
             reply.status = 0;
+            reply.code = "exception";
         }
         reply.ms = std::chrono::duration<double, std::milli>(Clock::now() - start).count();
         return reply;
-    }
-
-    // 요청 하나의 왕복 시간(ms). 200 이 아니면 nullopt.
-    std::optional<double> once(const std::string& text) {
-        const auto reply = call(text);
-        return reply.status == 200 ? std::optional<double>(reply.ms) : std::nullopt;
     }
 
     // provider 가 받은 본문 수와, 원문 값이 든 본문 수.
@@ -263,10 +265,12 @@ private:
 Stats sequential(Rig& rig, const std::string& text, int n) {
     Stats stats;
     for (int i = 0; i < n; ++i) {
-        if (const auto ms = rig.once(text)) {
-            stats.ms.push_back(*ms);
+        const auto reply = rig.call(text);
+        if (reply.status == 200) {
+            stats.ms.push_back(reply.ms);
         } else {
             ++stats.errors;
+            ++stats.reasons[std::to_string(reply.status) + " " + reply.code];
         }
     }
     return stats;
@@ -280,8 +284,8 @@ void measure_sequential(Rig& rig, const std::string& name, const std::string& te
     const auto handle = rig.handle_ms.take();
     const auto provider = rig.provider_ms.take();
     report(name + " round trip (ms)", round_trip);
-    report(name + " handle (ms)", Stats{handle, 0});
-    report(name + " provider (ms)", Stats{provider, 0});
+    report(name + " handle (ms)", Stats{handle, 0, {}});
+    report(name + " provider (ms)", Stats{provider, 0, {}});
     if (handle.size() != provider.size()) {
         std::printf("%-44s handle %zu, provider %zu: not paired\n", (name + " gateway").c_str(), handle.size(),
                     provider.size());
@@ -294,9 +298,7 @@ void measure_sequential(Rig& rig, const std::string& name, const std::string& te
     report(name + " gateway = handle - provider (ms)", gateway);
 }
 
-}  // namespace
-
-int main(int argc, char** argv) {
+int run(int argc, char** argv) {
     bool with_ner = true;
     int n = 200;
     int clients = 8;
@@ -367,6 +369,9 @@ int main(int argc, char** argv) {
                 std::scoped_lock lock(mutex);
                 concurrent.ms.insert(concurrent.ms.end(), local.ms.begin(), local.ms.end());
                 concurrent.errors += local.errors;
+                for (const auto& [reason, count] : local.reasons) {
+                    concurrent.reasons[reason] += count;
+                }
             });
         }
     }
@@ -403,4 +408,17 @@ int main(int argc, char** argv) {
     const auto [bodies, leaked] = rig.egress_check();
     std::printf("%-44s %zu bodies, %zu with raw values\n", "provider egress", bodies, leaked);
     return 0;
+}
+
+}  // namespace
+
+int main(int argc, char** argv) {
+    // 띄우기 실패(listen 등)는 예외로 온다. 프로세스를 강제 종료시키지 않고 이유를 남긴다.
+    try {
+        return run(argc, argv);
+    } catch (const std::exception& e) {
+        std::fflush(stdout);
+        std::fprintf(stderr, "fatal: %s\n", e.what());
+        return 2;
+    }
 }
