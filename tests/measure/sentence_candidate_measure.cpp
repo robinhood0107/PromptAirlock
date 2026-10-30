@@ -904,7 +904,16 @@ int main(int argc, char** argv) {
             const double s = score(text, p);
             return s >= chosen.at(p);
         };
-        // 1. 사람 표지를 처음 보는 것으로: 문장 맨 앞 "X은/는 " 을 바꾼다.
+        // 1. 사람 표지를 처음 보는 것으로: 사람 표지가 있는 문장의 앞 한두 어절 "X은/는" 을 바꾼다.
+        //    "노하은 대리는" 처럼 이름 속 글자나 "비밀번호는" 같은 사람 아닌 주어를 자르지 않는다.
+        const auto person_prefix = [](const std::string& text) -> std::size_t {
+            const auto first = text.find(' ');
+            const auto second = first == std::string::npos ? std::string::npos : text.find(' ', first + 1);
+            const auto topic = [&](std::size_t end) {
+                return end != std::string::npos && (text.substr(0, end).ends_with("은") || text.substr(0, end).ends_with("는"));
+            };
+            return topic(second) ? second + 1 : topic(first) ? first + 1 : std::string::npos;
+        };
         const std::vector<std::string> fresh = {"곽태린 대리는 ", "엄주원 과장은 ", "변 실장님은 ", "제 사촌은 "};
         // 2. 말끝을 다른 말투로
         const std::vector<std::pair<std::string, std::string>> endings = {
@@ -916,13 +925,14 @@ int main(int argc, char** argv) {
                 continue;
             }
             const bool before = decide(r.text);
-            for (const char* particle : {"은 ", "는 "}) {
-                const auto at = r.text.find(particle);
-                if (at != std::string::npos && at > 0 && at < 40) {
-                    const std::string swapped = fresh[k++ % fresh.size()] + r.text.substr(at + std::string(particle).size());
-                    ++name_n;
-                    name_flip += decide(swapped) != before ? 1 : 0;
-                    break;
+            if (const auto rest = person_prefix(r.text); r.person && rest != std::string::npos) {
+                const std::string swapped = fresh[k++ % fresh.size()] + r.text.substr(rest);
+                ++name_n;
+                const bool after = decide(swapped);
+                name_flip += after != before ? 1 : 0;
+                if (explain && after != before) {
+                    std::printf("name-flip %s %s %d->%d | %s | %s\n", r.id.c_str(), r.group.c_str(), before, after, r.text.c_str(),
+                                swapped.c_str());
                 }
             }
             for (const auto& [from, to] : endings) {
@@ -941,8 +951,13 @@ int main(int argc, char** argv) {
                 continue;
             }
             ++tr_n;
-            tr_before += decide(r.text) ? 1 : 0;
-            tr_after += decide(transplant[tr_n % transplant.size()] + r.text) ? 1 : 0;
+            const bool before = decide(r.text);
+            const bool after = decide(transplant[tr_n % transplant.size()] + r.text);
+            tr_before += before ? 1 : 0;
+            tr_after += after ? 1 : 0;
+            if (explain && after) {
+                std::printf("person-block %s %d | %s\n", r.id.c_str(), before, r.text.c_str());
+            }
         }
         const auto rate = [](std::size_t a, std::size_t b) { return b == 0 ? 0.0 : 100.0 * static_cast<double>(a) / static_cast<double>(b); };
         std::printf("\nshortcut tests (classifier decision only, pass if <= 10%%)\n");
