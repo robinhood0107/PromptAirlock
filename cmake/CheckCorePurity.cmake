@@ -1,6 +1,7 @@
 # core 소스가 I/O·시계·난수·정규식·다른 모듈에 기대지 않는지 검사한다(ADR 0001).
 # 사용: cmake -DPA_PURITY_ROOTS=<디렉터리;...> [-DPA_PURITY_SELF=<모듈>] -P CheckCorePurity.cmake
 # PA_PURITY_SELF 는 검사 대상 모듈 자신의 헤더 include 를 허용한다(예: detect).
+# PA_PURITY_ALLOW 는 그 모듈에서 빼는 규칙 이름 목록이다(예: detect 의 include-stop-token).
 # 위반이 하나라도 있으면 파일과 규칙 이름을 출력하고 실패한다. 원문 줄은 출력하지 않는다.
 cmake_minimum_required(VERSION 3.28)
 
@@ -22,7 +23,8 @@ set(_rules
   "include-cstdio"     "#[ \t]*include[ \t]*<(cstdio|stdio\\.h)>"
   "include-filesystem" "#[ \t]*include[ \t]*<filesystem>"
   "include-chrono"     "#[ \t]*include[ \t]*<(chrono|ctime|time\\.h)>"
-  "include-thread"     "#[ \t]*include[ \t]*<(thread|mutex|condition_variable|future|stop_token)>"
+  "include-thread"     "#[ \t]*include[ \t]*<(thread|mutex|condition_variable|future)>"
+  "include-stop-token" "#[ \t]*include[ \t]*<stop_token>"
   "include-random"     "#[ \t]*include[ \t]*<random>"
   "include-regex"      "#[ \t]*include[ \t]*<regex>"
   "include-os"         "#[ \t]*include[ \t]*<(windows\\.h|unistd\\.h|sys/)"
@@ -55,6 +57,9 @@ foreach(_file IN LISTS _all_files)
     math(EXPR _j "${_i} + 1")
     list(GET _rules ${_i} _name)
     list(GET _rules ${_j} _regex)
+    if(_name IN_LIST PA_PURITY_ALLOW)
+      continue()
+    endif()
     if(_text MATCHES "${_regex}")
       message(SEND_ERROR "purity: ${_name}: ${_file}")
       math(EXPR _violations "${_violations} + 1")
