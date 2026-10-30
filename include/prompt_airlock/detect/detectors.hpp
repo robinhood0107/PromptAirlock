@@ -4,6 +4,7 @@
 #include <expected>
 #include <memory>
 #include <span>
+#include <stop_token>
 #include <string_view>
 #include <utility>
 #include <vector>
@@ -36,19 +37,21 @@ public:
     [[nodiscard]] static std::expected<Detectors, core::InputError> make(std::span<const std::string_view> internal_terms,
                                                                          std::shared_ptr<const NerScanner> ner = {});
 
-    [[nodiscard]] std::expected<DocumentDetection, core::DetectError> detect(const core::PromptDocument& document) const;
+    // stop 은 NER 까지 넘긴다(요청 취소 신호). 결정론 규칙은 짧아서 확인하지 않는다.
+    [[nodiscard]] std::expected<DocumentDetection, core::DetectError> detect(const core::PromptDocument& document,
+                                                                           std::stop_token stop = {}) const;
 
     // segment 하나. 시험과 잔여 검사에서도 쓴다.
     [[nodiscard]] std::expected<std::vector<core::EntitySpan>, core::DetectError> detect_segment(
-        std::string_view text, core::SegmentIndex segment) const;
+        std::string_view text, core::SegmentIndex segment, std::stop_token stop = {}) const;
 
 private:
     Detectors(TermMatcher internal_terms, std::shared_ptr<const NerScanner> ner);
     [[nodiscard]] std::expected<std::vector<core::EntitySpan>, core::DetectError> scan(
-        std::string_view text, core::SegmentIndex segment, SensitiveTally& tally) const;
+        std::string_view text, core::SegmentIndex segment, SensitiveTally& tally, std::stop_token stop) const;
     // 덩어리를 깊이 2까지 풀고 푼 결과를 같은 탐지기로 본다.
     [[nodiscard]] std::expected<std::vector<core::EncodedFinding>, core::DetectError> scan_encoded(
-        std::string_view text, core::SegmentIndex segment) const;
+        std::string_view text, core::SegmentIndex segment, std::stop_token stop) const;
     TermMatcher internal_terms_;
     std::shared_ptr<const NerScanner> ner_;  // 여러 Detectors 사본이 같은 pool 을 함께 쓴다
     TermMatcher account_context_;   // 계좌 문맥어(data/account_context_terms.hpp)

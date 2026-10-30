@@ -4,8 +4,9 @@
 #include <condition_variable>
 #include <deque>
 #include <exception>
-#include <future>
 #include <mutex>
+#include <optional>
+#include <stop_token>
 #include <system_error>
 #include <utility>
 
@@ -37,7 +38,8 @@ class EngineWorker final : public NerWorker {
 public:
     explicit EngineWorker(NerEngine engine) : engine_(std::move(engine)) {}
 
-    Result run(std::string_view text, pc::SegmentIndex segment, const detect::DetectionView& view) override {
+    Result run(std::string_view text, pc::SegmentIndex segment, const detect::DetectionView& view,
+               std::stop_token) override {
         auto found = engine_.detect_all(text, segment, view);
         if (!found) {
             return std::unexpected(to_detect_error(found.error()));
@@ -55,7 +57,8 @@ struct Job {
     pc::SensitiveText text;
     pc::SegmentIndex segment;
     detect::DetectionView view;
-    std::promise<Result> result;
+    std::stop_source abandon;      // 요청이 결과를 기다리지 않고 떠나면 켠다
+    std::optional<Result> result;  // State::mutex 로 보호한다
 };
 
 }  // namespace
@@ -63,6 +66,7 @@ struct Job {
 struct NerPool::State {
     std::mutex mutex;
     std::condition_variable ready;
+    std::condition_variable_any done;  // 일 하나가 끝날 때마다 깨운다(기다리는 요청은 취소 신호로도 깬다)
     std::deque<std::shared_ptr<Job>> jobs;
     std::size_t depth = 0;
     std::chrono::milliseconds wait_limit{};
@@ -124,9 +128,13 @@ NerPool::~NerPool() {
     for (auto& thread : threads_) {
         thread.join();
     }
-    for (auto& job : state_->jobs) {
-        job->result.set_value(std::unexpected(pc::DetectError::Unavailable));
+    {
+        std::lock_guard lock(state_->mutex);
+        for (auto& job : state_->jobs) {
+            job->result = std::unexpected(pc::DetectError::Unavailable);
+        }
     }
+    state_->done.notify_all();
 }
 
 void NerPool::work(NerWorker& worker) {
@@ -143,37 +151,40 @@ void NerPool::work(NerWorker& worker) {
         }
         Result found = std::unexpected(pc::DetectError::Unavailable);
         try {
-            found = worker.run(job->text.view(), job->segment, job->view);
+            found = worker.run(job->text.view(), job->segment, job->view, job->abandon.get_token());
         } catch (...) {
             // 예외가 worker 스레드를 빠져나가면 프로세스가 끝난다. 이 일만 실패로 돌려주고 worker 는 계속 돈다.
         }
-        job->result.set_value(std::move(found));
+        {
+            std::lock_guard lock(state_->mutex);
+            job->result = std::move(found);
+        }
+        state_->done.notify_all();
     }
 }
 
-Result NerPool::scan(std::string_view text, pc::SegmentIndex segment, const detect::DetectionView& view) const {
+Result NerPool::scan(std::string_view text, pc::SegmentIndex segment, const detect::DetectionView& view,
+                     std::stop_token stop) const {
     try {
-        auto job = std::make_shared<Job>(Job{pc::SensitiveText::copy_of(text), segment, view, {}});
-        auto result = job->result.get_future();
-        {
-            std::lock_guard lock(state_->mutex);
-            if (state_->stopping) {
-                return std::unexpected(pc::DetectError::Unavailable);
-            }
-            if (state_->jobs.size() >= state_->depth) {
-                return std::unexpected(pc::DetectError::Overloaded);  // 기다리지 않는다
-            }
-            state_->jobs.push_back(job);
+        if (stop.stop_requested()) {
+            return std::unexpected(pc::DetectError::Timeout);  // 이미 포기한 요청은 줄을 세우지 않는다
         }
+        auto job = std::make_shared<Job>(Job{pc::SensitiveText::copy_of(text), segment, view, {}, {}});
+        std::unique_lock lock(state_->mutex);
+        if (state_->stopping) {
+            return std::unexpected(pc::DetectError::Unavailable);
+        }
+        if (state_->jobs.size() >= state_->depth) {
+            return std::unexpected(pc::DetectError::Overloaded);  // 기다리지 않는다
+        }
+        state_->jobs.push_back(job);
         state_->ready.notify_one();
-        if (result.wait_for(state_->wait_limit) == std::future_status::ready) {
-            return result.get();
+        if (state_->done.wait_for(lock, stop, state_->wait_limit, [&] { return job->result.has_value(); })) {
+            return std::move(*job->result);
         }
-        // 늦었다. 아직 대기열에 있으면 빼서 돌리지 않게 하고, 이미 돌고 있으면 결과를 버린다.
-        {
-            std::lock_guard lock(state_->mutex);
-            std::erase(state_->jobs, job);
-        }
+        // 늦었거나 요청이 취소됐다. 아직 대기열에 있으면 빼서 돌리지 않게 하고, 이미 돌고 있으면 멈추라고 알린다.
+        std::erase(state_->jobs, job);
+        job->abandon.request_stop();
         return std::unexpected(pc::DetectError::Timeout);
     } catch (const std::exception&) {
         return std::unexpected(pc::DetectError::Unavailable);  // 사본·대기열 메모리 부족 등

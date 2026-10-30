@@ -1,6 +1,6 @@
 // NER worker pool
 // - 실제 모델: 여러 요청 스레드가 함께 불러도 결과가 엔진 하나와 같다.
-// - 가짜 worker: 막아 둔 worker 로 포화·시간 초과·예외를 순서에 기대지 않고 확인한다.
+// - 가짜 worker: 막아 둔 worker 로 포화·시간 초과·예외·취소를 순서에 기대지 않고 확인한다.
 #include "prompt_airlock/ner/pool.hpp"
 
 #include <gtest/gtest.h>
@@ -11,6 +11,7 @@
 #include <filesystem>
 #include <memory>
 #include <mutex>
+#include <stop_token>
 #include <stdexcept>
 #include <string>
 #include <thread>
@@ -32,7 +33,7 @@ const fs::path model_dir = PA_NER_MODEL_DIR;
 class GateWorker final : public pn::NerWorker {
 public:
     std::expected<std::vector<pc::EntitySpan>, pc::DetectError> run(std::string_view, pc::SegmentIndex,
-                                                                     const pd::DetectionView&) override {
+                                                                     const pd::DetectionView&, std::stop_token) override {
         std::unique_lock lock(mutex_);
         ++started_;
         changed_.notify_all();
@@ -66,12 +67,48 @@ private:
 class ThrowingWorker final : public pn::NerWorker {
 public:
     std::expected<std::vector<pc::EntitySpan>, pc::DetectError> run(std::string_view text, pc::SegmentIndex,
-                                                                     const pd::DetectionView&) override {
+                                                                     const pd::DetectionView&, std::stop_token) override {
         if (text == "boom") {
             throw std::runtime_error("모의 실패");
         }
         return std::vector<pc::EntitySpan>{};
     }
+};
+
+// 중단 신호가 올 때까지 일을 붙잡는 가짜 worker. 시작한 일과 신호를 받고 끝낸 일을 센다.
+class StopWorker final : public pn::NerWorker {
+public:
+    std::expected<std::vector<pc::EntitySpan>, pc::DetectError> run(std::string_view, pc::SegmentIndex,
+                                                                     const pd::DetectionView&,
+                                                                     std::stop_token stop) override {
+        std::unique_lock lock(mutex_);
+        ++started_;
+        changed_.notify_all();
+        changed_.wait(lock, stop, [] { return false; });
+        ++quit_;
+        changed_.notify_all();
+        return std::vector<pc::EntitySpan>{};
+    }
+
+    // 5초 안에 조건이 맞으면 true. 시험이 멈추지 않고 실패하게 한다.
+    bool wait_started(int count) {
+        std::unique_lock lock(mutex_);
+        return changed_.wait_for(lock, 5s, [&] { return started_ >= count; });
+    }
+    bool wait_quit(int count) {
+        std::unique_lock lock(mutex_);
+        return changed_.wait_for(lock, 5s, [&] { return quit_ >= count; });
+    }
+    int started() {
+        std::lock_guard lock(mutex_);
+        return started_;
+    }
+
+private:
+    std::mutex mutex_;
+    std::condition_variable_any changed_;
+    int started_ = 0;
+    int quit_ = 0;
 };
 
 struct Gated {
@@ -112,7 +149,7 @@ TEST(NerPool, ConcurrentCallersGetTheSameResultAsOneEngine) {
     for (int t = 0; t < 8; ++t) {
         callers.emplace_back([&] {
             for (int i = 0; i < 4; ++i) {
-                const auto found = (*pool)->scan(text, pc::SegmentIndex{0}, *view);
+                const auto found = (*pool)->scan(text, pc::SegmentIndex{0}, *view, {});
                 if (found && *found == *expected) {
                     ++same;
                 }
@@ -128,13 +165,13 @@ TEST(NerPool, ConcurrentCallersGetTheSameResultAsOneEngine) {
 TEST(NerPool, FullQueueRefusesAtOnceInsteadOfWaiting) {
     // worker 1개를 막아 두고 대기열 1칸을 채운 뒤 하나 더 넣는다.
     auto [pool, gate] = gated_pool(1);
-    std::thread running([&] { EXPECT_TRUE(pool->scan("a", pc::SegmentIndex{0}, empty_view())); });
+    std::thread running([&] { EXPECT_TRUE(pool->scan("a", pc::SegmentIndex{0}, empty_view(), {})); });
     gate->wait_started(1);
-    std::thread queued([&] { EXPECT_TRUE(pool->scan("b", pc::SegmentIndex{0}, empty_view())); });
+    std::thread queued([&] { EXPECT_TRUE(pool->scan("b", pc::SegmentIndex{0}, empty_view(), {})); });
     while (pool->waiting() != 1) {
         std::this_thread::yield();
     }
-    const auto refused = pool->scan("c", pc::SegmentIndex{0}, empty_view());
+    const auto refused = pool->scan("c", pc::SegmentIndex{0}, empty_view(), {});
     ASSERT_FALSE(refused);
     EXPECT_EQ(refused.error(), pc::DetectError::Overloaded);
     gate->open();
@@ -146,13 +183,13 @@ TEST(NerPool, FullQueueRefusesAtOnceInsteadOfWaiting) {
 TEST(NerPool, SlowResultTimesOutAndQueuedWorkIsDropped) {
     auto [pool, gate] = gated_pool(4, 50ms);
     std::thread running([&] {
-        const auto r = pool->scan("a", pc::SegmentIndex{0}, empty_view());
+        const auto r = pool->scan("a", pc::SegmentIndex{0}, empty_view(), {});
         ASSERT_FALSE(r);
         EXPECT_EQ(r.error(), pc::DetectError::Timeout);
     });
     gate->wait_started(1);
     // 이 일은 대기열에서 시간을 넘기고, 넘긴 뒤에는 대기열에서 빠진다.
-    const auto late = pool->scan("b", pc::SegmentIndex{0}, empty_view());
+    const auto late = pool->scan("b", pc::SegmentIndex{0}, empty_view(), {});
     ASSERT_FALSE(late);
     EXPECT_EQ(late.error(), pc::DetectError::Timeout);
     EXPECT_EQ(pool->waiting(), 0u);
@@ -160,9 +197,35 @@ TEST(NerPool, SlowResultTimesOutAndQueuedWorkIsDropped) {
     gate->open();
     // pool 이 worker 를 소유하므로 gate 는 pool 이 살아 있을 때만 읽는다. 문을 연 뒤 다음 일이 들어가도
     // 붙잡히지 않는다. 빠진 일 "b" 가 돌았다면 그 사이 시작 수가 2 가 된다.
-    EXPECT_TRUE(pool->scan("c", pc::SegmentIndex{0}, empty_view()));
+    EXPECT_TRUE(pool->scan("c", pc::SegmentIndex{0}, empty_view(), {}));
     EXPECT_EQ(gate->started(), 2);  // "a" 와 "c" 만 돌았다
     pool.reset();  // 붙잡힌 일이 끝난 뒤 정상 종료
+}
+
+TEST(NerPool, StopReturnsAtOnceAndStopsTheRunningWork) {
+    auto worker = std::make_unique<StopWorker>();
+    auto* stopper = worker.get();
+    std::vector<std::unique_ptr<pn::NerWorker>> workers;
+    workers.push_back(std::move(worker));
+    const auto pool = *pn::NerPool::start(std::move(workers));
+    std::stop_source request;
+    std::thread caller([&] {
+        const auto r = pool->scan("a", pc::SegmentIndex{0}, empty_view(), request.get_token());
+        ASSERT_FALSE(r);
+        EXPECT_EQ(r.error(), pc::DetectError::Timeout);
+    });
+    ASSERT_TRUE(stopper->wait_started(1));
+    const auto start = std::chrono::steady_clock::now();
+    request.request_stop();
+    caller.join();
+    EXPECT_LT(std::chrono::steady_clock::now() - start, 1s);  // wait_limit(10초)를 기다리지 않는다
+    ASSERT_TRUE(stopper->wait_quit(1));                       // 돌던 일도 중단 신호를 받고 끝났다
+
+    // 이미 포기한 요청은 대기열에 넣지 않는다
+    const auto refused = pool->scan("b", pc::SegmentIndex{0}, empty_view(), request.get_token());
+    ASSERT_FALSE(refused);
+    EXPECT_EQ(refused.error(), pc::DetectError::Timeout);
+    EXPECT_EQ(stopper->started(), 1);
 }
 
 TEST(NerPool, WorkerExceptionFailsOnlyThatCall) {
@@ -170,10 +233,10 @@ TEST(NerPool, WorkerExceptionFailsOnlyThatCall) {
     workers.push_back(std::make_unique<ThrowingWorker>());
     const auto pool = pn::NerPool::start(std::move(workers));
     ASSERT_TRUE(pool);
-    const auto failed = (*pool)->scan("boom", pc::SegmentIndex{0}, empty_view());
+    const auto failed = (*pool)->scan("boom", pc::SegmentIndex{0}, empty_view(), {});
     ASSERT_FALSE(failed);
     EXPECT_EQ(failed.error(), pc::DetectError::Unavailable);
-    EXPECT_TRUE((*pool)->scan("fine", pc::SegmentIndex{0}, empty_view()));  // worker 는 살아 있다
+    EXPECT_TRUE((*pool)->scan("fine", pc::SegmentIndex{0}, empty_view(), {}));  // worker 는 살아 있다
 }
 
 TEST(NerPool, TooManyWindowsIsOverloaded) {
@@ -185,7 +248,7 @@ TEST(NerPool, TooManyWindowsIsOverloaded) {
     }
     const auto view = pd::make_view(big);
     ASSERT_TRUE(view);
-    const auto refused = (*pool)->scan(big, pc::SegmentIndex{0}, *view);
+    const auto refused = (*pool)->scan(big, pc::SegmentIndex{0}, *view, {});
     ASSERT_FALSE(refused);
     EXPECT_EQ(refused.error(), pc::DetectError::Overloaded);
 }

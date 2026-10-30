@@ -242,7 +242,7 @@ LoadResult run_load(const pn::NerPool& pool, const std::vector<std::string>& tex
             for (int i = 0; i < rounds; ++i) {
                 const auto k = static_cast<std::size_t>(t * rounds + i) % texts.size();
                 std::expected<std::vector<pc::EntitySpan>, pc::DetectError> found;
-                const auto ms = time_ms([&] { found = pool.scan(texts[k], pc::SegmentIndex{0}, views[k]); });
+                const auto ms = time_ms([&] { found = pool.scan(texts[k], pc::SegmentIndex{0}, views[k], {}); });
                 const std::lock_guard lock(mutex);
                 result.ms.push_back(ms);
                 if (found) {
@@ -365,7 +365,7 @@ int main(int argc, char** argv) {
     const auto pool_start_ms = time_ms([&] { pool = *pn::NerPool::make(model_dir); });
     for (std::size_t i = 0; i < 20; ++i) {
         const auto view = pd::make_view(records[i].text);
-        (void)pool->scan(records[i].text, pc::SegmentIndex{0}, *view);
+        (void)pool->scan(records[i].text, pc::SegmentIndex{0}, *view, {});
     }
     const double pool_mb = peak_mb();
     std::printf("%-46s %10.1f\n", "peak memory before model (MB)", base_mb);

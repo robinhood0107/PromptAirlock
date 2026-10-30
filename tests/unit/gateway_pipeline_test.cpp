@@ -51,7 +51,7 @@ private:
 class FailingNer final : public detect::NerScanner {
 public:
     std::expected<std::vector<core::EntitySpan>, core::DetectError> scan(std::string_view, core::SegmentIndex,
-                                                                        const detect::DetectionView&) const override {
+                                                                        const detect::DetectionView&, std::stop_token) const override {
         return std::unexpected(core::DetectError::Unavailable);
     }
 };
@@ -60,7 +60,7 @@ public:
 class GatedNer final : public detect::NerScanner {
 public:
     std::expected<std::vector<core::EntitySpan>, core::DetectError> scan(std::string_view, core::SegmentIndex,
-                                                                        const detect::DetectionView&) const override {
+                                                                        const detect::DetectionView&, std::stop_token) const override {
         ++calls_;
         if (gate_.wait_for(std::chrono::seconds(5)) != std::future_status::ready) {
             timed_out_ = true;

@@ -7,6 +7,7 @@
 #include <expected>
 #include <filesystem>
 #include <memory>
+#include <stop_token>
 #include <thread>
 #include <vector>
 
@@ -20,11 +21,11 @@ inline constexpr std::size_t ner_workers = 2;
 // 기다리는 일의 최대 수. 실행 중인 일은 세지 않는다.
 inline constexpr std::size_t ner_queue_depth = 16;
 // 요청 하나가 NER 결과를 기다리는 최대 시간. 가장 큰 일(창 128개)이 256 token p95 32 ms(Phase 2) 기준 약 4.1 초라
-// 그 두 배 남짓으로 잡았다. 넘으면 Timeout. 요청 전체의 시간 제한과 취소는 Phase 9 에서 정한다.
+// 그 두 배 남짓으로 잡았다. 넘으면 Timeout. 요청 전체의 시간 상한은 호출자가 취소 신호로 건다(Phase 9-2).
 inline constexpr std::chrono::milliseconds ner_wait_limit{10'000};
 
 // worker 하나가 맡는 추론. 제품은 NerEngine 을 감싼 것이고, 시험은 가짜를 넣는다.
-// 한 worker 는 한 스레드에서만 불린다.
+// 한 worker 는 한 스레드에서만 불린다. stop 이 켜지면 결과를 기다리는 요청이 이미 떠난 것이라 일찍 끝내도 된다.
 class NerWorker {
 public:
     NerWorker() = default;
@@ -33,7 +34,7 @@ public:
     virtual ~NerWorker() = default;
 
     [[nodiscard]] virtual std::expected<std::vector<core::EntitySpan>, core::DetectError> run(
-        std::string_view text, core::SegmentIndex segment, const detect::DetectionView& view) = 0;
+        std::string_view text, core::SegmentIndex segment, const detect::DetectionView& view, std::stop_token stop) = 0;
 };
 
 class NerPool final : public detect::NerScanner {
@@ -57,9 +58,11 @@ public:
     // 남은 일은 Unavailable 로 끝내고 worker 를 모두 기다린다.
     ~NerPool() override;
 
-    // 장애·예외는 Unavailable, 대기열 포화와 창 수 초과는 Overloaded, wait_limit 초과는 Timeout.
+    // 장애·예외는 Unavailable, 대기열 포화와 창 수 초과는 Overloaded, wait_limit 초과와 stop 은 Timeout.
+    // 기다리다 떠나면 그 일은 대기열에서 빼거나, 이미 돌고 있으면 worker 에 멈추라고 알린다.
     [[nodiscard]] std::expected<std::vector<core::EntitySpan>, core::DetectError> scan(
-        std::string_view text, core::SegmentIndex segment, const detect::DetectionView& view) const override;
+        std::string_view text, core::SegmentIndex segment, const detect::DetectionView& view,
+        std::stop_token stop) const override;
 
     // 지금 기다리는 일의 수(실행 중 제외). 측정과 시험용.
     [[nodiscard]] std::size_t waiting() const;
