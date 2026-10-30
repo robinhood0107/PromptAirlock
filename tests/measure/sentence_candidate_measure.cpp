@@ -1,6 +1,6 @@
 // 문장 판별 후보 측정(Phase 7.5-2). PA_SENTENCE_SPIKE 구성에서만 만들고 직접 실행한다.
 //   sentence_candidate_measure --model e5|e5base|e5q|e5baseq|minilm|arctic|nli|mdeberta|minilm6 [--set final] [--threshold T] [--explain] [--dir 모델 폴더]
-//                              [--split] [--gate] [--topk K] [--head --l2 L] [--verify 문장 함의 모델] [--shortcut]
+//                              [--split] [--gate] [--topk K] [--head --l2 L] [--verify 문장 함의 모델] [--mask-person] [--shortcut]
 // 후보 모델을 학습 없이(결정 #147) 돌려 문장마다 점수를 내고, 지금 규칙(NER 켬) 결과와 합쳐(OR) 막는 비율을 잰다.
 //   임베딩(e5, minilm): 범주별 예시 문장과의 최대 코사인 유사도에서 업무·일반 문장과의 최대 유사도를 뺀 값.
 //   문장 함의(nli): 범주별 가설을 함의할 확률의 최댓값.
@@ -361,6 +361,7 @@ int main(int argc, char** argv) {
     // 2단 판별: 분류기가 고른 범주의 가설 하나를 문장 함의 모델로 확인해 점수 = 분류기 확률 x 함의 확률.
     // 분류기 확률이 0.1 미만이면 확인하지 않고 0 으로 둔다(지금까지 범주 문턱값은 모두 0.2 이상).
     std::string verify_name;
+    bool mask_person = false;
     fs::path dir;
     for (int i = 1; i < argc; ++i) {
         const std::string_view arg = argv[i];
@@ -388,6 +389,8 @@ int main(int argc, char** argv) {
             shortcut = true;
         } else if (arg == "--topk" && i + 1 < argc) {
             topk = std::max<std::size_t>(1, std::strtoul(argv[++i], nullptr, 10));
+        } else if (arg == "--mask-person") {
+            mask_person = true;
         } else if (arg == "--verify" && i + 1 < argc) {
             verify_name = argv[++i];
         } else if (arg == "--dir" && i + 1 < argc) {
@@ -484,21 +487,48 @@ int main(int argc, char** argv) {
         add_negatives("ner-heldout2.jsonl");
     }
     const auto data = read_json(sentence_dir / "candidates.json");
-    std::printf("model: %s, verify: %s, set: %s, records: %zu, split: %d, gate: %d, topk: %zu\n", model_name.c_str(),
-                verify_name.empty() ? "-" : verify_name.c_str(), set_name.c_str(), records.size(), split ? 1 : 0, gate ? 1 : 0, topk);
+    std::printf("model: %s, verify: %s, mask person: %d, set: %s, records: %zu, split: %d, gate: %d, topk: %zu\n", model_name.c_str(),
+                verify_name.empty() ? "-" : verify_name.c_str(), mask_person ? 1 : 0, set_name.c_str(), records.size(), split ? 1 : 0,
+                gate ? 1 : 0, topk);
     std::vector<std::string> markers;
     for (const auto& m : data.at("person_markers")) {
         markers.push_back(m.get<std::string>());
     }
 
     // 1. 지금 규칙(제품과 같이 NER 켬)
-    {
-        auto pool = pn::NerPool::make(PA_NER_MODEL_DIR);
-        if (!pool) {
-            std::printf("NER pool unavailable\n");
-            return 2;
+    auto pool = pn::NerPool::make(PA_NER_MODEL_DIR);
+    if (!pool) {
+        std::printf("NER pool unavailable\n");
+        return 2;
+    }
+    const auto detectors = *pd::Detectors::make({}, *pool);
+    // --mask-person: NER 이 사람으로 찾은 범위를 고정된 말로 바꿔 판별기가 이름을 보지 못하게 한다(학습·판별 모두).
+    const auto mask = [&](const std::string& text) {
+        if (!mask_person) {
+            return text;
         }
-        const auto detectors = *pd::Detectors::make({}, *pool);
+        const auto found = detectors.detect_segment(text, pc::SegmentIndex{0});
+        if (!found) {
+            return text;
+        }
+        std::vector<pc::ByteSpan> spans;
+        for (const auto& e : *found) {
+            if (e.type() == pc::EntityType::Person) {
+                spans.push_back(e.span());
+            }
+        }
+        std::ranges::sort(spans, std::greater<>());
+        std::string out = text;
+        std::size_t limit = out.size();  // 뒤에서부터 바꾸고, 이미 바꾼 범위와 겹치면 건너뛴다
+        for (const auto& s : spans) {
+            if (s.end().value() <= limit) {
+                out.replace(s.begin().value(), s.size(), "OOO");
+                limit = s.begin().value();
+            }
+        }
+        return out;
+    };
+    {
         for (auto& r : records) {
             const auto found = detectors.detect_segment(r.text, pc::SegmentIndex{0});
             r.rule_blocked = !found;
@@ -535,11 +565,11 @@ int main(int argc, char** argv) {
     if (!nli) {
         for (const auto& c : categories) {
             for (const auto& e : data.at("categories").at(c).at("examples")) {
-                examples[c].push_back(embed(cand, e.get<std::string>()));
+                examples[c].push_back(embed(cand, mask(e.get<std::string>())));
             }
         }
         for (const auto& e : data.at("negatives")) {
-            negative_vectors.push_back(embed(cand, e.get<std::string>()));
+            negative_vectors.push_back(embed(cand, mask(e.get<std::string>())));
         }
     }
 
@@ -561,7 +591,7 @@ int main(int argc, char** argv) {
             return it == categories.end() ? classes - 1 : static_cast<std::size_t>(it - categories.begin());
         };
         for (const auto& r : load_lines(sentence_dir / "sentence-train.jsonl", false)) {
-            xs.push_back(embed(cand, r.text));
+            xs.push_back(embed(cand, mask(r.text)));
             ys.push_back(r.sensitive ? label_of(r.category) : classes - 1);
         }
         for (const auto& [c, v] : examples) {
@@ -685,7 +715,7 @@ int main(int argc, char** argv) {
     const auto score_one = [&](const std::string& text, std::string& predicted) {
         double best = -1e9;
         if (head) {
-            const auto v = embed(cand, text);
+            const auto v = embed(cand, mask(text));
             const std::size_t d = v.size();
             std::vector<double> logit(classes, 0.0);
             for (std::size_t c = 0; c < classes; ++c) {
@@ -722,7 +752,7 @@ int main(int argc, char** argv) {
             }
             return best;
         }
-        const auto v = embed(cand, text);
+        const auto v = embed(cand, mask(text));
         double neg = -1.0;
         for (const auto& n : negative_vectors) {
             neg = std::max(neg, dot(v, n));
@@ -985,8 +1015,8 @@ int main(int argc, char** argv) {
                 const bool after = decide(swapped);
                 name_flip += after != before ? 1 : 0;
                 if (explain && after != before) {
-                    std::printf("name-flip %s %s %d->%d | %s | %s\n", r.id.c_str(), r.group.c_str(), before, after, r.text.c_str(),
-                                swapped.c_str());
+                    std::printf("name-flip %s %s %d->%d | %s | %s\n", r.id.c_str(), r.group.c_str(), before, after, mask(r.text).c_str(),
+                                mask(swapped).c_str());
                 }
             }
             for (const auto& [from, to] : endings) {
