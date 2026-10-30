@@ -10,5 +10,13 @@
     "openssl",
     "protobuf",
     "utf8proc"
-  ]
+  ],
+  "features": {
+    "sentence-spike": {
+      "description": "Phase 7.5 sentence classifier candidates (measurement only)",
+      "dependencies": [
+        "sentencepiece"
+      ]
+    }
+  }
 }

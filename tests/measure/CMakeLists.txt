@@ -36,6 +36,26 @@ target_compile_definitions(sentence_measure PRIVATE PA_NER_MODEL_DIR="${PA_NER_M
                            PA_SENTENCE_FIXTURE_DIR="${PROJECT_SOURCE_DIR}/tests/fixtures/sentence")
 pa_copy_runtime_dlls(sentence_measure)
 
+# 문장 판별 후보 측정(Phase 7.5-2). 기본 빌드에는 없고, vcpkg 기능 sentence-spike(sentencepiece)를 켠 구성에서만 만든다.
+#   cmake --preset win-release -B build/win-release-spike -DVCPKG_MANIFEST_FEATURES=sentence-spike -DPA_SENTENCE_SPIKE=ON
+option(PA_SENTENCE_SPIKE "Phase 7.5 문장 판별 후보 측정 도구" OFF)
+if(PA_SENTENCE_SPIKE)
+  # vcpkg sentencepiece 포트는 CMake 설정 파일 없이 정적 라이브러리만 설치한다.
+  find_path(PA_SPM_INCLUDE sentencepiece_processor.h REQUIRED)
+  find_library(PA_SPM_LIBRARY NAMES sentencepiece REQUIRED)
+  find_package(Protobuf CONFIG REQUIRED)
+  # sentencepiece 정적 라이브러리는 abseil 의 플래그 기능을 함께 요구한다.
+  find_package(absl CONFIG REQUIRED)
+  add_executable(sentence_candidate_measure EXCLUDE_FROM_ALL sentence_candidate_measure.cpp)
+  target_include_directories(sentence_candidate_measure PRIVATE "${PA_SPM_INCLUDE}")
+  target_link_libraries(sentence_candidate_measure PRIVATE prompt_airlock_ner prompt_airlock_detect pa_options
+                        nlohmann_json::nlohmann_json pa::onnxruntime "${PA_SPM_LIBRARY}" protobuf::libprotobuf-lite absl::flags absl::flags_marshalling)
+  target_compile_definitions(sentence_candidate_measure PRIVATE PA_NER_MODEL_DIR="${PA_NER_MODEL_DIR}"
+                             PA_NER_FIXTURE_DIR="${PROJECT_SOURCE_DIR}/tests/fixtures/ner"
+                             PA_SENTENCE_FIXTURE_DIR="${PROJECT_SOURCE_DIR}/tests/fixtures/sentence")
+  pa_copy_runtime_dlls(sentence_candidate_measure)
+endif()
+
 # HTTP 로 끝까지 지연·처리량(Phase 8a). 실제 Vault 와 NER 모델, 같은 프로세스의 mock provider 를 쓴다.
 if(PA_WITH_VAULT)
   add_executable(gateway_measure EXCLUDE_FROM_ALL gateway_measure.cpp)
