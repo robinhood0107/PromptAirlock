@@ -25,7 +25,9 @@
 #include <chrono>
 #include <cmath>
 #include <cstdio>
+#include <cstdint>
 #include <cstdlib>
+#include <cstring>
 #include <filesystem>
 #include <fstream>
 #include <functional>
@@ -297,6 +299,9 @@ int main(int argc, char** argv) {
     bool split = false;
     bool gate = false;
     std::size_t topk = 1;
+    bool head = false;      // 임베딩 위에 선형 분류기(로지스틱 회귀)를 학습해 점수를 낸다(결정 #159)
+    double l2 = 1e-3;       // 분류기 L2 규제 세기
+    bool shortcut = false;  // 지름길 시험(이름 바꾸기, 말끝 바꾸기, 정상 문장에 사람 표지 붙이기)
     fs::path dir;
     for (int i = 1; i < argc; ++i) {
         const std::string_view arg = argv[i];
@@ -316,6 +321,12 @@ int main(int argc, char** argv) {
             split = true;
         } else if (arg == "--gate") {
             gate = true;
+        } else if (arg == "--head") {
+            head = true;
+        } else if (arg == "--l2" && i + 1 < argc) {
+            l2 = std::atof(argv[++i]);
+        } else if (arg == "--shortcut") {
+            shortcut = true;
         } else if (arg == "--topk" && i + 1 < argc) {
             topk = std::max<std::size_t>(1, std::strtoul(argv[++i], nullptr, 10));
         } else if (arg == "--dir" && i + 1 < argc) {
@@ -474,8 +485,173 @@ int main(int argc, char** argv) {
             negative_vectors.push_back(embed(model, tok, files.prefix + e.get<std::string>()));
         }
     }
+
+    // 선형 분류기(결정 #159): 학습 전용 셋(sentence-train.jsonl)과 candidates.json 의 예시·정상 문장만으로 학습한다.
+    // 개발용·판정용 셋은 쓰지 않는다. 클래스는 범주 11개와 None. 특징은 문장 벡터를 학습셋 평균·표준편차로 맞춘 값과 절편.
+    // 시작값 0, 전체 묶음 경사 하강을 정해진 횟수만큼 돌려 같은 데이터면 같은 가중치가 나온다(무작위 없음).
+    const std::size_t classes = categories.size() + 1;  // 마지막이 None
+    std::vector<std::vector<double>> weights;            // [클래스][차원 + 1]
+    std::vector<double> mean, stdev;
+    if (head) {
+        if (nli) {
+            std::printf("--head needs an embedding model\n");
+            return 2;
+        }
+        std::vector<std::vector<float>> xs;
+        std::vector<std::size_t> ys;
+        const auto label_of = [&](const std::string& c) {
+            const auto it = std::ranges::find(categories, c);
+            return it == categories.end() ? classes - 1 : static_cast<std::size_t>(it - categories.begin());
+        };
+        for (const auto& r : load_lines(sentence_dir / "sentence-train.jsonl", false)) {
+            xs.push_back(embed(model, tok, files.prefix + r.text));
+            ys.push_back(r.sensitive ? label_of(r.category) : classes - 1);
+        }
+        for (const auto& [c, v] : examples) {
+            for (const auto& e : v) {
+                xs.push_back(e);
+                ys.push_back(label_of(c));
+            }
+        }
+        for (const auto& n : negative_vectors) {
+            xs.push_back(n);
+            ys.push_back(classes - 1);
+        }
+        const std::size_t n = xs.size();
+        const std::size_t d = xs.front().size();
+        mean.assign(d, 0.0);
+        stdev.assign(d, 0.0);
+        for (const auto& x : xs) {
+            for (std::size_t k = 0; k < d; ++k) {
+                mean[k] += x[k];
+            }
+        }
+        for (auto& m : mean) {
+            m /= static_cast<double>(n);
+        }
+        for (const auto& x : xs) {
+            for (std::size_t k = 0; k < d; ++k) {
+                stdev[k] += (x[k] - mean[k]) * (x[k] - mean[k]);
+            }
+        }
+        for (auto& s : stdev) {
+            s = std::sqrt(s / static_cast<double>(n)) + 1e-8;
+        }
+        std::vector<std::vector<double>> z(n, std::vector<double>(d + 1, 1.0));
+        for (std::size_t i = 0; i < n; ++i) {
+            for (std::size_t k = 0; k < d; ++k) {
+                z[i][k] = (xs[i][k] - mean[k]) / stdev[k];
+            }
+        }
+        // 클래스마다 같은 무게가 되게(None 이 많아도 쏠리지 않게) 표본 가중치를 둔다.
+        std::vector<double> count(classes, 0.0);
+        for (const auto y : ys) {
+            count[y] += 1.0;
+        }
+        weights.assign(classes, std::vector<double>(d + 1, 0.0));
+        const double lr = 0.5;
+        const int steps = 2000;
+        double loss = 0.0;
+        for (int step = 0; step < steps; ++step) {
+            std::vector<std::vector<double>> grad(classes, std::vector<double>(d + 1, 0.0));
+            loss = 0.0;
+            double total = 0.0;
+            for (std::size_t i = 0; i < n; ++i) {
+                const double w = static_cast<double>(n) / (static_cast<double>(classes) * count[ys[i]]);
+                std::vector<double> logit(classes, 0.0);
+                for (std::size_t c = 0; c < classes; ++c) {
+                    for (std::size_t k = 0; k <= d; ++k) {
+                        logit[c] += weights[c][k] * z[i][k];
+                    }
+                }
+                const double top = *std::ranges::max_element(logit);
+                double sum = 0.0;
+                for (auto& l : logit) {
+                    l = std::exp(l - top);
+                    sum += l;
+                }
+                for (std::size_t c = 0; c < classes; ++c) {
+                    const double p = logit[c] / sum;
+                    const double g = w * (p - (c == ys[i] ? 1.0 : 0.0));
+                    for (std::size_t k = 0; k <= d; ++k) {
+                        grad[c][k] += g * z[i][k];
+                    }
+                }
+                loss -= w * std::log(logit[ys[i]] / sum);
+                total += w;
+            }
+            for (std::size_t c = 0; c < classes; ++c) {
+                for (std::size_t k = 0; k <= d; ++k) {
+                    const double reg = k < d ? l2 * weights[c][k] : 0.0;  // 절편은 규제하지 않는다
+                    weights[c][k] -= lr * (grad[c][k] / total + reg);
+                }
+            }
+            loss /= total;
+        }
+        // 학습셋 정확도(12개 중 맞힘)와 "민감 여부" 일치율, 가중치 해시(FNV-1a, 재현 확인용)
+        std::size_t right = 0;
+        std::size_t binary = 0;
+        std::uint64_t hash = 1469598103934665603ULL;
+        for (std::size_t i = 0; i < n; ++i) {
+            std::size_t best = 0;
+            double top = -1e300;
+            for (std::size_t c = 0; c < classes; ++c) {
+                double l = 0.0;
+                for (std::size_t k = 0; k <= d; ++k) {
+                    l += weights[c][k] * z[i][k];
+                }
+                if (l > top) {
+                    top = l;
+                    best = c;
+                }
+            }
+            right += best == ys[i] ? 1 : 0;
+            binary += (best == classes - 1) == (ys[i] == classes - 1) ? 1 : 0;
+        }
+        for (const auto& row : weights) {
+            for (const double v : row) {
+                const float f = static_cast<float>(v);
+                std::uint32_t bits = 0;
+                std::memcpy(&bits, &f, sizeof bits);
+                for (int b = 0; b < 4; ++b) {
+                    hash ^= (bits >> (8 * b)) & 0xFFU;
+                    hash *= 1099511628211ULL;
+                }
+            }
+        }
+        std::printf("head: train n=%zu, l2=%g, steps=%d, final loss %.4f, train accuracy %.1f%% (12-way), %.1f%% (sensitive or not), "
+                    "weights fnv1a %016llx\n",
+                    n, l2, steps, loss, 100.0 * static_cast<double>(right) / static_cast<double>(n),
+                    100.0 * static_cast<double>(binary) / static_cast<double>(n), static_cast<unsigned long long>(hash));
+    }
+
     const auto score_one = [&](const std::string& text, std::string& predicted) {
         double best = -1e9;
+        if (head) {
+            const auto v = embed(model, tok, files.prefix + text);
+            const std::size_t d = v.size();
+            std::vector<double> logit(classes, 0.0);
+            for (std::size_t c = 0; c < classes; ++c) {
+                logit[c] = weights[c][d];
+                for (std::size_t k = 0; k < d; ++k) {
+                    logit[c] += weights[c][k] * (v[k] - mean[k]) / stdev[k];
+                }
+            }
+            const double top = *std::ranges::max_element(logit);
+            double sum = 0.0;
+            for (auto& l : logit) {
+                l = std::exp(l - top);
+                sum += l;
+            }
+            // 점수: None 을 뺀 범주 가운데 가장 높은 확률
+            for (std::size_t c = 0; c + 1 < classes; ++c) {
+                if (logit[c] / sum > best) {
+                    best = logit[c] / sum;
+                    predicted = categories[c];
+                }
+            }
+            return best;
+        }
         if (nli) {
             for (const auto& c : categories) {
                 std::vector<std::int64_t> shape;
@@ -720,5 +896,62 @@ int main(int argc, char** argv) {
         std::printf(" %s=%zu", cat.c_str(), n);
     }
     std::printf("\n");
+
+    if (shortcut) {
+        // 지름길 시험(#161 4절, 측정 전에 정한 기준): 판별기 판정(점수 >= 범주 문턱값)만 본다. 바뀐 비율 10% 이하면 통과.
+        const auto decide = [&](const std::string& text) {
+            std::string p;
+            const double s = score(text, p);
+            return s >= chosen.at(p);
+        };
+        // 1. 사람 표지를 처음 보는 것으로: 문장 맨 앞 "X은/는 " 을 바꾼다.
+        const std::vector<std::string> fresh = {"곽태린 대리는 ", "엄주원 과장은 ", "변 실장님은 ", "제 사촌은 "};
+        // 2. 말끝을 다른 말투로
+        const std::vector<std::pair<std::string, std::string>> endings = {
+            {"이에요.", "이야."}, {"했어요.", "했어."}, {"대요.", "래."}, {"예요.", "야."}, {"어요.", "어."},
+            {"아요.", "아."},     {"해요.", "해."},     {"세요.", "셔."}, {"습니다.", "다."}, {"요.", "."}};
+        std::size_t name_n = 0, name_flip = 0, end_n = 0, end_flip = 0, k = 0;
+        for (const auto& r : records) {
+            if (r.group != "direct" && r.group != "evasive" && r.group != "personal") {
+                continue;
+            }
+            const bool before = decide(r.text);
+            for (const char* particle : {"은 ", "는 "}) {
+                const auto at = r.text.find(particle);
+                if (at != std::string::npos && at > 0 && at < 40) {
+                    const std::string swapped = fresh[k++ % fresh.size()] + r.text.substr(at + std::string(particle).size());
+                    ++name_n;
+                    name_flip += decide(swapped) != before ? 1 : 0;
+                    break;
+                }
+            }
+            for (const auto& [from, to] : endings) {
+                if (r.text.size() > from.size() && r.text.ends_with(from)) {
+                    ++end_n;
+                    end_flip += decide(r.text.substr(0, r.text.size() - from.size()) + to) != before ? 1 : 0;
+                    break;
+                }
+            }
+        }
+        // 3. 사람 이름이 없는 정상 업무 문장 앞에 민감 문장에서 쓴 사람 표지를 붙인다.
+        const std::vector<std::string> transplant = {"김민수 과장은 ", "이서연 대리는 ", "제 아내는 ", "최 팀장님은 "};
+        std::size_t tr_n = 0, tr_before = 0, tr_after = 0;
+        for (const auto& r : records) {
+            if (r.group != "ner-negative") {
+                continue;
+            }
+            ++tr_n;
+            tr_before += decide(r.text) ? 1 : 0;
+            tr_after += decide(transplant[tr_n % transplant.size()] + r.text) ? 1 : 0;
+        }
+        const auto rate = [](std::size_t a, std::size_t b) { return b == 0 ? 0.0 : 100.0 * static_cast<double>(a) / static_cast<double>(b); };
+        std::printf("\nshortcut tests (classifier decision only, pass if <= 10%%)\n");
+        std::printf("name swap      %4zu/%4zu flipped (%5.1f%%) %s\n", name_flip, name_n, rate(name_flip, name_n),
+                    rate(name_flip, name_n) <= 10.0 ? "PASS" : "FAIL");
+        std::printf("ending swap    %4zu/%4zu flipped (%5.1f%%) %s\n", end_flip, end_n, rate(end_flip, end_n),
+                    rate(end_flip, end_n) <= 10.0 ? "PASS" : "FAIL");
+        std::printf("person added   false block %zu/%zu (%.1f%%) -> %zu/%zu (%.1f%%), limit 5.5%% %s\n", tr_before, tr_n,
+                    rate(tr_before, tr_n), tr_after, tr_n, rate(tr_after, tr_n), rate(tr_after, tr_n) <= 5.5 ? "PASS" : "FAIL");
+    }
     return 0;
 }
