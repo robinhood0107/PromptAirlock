@@ -28,6 +28,14 @@ if(PA_WITH_VAULT)
 endif()
 pa_copy_runtime_dlls(ner_measure)
 
+# 문장 단위 민감정보 기준선(Phase 7.5-1). 합성 문장 셋과 NER 모델이 필요하다.
+add_executable(sentence_measure EXCLUDE_FROM_ALL sentence_measure.cpp)
+target_link_libraries(sentence_measure PRIVATE prompt_airlock_ner prompt_airlock_detect pa_options nlohmann_json::nlohmann_json)
+target_compile_definitions(sentence_measure PRIVATE PA_NER_MODEL_DIR="${PA_NER_MODEL_DIR}"
+                           PA_NER_FIXTURE_DIR="${PROJECT_SOURCE_DIR}/tests/fixtures/ner"
+                           PA_SENTENCE_FIXTURE_DIR="${PROJECT_SOURCE_DIR}/tests/fixtures/sentence")
+pa_copy_runtime_dlls(sentence_measure)
+
 # HTTP 로 끝까지 지연·처리량(Phase 8a). 실제 Vault 와 NER 모델, 같은 프로세스의 mock provider 를 쓴다.
 if(PA_WITH_VAULT)
   add_executable(gateway_measure EXCLUDE_FROM_ALL gateway_measure.cpp)
