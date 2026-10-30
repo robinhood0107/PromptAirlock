@@ -52,8 +52,12 @@ const credMarkers = [...credFile.slice(0, credFile.indexOf('inline constexpr aut
 const findTerm = (text, list) => list.find((t) => text.toLowerCase().includes(t));
 
 // 개인 표지. 이름+직함, 성+직함님, 자기 진술, 가족.
+// 학습용은 이름이 판정에 끼어들지 않게 30개로 늘렸다(결정 #163). 앞 20개는 이름·호칭, 뒤 10개는 자기 진술·가족.
 const people = TRAIN
-  ? ['문지안 사원', '탁서윤 주무관', '권도하 연구원', '봉 차장님', '하 과장님', '천 국장님', '예 선생님', '저', '제 언니', '우리 아빠']
+  ? ['문지안 사원', '탁서윤 주무관', '권도하 연구원', '봉 차장님', '하 과장님', '천 국장님', '예 선생님', '함지율 매니저',
+    '소예린 책임', '도경민 선임', '표하진 계장', '길나윤 수석', '어 반장님', '명 소장님', '피 원장님', '방 이사님', '계 주임님',
+    '심가온 사원', '황보준 연구원', '국 차장님',
+    '저', '제 언니', '우리 아빠', '제 형', '우리 할머니', '저희 삼촌', '제 남자친구', '우리 딸', '저희 외삼촌', '제 처제']
   : FINAL
   ? ['서하린 주무관', '남궁도윤 사무관', '옥채원 대리', '전 실장님', '반 차장님', '갈 국장님', '모 선생님', '저', '제 남편', '저희 어머니']
   : DEV2
@@ -416,6 +420,25 @@ const personal = TRAIN
     '새 노트북 신청을 했어요.', '이번 달 실적표를 정리하고 있어요.', '팀 워크숍 장소를 알아보고 있어요.', '출근길에 차가 막혀서 늦었대요.',
     '발표 자료 디자인을 바꿨어요.', '외부 교육을 다녀왔어요.', '계약서 검토를 부탁했어요.'];
 
+// 학습 전용 업무 보고체 정상 문장 조각(결정 #163). 개발용·판정용 NER 셋(gen-large.mjs)의 주어·서술어와 겹치지 않게 새로 썼다.
+const reportTopics = ['물품 구매 요청', '전산실 공사', '주간 업무 보고', '신규 채용 공고', '협력 업체 평가', '사옥 청소 일정',
+  '법인 차량 배차', '출장 정산 마감', '고객 설문 결과', '납품 검수', '서버 이관', '예산 집행률', '교육 이수 현황', '재고 실사',
+  '누리집 개편', '민원 처리 기한', '회의록 공유', '복합기 교체', '창고 정리', '사내 소식지 발행'];
+const reportEnds = ['목요일에 마친다.', '담당 부서로 넘겼다.', '결재가 끝났다.', '두 건이 남았다.', '일주일 연장했다.',
+  '전원 확인했다.', '초안을 돌렸다.', '오전에 배포했다.', '수치가 조금 올랐다.', '이견 없이 통과했다.', '협의 후 다시 정한다.',
+  '내부 공유만 한다.', '작업이 끝났습니다.', '일정을 조정했습니다.', '다음 회의에서 보고합니다.', '자료를 첨부합니다.',
+  '확인 후 회신 바랍니다.', '결과를 정리했습니다.'];
+const reportWithPerson = [
+  (p, s) => `${subject(p)} ${s} 건을 정리했다.`,
+  (p, s) => `${subject(p)} 오늘 ${s} 회의에 들어간다.`,
+  (p, s, q) => `${eun(s)} ${p} 확인 후 ${q}`,
+  (p, s) => `${p}에게 ${s} 자료를 넘겼습니다.`,
+  (p, s) => `담당: ${p} / ${s}`,
+  (p, s) => `${p}의 요청으로 ${s} 일정을 조정했습니다.`,
+  (p, s, q) => `${eun(s)} ${q} 회신은 ${p}에게 주세요.`,
+  (p, s) => `${s} 관련해서 ${p} 쪽에 공유했다.`,
+];
+
 const credValues = TRAIN ? ['Fq4@mZ7wKp', 'cloud#Pine58', 'Rt8!vB3nUx', 'Lp5$sD9cWq', 'Jm2&kH6tYz']
   : FINAL ? ['Rk9#vT2q!m', 'wolf-Sky-482!', 'Zq8x@Lp0Nn', '7391-ab-QQ', 'Hp4$eM2w9z']
   : DEV2 ? ['Hw5@qT8zLm', 'river#Stone19', 'Kx2!pV7nQe', 'Dm9$wR4tYu', 'Gs6&bN1cXo']
@@ -469,6 +492,26 @@ if (TRAIN) {
       add('None', 'personal', '', text, false);
     }
   }
+  // 업무 보고체: 사람 없는 것 120, 사람 표지가 앞·중간·뒤에 있는 것 틀마다 15(앞 2틀만 자기 진술·가족도 씀).
+  const seen = new Set();
+  const addReport = (group, text) => {
+    if (seen.has(text)) return false;
+    const hit = findTerm(text, terms);
+    if (hit) throw new Error(`report 에 범주어 "${hit}": ${text}`);
+    seen.add(text);
+    add('None', group, '', text, false);
+    return true;
+  };
+  for (let made = 0; made < 120;) {
+    const one = `${eun(pick(reportTopics))} ${pick(reportEnds)}`;
+    made += addReport('report', rand() < 0.3 ? `${one} ${eun(pick(reportTopics))} ${pick(reportEnds)}` : one) ? 1 : 0;
+  }
+  const named = people.slice(0, 20);
+  reportWithPerson.forEach((template, i) => {
+    for (let made = 0; made < 15;) {
+      made += addReport('report-person', template(pick(i < 2 ? people : named), pick(reportTopics), pick(reportEnds))) ? 1 : 0;
+    }
+  });
 }
 
 for (const [category, t] of Object.entries(TRAIN ? {} : sets)) {
