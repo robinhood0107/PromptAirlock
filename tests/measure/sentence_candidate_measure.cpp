@@ -1,11 +1,16 @@
 // 문장 판별 후보 측정(Phase 7.5-2). PA_SENTENCE_SPIKE 구성에서만 만들고 직접 실행한다.
-//   sentence_candidate_measure --model e5|minilm|nli [--set final] [--threshold T] [--explain] [--dir 모델 폴더]
+//   sentence_candidate_measure --model e5|e5base|minilm|nli [--set final] [--threshold T] [--explain] [--dir 모델 폴더]
+//                              [--split] [--gate] [--topk K]
 // 후보 모델을 학습 없이(결정 #147) 돌려 문장마다 점수를 내고, 지금 규칙(NER 켬) 결과와 합쳐(OR) 막는 비율을 잰다.
 //   임베딩(e5, minilm): 범주별 예시 문장과의 최대 코사인 유사도에서 업무·일반 문장과의 최대 유사도를 뺀 값.
 //   문장 함의(nli): 범주별 가설을 함의할 확률의 최댓값.
+// --split 은 문장을 하나씩 나눠 가장 높은 점수를 쓰고, --gate 는 개인 표지(NER 사람 또는 candidates.json 의 person_markers)가
+// 있는 글에서만 판별기 결과를 쓴다(인증 정보 범주는 예외). --topk 는 범주별 상위 K 개 예시 유사도의 평균을 쓴다.
 // --threshold 가 없으면 문턱값마다 표를 내고, 있으면 그 값으로 무리·범주별 표를 낸다. 원문은 출력하지 않는다.
 #ifdef _WIN32
+#ifndef NOMINMAX
 #define NOMINMAX
+#endif
 #include <windows.h>
 #include <psapi.h>
 #else
@@ -23,6 +28,7 @@
 #include <cstdlib>
 #include <filesystem>
 #include <fstream>
+#include <functional>
 #include <map>
 #include <memory>
 #include <nlohmann/json.hpp>
@@ -48,8 +54,9 @@ struct Record {
     std::string text;
     bool sensitive;
     bool rule_blocked = false;
+    bool person = false;
     double score = 0.0;
-    std::string predicted;
+    std::string predicted{};
 };
 
 json read_json(const fs::path& path) {
@@ -229,6 +236,25 @@ std::vector<float> embed(Model& model, const Tokenizer& tok, const std::string& 
     return v;
 }
 
+// 마침표·물음표·느낌표·줄바꿈 뒤에서 문장을 나눈다. 빈 문장은 버린다.
+std::vector<std::string> sentences(const std::string& text) {
+    std::vector<std::string> out;
+    std::string cur;
+    for (std::size_t i = 0; i < text.size(); ++i) {
+        const char c = text[i];
+        cur.push_back(c);
+        const bool end = c == '.' || c == '?' || c == '!' || c == '\n';
+        if (end && (i + 1 == text.size() || text[i + 1] == ' ' || text[i + 1] == '\n')) {
+            out.push_back(cur);
+            cur.clear();
+        }
+    }
+    if (cur.find_first_not_of(" \n") != std::string::npos) {
+        out.push_back(cur);
+    }
+    return out;
+}
+
 double dot(const std::vector<float>& a, const std::vector<float>& b) {
     double s = 0.0;
     for (std::size_t i = 0; i < a.size(); ++i) {
@@ -253,6 +279,9 @@ int main(int argc, char** argv) {
     bool final_set = false;
     bool explain = false;
     double fixed = std::nan("");
+    bool split = false;
+    bool gate = false;
+    std::size_t topk = 1;
     fs::path dir;
     for (int i = 1; i < argc; ++i) {
         const std::string_view arg = argv[i];
@@ -265,19 +294,28 @@ int main(int argc, char** argv) {
             fixed = std::atof(argv[++i]);
         } else if (arg == "--explain") {
             explain = true;
+        } else if (arg == "--split") {
+            split = true;
+        } else if (arg == "--gate") {
+            gate = true;
+        } else if (arg == "--topk" && i + 1 < argc) {
+            topk = std::max<std::size_t>(1, std::strtoul(argv[++i], nullptr, 10));
         } else if (arg == "--dir" && i + 1 < argc) {
             dir = argv[++i];
         }
     }
     const bool nli = model_name == "nli";
-    if (model_name != "e5" && model_name != "minilm" && !nli) {
-        std::printf("--model e5|minilm|nli\n");
+    if (model_name != "e5" && model_name != "e5base" && model_name != "minilm" && !nli) {
+        std::printf("--model e5|e5base|minilm|nli\n");
         return 2;
     }
     if (dir.empty()) {
 #ifdef _WIN32
-        const char* base = std::getenv("LOCALAPPDATA");
-        dir = fs::path(base != nullptr ? base : ".") / "prompt-airlock" / "models" / "phase75";
+        char* base = nullptr;
+        std::size_t length = 0;
+        dir = fs::path(_dupenv_s(&base, &length, "LOCALAPPDATA") == 0 && base != nullptr ? base : ".") / "prompt-airlock" / "models" /
+              "phase75";
+        std::free(base);
 #else
         const char* base = std::getenv("HOME");
         dir = fs::path(base != nullptr ? base : ".") / ".cache" / "prompt-airlock" / "models" / "phase75";
@@ -290,6 +328,9 @@ int main(int argc, char** argv) {
     const Files files = model_name == "e5"
         ? Files{dir / "intfloat_multilingual-e5-small/onnx/model.onnx", dir / "intfloat_multilingual-e5-small/onnx/sentencepiece.bpe.model",
                 dir / "intfloat_multilingual-e5-small/onnx/tokenizer.json", "query: "}
+        : model_name == "e5base"
+        ? Files{dir / "intfloat_multilingual-e5-base/onnx/model.onnx", dir / "intfloat_multilingual-e5-base/onnx/sentencepiece.bpe.model",
+                dir / "intfloat_multilingual-e5-base/onnx/tokenizer.json", "query: "}
         : model_name == "minilm"
         ? Files{dir / "sentence-transformers_paraphrase-multilingual-MiniLM-L12-v2/onnx/model.onnx",
                 dir / "sentence-transformers_paraphrase-multilingual-MiniLM-L12-v2/sentencepiece.bpe.model",
@@ -303,7 +344,12 @@ int main(int argc, char** argv) {
     const auto negatives = load_lines(fs::path(PA_NER_FIXTURE_DIR) / (final_set ? "ner-final.jsonl" : "ner-large.jsonl"), true);
     records.insert(records.end(), negatives.begin(), negatives.end());
     const auto data = read_json(sentence_dir / "candidates.json");
-    std::printf("model: %s, set: %s, records: %zu\n", model_name.c_str(), final_set ? "final" : "dev", records.size());
+    std::printf("model: %s, set: %s, records: %zu, split: %d, gate: %d, topk: %zu\n", model_name.c_str(), final_set ? "final" : "dev",
+                records.size(), split ? 1 : 0, gate ? 1 : 0, topk);
+    std::vector<std::string> markers;
+    for (const auto& m : data.at("person_markers")) {
+        markers.push_back(m.get<std::string>());
+    }
 
     // 1. 지금 규칙(제품과 같이 NER 켬)
     {
@@ -316,8 +362,10 @@ int main(int argc, char** argv) {
         for (auto& r : records) {
             const auto found = detectors.detect_segment(r.text, pc::SegmentIndex{0});
             r.rule_blocked = !found;
+            r.person = std::ranges::any_of(markers, [&](const std::string& m) { return r.text.find(m) != std::string::npos; });
             if (found) {
                 for (const auto& e : *found) {
+                    r.person = r.person || e.type() == pc::EntityType::Person;
                     const bool credential = e.type() == pc::EntityType::Credential;
                     const bool sensitive = e.type() == pc::EntityType::SensitivePersonalInfo;
                     if (r.sensitive ? (r.category == "Credential" ? credential : sensitive) : (credential || sensitive)) {
@@ -367,7 +415,7 @@ int main(int argc, char** argv) {
             negative_vectors.push_back(embed(model, tok, files.prefix + e.get<std::string>()));
         }
     }
-    const auto score = [&](const std::string& text, std::string& predicted) {
+    const auto score_one = [&](const std::string& text, std::string& predicted) {
         double best = -1e9;
         if (nli) {
             for (const auto& c : categories) {
@@ -391,12 +439,35 @@ int main(int argc, char** argv) {
             neg = std::max(neg, dot(v, n));
         }
         for (const auto& c : categories) {
+            std::vector<double> sims;
             for (const auto& e : examples[c]) {
-                const double s = dot(v, e) - neg;
-                if (s > best) {
-                    best = s;
-                    predicted = c;
-                }
+                sims.push_back(dot(v, e));
+            }
+            std::ranges::sort(sims, std::greater<>());
+            const std::size_t k = std::min(topk, sims.size());
+            double mean = 0.0;
+            for (std::size_t i = 0; i < k; ++i) {
+                mean += sims[i];
+            }
+            const double s = mean / static_cast<double>(k) - neg;
+            if (s > best) {
+                best = s;
+                predicted = c;
+            }
+        }
+        return best;
+    };
+    const auto score = [&](const std::string& text, std::string& predicted) {
+        if (!split) {
+            return score_one(text, predicted);
+        }
+        double best = -1e9;
+        for (const auto& s : sentences(text)) {
+            std::string p;
+            const double v = score_one(s, p);
+            if (v > best) {
+                best = v;
+                predicted = p;
             }
         }
         return best;
@@ -428,7 +499,8 @@ int main(int argc, char** argv) {
         std::map<std::string, Tally> by_group;
         std::map<std::string, std::map<std::string, Tally>> by_category;
         for (const auto& r : records) {
-            const bool blocked = r.rule_blocked || r.score >= t;
+            const bool usable = !gate || r.person || r.predicted == "Credential";
+            const bool blocked = r.rule_blocked || (usable && r.score >= t);
             auto& g = by_group[r.group];
             ++g.total;
             g.blocked += blocked ? 1 : 0;
