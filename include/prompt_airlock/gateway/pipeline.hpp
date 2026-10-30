@@ -80,10 +80,11 @@ enum class ProviderError : std::uint8_t { Unavailable, Timeout, BadResponse };
 using ProviderCall =
     std::function<boost::asio::awaitable<std::expected<ProviderReply, ProviderError>>(std::string body)>;
 
-// 잠정값(Phase 9-3 측정으로 확정). NER 대기열 16칸, Vault 연결 8개보다 많이 받아도 안에서 기다릴 뿐이다.
+// 측정(#143)으로 확정(#144). NER 대기열 16칸, Vault 연결 8개보다 많이 받아도 안에서 기다릴 뿐이다.
+// 동시 32개 과부하에서 16개를 받고 나머지는 바로 거절했고, 받은 요청의 왕복 p95 는 약 4초였다.
 inline constexpr unsigned pipeline_work_threads = 4;
 inline constexpr std::size_t pipeline_in_flight_limit = 16;
-// 요청 하나의 전체 시간 상한(잠정, 9-3 측정으로 확정). provider 상한 120초 + NER 최악 약 4.1초 3번 + 여유.
+// 요청 하나의 전체 시간 상한(#144). provider 상한 120초 + NER 최악 약 4.1초 3번 + 여유.
 inline constexpr std::chrono::seconds request_time_limit{150};
 
 class Pipeline {
