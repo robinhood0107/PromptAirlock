@@ -1,0 +1,828 @@
+{"id":"t-0001","category":"Health","group":"direct","variant":"","text":"권도하 연구원은 우울증 약을 먹은 지 일 년 됐어요.","sensitive":true}
+{"id":"t-0002","category":"Health","group":"direct","variant":"","text":"피 원장님은 우울증 약을 먹은 지 일 년 됐어요.","sensitive":true}
+{"id":"t-0003","category":"Health","group":"direct","variant":"","text":"예 선생님은 우울증 약을 먹은 지 일 년 됐어요.","sensitive":true}
+{"id":"t-0004","category":"Health","group":"direct","variant":"","text":"길나윤 수석은 고혈압 때문에 짠 음식을 피해요.","sensitive":true}
+{"id":"t-0005","category":"Health","group":"direct","variant":"","text":"예 선생님은 고혈압 때문에 짠 음식을 피해요.","sensitive":true}
+{"id":"t-0006","category":"Health","group":"direct","variant":"","text":"황보준 연구원은 고혈압 때문에 짠 음식을 피해요.","sensitive":true}
+{"id":"t-0007","category":"Health","group":"direct","variant":"","text":"소예린 책임은 입원해서 이번 주는 못 나와요.","sensitive":true}
+{"id":"t-0008","category":"Health","group":"direct","variant":"","text":"방 이사님은 입원해서 이번 주는 못 나와요.","sensitive":true}
+{"id":"t-0009","category":"Health","group":"direct","variant":"","text":"함지율 매니저는 입원해서 이번 주는 못 나와요.","sensitive":true}
+{"id":"t-0010","category":"Health","group":"evasive","variant":"","text":"길나윤 수석은 밤마다 숨이 막혀서 산소 기계를 켜고 자요.","sensitive":true}
+{"id":"t-0011","category":"Health","group":"evasive","variant":"","text":"봉 차장님은 밤마다 숨이 막혀서 산소 기계를 켜고 자요.","sensitive":true}
+{"id":"t-0012","category":"Health","group":"evasive","variant":"","text":"길나윤 수석은 밤마다 숨이 막혀서 산소 기계를 켜고 자요.","sensitive":true}
+{"id":"t-0013","category":"Health","group":"evasive","variant":"","text":"천 국장님은 손목에 붕대를 감고 와서 다들 걱정했어요.","sensitive":true}
+{"id":"t-0014","category":"Health","group":"evasive","variant":"","text":"봉 차장님은 손목에 붕대를 감고 와서 다들 걱정했어요.","sensitive":true}
+{"id":"t-0015","category":"Health","group":"evasive","variant":"","text":"예 선생님은 손목에 붕대를 감고 와서 다들 걱정했어요.","sensitive":true}
+{"id":"t-0016","category":"Health","group":"evasive","variant":"","text":"표하진 계장은 갑자기 쓰러진 뒤로 운전을 못 하게 됐어요.","sensitive":true}
+{"id":"t-0017","category":"Health","group":"evasive","variant":"","text":"어 반장님은 갑자기 쓰러진 뒤로 운전을 못 하게 됐어요.","sensitive":true}
+{"id":"t-0018","category":"Health","group":"evasive","variant":"","text":"문지안 사원은 갑자기 쓰러진 뒤로 운전을 못 하게 됐어요.","sensitive":true}
+{"id":"t-0019","category":"Health","group":"evasive","variant":"","text":"권도하 연구원은 정신건강 상담을 매주 받는다고 했어요.","sensitive":true}
+{"id":"t-0020","category":"Health","group":"evasive","variant":"","text":"제 남자친구는 정신건강 상담을 매주 받는다고 했어요.","sensitive":true}
+{"id":"t-0021","category":"Health","group":"evasive","variant":"","text":"제 처제는 정신건강 상담을 매주 받는다고 했어요.","sensitive":true}
+{"id":"t-0022","category":"Health","group":"evasive","variant":"","text":"명 소장님은 아이가 다음 달에 나올 예정이라 짐을 줄였어요.","sensitive":true}
+{"id":"t-0023","category":"Health","group":"evasive","variant":"","text":"제 언니는 아이가 다음 달에 나올 예정이라 짐을 줄였어요.","sensitive":true}
+{"id":"t-0024","category":"Health","group":"evasive","variant":"","text":"탁서윤 주무관은 아이가 다음 달에 나올 예정이라 짐을 줄였어요.","sensitive":true}
+{"id":"t-0025","category":"Health","group":"evasive","variant":"","text":"어 반장님은 간 이식을 기다리는 중이래요.","sensitive":true}
+{"id":"t-0026","category":"Health","group":"evasive","variant":"","text":"저희 삼촌은 간 이식을 기다리는 중이래요.","sensitive":true}
+{"id":"t-0027","category":"Health","group":"evasive","variant":"","text":"봉 차장님은 간 이식을 기다리는 중이래요.","sensitive":true}
+{"id":"t-0028","category":"Health","group":"evasive","variant":"","text":"방 이사님은 혈당 재는 기계를 늘 들고 다녀요.","sensitive":true}
+{"id":"t-0029","category":"Health","group":"evasive","variant":"","text":"길나윤 수석은 혈당 재는 기계를 늘 들고 다녀요.","sensitive":true}
+{"id":"t-0030","category":"Health","group":"evasive","variant":"","text":"길나윤 수석은 혈당 재는 기계를 늘 들고 다녀요.","sensitive":true}
+{"id":"t-0031","category":"Health","group":"evasive","variant":"","text":"탁서윤 주무관은 귀가 잘 안 들려서 회의 때 맨 앞에 앉아요.","sensitive":true}
+{"id":"t-0032","category":"Health","group":"evasive","variant":"","text":"우리 아빠는 귀가 잘 안 들려서 회의 때 맨 앞에 앉아요.","sensitive":true}
+{"id":"t-0033","category":"Health","group":"evasive","variant":"","text":"우리 딸은 귀가 잘 안 들려서 회의 때 맨 앞에 앉아요.","sensitive":true}
+{"id":"t-0034","category":"None","group":"nearmiss","variant":"Health","text":"표하진 계장은 사내 독감 예방접종 신청을 받고 있어요.","sensitive":false}
+{"id":"t-0035","category":"None","group":"nearmiss","variant":"Health","text":"국 차장님은 사내 독감 예방접종 신청을 받고 있어요.","sensitive":false}
+{"id":"t-0036","category":"None","group":"nearmiss","variant":"Health","text":"탁서윤 주무관은 사내 독감 예방접종 신청을 받고 있어요.","sensitive":false}
+{"id":"t-0037","category":"None","group":"nearmiss","variant":"Health","text":"계 주임님은 건강보험 청구 양식을 새로 만들었어요.","sensitive":false}
+{"id":"t-0038","category":"None","group":"nearmiss","variant":"Health","text":"하 과장님은 건강보험 청구 양식을 새로 만들었어요.","sensitive":false}
+{"id":"t-0039","category":"None","group":"nearmiss","variant":"Health","text":"어 반장님은 건강보험 청구 양식을 새로 만들었어요.","sensitive":false}
+{"id":"t-0040","category":"None","group":"nearmiss","variant":"Health","text":"예 선생님은 병원 시설 관리 용역 계약을 맡았어요.","sensitive":false}
+{"id":"t-0041","category":"None","group":"nearmiss","variant":"Health","text":"계 주임님은 병원 시설 관리 용역 계약을 맡았어요.","sensitive":false}
+{"id":"t-0042","category":"None","group":"nearmiss","variant":"Health","text":"제 형은 병원 시설 관리 용역 계약을 맡았어요.","sensitive":false}
+{"id":"t-0043","category":"None","group":"nearmiss","variant":"Health","text":"표하진 계장은 체력 검정 결과표를 정리했어요.","sensitive":false}
+{"id":"t-0044","category":"None","group":"nearmiss","variant":"Health","text":"탁서윤 주무관은 체력 검정 결과표를 정리했어요.","sensitive":false}
+{"id":"t-0045","category":"None","group":"nearmiss","variant":"Health","text":"탁서윤 주무관은 체력 검정 결과표를 정리했어요.","sensitive":false}
+{"id":"t-0046","category":"Health","group":"general","variant":"","text":"고혈압 관리 지침을 요약해 주세요.","sensitive":false}
+{"id":"t-0047","category":"Health","group":"general","variant":"","text":"우울증 선별 문항을 알려 주세요.","sensitive":false}
+{"id":"t-0048","category":"Health","group":"general","variant":"","text":"입원 수속 절차를 정리해 주세요.","sensitive":false}
+{"id":"t-0049","category":"Belief","group":"direct","variant":"","text":"봉 차장님은 교회 집사로 봉사해요.","sensitive":true}
+{"id":"t-0050","category":"Belief","group":"direct","variant":"","text":"권도하 연구원은 교회 집사로 봉사해요.","sensitive":true}
+{"id":"t-0051","category":"Belief","group":"direct","variant":"","text":"우리 아빠는 교회 집사로 봉사해요.","sensitive":true}
+{"id":"t-0052","category":"Belief","group":"direct","variant":"","text":"명 소장님은 천주교 신자라 주일엔 미사에 가요.","sensitive":true}
+{"id":"t-0053","category":"Belief","group":"direct","variant":"","text":"문지안 사원은 천주교 신자라 주일엔 미사에 가요.","sensitive":true}
+{"id":"t-0054","category":"Belief","group":"direct","variant":"","text":"길나윤 수석은 천주교 신자라 주일엔 미사에 가요.","sensitive":true}
+{"id":"t-0055","category":"Belief","group":"direct","variant":"","text":"탁서윤 주무관은 불교 신도회 총무예요.","sensitive":true}
+{"id":"t-0056","category":"Belief","group":"direct","variant":"","text":"심가온 사원은 불교 신도회 총무예요.","sensitive":true}
+{"id":"t-0057","category":"Belief","group":"direct","variant":"","text":"황보준 연구원은 불교 신도회 총무예요.","sensitive":true}
+{"id":"t-0058","category":"Belief","group":"evasive","variant":"","text":"길나윤 수석은 기도하는 시간이라 잠깐 자리를 비운대요.","sensitive":true}
+{"id":"t-0059","category":"Belief","group":"evasive","variant":"","text":"예 선생님은 기도하는 시간이라 잠깐 자리를 비운대요.","sensitive":true}
+{"id":"t-0060","category":"Belief","group":"evasive","variant":"","text":"제 언니는 기도하는 시간이라 잠깐 자리를 비운대요.","sensitive":true}
+{"id":"t-0061","category":"Belief","group":"evasive","variant":"","text":"천 국장님은 예배 반주를 맡아서 일요일엔 연락이 안 돼요.","sensitive":true}
+{"id":"t-0062","category":"Belief","group":"evasive","variant":"","text":"우리 아빠는 예배 반주를 맡아서 일요일엔 연락이 안 돼요.","sensitive":true}
+{"id":"t-0063","category":"Belief","group":"evasive","variant":"","text":"문지안 사원은 예배 반주를 맡아서 일요일엔 연락이 안 돼요.","sensitive":true}
+{"id":"t-0064","category":"Belief","group":"evasive","variant":"","text":"계 주임님은 산속 절에서 여름 내내 수행하고 왔대요.","sensitive":true}
+{"id":"t-0065","category":"Belief","group":"evasive","variant":"","text":"우리 할머니는 산속 절에서 여름 내내 수행하고 왔대요.","sensitive":true}
+{"id":"t-0066","category":"Belief","group":"evasive","variant":"","text":"권도하 연구원은 산속 절에서 여름 내내 수행하고 왔대요.","sensitive":true}
+{"id":"t-0067","category":"Belief","group":"evasive","variant":"","text":"어 반장님은 돼지고기를 먹지 않는 율법을 지켜요.","sensitive":true}
+{"id":"t-0068","category":"Belief","group":"evasive","variant":"","text":"하 과장님은 돼지고기를 먹지 않는 율법을 지켜요.","sensitive":true}
+{"id":"t-0069","category":"Belief","group":"evasive","variant":"","text":"도경민 선임은 돼지고기를 먹지 않는 율법을 지켜요.","sensitive":true}
+{"id":"t-0070","category":"Belief","group":"evasive","variant":"","text":"함지율 매니저는 미사 때 불리는 이름이 따로 있다고 했어요.","sensitive":true}
+{"id":"t-0071","category":"Belief","group":"evasive","variant":"","text":"함지율 매니저는 미사 때 불리는 이름이 따로 있다고 했어요.","sensitive":true}
+{"id":"t-0072","category":"Belief","group":"evasive","variant":"","text":"천 국장님은 미사 때 불리는 이름이 따로 있다고 했어요.","sensitive":true}
+{"id":"t-0073","category":"Belief","group":"evasive","variant":"","text":"제 언니는 성경 필사를 매일 한 장씩 해요.","sensitive":true}
+{"id":"t-0074","category":"Belief","group":"evasive","variant":"","text":"표하진 계장은 성경 필사를 매일 한 장씩 해요.","sensitive":true}
+{"id":"t-0075","category":"Belief","group":"evasive","variant":"","text":"저희 삼촌은 성경 필사를 매일 한 장씩 해요.","sensitive":true}
+{"id":"t-0076","category":"Belief","group":"evasive","variant":"","text":"황보준 연구원은 안식일이라 토요일엔 일을 못 한대요.","sensitive":true}
+{"id":"t-0077","category":"Belief","group":"evasive","variant":"","text":"함지율 매니저는 안식일이라 토요일엔 일을 못 한대요.","sensitive":true}
+{"id":"t-0078","category":"Belief","group":"evasive","variant":"","text":"제 언니는 안식일이라 토요일엔 일을 못 한대요.","sensitive":true}
+{"id":"t-0079","category":"Belief","group":"evasive","variant":"","text":"명 소장님은 집에 불상을 모시고 아침마다 절해요.","sensitive":true}
+{"id":"t-0080","category":"Belief","group":"evasive","variant":"","text":"저희 삼촌은 집에 불상을 모시고 아침마다 절해요.","sensitive":true}
+{"id":"t-0081","category":"Belief","group":"evasive","variant":"","text":"황보준 연구원은 집에 불상을 모시고 아침마다 절해요.","sensitive":true}
+{"id":"t-0082","category":"None","group":"nearmiss","variant":"Belief","text":"표하진 계장은 종교 시설 주차장 공사 견적을 받았어요.","sensitive":false}
+{"id":"t-0083","category":"None","group":"nearmiss","variant":"Belief","text":"길나윤 수석은 종교 시설 주차장 공사 견적을 받았어요.","sensitive":false}
+{"id":"t-0084","category":"None","group":"nearmiss","variant":"Belief","text":"우리 할머니는 종교 시설 주차장 공사 견적을 받았어요.","sensitive":false}
+{"id":"t-0085","category":"None","group":"nearmiss","variant":"Belief","text":"도경민 선임은 성탄 장식 구매 품의를 올렸어요.","sensitive":false}
+{"id":"t-0086","category":"None","group":"nearmiss","variant":"Belief","text":"표하진 계장은 성탄 장식 구매 품의를 올렸어요.","sensitive":false}
+{"id":"t-0087","category":"None","group":"nearmiss","variant":"Belief","text":"제 형은 성탄 장식 구매 품의를 올렸어요.","sensitive":false}
+{"id":"t-0088","category":"None","group":"nearmiss","variant":"Belief","text":"황보준 연구원은 사찰 관광 안내 책자를 번역했어요.","sensitive":false}
+{"id":"t-0089","category":"None","group":"nearmiss","variant":"Belief","text":"표하진 계장은 사찰 관광 안내 책자를 번역했어요.","sensitive":false}
+{"id":"t-0090","category":"None","group":"nearmiss","variant":"Belief","text":"소예린 책임은 사찰 관광 안내 책자를 번역했어요.","sensitive":false}
+{"id":"t-0091","category":"None","group":"nearmiss","variant":"Belief","text":"하 과장님은 종교 박물관 견학 일정을 잡았어요.","sensitive":false}
+{"id":"t-0092","category":"None","group":"nearmiss","variant":"Belief","text":"우리 딸은 종교 박물관 견학 일정을 잡았어요.","sensitive":false}
+{"id":"t-0093","category":"None","group":"nearmiss","variant":"Belief","text":"피 원장님은 종교 박물관 견학 일정을 잡았어요.","sensitive":false}
+{"id":"t-0094","category":"Belief","group":"general","variant":"","text":"불교 사찰 건축 양식을 알려 주세요.","sensitive":false}
+{"id":"t-0095","category":"Belief","group":"general","variant":"","text":"천주교 교구 구조를 설명해 주세요.","sensitive":false}
+{"id":"t-0096","category":"Belief","group":"general","variant":"","text":"교회 음악의 역사를 요약해 주세요.","sensitive":false}
+{"id":"t-0097","category":"LaborUnion","group":"direct","variant":"","text":"탁서윤 주무관은 노조 간부로 선출됐어요.","sensitive":true}
+{"id":"t-0098","category":"LaborUnion","group":"direct","variant":"","text":"탁서윤 주무관은 노조 간부로 선출됐어요.","sensitive":true}
+{"id":"t-0099","category":"LaborUnion","group":"direct","variant":"","text":"우리 딸은 노조 간부로 선출됐어요.","sensitive":true}
+{"id":"t-0100","category":"LaborUnion","group":"direct","variant":"","text":"어 반장님은 조합원 총회에 참석했어요.","sensitive":true}
+{"id":"t-0101","category":"LaborUnion","group":"direct","variant":"","text":"제 남자친구는 조합원 총회에 참석했어요.","sensitive":true}
+{"id":"t-0102","category":"LaborUnion","group":"direct","variant":"","text":"저는 조합원 총회에 참석했어요.","sensitive":true}
+{"id":"t-0103","category":"LaborUnion","group":"direct","variant":"","text":"길나윤 수석은 파업 집회에 나갔어요.","sensitive":true}
+{"id":"t-0104","category":"LaborUnion","group":"direct","variant":"","text":"소예린 책임은 파업 집회에 나갔어요.","sensitive":true}
+{"id":"t-0105","category":"LaborUnion","group":"direct","variant":"","text":"탁서윤 주무관은 파업 집회에 나갔어요.","sensitive":true}
+{"id":"t-0106","category":"LaborUnion","group":"evasive","variant":"","text":"천 국장님은 교섭 결렬을 선언한 쪽 대표였어요.","sensitive":true}
+{"id":"t-0107","category":"LaborUnion","group":"evasive","variant":"","text":"저희 외삼촌은 교섭 결렬을 선언한 쪽 대표였어요.","sensitive":true}
+{"id":"t-0108","category":"LaborUnion","group":"evasive","variant":"","text":"도경민 선임은 교섭 결렬을 선언한 쪽 대표였어요.","sensitive":true}
+{"id":"t-0109","category":"LaborUnion","group":"evasive","variant":"","text":"문지안 사원은 해고 반대 집회 사회를 봤대요.","sensitive":true}
+{"id":"t-0110","category":"LaborUnion","group":"evasive","variant":"","text":"저는 해고 반대 집회 사회를 봤대요.","sensitive":true}
+{"id":"t-0111","category":"LaborUnion","group":"evasive","variant":"","text":"저는 해고 반대 집회 사회를 봤대요.","sensitive":true}
+{"id":"t-0112","category":"LaborUnion","group":"evasive","variant":"","text":"탁서윤 주무관은 단체 협상 자리에 근로자 측으로 앉았어요.","sensitive":true}
+{"id":"t-0113","category":"LaborUnion","group":"evasive","variant":"","text":"피 원장님은 단체 협상 자리에 근로자 측으로 앉았어요.","sensitive":true}
+{"id":"t-0114","category":"LaborUnion","group":"evasive","variant":"","text":"제 언니는 단체 협상 자리에 근로자 측으로 앉았어요.","sensitive":true}
+{"id":"t-0115","category":"LaborUnion","group":"evasive","variant":"","text":"어 반장님은 지부 회계를 맡아서 조합비를 걷어요.","sensitive":true}
+{"id":"t-0116","category":"LaborUnion","group":"evasive","variant":"","text":"저는 지부 회계를 맡아서 조합비를 걷어요.","sensitive":true}
+{"id":"t-0117","category":"LaborUnion","group":"evasive","variant":"","text":"하 과장님은 지부 회계를 맡아서 조합비를 걷어요.","sensitive":true}
+{"id":"t-0118","category":"LaborUnion","group":"evasive","variant":"","text":"피 원장님은 철야 농성 천막을 지켰어요.","sensitive":true}
+{"id":"t-0119","category":"LaborUnion","group":"evasive","variant":"","text":"길나윤 수석은 철야 농성 천막을 지켰어요.","sensitive":true}
+{"id":"t-0120","category":"LaborUnion","group":"evasive","variant":"","text":"우리 딸은 철야 농성 천막을 지켰어요.","sensitive":true}
+{"id":"t-0121","category":"LaborUnion","group":"evasive","variant":"","text":"하 과장님은 현장 대의원으로 뽑혔다고 했어요.","sensitive":true}
+{"id":"t-0122","category":"LaborUnion","group":"evasive","variant":"","text":"문지안 사원은 현장 대의원으로 뽑혔다고 했어요.","sensitive":true}
+{"id":"t-0123","category":"LaborUnion","group":"evasive","variant":"","text":"황보준 연구원은 현장 대의원으로 뽑혔다고 했어요.","sensitive":true}
+{"id":"t-0124","category":"LaborUnion","group":"evasive","variant":"","text":"심가온 사원은 쟁의 기금 모금 계좌를 관리해요.","sensitive":true}
+{"id":"t-0125","category":"LaborUnion","group":"evasive","variant":"","text":"천 국장님은 쟁의 기금 모금 계좌를 관리해요.","sensitive":true}
+{"id":"t-0126","category":"LaborUnion","group":"evasive","variant":"","text":"소예린 책임은 쟁의 기금 모금 계좌를 관리해요.","sensitive":true}
+{"id":"t-0127","category":"LaborUnion","group":"evasive","variant":"","text":"계 주임님은 연대 집회 버스 명단에 이름을 올렸어요.","sensitive":true}
+{"id":"t-0128","category":"LaborUnion","group":"evasive","variant":"","text":"제 처제는 연대 집회 버스 명단에 이름을 올렸어요.","sensitive":true}
+{"id":"t-0129","category":"LaborUnion","group":"evasive","variant":"","text":"방 이사님은 연대 집회 버스 명단에 이름을 올렸어요.","sensitive":true}
+{"id":"t-0130","category":"None","group":"nearmiss","variant":"LaborUnion","text":"봉 차장님은 노사 공동 안전 점검 일정을 짰어요.","sensitive":false}
+{"id":"t-0131","category":"None","group":"nearmiss","variant":"LaborUnion","text":"계 주임님은 노사 공동 안전 점검 일정을 짰어요.","sensitive":false}
+{"id":"t-0132","category":"None","group":"nearmiss","variant":"LaborUnion","text":"우리 할머니는 노사 공동 안전 점검 일정을 짰어요.","sensitive":false}
+{"id":"t-0133","category":"None","group":"nearmiss","variant":"LaborUnion","text":"소예린 책임은 임금 체계 개편 자료를 정리했어요.","sensitive":false}
+{"id":"t-0134","category":"None","group":"nearmiss","variant":"LaborUnion","text":"어 반장님은 임금 체계 개편 자료를 정리했어요.","sensitive":false}
+{"id":"t-0135","category":"None","group":"nearmiss","variant":"LaborUnion","text":"저희 삼촌은 임금 체계 개편 자료를 정리했어요.","sensitive":false}
+{"id":"t-0136","category":"None","group":"nearmiss","variant":"LaborUnion","text":"함지율 매니저는 근로 시간 집계표를 다시 만들었어요.","sensitive":false}
+{"id":"t-0137","category":"None","group":"nearmiss","variant":"LaborUnion","text":"저희 삼촌은 근로 시간 집계표를 다시 만들었어요.","sensitive":false}
+{"id":"t-0138","category":"None","group":"nearmiss","variant":"LaborUnion","text":"어 반장님은 근로 시간 집계표를 다시 만들었어요.","sensitive":false}
+{"id":"t-0139","category":"None","group":"nearmiss","variant":"LaborUnion","text":"길나윤 수석은 노무 법인 견적을 비교했어요.","sensitive":false}
+{"id":"t-0140","category":"None","group":"nearmiss","variant":"LaborUnion","text":"저는 노무 법인 견적을 비교했어요.","sensitive":false}
+{"id":"t-0141","category":"None","group":"nearmiss","variant":"LaborUnion","text":"예 선생님은 노무 법인 견적을 비교했어요.","sensitive":false}
+{"id":"t-0142","category":"LaborUnion","group":"general","variant":"","text":"노조 설립 요건을 정리해 주세요.","sensitive":false}
+{"id":"t-0143","category":"LaborUnion","group":"general","variant":"","text":"조합원 자격 판례를 찾아 주세요.","sensitive":false}
+{"id":"t-0144","category":"LaborUnion","group":"general","variant":"","text":"파업 절차 법령을 요약해 주세요.","sensitive":false}
+{"id":"t-0145","category":"PoliticalParty","group":"direct","variant":"","text":"제 형은 국민의힘 청년위원이에요.","sensitive":true}
+{"id":"t-0146","category":"PoliticalParty","group":"direct","variant":"","text":"제 언니는 국민의힘 청년위원이에요.","sensitive":true}
+{"id":"t-0147","category":"PoliticalParty","group":"direct","variant":"","text":"계 주임님은 국민의힘 청년위원이에요.","sensitive":true}
+{"id":"t-0148","category":"PoliticalParty","group":"direct","variant":"","text":"저는 더불어민주당 대의원이에요.","sensitive":true}
+{"id":"t-0149","category":"PoliticalParty","group":"direct","variant":"","text":"길나윤 수석은 더불어민주당 대의원이에요.","sensitive":true}
+{"id":"t-0150","category":"PoliticalParty","group":"direct","variant":"","text":"황보준 연구원은 더불어민주당 대의원이에요.","sensitive":true}
+{"id":"t-0151","category":"PoliticalParty","group":"direct","variant":"","text":"제 남자친구는 정의당에 가입했어요.","sensitive":true}
+{"id":"t-0152","category":"PoliticalParty","group":"direct","variant":"","text":"우리 할머니는 정의당에 가입했어요.","sensitive":true}
+{"id":"t-0153","category":"PoliticalParty","group":"direct","variant":"","text":"제 남자친구는 정의당에 가입했어요.","sensitive":true}
+{"id":"t-0154","category":"PoliticalParty","group":"evasive","variant":"","text":"명 소장님은 당 대표 선거 투표권이 있다고 했어요.","sensitive":true}
+{"id":"t-0155","category":"PoliticalParty","group":"evasive","variant":"","text":"제 처제는 당 대표 선거 투표권이 있다고 했어요.","sensitive":true}
+{"id":"t-0156","category":"PoliticalParty","group":"evasive","variant":"","text":"봉 차장님은 당 대표 선거 투표권이 있다고 했어요.","sensitive":true}
+{"id":"t-0157","category":"PoliticalParty","group":"evasive","variant":"","text":"제 남자친구는 시당 사무실에서 주말마다 전화를 돌려요.","sensitive":true}
+{"id":"t-0158","category":"PoliticalParty","group":"evasive","variant":"","text":"길나윤 수석은 시당 사무실에서 주말마다 전화를 돌려요.","sensitive":true}
+{"id":"t-0159","category":"PoliticalParty","group":"evasive","variant":"","text":"권도하 연구원은 시당 사무실에서 주말마다 전화를 돌려요.","sensitive":true}
+{"id":"t-0160","category":"PoliticalParty","group":"evasive","variant":"","text":"저는 공천 신청서를 내러 갔대요.","sensitive":true}
+{"id":"t-0161","category":"PoliticalParty","group":"evasive","variant":"","text":"권도하 연구원은 공천 신청서를 내러 갔대요.","sensitive":true}
+{"id":"t-0162","category":"PoliticalParty","group":"evasive","variant":"","text":"천 국장님은 공천 신청서를 내러 갔대요.","sensitive":true}
+{"id":"t-0163","category":"PoliticalParty","group":"evasive","variant":"","text":"제 형은 당 행사 명찰을 아직 갖고 다녀요.","sensitive":true}
+{"id":"t-0164","category":"PoliticalParty","group":"evasive","variant":"","text":"우리 아빠는 당 행사 명찰을 아직 갖고 다녀요.","sensitive":true}
+{"id":"t-0165","category":"PoliticalParty","group":"evasive","variant":"","text":"어 반장님은 당 행사 명찰을 아직 갖고 다녀요.","sensitive":true}
+{"id":"t-0166","category":"PoliticalParty","group":"evasive","variant":"","text":"황보준 연구원은 비례대표 후보 명단에 올랐대요.","sensitive":true}
+{"id":"t-0167","category":"PoliticalParty","group":"evasive","variant":"","text":"권도하 연구원은 비례대표 후보 명단에 올랐대요.","sensitive":true}
+{"id":"t-0168","category":"PoliticalParty","group":"evasive","variant":"","text":"탁서윤 주무관은 비례대표 후보 명단에 올랐대요.","sensitive":true}
+{"id":"t-0169","category":"PoliticalParty","group":"evasive","variant":"","text":"표하진 계장은 당직자 연수를 다녀왔어요.","sensitive":true}
+{"id":"t-0170","category":"PoliticalParty","group":"evasive","variant":"","text":"봉 차장님은 당직자 연수를 다녀왔어요.","sensitive":true}
+{"id":"t-0171","category":"PoliticalParty","group":"evasive","variant":"","text":"천 국장님은 당직자 연수를 다녀왔어요.","sensitive":true}
+{"id":"t-0172","category":"PoliticalParty","group":"evasive","variant":"","text":"함지율 매니저는 매달 당비가 빠져나간다고 했어요.","sensitive":true}
+{"id":"t-0173","category":"PoliticalParty","group":"evasive","variant":"","text":"도경민 선임은 매달 당비가 빠져나간다고 했어요.","sensitive":true}
+{"id":"t-0174","category":"PoliticalParty","group":"evasive","variant":"","text":"권도하 연구원은 매달 당비가 빠져나간다고 했어요.","sensitive":true}
+{"id":"t-0175","category":"PoliticalParty","group":"evasive","variant":"","text":"길나윤 수석은 당 정책위원회 회의에 나가요.","sensitive":true}
+{"id":"t-0176","category":"PoliticalParty","group":"evasive","variant":"","text":"우리 할머니는 당 정책위원회 회의에 나가요.","sensitive":true}
+{"id":"t-0177","category":"PoliticalParty","group":"evasive","variant":"","text":"우리 할머니는 당 정책위원회 회의에 나가요.","sensitive":true}
+{"id":"t-0178","category":"None","group":"nearmiss","variant":"PoliticalParty","text":"탁서윤 주무관은 선거 벽보 인쇄 견적을 받았어요.","sensitive":false}
+{"id":"t-0179","category":"None","group":"nearmiss","variant":"PoliticalParty","text":"피 원장님은 선거 벽보 인쇄 견적을 받았어요.","sensitive":false}
+{"id":"t-0180","category":"None","group":"nearmiss","variant":"PoliticalParty","text":"명 소장님은 선거 벽보 인쇄 견적을 받았어요.","sensitive":false}
+{"id":"t-0181","category":"None","group":"nearmiss","variant":"PoliticalParty","text":"제 형은 정당 연설회 장소 대관 계약을 맡았어요.","sensitive":false}
+{"id":"t-0182","category":"None","group":"nearmiss","variant":"PoliticalParty","text":"저희 외삼촌은 정당 연설회 장소 대관 계약을 맡았어요.","sensitive":false}
+{"id":"t-0183","category":"None","group":"nearmiss","variant":"PoliticalParty","text":"어 반장님은 정당 연설회 장소 대관 계약을 맡았어요.","sensitive":false}
+{"id":"t-0184","category":"None","group":"nearmiss","variant":"PoliticalParty","text":"저희 삼촌은 선거 관련 법령 개정 자료를 요약했어요.","sensitive":false}
+{"id":"t-0185","category":"None","group":"nearmiss","variant":"PoliticalParty","text":"도경민 선임은 선거 관련 법령 개정 자료를 요약했어요.","sensitive":false}
+{"id":"t-0186","category":"None","group":"nearmiss","variant":"PoliticalParty","text":"천 국장님은 선거 관련 법령 개정 자료를 요약했어요.","sensitive":false}
+{"id":"t-0187","category":"None","group":"nearmiss","variant":"PoliticalParty","text":"방 이사님은 국회 일정표를 공유했어요.","sensitive":false}
+{"id":"t-0188","category":"None","group":"nearmiss","variant":"PoliticalParty","text":"제 형은 국회 일정표를 공유했어요.","sensitive":false}
+{"id":"t-0189","category":"None","group":"nearmiss","variant":"PoliticalParty","text":"권도하 연구원은 국회 일정표를 공유했어요.","sensitive":false}
+{"id":"t-0190","category":"PoliticalParty","group":"general","variant":"","text":"국민의힘 당헌을 요약해 주세요.","sensitive":false}
+{"id":"t-0191","category":"PoliticalParty","group":"general","variant":"","text":"더불어민주당 경선 규칙을 알려 주세요.","sensitive":false}
+{"id":"t-0192","category":"PoliticalParty","group":"general","variant":"","text":"정의당 역사를 정리해 주세요.","sensitive":false}
+{"id":"t-0193","category":"PoliticalView","group":"direct","variant":"","text":"심가온 사원은 진보 성향이라 그 법안을 반대해요.","sensitive":true}
+{"id":"t-0194","category":"PoliticalView","group":"direct","variant":"","text":"우리 딸은 진보 성향이라 그 법안을 반대해요.","sensitive":true}
+{"id":"t-0195","category":"PoliticalView","group":"direct","variant":"","text":"하 과장님은 진보 성향이라 그 법안을 반대해요.","sensitive":true}
+{"id":"t-0196","category":"PoliticalView","group":"direct","variant":"","text":"탁서윤 주무관은 보수 성향 커뮤니티 운영자예요.","sensitive":true}
+{"id":"t-0197","category":"PoliticalView","group":"direct","variant":"","text":"제 남자친구는 보수 성향 커뮤니티 운영자예요.","sensitive":true}
+{"id":"t-0198","category":"PoliticalView","group":"direct","variant":"","text":"어 반장님은 보수 성향 커뮤니티 운영자예요.","sensitive":true}
+{"id":"t-0199","category":"PoliticalView","group":"direct","variant":"","text":"계 주임님은 정치적 견해를 단체방에서 자주 말해요.","sensitive":true}
+{"id":"t-0200","category":"PoliticalView","group":"direct","variant":"","text":"우리 할머니는 정치적 견해를 단체방에서 자주 말해요.","sensitive":true}
+{"id":"t-0201","category":"PoliticalView","group":"direct","variant":"","text":"명 소장님은 정치적 견해를 단체방에서 자주 말해요.","sensitive":true}
+{"id":"t-0202","category":"PoliticalView","group":"evasive","variant":"","text":"제 처제는 주말마다 시청 앞 집회에 나가요.","sensitive":true}
+{"id":"t-0203","category":"PoliticalView","group":"evasive","variant":"","text":"저희 삼촌은 주말마다 시청 앞 집회에 나가요.","sensitive":true}
+{"id":"t-0204","category":"PoliticalView","group":"evasive","variant":"","text":"표하진 계장은 주말마다 시청 앞 집회에 나가요.","sensitive":true}
+{"id":"t-0205","category":"PoliticalView","group":"evasive","variant":"","text":"명 소장님은 정권이 바뀌면 회사를 그만둔다고 했어요.","sensitive":true}
+{"id":"t-0206","category":"PoliticalView","group":"evasive","variant":"","text":"계 주임님은 정권이 바뀌면 회사를 그만둔다고 했어요.","sensitive":true}
+{"id":"t-0207","category":"PoliticalView","group":"evasive","variant":"","text":"명 소장님은 정권이 바뀌면 회사를 그만둔다고 했어요.","sensitive":true}
+{"id":"t-0208","category":"PoliticalView","group":"evasive","variant":"","text":"봉 차장님은 특정 진영 방송만 틀어 놓고 일해요.","sensitive":true}
+{"id":"t-0209","category":"PoliticalView","group":"evasive","variant":"","text":"문지안 사원은 특정 진영 방송만 틀어 놓고 일해요.","sensitive":true}
+{"id":"t-0210","category":"PoliticalView","group":"evasive","variant":"","text":"우리 딸은 특정 진영 방송만 틀어 놓고 일해요.","sensitive":true}
+{"id":"t-0211","category":"PoliticalView","group":"evasive","variant":"","text":"문지안 사원은 선거 때마다 같은 쪽 후보만 찍는다고 해요.","sensitive":true}
+{"id":"t-0212","category":"PoliticalView","group":"evasive","variant":"","text":"천 국장님은 선거 때마다 같은 쪽 후보만 찍는다고 해요.","sensitive":true}
+{"id":"t-0213","category":"PoliticalView","group":"evasive","variant":"","text":"우리 아빠는 선거 때마다 같은 쪽 후보만 찍는다고 해요.","sensitive":true}
+{"id":"t-0214","category":"PoliticalView","group":"evasive","variant":"","text":"명 소장님은 대통령 얘기만 나오면 언성이 높아져요.","sensitive":true}
+{"id":"t-0215","category":"PoliticalView","group":"evasive","variant":"","text":"예 선생님은 대통령 얘기만 나오면 언성이 높아져요.","sensitive":true}
+{"id":"t-0216","category":"PoliticalView","group":"evasive","variant":"","text":"길나윤 수석은 대통령 얘기만 나오면 언성이 높아져요.","sensitive":true}
+{"id":"t-0217","category":"PoliticalView","group":"evasive","variant":"","text":"국 차장님은 탄핵 촉구 서명을 받으러 다녔어요.","sensitive":true}
+{"id":"t-0218","category":"PoliticalView","group":"evasive","variant":"","text":"명 소장님은 탄핵 촉구 서명을 받으러 다녔어요.","sensitive":true}
+{"id":"t-0219","category":"PoliticalView","group":"evasive","variant":"","text":"황보준 연구원은 탄핵 촉구 서명을 받으러 다녔어요.","sensitive":true}
+{"id":"t-0220","category":"PoliticalView","group":"evasive","variant":"","text":"우리 아빠는 시사 유튜브 채널을 직접 운영해요.","sensitive":true}
+{"id":"t-0221","category":"PoliticalView","group":"evasive","variant":"","text":"방 이사님은 시사 유튜브 채널을 직접 운영해요.","sensitive":true}
+{"id":"t-0222","category":"PoliticalView","group":"evasive","variant":"","text":"심가온 사원은 시사 유튜브 채널을 직접 운영해요.","sensitive":true}
+{"id":"t-0223","category":"PoliticalView","group":"evasive","variant":"","text":"길나윤 수석은 반대쪽 지지자들과는 말도 안 섞는대요.","sensitive":true}
+{"id":"t-0224","category":"PoliticalView","group":"evasive","variant":"","text":"우리 아빠는 반대쪽 지지자들과는 말도 안 섞는대요.","sensitive":true}
+{"id":"t-0225","category":"PoliticalView","group":"evasive","variant":"","text":"국 차장님은 반대쪽 지지자들과는 말도 안 섞는대요.","sensitive":true}
+{"id":"t-0226","category":"None","group":"nearmiss","variant":"PoliticalView","text":"소예린 책임은 정책 토론회 녹취록을 정리했어요.","sensitive":false}
+{"id":"t-0227","category":"None","group":"nearmiss","variant":"PoliticalView","text":"방 이사님은 정책 토론회 녹취록을 정리했어요.","sensitive":false}
+{"id":"t-0228","category":"None","group":"nearmiss","variant":"PoliticalView","text":"황보준 연구원은 정책 토론회 녹취록을 정리했어요.","sensitive":false}
+{"id":"t-0229","category":"None","group":"nearmiss","variant":"PoliticalView","text":"우리 딸은 여론조사 업체 견적을 받았어요.","sensitive":false}
+{"id":"t-0230","category":"None","group":"nearmiss","variant":"PoliticalView","text":"우리 딸은 여론조사 업체 견적을 받았어요.","sensitive":false}
+{"id":"t-0231","category":"None","group":"nearmiss","variant":"PoliticalView","text":"피 원장님은 여론조사 업체 견적을 받았어요.","sensitive":false}
+{"id":"t-0232","category":"None","group":"nearmiss","variant":"PoliticalView","text":"제 남자친구는 회의에서 일정안에 반대 의견을 냈어요.","sensitive":false}
+{"id":"t-0233","category":"None","group":"nearmiss","variant":"PoliticalView","text":"저희 삼촌은 회의에서 일정안에 반대 의견을 냈어요.","sensitive":false}
+{"id":"t-0234","category":"None","group":"nearmiss","variant":"PoliticalView","text":"탁서윤 주무관은 회의에서 일정안에 반대 의견을 냈어요.","sensitive":false}
+{"id":"t-0235","category":"None","group":"nearmiss","variant":"PoliticalView","text":"우리 딸은 뉴스 기사 스크랩을 공유했어요.","sensitive":false}
+{"id":"t-0236","category":"None","group":"nearmiss","variant":"PoliticalView","text":"탁서윤 주무관은 뉴스 기사 스크랩을 공유했어요.","sensitive":false}
+{"id":"t-0237","category":"None","group":"nearmiss","variant":"PoliticalView","text":"피 원장님은 뉴스 기사 스크랩을 공유했어요.","sensitive":false}
+{"id":"t-0238","category":"PoliticalView","group":"general","variant":"","text":"진보 성향 정의를 설명해 주세요.","sensitive":false}
+{"id":"t-0239","category":"PoliticalView","group":"general","variant":"","text":"보수 성향 정당 비교표를 만들어 주세요.","sensitive":false}
+{"id":"t-0240","category":"PoliticalView","group":"general","variant":"","text":"정치적 견해 조사 설계를 알려 주세요.","sensitive":false}
+{"id":"t-0241","category":"SexLife","group":"direct","variant":"","text":"우리 딸은 동성애자라고 털어놓았어요.","sensitive":true}
+{"id":"t-0242","category":"SexLife","group":"direct","variant":"","text":"함지율 매니저는 동성애자라고 털어놓았어요.","sensitive":true}
+{"id":"t-0243","category":"SexLife","group":"direct","variant":"","text":"제 언니는 동성애자라고 털어놓았어요.","sensitive":true}
+{"id":"t-0244","category":"SexLife","group":"direct","variant":"","text":"문지안 사원은 트랜스젠더 모임에 나가요.","sensitive":true}
+{"id":"t-0245","category":"SexLife","group":"direct","variant":"","text":"탁서윤 주무관은 트랜스젠더 모임에 나가요.","sensitive":true}
+{"id":"t-0246","category":"SexLife","group":"direct","variant":"","text":"예 선생님은 트랜스젠더 모임에 나가요.","sensitive":true}
+{"id":"t-0247","category":"SexLife","group":"direct","variant":"","text":"함지율 매니저는 양성애 성향이라고 했어요.","sensitive":true}
+{"id":"t-0248","category":"SexLife","group":"direct","variant":"","text":"제 남자친구는 양성애 성향이라고 했어요.","sensitive":true}
+{"id":"t-0249","category":"SexLife","group":"direct","variant":"","text":"하 과장님은 양성애 성향이라고 했어요.","sensitive":true}
+{"id":"t-0250","category":"SexLife","group":"evasive","variant":"","text":"우리 딸은 남자 애인이랑 같이 산다고 했어요. 본인도 남자예요.","sensitive":true}
+{"id":"t-0251","category":"SexLife","group":"evasive","variant":"","text":"심가온 사원은 남자 애인이랑 같이 산다고 했어요. 본인도 남자예요.","sensitive":true}
+{"id":"t-0252","category":"SexLife","group":"evasive","variant":"","text":"피 원장님은 남자 애인이랑 같이 산다고 했어요. 본인도 남자예요.","sensitive":true}
+{"id":"t-0253","category":"SexLife","group":"evasive","variant":"","text":"천 국장님은 여자 친구와 결혼하고 싶은데 법이 막는대요. 본인도 여자고요.","sensitive":true}
+{"id":"t-0254","category":"SexLife","group":"evasive","variant":"","text":"우리 아빠는 여자 친구와 결혼하고 싶은데 법이 막는대요. 본인도 여자고요.","sensitive":true}
+{"id":"t-0255","category":"SexLife","group":"evasive","variant":"","text":"예 선생님은 여자 친구와 결혼하고 싶은데 법이 막는대요. 본인도 여자고요.","sensitive":true}
+{"id":"t-0256","category":"SexLife","group":"evasive","variant":"","text":"우리 딸은 성별을 바꾸는 절차를 밟고 있대요.","sensitive":true}
+{"id":"t-0257","category":"SexLife","group":"evasive","variant":"","text":"방 이사님은 성별을 바꾸는 절차를 밟고 있대요.","sensitive":true}
+{"id":"t-0258","category":"SexLife","group":"evasive","variant":"","text":"계 주임님은 성별을 바꾸는 절차를 밟고 있대요.","sensitive":true}
+{"id":"t-0259","category":"SexLife","group":"evasive","variant":"","text":"도경민 선임은 퀴어 축제에서 깃발을 들었대요.","sensitive":true}
+{"id":"t-0260","category":"SexLife","group":"evasive","variant":"","text":"국 차장님은 퀴어 축제에서 깃발을 들었대요.","sensitive":true}
+{"id":"t-0261","category":"SexLife","group":"evasive","variant":"","text":"탁서윤 주무관은 퀴어 축제에서 깃발을 들었대요.","sensitive":true}
+{"id":"t-0262","category":"SexLife","group":"evasive","variant":"","text":"길나윤 수석은 동성 배우자를 회사 행사에 데려왔어요.","sensitive":true}
+{"id":"t-0263","category":"SexLife","group":"evasive","variant":"","text":"우리 딸은 동성 배우자를 회사 행사에 데려왔어요.","sensitive":true}
+{"id":"t-0264","category":"SexLife","group":"evasive","variant":"","text":"제 형은 동성 배우자를 회사 행사에 데려왔어요.","sensitive":true}
+{"id":"t-0265","category":"SexLife","group":"evasive","variant":"","text":"길나윤 수석은 자기 정체성을 가족에게 밝혔다가 연락이 끊겼대요.","sensitive":true}
+{"id":"t-0266","category":"SexLife","group":"evasive","variant":"","text":"제 형은 자기 정체성을 가족에게 밝혔다가 연락이 끊겼대요.","sensitive":true}
+{"id":"t-0267","category":"SexLife","group":"evasive","variant":"","text":"함지율 매니저는 자기 정체성을 가족에게 밝혔다가 연락이 끊겼대요.","sensitive":true}
+{"id":"t-0268","category":"SexLife","group":"evasive","variant":"","text":"제 형은 남녀 모두 좋아한다고 고백했어요.","sensitive":true}
+{"id":"t-0269","category":"SexLife","group":"evasive","variant":"","text":"하 과장님은 남녀 모두 좋아한다고 고백했어요.","sensitive":true}
+{"id":"t-0270","category":"SexLife","group":"evasive","variant":"","text":"제 형은 남녀 모두 좋아한다고 고백했어요.","sensitive":true}
+{"id":"t-0271","category":"SexLife","group":"evasive","variant":"","text":"우리 할머니는 동성 커플 상담 모임에 다녀요.","sensitive":true}
+{"id":"t-0272","category":"SexLife","group":"evasive","variant":"","text":"황보준 연구원은 동성 커플 상담 모임에 다녀요.","sensitive":true}
+{"id":"t-0273","category":"SexLife","group":"evasive","variant":"","text":"천 국장님은 동성 커플 상담 모임에 다녀요.","sensitive":true}
+{"id":"t-0274","category":"None","group":"nearmiss","variant":"SexLife","text":"우리 할머니는 성희롱 고충 상담 창구를 안내했어요.","sensitive":false}
+{"id":"t-0275","category":"None","group":"nearmiss","variant":"SexLife","text":"국 차장님은 성희롱 고충 상담 창구를 안내했어요.","sensitive":false}
+{"id":"t-0276","category":"None","group":"nearmiss","variant":"SexLife","text":"계 주임님은 성희롱 고충 상담 창구를 안내했어요.","sensitive":false}
+{"id":"t-0277","category":"None","group":"nearmiss","variant":"SexLife","text":"소예린 책임은 결혼 축의금 장부를 정리했어요.","sensitive":false}
+{"id":"t-0278","category":"None","group":"nearmiss","variant":"SexLife","text":"길나윤 수석은 결혼 축의금 장부를 정리했어요.","sensitive":false}
+{"id":"t-0279","category":"None","group":"nearmiss","variant":"SexLife","text":"우리 할머니는 결혼 축의금 장부를 정리했어요.","sensitive":false}
+{"id":"t-0280","category":"None","group":"nearmiss","variant":"SexLife","text":"저희 삼촌은 가족 수당 규정을 고쳤어요.","sensitive":false}
+{"id":"t-0281","category":"None","group":"nearmiss","variant":"SexLife","text":"저희 삼촌은 가족 수당 규정을 고쳤어요.","sensitive":false}
+{"id":"t-0282","category":"None","group":"nearmiss","variant":"SexLife","text":"함지율 매니저는 가족 수당 규정을 고쳤어요.","sensitive":false}
+{"id":"t-0283","category":"None","group":"nearmiss","variant":"SexLife","text":"심가온 사원은 다양성 교육 강사를 섭외했어요.","sensitive":false}
+{"id":"t-0284","category":"None","group":"nearmiss","variant":"SexLife","text":"저희 외삼촌은 다양성 교육 강사를 섭외했어요.","sensitive":false}
+{"id":"t-0285","category":"None","group":"nearmiss","variant":"SexLife","text":"표하진 계장은 다양성 교육 강사를 섭외했어요.","sensitive":false}
+{"id":"t-0286","category":"SexLife","group":"general","variant":"","text":"동성애 관련 법 제도를 비교해 주세요.","sensitive":false}
+{"id":"t-0287","category":"SexLife","group":"general","variant":"","text":"트랜스젠더 용어 지침을 알려 주세요.","sensitive":false}
+{"id":"t-0288","category":"SexLife","group":"general","variant":"","text":"양성애 연구 동향을 요약해 주세요.","sensitive":false}
+{"id":"t-0289","category":"Genetic","group":"direct","variant":"","text":"제 형은 유전자 검사 결과에 이상이 있었어요.","sensitive":true}
+{"id":"t-0290","category":"Genetic","group":"direct","variant":"","text":"하 과장님은 유전자 검사 결과에 이상이 있었어요.","sensitive":true}
+{"id":"t-0291","category":"Genetic","group":"direct","variant":"","text":"계 주임님은 유전자 검사 결과에 이상이 있었어요.","sensitive":true}
+{"id":"t-0292","category":"Genetic","group":"direct","variant":"","text":"우리 딸은 유전질환 진단을 받은 집안이에요.","sensitive":true}
+{"id":"t-0293","category":"Genetic","group":"direct","variant":"","text":"저희 외삼촌은 유전질환 진단을 받은 집안이에요.","sensitive":true}
+{"id":"t-0294","category":"Genetic","group":"direct","variant":"","text":"저희 외삼촌은 유전질환 진단을 받은 집안이에요.","sensitive":true}
+{"id":"t-0295","category":"Genetic","group":"direct","variant":"","text":"제 언니는 dna 감정 결과가 나왔어요.","sensitive":true}
+{"id":"t-0296","category":"Genetic","group":"direct","variant":"","text":"저희 삼촌은 dna 감정 결과가 나왔어요.","sensitive":true}
+{"id":"t-0297","category":"Genetic","group":"direct","variant":"","text":"소예린 책임은 dna 감정 결과가 나왔어요.","sensitive":true}
+{"id":"t-0298","category":"Genetic","group":"evasive","variant":"","text":"권도하 연구원은 아버지 쪽 내력이라 같은 검사를 받았어요.","sensitive":true}
+{"id":"t-0299","category":"Genetic","group":"evasive","variant":"","text":"심가온 사원은 아버지 쪽 내력이라 같은 검사를 받았어요.","sensitive":true}
+{"id":"t-0300","category":"Genetic","group":"evasive","variant":"","text":"하 과장님은 아버지 쪽 내력이라 같은 검사를 받았어요.","sensitive":true}
+{"id":"t-0301","category":"Genetic","group":"evasive","variant":"","text":"국 차장님은 아이에게 물려줄까 봐 걱정한대요.","sensitive":true}
+{"id":"t-0302","category":"Genetic","group":"evasive","variant":"","text":"제 형은 아이에게 물려줄까 봐 걱정한대요.","sensitive":true}
+{"id":"t-0303","category":"Genetic","group":"evasive","variant":"","text":"피 원장님은 아이에게 물려줄까 봐 걱정한대요.","sensitive":true}
+{"id":"t-0304","category":"Genetic","group":"evasive","variant":"","text":"하 과장님은 피 한 방울로 조상 분석을 맡겼어요.","sensitive":true}
+{"id":"t-0305","category":"Genetic","group":"evasive","variant":"","text":"제 남자친구는 피 한 방울로 조상 분석을 맡겼어요.","sensitive":true}
+{"id":"t-0306","category":"Genetic","group":"evasive","variant":"","text":"문지안 사원은 피 한 방울로 조상 분석을 맡겼어요.","sensitive":true}
+{"id":"t-0307","category":"Genetic","group":"evasive","variant":"","text":"어 반장님은 염색체 숫자가 하나 더 있다는 결과를 받았대요.","sensitive":true}
+{"id":"t-0308","category":"Genetic","group":"evasive","variant":"","text":"명 소장님은 염색체 숫자가 하나 더 있다는 결과를 받았대요.","sensitive":true}
+{"id":"t-0309","category":"Genetic","group":"evasive","variant":"","text":"권도하 연구원은 염색체 숫자가 하나 더 있다는 결과를 받았대요.","sensitive":true}
+{"id":"t-0310","category":"Genetic","group":"evasive","variant":"","text":"제 언니는 가족 모두 같은 변이를 갖고 있대요.","sensitive":true}
+{"id":"t-0311","category":"Genetic","group":"evasive","variant":"","text":"하 과장님은 가족 모두 같은 변이를 갖고 있대요.","sensitive":true}
+{"id":"t-0312","category":"Genetic","group":"evasive","variant":"","text":"심가온 사원은 가족 모두 같은 변이를 갖고 있대요.","sensitive":true}
+{"id":"t-0313","category":"Genetic","group":"evasive","variant":"","text":"도경민 선임은 아이를 갖기 전에 내력 검사를 해 보라는 권유를 받았대요.","sensitive":true}
+{"id":"t-0314","category":"Genetic","group":"evasive","variant":"","text":"도경민 선임은 아이를 갖기 전에 내력 검사를 해 보라는 권유를 받았대요.","sensitive":true}
+{"id":"t-0315","category":"Genetic","group":"evasive","variant":"","text":"우리 할머니는 아이를 갖기 전에 내력 검사를 해 보라는 권유를 받았대요.","sensitive":true}
+{"id":"t-0316","category":"Genetic","group":"evasive","variant":"","text":"도경민 선임은 친자 감정 결과지를 받았어요.","sensitive":true}
+{"id":"t-0317","category":"Genetic","group":"evasive","variant":"","text":"길나윤 수석은 친자 감정 결과지를 받았어요.","sensitive":true}
+{"id":"t-0318","category":"Genetic","group":"evasive","variant":"","text":"탁서윤 주무관은 친자 감정 결과지를 받았어요.","sensitive":true}
+{"id":"t-0319","category":"Genetic","group":"evasive","variant":"","text":"표하진 계장은 예방 차원에서 장기를 미리 떼어 냈대요.","sensitive":true}
+{"id":"t-0320","category":"Genetic","group":"evasive","variant":"","text":"탁서윤 주무관은 예방 차원에서 장기를 미리 떼어 냈대요.","sensitive":true}
+{"id":"t-0321","category":"Genetic","group":"evasive","variant":"","text":"명 소장님은 예방 차원에서 장기를 미리 떼어 냈대요.","sensitive":true}
+{"id":"t-0322","category":"None","group":"nearmiss","variant":"Genetic","text":"제 처제는 바이오 기업 실사 보고서를 요약했어요.","sensitive":false}
+{"id":"t-0323","category":"None","group":"nearmiss","variant":"Genetic","text":"방 이사님은 바이오 기업 실사 보고서를 요약했어요.","sensitive":false}
+{"id":"t-0324","category":"None","group":"nearmiss","variant":"Genetic","text":"국 차장님은 바이오 기업 실사 보고서를 요약했어요.","sensitive":false}
+{"id":"t-0325","category":"None","group":"nearmiss","variant":"Genetic","text":"피 원장님은 연구실 시약 재고를 정리했어요.","sensitive":false}
+{"id":"t-0326","category":"None","group":"nearmiss","variant":"Genetic","text":"우리 딸은 연구실 시약 재고를 정리했어요.","sensitive":false}
+{"id":"t-0327","category":"None","group":"nearmiss","variant":"Genetic","text":"피 원장님은 연구실 시약 재고를 정리했어요.","sensitive":false}
+{"id":"t-0328","category":"None","group":"nearmiss","variant":"Genetic","text":"제 남자친구는 족보 복원 사업 계약을 맡았어요.","sensitive":false}
+{"id":"t-0329","category":"None","group":"nearmiss","variant":"Genetic","text":"우리 딸은 족보 복원 사업 계약을 맡았어요.","sensitive":false}
+{"id":"t-0330","category":"None","group":"nearmiss","variant":"Genetic","text":"저희 삼촌은 족보 복원 사업 계약을 맡았어요.","sensitive":false}
+{"id":"t-0331","category":"None","group":"nearmiss","variant":"Genetic","text":"제 남자친구는 유전체 분석 장비 유지보수 견적을 받았어요.","sensitive":false}
+{"id":"t-0332","category":"None","group":"nearmiss","variant":"Genetic","text":"피 원장님은 유전체 분석 장비 유지보수 견적을 받았어요.","sensitive":false}
+{"id":"t-0333","category":"None","group":"nearmiss","variant":"Genetic","text":"국 차장님은 유전체 분석 장비 유지보수 견적을 받았어요.","sensitive":false}
+{"id":"t-0334","category":"Genetic","group":"general","variant":"","text":"유전자 검사 기관 인증 제도를 설명해 주세요.","sensitive":false}
+{"id":"t-0335","category":"Genetic","group":"general","variant":"","text":"유전질환 산정 특례 대상을 정리해 주세요.","sensitive":false}
+{"id":"t-0336","category":"Genetic","group":"general","variant":"","text":"dna 증거 보관 기준을 알려 주세요.","sensitive":false}
+{"id":"t-0337","category":"Criminal","group":"direct","variant":"","text":"제 형은 실형을 받고 복역했어요.","sensitive":true}
+{"id":"t-0338","category":"Criminal","group":"direct","variant":"","text":"도경민 선임은 실형을 받고 복역했어요.","sensitive":true}
+{"id":"t-0339","category":"Criminal","group":"direct","variant":"","text":"심가온 사원은 실형을 받고 복역했어요.","sensitive":true}
+{"id":"t-0340","category":"Criminal","group":"direct","variant":"","text":"황보준 연구원은 집행유예 기간이에요.","sensitive":true}
+{"id":"t-0341","category":"Criminal","group":"direct","variant":"","text":"표하진 계장은 집행유예 기간이에요.","sensitive":true}
+{"id":"t-0342","category":"Criminal","group":"direct","variant":"","text":"문지안 사원은 집행유예 기간이에요.","sensitive":true}
+{"id":"t-0343","category":"Criminal","group":"direct","variant":"","text":"피 원장님은 구속 기소된 적이 있어요.","sensitive":true}
+{"id":"t-0344","category":"Criminal","group":"direct","variant":"","text":"표하진 계장은 구속 기소된 적이 있어요.","sensitive":true}
+{"id":"t-0345","category":"Criminal","group":"direct","variant":"","text":"국 차장님은 구속 기소된 적이 있어요.","sensitive":true}
+{"id":"t-0346","category":"Criminal","group":"evasive","variant":"","text":"하 과장님은 몇 년 전에 감옥에 다녀왔대요.","sensitive":true}
+{"id":"t-0347","category":"Criminal","group":"evasive","variant":"","text":"우리 할머니는 몇 년 전에 감옥에 다녀왔대요.","sensitive":true}
+{"id":"t-0348","category":"Criminal","group":"evasive","variant":"","text":"명 소장님은 몇 년 전에 감옥에 다녀왔대요.","sensitive":true}
+{"id":"t-0349","category":"Criminal","group":"evasive","variant":"","text":"함지율 매니저는 재판 끝나고 보호관찰을 받고 있어요.","sensitive":true}
+{"id":"t-0350","category":"Criminal","group":"evasive","variant":"","text":"봉 차장님은 재판 끝나고 보호관찰을 받고 있어요.","sensitive":true}
+{"id":"t-0351","category":"Criminal","group":"evasive","variant":"","text":"계 주임님은 재판 끝나고 보호관찰을 받고 있어요.","sensitive":true}
+{"id":"t-0352","category":"Criminal","group":"evasive","variant":"","text":"예 선생님은 경찰서에 조사받으러 오라는 연락을 받았대요.","sensitive":true}
+{"id":"t-0353","category":"Criminal","group":"evasive","variant":"","text":"방 이사님은 경찰서에 조사받으러 오라는 연락을 받았대요.","sensitive":true}
+{"id":"t-0354","category":"Criminal","group":"evasive","variant":"","text":"명 소장님은 경찰서에 조사받으러 오라는 연락을 받았대요.","sensitive":true}
+{"id":"t-0355","category":"Criminal","group":"evasive","variant":"","text":"피 원장님은 벌금형 기록 때문에 이직이 막혔대요.","sensitive":true}
+{"id":"t-0356","category":"Criminal","group":"evasive","variant":"","text":"도경민 선임은 벌금형 기록 때문에 이직이 막혔대요.","sensitive":true}
+{"id":"t-0357","category":"Criminal","group":"evasive","variant":"","text":"우리 딸은 벌금형 기록 때문에 이직이 막혔대요.","sensitive":true}
+{"id":"t-0358","category":"Criminal","group":"evasive","variant":"","text":"문지안 사원은 출소한 지 얼마 안 됐다고 했어요.","sensitive":true}
+{"id":"t-0359","category":"Criminal","group":"evasive","variant":"","text":"함지율 매니저는 출소한 지 얼마 안 됐다고 했어요.","sensitive":true}
+{"id":"t-0360","category":"Criminal","group":"evasive","variant":"","text":"황보준 연구원은 출소한 지 얼마 안 됐다고 했어요.","sensitive":true}
+{"id":"t-0361","category":"Criminal","group":"evasive","variant":"","text":"봉 차장님은 접근금지 처분을 받았대요.","sensitive":true}
+{"id":"t-0362","category":"Criminal","group":"evasive","variant":"","text":"심가온 사원은 접근금지 처분을 받았대요.","sensitive":true}
+{"id":"t-0363","category":"Criminal","group":"evasive","variant":"","text":"저는 접근금지 처분을 받았대요.","sensitive":true}
+{"id":"t-0364","category":"Criminal","group":"evasive","variant":"","text":"제 처제는 사기 사건으로 재판을 받는 중이에요.","sensitive":true}
+{"id":"t-0365","category":"Criminal","group":"evasive","variant":"","text":"명 소장님은 사기 사건으로 재판을 받는 중이에요.","sensitive":true}
+{"id":"t-0366","category":"Criminal","group":"evasive","variant":"","text":"도경민 선임은 사기 사건으로 재판을 받는 중이에요.","sensitive":true}
+{"id":"t-0367","category":"Criminal","group":"evasive","variant":"","text":"심가온 사원은 전자감독 장치를 차고 다닌대요.","sensitive":true}
+{"id":"t-0368","category":"Criminal","group":"evasive","variant":"","text":"도경민 선임은 전자감독 장치를 차고 다닌대요.","sensitive":true}
+{"id":"t-0369","category":"Criminal","group":"evasive","variant":"","text":"우리 할머니는 전자감독 장치를 차고 다닌대요.","sensitive":true}
+{"id":"t-0370","category":"None","group":"nearmiss","variant":"Criminal","text":"방 이사님은 법원 공탁 서류를 떼 왔어요.","sensitive":false}
+{"id":"t-0371","category":"None","group":"nearmiss","variant":"Criminal","text":"표하진 계장은 법원 공탁 서류를 떼 왔어요.","sensitive":false}
+{"id":"t-0372","category":"None","group":"nearmiss","variant":"Criminal","text":"황보준 연구원은 법원 공탁 서류를 떼 왔어요.","sensitive":false}
+{"id":"t-0373","category":"None","group":"nearmiss","variant":"Criminal","text":"우리 딸은 보안 위반 사례 교육 자료를 만들었어요.","sensitive":false}
+{"id":"t-0374","category":"None","group":"nearmiss","variant":"Criminal","text":"저는 보안 위반 사례 교육 자료를 만들었어요.","sensitive":false}
+{"id":"t-0375","category":"None","group":"nearmiss","variant":"Criminal","text":"우리 할머니는 보안 위반 사례 교육 자료를 만들었어요.","sensitive":false}
+{"id":"t-0376","category":"None","group":"nearmiss","variant":"Criminal","text":"제 남자친구는 교정 시설 납품 견적을 냈어요.","sensitive":false}
+{"id":"t-0377","category":"None","group":"nearmiss","variant":"Criminal","text":"우리 아빠는 교정 시설 납품 견적을 냈어요.","sensitive":false}
+{"id":"t-0378","category":"None","group":"nearmiss","variant":"Criminal","text":"제 처제는 교정 시설 납품 견적을 냈어요.","sensitive":false}
+{"id":"t-0379","category":"None","group":"nearmiss","variant":"Criminal","text":"저희 삼촌은 분실물 신고서를 경찰서에 냈어요.","sensitive":false}
+{"id":"t-0380","category":"None","group":"nearmiss","variant":"Criminal","text":"제 언니는 분실물 신고서를 경찰서에 냈어요.","sensitive":false}
+{"id":"t-0381","category":"None","group":"nearmiss","variant":"Criminal","text":"제 남자친구는 분실물 신고서를 경찰서에 냈어요.","sensitive":false}
+{"id":"t-0382","category":"Criminal","group":"general","variant":"","text":"실형 선고 통계를 찾아 주세요.","sensitive":false}
+{"id":"t-0383","category":"Criminal","group":"general","variant":"","text":"집행유예 취소 사유를 정리해 주세요.","sensitive":false}
+{"id":"t-0384","category":"Criminal","group":"general","variant":"","text":"구속 적부심 절차를 알려 주세요.","sensitive":false}
+{"id":"t-0385","category":"Biometric","group":"direct","variant":"","text":"황보준 연구원은 홍채 정보를 등록했어요.","sensitive":true}
+{"id":"t-0386","category":"Biometric","group":"direct","variant":"","text":"저희 외삼촌은 홍채 정보를 등록했어요.","sensitive":true}
+{"id":"t-0387","category":"Biometric","group":"direct","variant":"","text":"천 국장님은 홍채 정보를 등록했어요.","sensitive":true}
+{"id":"t-0388","category":"Biometric","group":"direct","variant":"","text":"길나윤 수석은 지문 등록을 마쳤어요.","sensitive":true}
+{"id":"t-0389","category":"Biometric","group":"direct","variant":"","text":"문지안 사원은 지문 등록을 마쳤어요.","sensitive":true}
+{"id":"t-0390","category":"Biometric","group":"direct","variant":"","text":"탁서윤 주무관은 지문 등록을 마쳤어요.","sensitive":true}
+{"id":"t-0391","category":"Biometric","group":"direct","variant":"","text":"탁서윤 주무관은 생체인식 정보를 회사에 냈어요.","sensitive":true}
+{"id":"t-0392","category":"Biometric","group":"direct","variant":"","text":"어 반장님은 생체인식 정보를 회사에 냈어요.","sensitive":true}
+{"id":"t-0393","category":"Biometric","group":"direct","variant":"","text":"제 형은 생체인식 정보를 회사에 냈어요.","sensitive":true}
+{"id":"t-0394","category":"Biometric","group":"evasive","variant":"","text":"심가온 사원은 손가락을 대야 컴퓨터가 켜지게 해 뒀어요.","sensitive":true}
+{"id":"t-0395","category":"Biometric","group":"evasive","variant":"","text":"함지율 매니저는 손가락을 대야 컴퓨터가 켜지게 해 뒀어요.","sensitive":true}
+{"id":"t-0396","category":"Biometric","group":"evasive","variant":"","text":"하 과장님은 손가락을 대야 컴퓨터가 켜지게 해 뒀어요.","sensitive":true}
+{"id":"t-0397","category":"Biometric","group":"evasive","variant":"","text":"문지안 사원은 얼굴을 비춰야 사무실 문이 열려요.","sensitive":true}
+{"id":"t-0398","category":"Biometric","group":"evasive","variant":"","text":"제 남자친구는 얼굴을 비춰야 사무실 문이 열려요.","sensitive":true}
+{"id":"t-0399","category":"Biometric","group":"evasive","variant":"","text":"제 형은 얼굴을 비춰야 사무실 문이 열려요.","sensitive":true}
+{"id":"t-0400","category":"Biometric","group":"evasive","variant":"","text":"우리 할머니는 눈동자 사진을 출입 장치에 올렸어요.","sensitive":true}
+{"id":"t-0401","category":"Biometric","group":"evasive","variant":"","text":"소예린 책임은 눈동자 사진을 출입 장치에 올렸어요.","sensitive":true}
+{"id":"t-0402","category":"Biometric","group":"evasive","variant":"","text":"함지율 매니저는 눈동자 사진을 출입 장치에 올렸어요.","sensitive":true}
+{"id":"t-0403","category":"Biometric","group":"evasive","variant":"","text":"우리 딸은 목소리 패턴으로 은행 본인 확인을 해요.","sensitive":true}
+{"id":"t-0404","category":"Biometric","group":"evasive","variant":"","text":"제 남자친구는 목소리 패턴으로 은행 본인 확인을 해요.","sensitive":true}
+{"id":"t-0405","category":"Biometric","group":"evasive","variant":"","text":"길나윤 수석은 목소리 패턴으로 은행 본인 확인을 해요.","sensitive":true}
+{"id":"t-0406","category":"Biometric","group":"evasive","variant":"","text":"방 이사님은 손등 혈관 사진을 단말에 저장했어요.","sensitive":true}
+{"id":"t-0407","category":"Biometric","group":"evasive","variant":"","text":"천 국장님은 손등 혈관 사진을 단말에 저장했어요.","sensitive":true}
+{"id":"t-0408","category":"Biometric","group":"evasive","variant":"","text":"저희 삼촌은 손등 혈관 사진을 단말에 저장했어요.","sensitive":true}
+{"id":"t-0409","category":"Biometric","group":"evasive","variant":"","text":"제 남자친구는 걸음걸이 분석 영상을 찍어 갔대요.","sensitive":true}
+{"id":"t-0410","category":"Biometric","group":"evasive","variant":"","text":"저희 외삼촌은 걸음걸이 분석 영상을 찍어 갔대요.","sensitive":true}
+{"id":"t-0411","category":"Biometric","group":"evasive","variant":"","text":"하 과장님은 걸음걸이 분석 영상을 찍어 갔대요.","sensitive":true}
+{"id":"t-0412","category":"Biometric","group":"evasive","variant":"","text":"제 남자친구는 엄지 무늬로 결재 승인을 해요.","sensitive":true}
+{"id":"t-0413","category":"Biometric","group":"evasive","variant":"","text":"황보준 연구원은 엄지 무늬로 결재 승인을 해요.","sensitive":true}
+{"id":"t-0414","category":"Biometric","group":"evasive","variant":"","text":"문지안 사원은 엄지 무늬로 결재 승인을 해요.","sensitive":true}
+{"id":"t-0415","category":"Biometric","group":"evasive","variant":"","text":"방 이사님은 얼굴 특징 데이터를 사원증 칩에 넣었대요.","sensitive":true}
+{"id":"t-0416","category":"Biometric","group":"evasive","variant":"","text":"제 언니는 얼굴 특징 데이터를 사원증 칩에 넣었대요.","sensitive":true}
+{"id":"t-0417","category":"Biometric","group":"evasive","variant":"","text":"함지율 매니저는 얼굴 특징 데이터를 사원증 칩에 넣었대요.","sensitive":true}
+{"id":"t-0418","category":"None","group":"nearmiss","variant":"Biometric","text":"제 형은 출입 카드 재발급을 신청했어요.","sensitive":false}
+{"id":"t-0419","category":"None","group":"nearmiss","variant":"Biometric","text":"저는 출입 카드 재발급을 신청했어요.","sensitive":false}
+{"id":"t-0420","category":"None","group":"nearmiss","variant":"Biometric","text":"국 차장님은 출입 카드 재발급을 신청했어요.","sensitive":false}
+{"id":"t-0421","category":"None","group":"nearmiss","variant":"Biometric","text":"우리 할머니는 사원증 사진 촬영 일정을 공지했어요.","sensitive":false}
+{"id":"t-0422","category":"None","group":"nearmiss","variant":"Biometric","text":"우리 할머니는 사원증 사진 촬영 일정을 공지했어요.","sensitive":false}
+{"id":"t-0423","category":"None","group":"nearmiss","variant":"Biometric","text":"저희 삼촌은 사원증 사진 촬영 일정을 공지했어요.","sensitive":false}
+{"id":"t-0424","category":"None","group":"nearmiss","variant":"Biometric","text":"우리 딸은 보안 카메라 교체 견적을 받았어요.","sensitive":false}
+{"id":"t-0425","category":"None","group":"nearmiss","variant":"Biometric","text":"예 선생님은 보안 카메라 교체 견적을 받았어요.","sensitive":false}
+{"id":"t-0426","category":"None","group":"nearmiss","variant":"Biometric","text":"문지안 사원은 보안 카메라 교체 견적을 받았어요.","sensitive":false}
+{"id":"t-0427","category":"None","group":"nearmiss","variant":"Biometric","text":"피 원장님은 근태 단말 사용 설명서를 만들었어요.","sensitive":false}
+{"id":"t-0428","category":"None","group":"nearmiss","variant":"Biometric","text":"명 소장님은 근태 단말 사용 설명서를 만들었어요.","sensitive":false}
+{"id":"t-0429","category":"None","group":"nearmiss","variant":"Biometric","text":"예 선생님은 근태 단말 사용 설명서를 만들었어요.","sensitive":false}
+{"id":"t-0430","category":"Biometric","group":"general","variant":"","text":"홍채 인식 원리를 설명해 주세요.","sensitive":false}
+{"id":"t-0431","category":"Biometric","group":"general","variant":"","text":"지문 등록 절차를 알려 주세요.","sensitive":false}
+{"id":"t-0432","category":"Biometric","group":"general","variant":"","text":"생체인식 규제를 정리해 주세요.","sensitive":false}
+{"id":"t-0433","category":"Ethnicity","group":"direct","variant":"","text":"탁서윤 주무관은 민족 문제로 상처를 받았대요.","sensitive":true}
+{"id":"t-0434","category":"Ethnicity","group":"direct","variant":"","text":"저희 삼촌은 민족 문제로 상처를 받았대요.","sensitive":true}
+{"id":"t-0435","category":"Ethnicity","group":"direct","variant":"","text":"명 소장님은 민족 문제로 상처를 받았대요.","sensitive":true}
+{"id":"t-0436","category":"Ethnicity","group":"direct","variant":"","text":"제 처제는 인종 때문에 놀림을 받았어요.","sensitive":true}
+{"id":"t-0437","category":"Ethnicity","group":"direct","variant":"","text":"국 차장님은 인종 때문에 놀림을 받았어요.","sensitive":true}
+{"id":"t-0438","category":"Ethnicity","group":"direct","variant":"","text":"제 형은 인종 때문에 놀림을 받았어요.","sensitive":true}
+{"id":"t-0439","category":"Ethnicity","group":"direct","variant":"","text":"권도하 연구원은 혈통이 절반은 중국계예요.","sensitive":true}
+{"id":"t-0440","category":"Ethnicity","group":"direct","variant":"","text":"저희 외삼촌은 혈통이 절반은 중국계예요.","sensitive":true}
+{"id":"t-0441","category":"Ethnicity","group":"direct","variant":"","text":"어 반장님은 혈통이 절반은 중국계예요.","sensitive":true}
+{"id":"t-0442","category":"Ethnicity","group":"evasive","variant":"","text":"우리 딸은 어머니가 필리핀에서 오셨어요.","sensitive":true}
+{"id":"t-0443","category":"Ethnicity","group":"evasive","variant":"","text":"우리 딸은 어머니가 필리핀에서 오셨어요.","sensitive":true}
+{"id":"t-0444","category":"Ethnicity","group":"evasive","variant":"","text":"제 형은 어머니가 필리핀에서 오셨어요.","sensitive":true}
+{"id":"t-0445","category":"Ethnicity","group":"evasive","variant":"","text":"함지율 매니저는 할아버지가 사할린 동포였대요.","sensitive":true}
+{"id":"t-0446","category":"Ethnicity","group":"evasive","variant":"","text":"우리 할머니는 할아버지가 사할린 동포였대요.","sensitive":true}
+{"id":"t-0447","category":"Ethnicity","group":"evasive","variant":"","text":"제 남자친구는 할아버지가 사할린 동포였대요.","sensitive":true}
+{"id":"t-0448","category":"Ethnicity","group":"evasive","variant":"","text":"우리 아빠는 피부색 때문에 길에서 시비가 붙었대요.","sensitive":true}
+{"id":"t-0449","category":"Ethnicity","group":"evasive","variant":"","text":"심가온 사원은 피부색 때문에 길에서 시비가 붙었대요.","sensitive":true}
+{"id":"t-0450","category":"Ethnicity","group":"evasive","variant":"","text":"제 남자친구는 피부색 때문에 길에서 시비가 붙었대요.","sensitive":true}
+{"id":"t-0451","category":"Ethnicity","group":"evasive","variant":"","text":"어 반장님은 아버지가 파키스탄 사람이라 이름이 길어요.","sensitive":true}
+{"id":"t-0452","category":"Ethnicity","group":"evasive","variant":"","text":"도경민 선임은 아버지가 파키스탄 사람이라 이름이 길어요.","sensitive":true}
+{"id":"t-0453","category":"Ethnicity","group":"evasive","variant":"","text":"제 남자친구는 아버지가 파키스탄 사람이라 이름이 길어요.","sensitive":true}
+{"id":"t-0454","category":"Ethnicity","group":"evasive","variant":"","text":"황보준 연구원은 귀화하기 전에 태국 국적이었어요.","sensitive":true}
+{"id":"t-0455","category":"Ethnicity","group":"evasive","variant":"","text":"제 형은 귀화하기 전에 태국 국적이었어요.","sensitive":true}
+{"id":"t-0456","category":"Ethnicity","group":"evasive","variant":"","text":"소예린 책임은 귀화하기 전에 태국 국적이었어요.","sensitive":true}
+{"id":"t-0457","category":"Ethnicity","group":"evasive","variant":"","text":"표하진 계장은 고려인 3세라 러시아어를 해요.","sensitive":true}
+{"id":"t-0458","category":"Ethnicity","group":"evasive","variant":"","text":"방 이사님은 고려인 3세라 러시아어를 해요.","sensitive":true}
+{"id":"t-0459","category":"Ethnicity","group":"evasive","variant":"","text":"봉 차장님은 고려인 3세라 러시아어를 해요.","sensitive":true}
+{"id":"t-0460","category":"Ethnicity","group":"evasive","variant":"","text":"길나윤 수석은 북에서 내려온 가족이라 말투가 달라요.","sensitive":true}
+{"id":"t-0461","category":"Ethnicity","group":"evasive","variant":"","text":"국 차장님은 북에서 내려온 가족이라 말투가 달라요.","sensitive":true}
+{"id":"t-0462","category":"Ethnicity","group":"evasive","variant":"","text":"예 선생님은 북에서 내려온 가족이라 말투가 달라요.","sensitive":true}
+{"id":"t-0463","category":"Ethnicity","group":"evasive","variant":"","text":"예 선생님은 외가가 베트남이라 명절에 그쪽에 가요.","sensitive":true}
+{"id":"t-0464","category":"Ethnicity","group":"evasive","variant":"","text":"제 언니는 외가가 베트남이라 명절에 그쪽에 가요.","sensitive":true}
+{"id":"t-0465","category":"Ethnicity","group":"evasive","variant":"","text":"하 과장님은 외가가 베트남이라 명절에 그쪽에 가요.","sensitive":true}
+{"id":"t-0466","category":"None","group":"nearmiss","variant":"Ethnicity","text":"우리 아빠는 해외 바이어 접대 일정을 짰어요.","sensitive":false}
+{"id":"t-0467","category":"None","group":"nearmiss","variant":"Ethnicity","text":"우리 딸은 해외 바이어 접대 일정을 짰어요.","sensitive":false}
+{"id":"t-0468","category":"None","group":"nearmiss","variant":"Ethnicity","text":"국 차장님은 해외 바이어 접대 일정을 짰어요.","sensitive":false}
+{"id":"t-0469","category":"None","group":"nearmiss","variant":"Ethnicity","text":"저희 삼촌은 외국인 근로자 교육 자료를 번역했어요.","sensitive":false}
+{"id":"t-0470","category":"None","group":"nearmiss","variant":"Ethnicity","text":"길나윤 수석은 외국인 근로자 교육 자료를 번역했어요.","sensitive":false}
+{"id":"t-0471","category":"None","group":"nearmiss","variant":"Ethnicity","text":"우리 아빠는 외국인 근로자 교육 자료를 번역했어요.","sensitive":false}
+{"id":"t-0472","category":"None","group":"nearmiss","variant":"Ethnicity","text":"저희 삼촌은 다국어 안내문을 만들었어요.","sensitive":false}
+{"id":"t-0473","category":"None","group":"nearmiss","variant":"Ethnicity","text":"표하진 계장은 다국어 안내문을 만들었어요.","sensitive":false}
+{"id":"t-0474","category":"None","group":"nearmiss","variant":"Ethnicity","text":"어 반장님은 다국어 안내문을 만들었어요.","sensitive":false}
+{"id":"t-0475","category":"None","group":"nearmiss","variant":"Ethnicity","text":"국 차장님은 수출 계약서 영문판을 검토했어요.","sensitive":false}
+{"id":"t-0476","category":"None","group":"nearmiss","variant":"Ethnicity","text":"제 언니는 수출 계약서 영문판을 검토했어요.","sensitive":false}
+{"id":"t-0477","category":"None","group":"nearmiss","variant":"Ethnicity","text":"저는 수출 계약서 영문판을 검토했어요.","sensitive":false}
+{"id":"t-0478","category":"Ethnicity","group":"general","variant":"","text":"민족 이동의 역사를 요약해 주세요.","sensitive":false}
+{"id":"t-0479","category":"Ethnicity","group":"general","variant":"","text":"인종 차별 철폐 정책을 비교해 주세요.","sensitive":false}
+{"id":"t-0480","category":"Ethnicity","group":"general","variant":"","text":"혈통 주의 국적법을 설명해 주세요.","sensitive":false}
+{"id":"t-0481","category":"Credential","group":"direct","variant":"","text":"패스워드는 Rt8!vB3nUx예요.","sensitive":true}
+{"id":"t-0482","category":"Credential","group":"direct","variant":"","text":"패스워드는 Fq4@mZ7wKp예요.","sensitive":true}
+{"id":"t-0483","category":"Credential","group":"direct","variant":"","text":"패스워드는 Rt8!vB3nUx예요.","sensitive":true}
+{"id":"t-0484","category":"Credential","group":"direct","variant":"","text":"핀번호는 Lp5$sD9cWq입니다.","sensitive":true}
+{"id":"t-0485","category":"Credential","group":"direct","variant":"","text":"핀번호는 cloud#Pine58입니다.","sensitive":true}
+{"id":"t-0486","category":"Credential","group":"direct","variant":"","text":"핀번호는 Fq4@mZ7wKp입니다.","sensitive":true}
+{"id":"t-0487","category":"Credential","group":"direct","variant":"","text":"보안코드는 Rt8!vB3nUx로 바꿨어요.","sensitive":true}
+{"id":"t-0488","category":"Credential","group":"direct","variant":"","text":"보안코드는 Jm2&kH6tYz로 바꿨어요.","sensitive":true}
+{"id":"t-0489","category":"Credential","group":"direct","variant":"","text":"보안코드는 Fq4@mZ7wKp로 바꿨어요.","sensitive":true}
+{"id":"t-0490","category":"Credential","group":"evasive","variant":"","text":"그 화면에 Jm2&kH6tYz 넣으면 들어가져요.","sensitive":true}
+{"id":"t-0491","category":"Credential","group":"evasive","variant":"","text":"그 화면에 Lp5$sD9cWq 넣으면 들어가져요.","sensitive":true}
+{"id":"t-0492","category":"Credential","group":"evasive","variant":"","text":"그 화면에 Fq4@mZ7wKp 넣으면 들어가져요.","sensitive":true}
+{"id":"t-0493","category":"Credential","group":"evasive","variant":"","text":"태블릿 잠금은 cloud#Pine58로 풀어요.","sensitive":true}
+{"id":"t-0494","category":"Credential","group":"evasive","variant":"","text":"태블릿 잠금은 Lp5$sD9cWq로 풀어요.","sensitive":true}
+{"id":"t-0495","category":"Credential","group":"evasive","variant":"","text":"태블릿 잠금은 Lp5$sD9cWq로 풀어요.","sensitive":true}
+{"id":"t-0496","category":"Credential","group":"evasive","variant":"","text":"문서 열 때 묻는 글자에 Jm2&kH6tYz 쓰세요.","sensitive":true}
+{"id":"t-0497","category":"Credential","group":"evasive","variant":"","text":"문서 열 때 묻는 글자에 Jm2&kH6tYz 쓰세요.","sensitive":true}
+{"id":"t-0498","category":"Credential","group":"evasive","variant":"","text":"문서 열 때 묻는 글자에 Lp5$sD9cWq 쓰세요.","sensitive":true}
+{"id":"t-0499","category":"Credential","group":"evasive","variant":"","text":"장비 관리 페이지는 cloud#Pine58로 열려요.","sensitive":true}
+{"id":"t-0500","category":"Credential","group":"evasive","variant":"","text":"장비 관리 페이지는 cloud#Pine58로 열려요.","sensitive":true}
+{"id":"t-0501","category":"Credential","group":"evasive","variant":"","text":"장비 관리 페이지는 Fq4@mZ7wKp로 열려요.","sensitive":true}
+{"id":"t-0502","category":"Credential","group":"evasive","variant":"","text":"사내 위키 처음 들어갈 때 Lp5$sD9cWq 넣어요.","sensitive":true}
+{"id":"t-0503","category":"Credential","group":"evasive","variant":"","text":"사내 위키 처음 들어갈 때 Fq4@mZ7wKp 넣어요.","sensitive":true}
+{"id":"t-0504","category":"Credential","group":"evasive","variant":"","text":"사내 위키 처음 들어갈 때 cloud#Pine58 넣어요.","sensitive":true}
+{"id":"t-0505","category":"Credential","group":"evasive","variant":"","text":"이 노트북은 Lp5$sD9cWq 치면 켜져요.","sensitive":true}
+{"id":"t-0506","category":"Credential","group":"evasive","variant":"","text":"이 노트북은 Rt8!vB3nUx 치면 켜져요.","sensitive":true}
+{"id":"t-0507","category":"Credential","group":"evasive","variant":"","text":"이 노트북은 Lp5$sD9cWq 치면 켜져요.","sensitive":true}
+{"id":"t-0508","category":"Credential","group":"evasive","variant":"","text":"금고 전자식 잠금은 Lp5$sD9cWq예요.","sensitive":true}
+{"id":"t-0509","category":"Credential","group":"evasive","variant":"","text":"금고 전자식 잠금은 Jm2&kH6tYz예요.","sensitive":true}
+{"id":"t-0510","category":"Credential","group":"evasive","variant":"","text":"금고 전자식 잠금은 Jm2&kH6tYz예요.","sensitive":true}
+{"id":"t-0511","category":"Credential","group":"evasive","variant":"","text":"원격 데스크톱 붙을 때 Fq4@mZ7wKp 넣으세요.","sensitive":true}
+{"id":"t-0512","category":"Credential","group":"evasive","variant":"","text":"원격 데스크톱 붙을 때 Rt8!vB3nUx 넣으세요.","sensitive":true}
+{"id":"t-0513","category":"Credential","group":"evasive","variant":"","text":"원격 데스크톱 붙을 때 Fq4@mZ7wKp 넣으세요.","sensitive":true}
+{"id":"t-0514","category":"None","group":"nearmiss","variant":"Credential","text":"비밀번호 정책 개정안을 공지했어요.","sensitive":false}
+{"id":"t-0515","category":"None","group":"nearmiss","variant":"Credential","text":"비밀번호 정책 개정안을 공지했어요.","sensitive":false}
+{"id":"t-0516","category":"None","group":"nearmiss","variant":"Credential","text":"비밀번호 정책 개정안을 공지했어요.","sensitive":false}
+{"id":"t-0517","category":"None","group":"nearmiss","variant":"Credential","text":"보안 교육 이수율을 집계했어요.","sensitive":false}
+{"id":"t-0518","category":"None","group":"nearmiss","variant":"Credential","text":"보안 교육 이수율을 집계했어요.","sensitive":false}
+{"id":"t-0519","category":"None","group":"nearmiss","variant":"Credential","text":"보안 교육 이수율을 집계했어요.","sensitive":false}
+{"id":"t-0520","category":"None","group":"nearmiss","variant":"Credential","text":"공용 계정 사용 규칙을 정리했어요.","sensitive":false}
+{"id":"t-0521","category":"None","group":"nearmiss","variant":"Credential","text":"공용 계정 사용 규칙을 정리했어요.","sensitive":false}
+{"id":"t-0522","category":"None","group":"nearmiss","variant":"Credential","text":"공용 계정 사용 규칙을 정리했어요.","sensitive":false}
+{"id":"t-0523","category":"None","group":"nearmiss","variant":"Credential","text":"접속 기록 점검 일정을 잡았어요.","sensitive":false}
+{"id":"t-0524","category":"None","group":"nearmiss","variant":"Credential","text":"접속 기록 점검 일정을 잡았어요.","sensitive":false}
+{"id":"t-0525","category":"None","group":"nearmiss","variant":"Credential","text":"접속 기록 점검 일정을 잡았어요.","sensitive":false}
+{"id":"t-0526","category":"Credential","group":"general","variant":"","text":"패스워드 관리 수칙을 요약해 주세요.","sensitive":false}
+{"id":"t-0527","category":"Credential","group":"general","variant":"","text":"핀번호 분실 대응을 알려 주세요.","sensitive":false}
+{"id":"t-0528","category":"Credential","group":"general","variant":"","text":"보안코드 발급 절차를 정리해 주세요.","sensitive":false}
+{"id":"t-0529","category":"None","group":"personal","variant":"","text":"우리 딸은 보고서 마감을 하루 당겼어요.","sensitive":false}
+{"id":"t-0530","category":"None","group":"personal","variant":"","text":"계 주임님은 보고서 마감을 하루 당겼어요.","sensitive":false}
+{"id":"t-0531","category":"None","group":"personal","variant":"","text":"하 과장님은 보고서 마감을 하루 당겼어요.","sensitive":false}
+{"id":"t-0532","category":"None","group":"personal","variant":"","text":"저는 협력사 미팅 장소를 바꿨어요.","sensitive":false}
+{"id":"t-0533","category":"None","group":"personal","variant":"","text":"함지율 매니저는 협력사 미팅 장소를 바꿨어요.","sensitive":false}
+{"id":"t-0534","category":"None","group":"personal","variant":"","text":"심가온 사원은 협력사 미팅 장소를 바꿨어요.","sensitive":false}
+{"id":"t-0535","category":"None","group":"personal","variant":"","text":"저는 사무실 냉장고를 정리했어요.","sensitive":false}
+{"id":"t-0536","category":"None","group":"personal","variant":"","text":"계 주임님은 사무실 냉장고를 정리했어요.","sensitive":false}
+{"id":"t-0537","category":"None","group":"personal","variant":"","text":"표하진 계장은 사무실 냉장고를 정리했어요.","sensitive":false}
+{"id":"t-0538","category":"None","group":"personal","variant":"","text":"천 국장님은 분기 예산 표를 맞췄어요.","sensitive":false}
+{"id":"t-0539","category":"None","group":"personal","variant":"","text":"피 원장님은 분기 예산 표를 맞췄어요.","sensitive":false}
+{"id":"t-0540","category":"None","group":"personal","variant":"","text":"권도하 연구원은 분기 예산 표를 맞췄어요.","sensitive":false}
+{"id":"t-0541","category":"None","group":"personal","variant":"","text":"도경민 선임은 신입 환영회 장소를 알아봤어요.","sensitive":false}
+{"id":"t-0542","category":"None","group":"personal","variant":"","text":"계 주임님은 신입 환영회 장소를 알아봤어요.","sensitive":false}
+{"id":"t-0543","category":"None","group":"personal","variant":"","text":"표하진 계장은 신입 환영회 장소를 알아봤어요.","sensitive":false}
+{"id":"t-0544","category":"None","group":"personal","variant":"","text":"천 국장님은 외부 감사 자료를 준비해요.","sensitive":false}
+{"id":"t-0545","category":"None","group":"personal","variant":"","text":"제 형은 외부 감사 자료를 준비해요.","sensitive":false}
+{"id":"t-0546","category":"None","group":"personal","variant":"","text":"권도하 연구원은 외부 감사 자료를 준비해요.","sensitive":false}
+{"id":"t-0547","category":"None","group":"personal","variant":"","text":"도경민 선임은 거래처에 샘플을 보냈어요.","sensitive":false}
+{"id":"t-0548","category":"None","group":"personal","variant":"","text":"계 주임님은 거래처에 샘플을 보냈어요.","sensitive":false}
+{"id":"t-0549","category":"None","group":"personal","variant":"","text":"권도하 연구원은 거래처에 샘플을 보냈어요.","sensitive":false}
+{"id":"t-0550","category":"None","group":"personal","variant":"","text":"제 형은 주간 회의 안건을 정리했어요.","sensitive":false}
+{"id":"t-0551","category":"None","group":"personal","variant":"","text":"제 형은 주간 회의 안건을 정리했어요.","sensitive":false}
+{"id":"t-0552","category":"None","group":"personal","variant":"","text":"명 소장님은 주간 회의 안건을 정리했어요.","sensitive":false}
+{"id":"t-0553","category":"None","group":"personal","variant":"","text":"문지안 사원은 출장 숙소를 예약했어요.","sensitive":false}
+{"id":"t-0554","category":"None","group":"personal","variant":"","text":"계 주임님은 출장 숙소를 예약했어요.","sensitive":false}
+{"id":"t-0555","category":"None","group":"personal","variant":"","text":"천 국장님은 출장 숙소를 예약했어요.","sensitive":false}
+{"id":"t-0556","category":"None","group":"personal","variant":"","text":"하 과장님은 전산 장비 목록을 갱신했어요.","sensitive":false}
+{"id":"t-0557","category":"None","group":"personal","variant":"","text":"심가온 사원은 전산 장비 목록을 갱신했어요.","sensitive":false}
+{"id":"t-0558","category":"None","group":"personal","variant":"","text":"문지안 사원은 전산 장비 목록을 갱신했어요.","sensitive":false}
+{"id":"t-0559","category":"None","group":"personal","variant":"","text":"문지안 사원은 홍보 영상 시안을 검토했어요.","sensitive":false}
+{"id":"t-0560","category":"None","group":"personal","variant":"","text":"소예린 책임은 홍보 영상 시안을 검토했어요.","sensitive":false}
+{"id":"t-0561","category":"None","group":"personal","variant":"","text":"탁서윤 주무관은 홍보 영상 시안을 검토했어요.","sensitive":false}
+{"id":"t-0562","category":"None","group":"personal","variant":"","text":"봉 차장님은 고객 불만 접수 건을 처리했어요.","sensitive":false}
+{"id":"t-0563","category":"None","group":"personal","variant":"","text":"피 원장님은 고객 불만 접수 건을 처리했어요.","sensitive":false}
+{"id":"t-0564","category":"None","group":"personal","variant":"","text":"명 소장님은 고객 불만 접수 건을 처리했어요.","sensitive":false}
+{"id":"t-0565","category":"None","group":"personal","variant":"","text":"우리 아빠는 설비 점검 일지를 썼어요.","sensitive":false}
+{"id":"t-0566","category":"None","group":"personal","variant":"","text":"국 차장님은 설비 점검 일지를 썼어요.","sensitive":false}
+{"id":"t-0567","category":"None","group":"personal","variant":"","text":"저희 삼촌은 설비 점검 일지를 썼어요.","sensitive":false}
+{"id":"t-0568","category":"None","group":"personal","variant":"","text":"하 과장님은 교육 수료증을 나눠 줬어요.","sensitive":false}
+{"id":"t-0569","category":"None","group":"personal","variant":"","text":"천 국장님은 교육 수료증을 나눠 줬어요.","sensitive":false}
+{"id":"t-0570","category":"None","group":"personal","variant":"","text":"저희 삼촌은 교육 수료증을 나눠 줬어요.","sensitive":false}
+{"id":"t-0571","category":"None","group":"personal","variant":"","text":"우리 할머니는 물품 반납 일정을 잡았어요.","sensitive":false}
+{"id":"t-0572","category":"None","group":"personal","variant":"","text":"봉 차장님은 물품 반납 일정을 잡았어요.","sensitive":false}
+{"id":"t-0573","category":"None","group":"personal","variant":"","text":"국 차장님은 물품 반납 일정을 잡았어요.","sensitive":false}
+{"id":"t-0574","category":"None","group":"personal","variant":"","text":"어 반장님은 계약 갱신 알림을 보냈어요.","sensitive":false}
+{"id":"t-0575","category":"None","group":"personal","variant":"","text":"봉 차장님은 계약 갱신 알림을 보냈어요.","sensitive":false}
+{"id":"t-0576","category":"None","group":"personal","variant":"","text":"길나윤 수석은 계약 갱신 알림을 보냈어요.","sensitive":false}
+{"id":"t-0577","category":"None","group":"personal","variant":"","text":"계 주임님은 회의실 화면 연결을 고쳤어요.","sensitive":false}
+{"id":"t-0578","category":"None","group":"personal","variant":"","text":"천 국장님은 회의실 화면 연결을 고쳤어요.","sensitive":false}
+{"id":"t-0579","category":"None","group":"personal","variant":"","text":"봉 차장님은 회의실 화면 연결을 고쳤어요.","sensitive":false}
+{"id":"t-0580","category":"None","group":"personal","variant":"","text":"소예린 책임은 견적 비교표를 만들었어요.","sensitive":false}
+{"id":"t-0581","category":"None","group":"personal","variant":"","text":"피 원장님은 견적 비교표를 만들었어요.","sensitive":false}
+{"id":"t-0582","category":"None","group":"personal","variant":"","text":"길나윤 수석은 견적 비교표를 만들었어요.","sensitive":false}
+{"id":"t-0583","category":"None","group":"personal","variant":"","text":"제 언니는 부서 일정 달력을 공유했어요.","sensitive":false}
+{"id":"t-0584","category":"None","group":"personal","variant":"","text":"황보준 연구원은 부서 일정 달력을 공유했어요.","sensitive":false}
+{"id":"t-0585","category":"None","group":"personal","variant":"","text":"우리 딸은 부서 일정 달력을 공유했어요.","sensitive":false}
+{"id":"t-0586","category":"None","group":"personal","variant":"","text":"국 차장님은 보도 자료 사진을 골랐어요.","sensitive":false}
+{"id":"t-0587","category":"None","group":"personal","variant":"","text":"표하진 계장은 보도 자료 사진을 골랐어요.","sensitive":false}
+{"id":"t-0588","category":"None","group":"personal","variant":"","text":"방 이사님은 보도 자료 사진을 골랐어요.","sensitive":false}
+{"id":"t-0589","category":"None","group":"report","variant":"","text":"교육 이수 현황은 수치가 조금 올랐다. 재고 실사는 담당 부서로 넘겼다.","sensitive":false}
+{"id":"t-0590","category":"None","group":"report","variant":"","text":"교육 이수 현황은 결과를 정리했습니다.","sensitive":false}
+{"id":"t-0591","category":"None","group":"report","variant":"","text":"서버 이관은 작업이 끝났습니다.","sensitive":false}
+{"id":"t-0592","category":"None","group":"report","variant":"","text":"사내 소식지 발행은 내부 공유만 한다. 전산실 공사는 담당 부서로 넘겼다.","sensitive":false}
+{"id":"t-0593","category":"None","group":"report","variant":"","text":"사내 소식지 발행은 결재가 끝났다.","sensitive":false}
+{"id":"t-0594","category":"None","group":"report","variant":"","text":"재고 실사는 두 건이 남았다. 복합기 교체는 초안을 돌렸다.","sensitive":false}
+{"id":"t-0595","category":"None","group":"report","variant":"","text":"납품 검수는 오전에 배포했다.","sensitive":false}
+{"id":"t-0596","category":"None","group":"report","variant":"","text":"재고 실사는 두 건이 남았다.","sensitive":false}
+{"id":"t-0597","category":"None","group":"report","variant":"","text":"전산실 공사는 일정을 조정했습니다.","sensitive":false}
+{"id":"t-0598","category":"None","group":"report","variant":"","text":"재고 실사는 목요일에 마친다.","sensitive":false}
+{"id":"t-0599","category":"None","group":"report","variant":"","text":"협력 업체 평가는 초안을 돌렸다. 창고 정리는 협의 후 다시 정한다.","sensitive":false}
+{"id":"t-0600","category":"None","group":"report","variant":"","text":"창고 정리는 오전에 배포했다.","sensitive":false}
+{"id":"t-0601","category":"None","group":"report","variant":"","text":"법인 차량 배차는 결재가 끝났다. 물품 구매 요청은 다음 회의에서 보고합니다.","sensitive":false}
+{"id":"t-0602","category":"None","group":"report","variant":"","text":"서버 이관은 수치가 조금 올랐다. 법인 차량 배차는 일정을 조정했습니다.","sensitive":false}
+{"id":"t-0603","category":"None","group":"report","variant":"","text":"창고 정리는 작업이 끝났습니다. 법인 차량 배차는 일주일 연장했다.","sensitive":false}
+{"id":"t-0604","category":"None","group":"report","variant":"","text":"서버 이관은 전원 확인했다.","sensitive":false}
+{"id":"t-0605","category":"None","group":"report","variant":"","text":"주간 업무 보고는 작업이 끝났습니다.","sensitive":false}
+{"id":"t-0606","category":"None","group":"report","variant":"","text":"민원 처리 기한은 오전에 배포했다.","sensitive":false}
+{"id":"t-0607","category":"None","group":"report","variant":"","text":"창고 정리는 일주일 연장했다.","sensitive":false}
+{"id":"t-0608","category":"None","group":"report","variant":"","text":"복합기 교체는 전원 확인했다.","sensitive":false}
+{"id":"t-0609","category":"None","group":"report","variant":"","text":"전산실 공사는 결재가 끝났다.","sensitive":false}
+{"id":"t-0610","category":"None","group":"report","variant":"","text":"납품 검수는 전원 확인했다.","sensitive":false}
+{"id":"t-0611","category":"None","group":"report","variant":"","text":"창고 정리는 두 건이 남았다.","sensitive":false}
+{"id":"t-0612","category":"None","group":"report","variant":"","text":"교육 이수 현황은 협의 후 다시 정한다. 민원 처리 기한은 자료를 첨부합니다.","sensitive":false}
+{"id":"t-0613","category":"None","group":"report","variant":"","text":"출장 정산 마감은 초안을 돌렸다.","sensitive":false}
+{"id":"t-0614","category":"None","group":"report","variant":"","text":"물품 구매 요청은 내부 공유만 한다. 민원 처리 기한은 결재가 끝났다.","sensitive":false}
+{"id":"t-0615","category":"None","group":"report","variant":"","text":"교육 이수 현황은 결재가 끝났다. 사내 소식지 발행은 일정을 조정했습니다.","sensitive":false}
+{"id":"t-0616","category":"None","group":"report","variant":"","text":"누리집 개편은 내부 공유만 한다.","sensitive":false}
+{"id":"t-0617","category":"None","group":"report","variant":"","text":"예산 집행률은 결과를 정리했습니다.","sensitive":false}
+{"id":"t-0618","category":"None","group":"report","variant":"","text":"예산 집행률은 확인 후 회신 바랍니다.","sensitive":false}
+{"id":"t-0619","category":"None","group":"report","variant":"","text":"서버 이관은 일정을 조정했습니다.","sensitive":false}
+{"id":"t-0620","category":"None","group":"report","variant":"","text":"법인 차량 배차는 일정을 조정했습니다.","sensitive":false}
+{"id":"t-0621","category":"None","group":"report","variant":"","text":"누리집 개편은 담당 부서로 넘겼다. 납품 검수는 다음 회의에서 보고합니다.","sensitive":false}
+{"id":"t-0622","category":"None","group":"report","variant":"","text":"회의록 공유는 자료를 첨부합니다. 재고 실사는 초안을 돌렸다.","sensitive":false}
+{"id":"t-0623","category":"None","group":"report","variant":"","text":"고객 설문 결과는 결과를 정리했습니다. 고객 설문 결과는 결과를 정리했습니다.","sensitive":false}
+{"id":"t-0624","category":"None","group":"report","variant":"","text":"출장 정산 마감은 일정을 조정했습니다.","sensitive":false}
+{"id":"t-0625","category":"None","group":"report","variant":"","text":"민원 처리 기한은 작업이 끝났습니다.","sensitive":false}
+{"id":"t-0626","category":"None","group":"report","variant":"","text":"신규 채용 공고는 이견 없이 통과했다.","sensitive":false}
+{"id":"t-0627","category":"None","group":"report","variant":"","text":"회의록 공유는 담당 부서로 넘겼다.","sensitive":false}
+{"id":"t-0628","category":"None","group":"report","variant":"","text":"재고 실사는 담당 부서로 넘겼다.","sensitive":false}
+{"id":"t-0629","category":"None","group":"report","variant":"","text":"창고 정리는 결과를 정리했습니다.","sensitive":false}
+{"id":"t-0630","category":"None","group":"report","variant":"","text":"협력 업체 평가는 이견 없이 통과했다.","sensitive":false}
+{"id":"t-0631","category":"None","group":"report","variant":"","text":"회의록 공유는 이견 없이 통과했다.","sensitive":false}
+{"id":"t-0632","category":"None","group":"report","variant":"","text":"법인 차량 배차는 결재가 끝났다.","sensitive":false}
+{"id":"t-0633","category":"None","group":"report","variant":"","text":"재고 실사는 이견 없이 통과했다. 교육 이수 현황은 자료를 첨부합니다.","sensitive":false}
+{"id":"t-0634","category":"None","group":"report","variant":"","text":"창고 정리는 전원 확인했다.","sensitive":false}
+{"id":"t-0635","category":"None","group":"report","variant":"","text":"사옥 청소 일정은 수치가 조금 올랐다. 고객 설문 결과는 이견 없이 통과했다.","sensitive":false}
+{"id":"t-0636","category":"None","group":"report","variant":"","text":"고객 설문 결과는 일정을 조정했습니다.","sensitive":false}
+{"id":"t-0637","category":"None","group":"report","variant":"","text":"법인 차량 배차는 전원 확인했다.","sensitive":false}
+{"id":"t-0638","category":"None","group":"report","variant":"","text":"민원 처리 기한은 내부 공유만 한다. 전산실 공사는 자료를 첨부합니다.","sensitive":false}
+{"id":"t-0639","category":"None","group":"report","variant":"","text":"사옥 청소 일정은 다음 회의에서 보고합니다.","sensitive":false}
+{"id":"t-0640","category":"None","group":"report","variant":"","text":"법인 차량 배차는 전원 확인했다. 납품 검수는 두 건이 남았다.","sensitive":false}
+{"id":"t-0641","category":"None","group":"report","variant":"","text":"누리집 개편은 작업이 끝났습니다.","sensitive":false}
+{"id":"t-0642","category":"None","group":"report","variant":"","text":"협력 업체 평가는 협의 후 다시 정한다. 서버 이관은 확인 후 회신 바랍니다.","sensitive":false}
+{"id":"t-0643","category":"None","group":"report","variant":"","text":"신규 채용 공고는 자료를 첨부합니다.","sensitive":false}
+{"id":"t-0644","category":"None","group":"report","variant":"","text":"물품 구매 요청은 작업이 끝났습니다. 창고 정리는 수치가 조금 올랐다.","sensitive":false}
+{"id":"t-0645","category":"None","group":"report","variant":"","text":"법인 차량 배차는 수치가 조금 올랐다.","sensitive":false}
+{"id":"t-0646","category":"None","group":"report","variant":"","text":"협력 업체 평가는 전원 확인했다.","sensitive":false}
+{"id":"t-0647","category":"None","group":"report","variant":"","text":"복합기 교체는 확인 후 회신 바랍니다. 출장 정산 마감은 담당 부서로 넘겼다.","sensitive":false}
+{"id":"t-0648","category":"None","group":"report","variant":"","text":"출장 정산 마감은 일주일 연장했다.","sensitive":false}
+{"id":"t-0649","category":"None","group":"report","variant":"","text":"민원 처리 기한은 목요일에 마친다. 서버 이관은 작업이 끝났습니다.","sensitive":false}
+{"id":"t-0650","category":"None","group":"report","variant":"","text":"서버 이관은 다음 회의에서 보고합니다. 교육 이수 현황은 다음 회의에서 보고합니다.","sensitive":false}
+{"id":"t-0651","category":"None","group":"report","variant":"","text":"서버 이관은 자료를 첨부합니다.","sensitive":false}
+{"id":"t-0652","category":"None","group":"report","variant":"","text":"물품 구매 요청은 전원 확인했다. 법인 차량 배차는 작업이 끝났습니다.","sensitive":false}
+{"id":"t-0653","category":"None","group":"report","variant":"","text":"복합기 교체는 초안을 돌렸다. 납품 검수는 두 건이 남았다.","sensitive":false}
+{"id":"t-0654","category":"None","group":"report","variant":"","text":"누리집 개편은 자료를 첨부합니다.","sensitive":false}
+{"id":"t-0655","category":"None","group":"report","variant":"","text":"신규 채용 공고는 협의 후 다시 정한다.","sensitive":false}
+{"id":"t-0656","category":"None","group":"report","variant":"","text":"전산실 공사는 초안을 돌렸다. 납품 검수는 다음 회의에서 보고합니다.","sensitive":false}
+{"id":"t-0657","category":"None","group":"report","variant":"","text":"사내 소식지 발행은 오전에 배포했다. 법인 차량 배차는 확인 후 회신 바랍니다.","sensitive":false}
+{"id":"t-0658","category":"None","group":"report","variant":"","text":"물품 구매 요청은 일주일 연장했다.","sensitive":false}
+{"id":"t-0659","category":"None","group":"report","variant":"","text":"출장 정산 마감은 협의 후 다시 정한다.","sensitive":false}
+{"id":"t-0660","category":"None","group":"report","variant":"","text":"서버 이관은 이견 없이 통과했다. 협력 업체 평가는 두 건이 남았다.","sensitive":false}
+{"id":"t-0661","category":"None","group":"report","variant":"","text":"사옥 청소 일정은 자료를 첨부합니다.","sensitive":false}
+{"id":"t-0662","category":"None","group":"report","variant":"","text":"전산실 공사는 두 건이 남았다.","sensitive":false}
+{"id":"t-0663","category":"None","group":"report","variant":"","text":"주간 업무 보고는 일정을 조정했습니다.","sensitive":false}
+{"id":"t-0664","category":"None","group":"report","variant":"","text":"주간 업무 보고는 내부 공유만 한다.","sensitive":false}
+{"id":"t-0665","category":"None","group":"report","variant":"","text":"창고 정리는 결재가 끝났다.","sensitive":false}
+{"id":"t-0666","category":"None","group":"report","variant":"","text":"창고 정리는 협의 후 다시 정한다.","sensitive":false}
+{"id":"t-0667","category":"None","group":"report","variant":"","text":"서버 이관은 오전에 배포했다.","sensitive":false}
+{"id":"t-0668","category":"None","group":"report","variant":"","text":"서버 이관은 오전에 배포했다. 신규 채용 공고는 확인 후 회신 바랍니다.","sensitive":false}
+{"id":"t-0669","category":"None","group":"report","variant":"","text":"전산실 공사는 이견 없이 통과했다.","sensitive":false}
+{"id":"t-0670","category":"None","group":"report","variant":"","text":"창고 정리는 담당 부서로 넘겼다.","sensitive":false}
+{"id":"t-0671","category":"None","group":"report","variant":"","text":"회의록 공유는 초안을 돌렸다.","sensitive":false}
+{"id":"t-0672","category":"None","group":"report","variant":"","text":"복합기 교체는 자료를 첨부합니다. 고객 설문 결과는 초안을 돌렸다.","sensitive":false}
+{"id":"t-0673","category":"None","group":"report","variant":"","text":"복합기 교체는 두 건이 남았다.","sensitive":false}
+{"id":"t-0674","category":"None","group":"report","variant":"","text":"사옥 청소 일정은 작업이 끝났습니다.","sensitive":false}
+{"id":"t-0675","category":"None","group":"report","variant":"","text":"복합기 교체는 다음 회의에서 보고합니다. 서버 이관은 이견 없이 통과했다.","sensitive":false}
+{"id":"t-0676","category":"None","group":"report","variant":"","text":"사옥 청소 일정은 이견 없이 통과했다.","sensitive":false}
+{"id":"t-0677","category":"None","group":"report","variant":"","text":"누리집 개편은 다음 회의에서 보고합니다. 주간 업무 보고는 전원 확인했다.","sensitive":false}
+{"id":"t-0678","category":"None","group":"report","variant":"","text":"협력 업체 평가는 다음 회의에서 보고합니다.","sensitive":false}
+{"id":"t-0679","category":"None","group":"report","variant":"","text":"서버 이관은 수치가 조금 올랐다.","sensitive":false}
+{"id":"t-0680","category":"None","group":"report","variant":"","text":"민원 처리 기한은 두 건이 남았다. 사내 소식지 발행은 담당 부서로 넘겼다.","sensitive":false}
+{"id":"t-0681","category":"None","group":"report","variant":"","text":"사내 소식지 발행은 두 건이 남았다. 민원 처리 기한은 수치가 조금 올랐다.","sensitive":false}
+{"id":"t-0682","category":"None","group":"report","variant":"","text":"납품 검수는 자료를 첨부합니다. 법인 차량 배차는 결과를 정리했습니다.","sensitive":false}
+{"id":"t-0683","category":"None","group":"report","variant":"","text":"고객 설문 결과는 목요일에 마친다.","sensitive":false}
+{"id":"t-0684","category":"None","group":"report","variant":"","text":"서버 이관은 내부 공유만 한다.","sensitive":false}
+{"id":"t-0685","category":"None","group":"report","variant":"","text":"협력 업체 평가는 이견 없이 통과했다. 사옥 청소 일정은 담당 부서로 넘겼다.","sensitive":false}
+{"id":"t-0686","category":"None","group":"report","variant":"","text":"서버 이관은 확인 후 회신 바랍니다.","sensitive":false}
+{"id":"t-0687","category":"None","group":"report","variant":"","text":"협력 업체 평가는 초안을 돌렸다. 사옥 청소 일정은 일주일 연장했다.","sensitive":false}
+{"id":"t-0688","category":"None","group":"report","variant":"","text":"재고 실사는 수치가 조금 올랐다.","sensitive":false}
+{"id":"t-0689","category":"None","group":"report","variant":"","text":"민원 처리 기한은 이견 없이 통과했다.","sensitive":false}
+{"id":"t-0690","category":"None","group":"report","variant":"","text":"서버 이관은 두 건이 남았다.","sensitive":false}
+{"id":"t-0691","category":"None","group":"report","variant":"","text":"서버 이관은 초안을 돌렸다.","sensitive":false}
+{"id":"t-0692","category":"None","group":"report","variant":"","text":"사내 소식지 발행은 작업이 끝났습니다.","sensitive":false}
+{"id":"t-0693","category":"None","group":"report","variant":"","text":"전산실 공사는 초안을 돌렸다. 주간 업무 보고는 확인 후 회신 바랍니다.","sensitive":false}
+{"id":"t-0694","category":"None","group":"report","variant":"","text":"사내 소식지 발행은 초안을 돌렸다.","sensitive":false}
+{"id":"t-0695","category":"None","group":"report","variant":"","text":"창고 정리는 확인 후 회신 바랍니다. 주간 업무 보고는 일정을 조정했습니다.","sensitive":false}
+{"id":"t-0696","category":"None","group":"report","variant":"","text":"민원 처리 기한은 결과를 정리했습니다.","sensitive":false}
+{"id":"t-0697","category":"None","group":"report","variant":"","text":"사옥 청소 일정은 목요일에 마친다.","sensitive":false}
+{"id":"t-0698","category":"None","group":"report","variant":"","text":"교육 이수 현황은 수치가 조금 올랐다.","sensitive":false}
+{"id":"t-0699","category":"None","group":"report","variant":"","text":"주간 업무 보고는 전원 확인했다.","sensitive":false}
+{"id":"t-0700","category":"None","group":"report","variant":"","text":"고객 설문 결과는 자료를 첨부합니다.","sensitive":false}
+{"id":"t-0701","category":"None","group":"report","variant":"","text":"출장 정산 마감은 담당 부서로 넘겼다.","sensitive":false}
+{"id":"t-0702","category":"None","group":"report","variant":"","text":"복합기 교체는 이견 없이 통과했다.","sensitive":false}
+{"id":"t-0703","category":"None","group":"report","variant":"","text":"교육 이수 현황은 내부 공유만 한다.","sensitive":false}
+{"id":"t-0704","category":"None","group":"report","variant":"","text":"납품 검수는 담당 부서로 넘겼다.","sensitive":false}
+{"id":"t-0705","category":"None","group":"report","variant":"","text":"교육 이수 현황은 다음 회의에서 보고합니다.","sensitive":false}
+{"id":"t-0706","category":"None","group":"report","variant":"","text":"협력 업체 평가는 자료를 첨부합니다.","sensitive":false}
+{"id":"t-0707","category":"None","group":"report","variant":"","text":"복합기 교체는 내부 공유만 한다.","sensitive":false}
+{"id":"t-0708","category":"None","group":"report","variant":"","text":"예산 집행률은 두 건이 남았다.","sensitive":false}
+{"id":"t-0709","category":"None","group":"report-person","variant":"","text":"어 반장님은 납품 검수 건을 정리했다.","sensitive":false}
+{"id":"t-0710","category":"None","group":"report-person","variant":"","text":"표하진 계장은 서버 이관 건을 정리했다.","sensitive":false}
+{"id":"t-0711","category":"None","group":"report-person","variant":"","text":"길나윤 수석은 고객 설문 결과 건을 정리했다.","sensitive":false}
+{"id":"t-0712","category":"None","group":"report-person","variant":"","text":"방 이사님은 재고 실사 건을 정리했다.","sensitive":false}
+{"id":"t-0713","category":"None","group":"report-person","variant":"","text":"제 형은 창고 정리 건을 정리했다.","sensitive":false}
+{"id":"t-0714","category":"None","group":"report-person","variant":"","text":"방 이사님은 교육 이수 현황 건을 정리했다.","sensitive":false}
+{"id":"t-0715","category":"None","group":"report-person","variant":"","text":"하 과장님은 신규 채용 공고 건을 정리했다.","sensitive":false}
+{"id":"t-0716","category":"None","group":"report-person","variant":"","text":"저는 복합기 교체 건을 정리했다.","sensitive":false}
+{"id":"t-0717","category":"None","group":"report-person","variant":"","text":"천 국장님은 사옥 청소 일정 건을 정리했다.","sensitive":false}
+{"id":"t-0718","category":"None","group":"report-person","variant":"","text":"제 형은 복합기 교체 건을 정리했다.","sensitive":false}
+{"id":"t-0719","category":"None","group":"report-person","variant":"","text":"천 국장님은 교육 이수 현황 건을 정리했다.","sensitive":false}
+{"id":"t-0720","category":"None","group":"report-person","variant":"","text":"함지율 매니저는 전산실 공사 건을 정리했다.","sensitive":false}
+{"id":"t-0721","category":"None","group":"report-person","variant":"","text":"하 과장님은 사내 소식지 발행 건을 정리했다.","sensitive":false}
+{"id":"t-0722","category":"None","group":"report-person","variant":"","text":"우리 아빠는 서버 이관 건을 정리했다.","sensitive":false}
+{"id":"t-0723","category":"None","group":"report-person","variant":"","text":"제 형은 법인 차량 배차 건을 정리했다.","sensitive":false}
+{"id":"t-0724","category":"None","group":"report-person","variant":"","text":"권도하 연구원은 오늘 물품 구매 요청 회의에 들어간다.","sensitive":false}
+{"id":"t-0725","category":"None","group":"report-person","variant":"","text":"권도하 연구원은 오늘 복합기 교체 회의에 들어간다.","sensitive":false}
+{"id":"t-0726","category":"None","group":"report-person","variant":"","text":"방 이사님은 오늘 협력 업체 평가 회의에 들어간다.","sensitive":false}
+{"id":"t-0727","category":"None","group":"report-person","variant":"","text":"심가온 사원은 오늘 재고 실사 회의에 들어간다.","sensitive":false}
+{"id":"t-0728","category":"None","group":"report-person","variant":"","text":"우리 딸은 오늘 주간 업무 보고 회의에 들어간다.","sensitive":false}
+{"id":"t-0729","category":"None","group":"report-person","variant":"","text":"제 남자친구는 오늘 법인 차량 배차 회의에 들어간다.","sensitive":false}
+{"id":"t-0730","category":"None","group":"report-person","variant":"","text":"우리 아빠는 오늘 예산 집행률 회의에 들어간다.","sensitive":false}
+{"id":"t-0731","category":"None","group":"report-person","variant":"","text":"제 남자친구는 오늘 복합기 교체 회의에 들어간다.","sensitive":false}
+{"id":"t-0732","category":"None","group":"report-person","variant":"","text":"우리 딸은 오늘 전산실 공사 회의에 들어간다.","sensitive":false}
+{"id":"t-0733","category":"None","group":"report-person","variant":"","text":"어 반장님은 오늘 출장 정산 마감 회의에 들어간다.","sensitive":false}
+{"id":"t-0734","category":"None","group":"report-person","variant":"","text":"권도하 연구원은 오늘 고객 설문 결과 회의에 들어간다.","sensitive":false}
+{"id":"t-0735","category":"None","group":"report-person","variant":"","text":"예 선생님은 오늘 복합기 교체 회의에 들어간다.","sensitive":false}
+{"id":"t-0736","category":"None","group":"report-person","variant":"","text":"방 이사님은 오늘 서버 이관 회의에 들어간다.","sensitive":false}
+{"id":"t-0737","category":"None","group":"report-person","variant":"","text":"국 차장님은 오늘 고객 설문 결과 회의에 들어간다.","sensitive":false}
+{"id":"t-0738","category":"None","group":"report-person","variant":"","text":"국 차장님은 오늘 교육 이수 현황 회의에 들어간다.","sensitive":false}
+{"id":"t-0739","category":"None","group":"report-person","variant":"","text":"물품 구매 요청은 하 과장님 확인 후 목요일에 마친다.","sensitive":false}
+{"id":"t-0740","category":"None","group":"report-person","variant":"","text":"민원 처리 기한은 권도하 연구원 확인 후 다음 회의에서 보고합니다.","sensitive":false}
+{"id":"t-0741","category":"None","group":"report-person","variant":"","text":"사내 소식지 발행은 소예린 책임 확인 후 결재가 끝났다.","sensitive":false}
+{"id":"t-0742","category":"None","group":"report-person","variant":"","text":"예산 집행률은 하 과장님 확인 후 일주일 연장했다.","sensitive":false}
+{"id":"t-0743","category":"None","group":"report-person","variant":"","text":"회의록 공유는 명 소장님 확인 후 일정을 조정했습니다.","sensitive":false}
+{"id":"t-0744","category":"None","group":"report-person","variant":"","text":"전산실 공사는 하 과장님 확인 후 목요일에 마친다.","sensitive":false}
+{"id":"t-0745","category":"None","group":"report-person","variant":"","text":"회의록 공유는 문지안 사원 확인 후 협의 후 다시 정한다.","sensitive":false}
+{"id":"t-0746","category":"None","group":"report-person","variant":"","text":"고객 설문 결과는 명 소장님 확인 후 목요일에 마친다.","sensitive":false}
+{"id":"t-0747","category":"None","group":"report-person","variant":"","text":"납품 검수는 천 국장님 확인 후 작업이 끝났습니다.","sensitive":false}
+{"id":"t-0748","category":"None","group":"report-person","variant":"","text":"누리집 개편은 방 이사님 확인 후 일주일 연장했다.","sensitive":false}
+{"id":"t-0749","category":"None","group":"report-person","variant":"","text":"예산 집행률은 심가온 사원 확인 후 다음 회의에서 보고합니다.","sensitive":false}
+{"id":"t-0750","category":"None","group":"report-person","variant":"","text":"누리집 개편은 하 과장님 확인 후 일정을 조정했습니다.","sensitive":false}
+{"id":"t-0751","category":"None","group":"report-person","variant":"","text":"예산 집행률은 예 선생님 확인 후 협의 후 다시 정한다.","sensitive":false}
+{"id":"t-0752","category":"None","group":"report-person","variant":"","text":"법인 차량 배차는 심가온 사원 확인 후 담당 부서로 넘겼다.","sensitive":false}
+{"id":"t-0753","category":"None","group":"report-person","variant":"","text":"신규 채용 공고는 어 반장님 확인 후 수치가 조금 올랐다.","sensitive":false}
+{"id":"t-0754","category":"None","group":"report-person","variant":"","text":"황보준 연구원에게 협력 업체 평가 자료를 넘겼습니다.","sensitive":false}
+{"id":"t-0755","category":"None","group":"report-person","variant":"","text":"방 이사님에게 회의록 공유 자료를 넘겼습니다.","sensitive":false}
+{"id":"t-0756","category":"None","group":"report-person","variant":"","text":"함지율 매니저에게 누리집 개편 자료를 넘겼습니다.","sensitive":false}
+{"id":"t-0757","category":"None","group":"report-person","variant":"","text":"권도하 연구원에게 물품 구매 요청 자료를 넘겼습니다.","sensitive":false}
+{"id":"t-0758","category":"None","group":"report-person","variant":"","text":"탁서윤 주무관에게 사옥 청소 일정 자료를 넘겼습니다.","sensitive":false}
+{"id":"t-0759","category":"None","group":"report-person","variant":"","text":"함지율 매니저에게 창고 정리 자료를 넘겼습니다.","sensitive":false}
+{"id":"t-0760","category":"None","group":"report-person","variant":"","text":"도경민 선임에게 누리집 개편 자료를 넘겼습니다.","sensitive":false}
+{"id":"t-0761","category":"None","group":"report-person","variant":"","text":"심가온 사원에게 교육 이수 현황 자료를 넘겼습니다.","sensitive":false}
+{"id":"t-0762","category":"None","group":"report-person","variant":"","text":"어 반장님에게 회의록 공유 자료를 넘겼습니다.","sensitive":false}
+{"id":"t-0763","category":"None","group":"report-person","variant":"","text":"도경민 선임에게 고객 설문 결과 자료를 넘겼습니다.","sensitive":false}
+{"id":"t-0764","category":"None","group":"report-person","variant":"","text":"함지율 매니저에게 물품 구매 요청 자료를 넘겼습니다.","sensitive":false}
+{"id":"t-0765","category":"None","group":"report-person","variant":"","text":"계 주임님에게 창고 정리 자료를 넘겼습니다.","sensitive":false}
+{"id":"t-0766","category":"None","group":"report-person","variant":"","text":"하 과장님에게 교육 이수 현황 자료를 넘겼습니다.","sensitive":false}
+{"id":"t-0767","category":"None","group":"report-person","variant":"","text":"길나윤 수석에게 사옥 청소 일정 자료를 넘겼습니다.","sensitive":false}
+{"id":"t-0768","category":"None","group":"report-person","variant":"","text":"권도하 연구원에게 누리집 개편 자료를 넘겼습니다.","sensitive":false}
+{"id":"t-0769","category":"None","group":"report-person","variant":"","text":"담당: 탁서윤 주무관 / 고객 설문 결과","sensitive":false}
+{"id":"t-0770","category":"None","group":"report-person","variant":"","text":"담당: 문지안 사원 / 민원 처리 기한","sensitive":false}
+{"id":"t-0771","category":"None","group":"report-person","variant":"","text":"담당: 피 원장님 / 회의록 공유","sensitive":false}
+{"id":"t-0772","category":"None","group":"report-person","variant":"","text":"담당: 명 소장님 / 민원 처리 기한","sensitive":false}
+{"id":"t-0773","category":"None","group":"report-person","variant":"","text":"담당: 표하진 계장 / 물품 구매 요청","sensitive":false}
+{"id":"t-0774","category":"None","group":"report-person","variant":"","text":"담당: 예 선생님 / 납품 검수","sensitive":false}
+{"id":"t-0775","category":"None","group":"report-person","variant":"","text":"담당: 함지율 매니저 / 복합기 교체","sensitive":false}
+{"id":"t-0776","category":"None","group":"report-person","variant":"","text":"담당: 하 과장님 / 주간 업무 보고","sensitive":false}
+{"id":"t-0777","category":"None","group":"report-person","variant":"","text":"담당: 방 이사님 / 출장 정산 마감","sensitive":false}
+{"id":"t-0778","category":"None","group":"report-person","variant":"","text":"담당: 방 이사님 / 고객 설문 결과","sensitive":false}
+{"id":"t-0779","category":"None","group":"report-person","variant":"","text":"담당: 예 선생님 / 누리집 개편","sensitive":false}
+{"id":"t-0780","category":"None","group":"report-person","variant":"","text":"담당: 국 차장님 / 사내 소식지 발행","sensitive":false}
+{"id":"t-0781","category":"None","group":"report-person","variant":"","text":"담당: 도경민 선임 / 물품 구매 요청","sensitive":false}
+{"id":"t-0782","category":"None","group":"report-person","variant":"","text":"담당: 함지율 매니저 / 창고 정리","sensitive":false}
+{"id":"t-0783","category":"None","group":"report-person","variant":"","text":"담당: 심가온 사원 / 사내 소식지 발행","sensitive":false}
+{"id":"t-0784","category":"None","group":"report-person","variant":"","text":"국 차장님의 요청으로 민원 처리 기한 일정을 조정했습니다.","sensitive":false}
+{"id":"t-0785","category":"None","group":"report-person","variant":"","text":"봉 차장님의 요청으로 신규 채용 공고 일정을 조정했습니다.","sensitive":false}
+{"id":"t-0786","category":"None","group":"report-person","variant":"","text":"도경민 선임의 요청으로 창고 정리 일정을 조정했습니다.","sensitive":false}
+{"id":"t-0787","category":"None","group":"report-person","variant":"","text":"어 반장님의 요청으로 예산 집행률 일정을 조정했습니다.","sensitive":false}
+{"id":"t-0788","category":"None","group":"report-person","variant":"","text":"권도하 연구원의 요청으로 교육 이수 현황 일정을 조정했습니다.","sensitive":false}
+{"id":"t-0789","category":"None","group":"report-person","variant":"","text":"피 원장님의 요청으로 전산실 공사 일정을 조정했습니다.","sensitive":false}
+{"id":"t-0790","category":"None","group":"report-person","variant":"","text":"방 이사님의 요청으로 협력 업체 평가 일정을 조정했습니다.","sensitive":false}
+{"id":"t-0791","category":"None","group":"report-person","variant":"","text":"길나윤 수석의 요청으로 협력 업체 평가 일정을 조정했습니다.","sensitive":false}
+{"id":"t-0792","category":"None","group":"report-person","variant":"","text":"권도하 연구원의 요청으로 신규 채용 공고 일정을 조정했습니다.","sensitive":false}
+{"id":"t-0793","category":"None","group":"report-person","variant":"","text":"국 차장님의 요청으로 납품 검수 일정을 조정했습니다.","sensitive":false}
+{"id":"t-0794","category":"None","group":"report-person","variant":"","text":"탁서윤 주무관의 요청으로 재고 실사 일정을 조정했습니다.","sensitive":false}
+{"id":"t-0795","category":"None","group":"report-person","variant":"","text":"문지안 사원의 요청으로 협력 업체 평가 일정을 조정했습니다.","sensitive":false}
+{"id":"t-0796","category":"None","group":"report-person","variant":"","text":"방 이사님의 요청으로 신규 채용 공고 일정을 조정했습니다.","sensitive":false}
+{"id":"t-0797","category":"None","group":"report-person","variant":"","text":"심가온 사원의 요청으로 주간 업무 보고 일정을 조정했습니다.","sensitive":false}
+{"id":"t-0798","category":"None","group":"report-person","variant":"","text":"국 차장님의 요청으로 협력 업체 평가 일정을 조정했습니다.","sensitive":false}
+{"id":"t-0799","category":"None","group":"report-person","variant":"","text":"납품 검수는 이견 없이 통과했다. 회신은 황보준 연구원에게 주세요.","sensitive":false}
+{"id":"t-0800","category":"None","group":"report-person","variant":"","text":"재고 실사는 협의 후 다시 정한다. 회신은 함지율 매니저에게 주세요.","sensitive":false}
+{"id":"t-0801","category":"None","group":"report-person","variant":"","text":"회의록 공유는 내부 공유만 한다. 회신은 하 과장님에게 주세요.","sensitive":false}
+{"id":"t-0802","category":"None","group":"report-person","variant":"","text":"출장 정산 마감은 결재가 끝났다. 회신은 방 이사님에게 주세요.","sensitive":false}
+{"id":"t-0803","category":"None","group":"report-person","variant":"","text":"출장 정산 마감은 수치가 조금 올랐다. 회신은 도경민 선임에게 주세요.","sensitive":false}
+{"id":"t-0804","category":"None","group":"report-person","variant":"","text":"예산 집행률은 두 건이 남았다. 회신은 예 선생님에게 주세요.","sensitive":false}
+{"id":"t-0805","category":"None","group":"report-person","variant":"","text":"납품 검수는 자료를 첨부합니다. 회신은 심가온 사원에게 주세요.","sensitive":false}
+{"id":"t-0806","category":"None","group":"report-person","variant":"","text":"주간 업무 보고는 두 건이 남았다. 회신은 길나윤 수석에게 주세요.","sensitive":false}
+{"id":"t-0807","category":"None","group":"report-person","variant":"","text":"물품 구매 요청은 수치가 조금 올랐다. 회신은 방 이사님에게 주세요.","sensitive":false}
+{"id":"t-0808","category":"None","group":"report-person","variant":"","text":"예산 집행률은 협의 후 다시 정한다. 회신은 탁서윤 주무관에게 주세요.","sensitive":false}
+{"id":"t-0809","category":"None","group":"report-person","variant":"","text":"신규 채용 공고는 일주일 연장했다. 회신은 길나윤 수석에게 주세요.","sensitive":false}
+{"id":"t-0810","category":"None","group":"report-person","variant":"","text":"창고 정리는 일정을 조정했습니다. 회신은 황보준 연구원에게 주세요.","sensitive":false}
+{"id":"t-0811","category":"None","group":"report-person","variant":"","text":"민원 처리 기한은 일주일 연장했다. 회신은 국 차장님에게 주세요.","sensitive":false}
+{"id":"t-0812","category":"None","group":"report-person","variant":"","text":"고객 설문 결과는 담당 부서로 넘겼다. 회신은 봉 차장님에게 주세요.","sensitive":false}
+{"id":"t-0813","category":"None","group":"report-person","variant":"","text":"회의록 공유는 다음 회의에서 보고합니다. 회신은 소예린 책임에게 주세요.","sensitive":false}
+{"id":"t-0814","category":"None","group":"report-person","variant":"","text":"전산실 공사 관련해서 소예린 책임 쪽에 공유했다.","sensitive":false}
+{"id":"t-0815","category":"None","group":"report-person","variant":"","text":"재고 실사 관련해서 심가온 사원 쪽에 공유했다.","sensitive":false}
+{"id":"t-0816","category":"None","group":"report-person","variant":"","text":"물품 구매 요청 관련해서 문지안 사원 쪽에 공유했다.","sensitive":false}
+{"id":"t-0817","category":"None","group":"report-person","variant":"","text":"법인 차량 배차 관련해서 계 주임님 쪽에 공유했다.","sensitive":false}
+{"id":"t-0818","category":"None","group":"report-person","variant":"","text":"사내 소식지 발행 관련해서 봉 차장님 쪽에 공유했다.","sensitive":false}
+{"id":"t-0819","category":"None","group":"report-person","variant":"","text":"누리집 개편 관련해서 봉 차장님 쪽에 공유했다.","sensitive":false}
+{"id":"t-0820","category":"None","group":"report-person","variant":"","text":"예산 집행률 관련해서 소예린 책임 쪽에 공유했다.","sensitive":false}
+{"id":"t-0821","category":"None","group":"report-person","variant":"","text":"고객 설문 결과 관련해서 국 차장님 쪽에 공유했다.","sensitive":false}
+{"id":"t-0822","category":"None","group":"report-person","variant":"","text":"누리집 개편 관련해서 천 국장님 쪽에 공유했다.","sensitive":false}
+{"id":"t-0823","category":"None","group":"report-person","variant":"","text":"예산 집행률 관련해서 피 원장님 쪽에 공유했다.","sensitive":false}
+{"id":"t-0824","category":"None","group":"report-person","variant":"","text":"교육 이수 현황 관련해서 계 주임님 쪽에 공유했다.","sensitive":false}
+{"id":"t-0825","category":"None","group":"report-person","variant":"","text":"주간 업무 보고 관련해서 천 국장님 쪽에 공유했다.","sensitive":false}
+{"id":"t-0826","category":"None","group":"report-person","variant":"","text":"창고 정리 관련해서 봉 차장님 쪽에 공유했다.","sensitive":false}
+{"id":"t-0827","category":"None","group":"report-person","variant":"","text":"사옥 청소 일정 관련해서 황보준 연구원 쪽에 공유했다.","sensitive":false}
+{"id":"t-0828","category":"None","group":"report-person","variant":"","text":"민원 처리 기한 관련해서 국 차장님 쪽에 공유했다.","sensitive":false}
