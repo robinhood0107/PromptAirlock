@@ -956,7 +956,9 @@ int main(int argc, char** argv) {
             tr_before += before ? 1 : 0;
             tr_after += after ? 1 : 0;
             if (explain && after) {
-                std::printf("person-block %s %d | %s\n", r.id.c_str(), before, r.text.c_str());
+                std::string p;
+                const double s = score(transplant[tr_n % transplant.size()] + r.text, p);
+                std::printf("person-block %s %d %s %.3f>=%.3f | %s\n", r.id.c_str(), before, p.c_str(), s, chosen.at(p), r.text.c_str());
             }
         }
         const auto rate = [](std::size_t a, std::size_t b) { return b == 0 ? 0.0 : 100.0 * static_cast<double>(a) / static_cast<double>(b); };
