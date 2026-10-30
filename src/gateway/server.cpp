@@ -3,7 +3,9 @@
 #include <boost/asio/as_tuple.hpp>
 #include <boost/asio/co_spawn.hpp>
 #include <boost/asio/detached.hpp>
+#include <boost/asio/experimental/awaitable_operators.hpp>
 #include <boost/asio/post.hpp>
+#include <boost/asio/steady_timer.hpp>
 #include <boost/asio/strand.hpp>
 #include <boost/asio/use_awaitable.hpp>
 #include <boost/beast/core.hpp>
@@ -16,6 +18,7 @@
 #include <optional>
 #include <string_view>
 #include <utility>
+#include <variant>
 #include <vector>
 
 namespace prompt_airlock::gateway {
@@ -139,6 +142,21 @@ std::expected<std::pair<const Origin*, core::OpenGrade>, JsonResponse> check_hea
     return std::pair{*origin, *grade};
 }
 
+// 처리 중 연결이 끊기면 돌아온다. 읽을 것이 생겼는데 쌓인 바이트가 0 이면 상대가 닫은 것(FIN·RST)이다.
+// 바이트가 있으면(다음 요청, TLS 종료 알림) 끊김인지 알 수 없어 처리가 끝날 때까지 기다린다.
+// shortcut: TLS 종료 알림을 먼저 보내고 닫는 클라이언트는 응답을 쓸 때 끊김이 드러난다. 알림까지 읽으려면 TLS 읽기를 처리와 함께 돌려야 한다.
+asio::awaitable<void> client_gone(tcp::socket& socket) {
+    if (auto [ec] = co_await socket.async_wait(tcp::socket::wait_read, use_tuple); ec == asio::error::operation_aborted) {
+        co_return;  // 처리가 먼저 끝났다
+    }
+    beast::error_code ec;
+    if (socket.available(ec) == 0 || ec) {
+        co_return;
+    }
+    asio::steady_timer until_done(co_await asio::this_coro::executor, asio::steady_timer::time_point::max());
+    (void)co_await until_done.async_wait(use_tuple);
+}
+
 asio::awaitable<void> session(std::shared_ptr<Server::Shared> shared, tcp::socket socket) {
     struct Release {
         std::atomic<std::size_t>& count;
@@ -193,9 +211,16 @@ asio::awaitable<void> session(std::shared_ptr<Server::Shared> shared, tcp::socke
             } else if (body_error) {
                 break;
             } else {
+                using namespace asio::experimental::awaitable_operators;
                 try {
-                    reply = co_await shared->handler(
-                        AcceptedRequest{accepted->first, accepted->second, std::move(parser.get().body()), client});
+                    // 처리 중 연결이 끊기면 처리 단계에 asio 취소를 보내 남은 단계를 멈추고 가명 범위를 지우게 한다
+                    auto outcome = co_await (shared->handler(AcceptedRequest{accepted->first, accepted->second,
+                                                                             std::move(parser.get().body()), client}) ||
+                                             client_gone(beast::get_lowest_layer(stream).socket()));
+                    if (outcome.index() == 1) {
+                        co_return;  // 받을 사람이 없다
+                    }
+                    reply = std::move(std::get<0>(outcome));
                 } catch (const std::exception&) {
                     reply = error_response(core::UserRejection{core::ReasonCode::InternalError, {}});
                 }
