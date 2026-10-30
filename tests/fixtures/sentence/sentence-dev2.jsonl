@@ -1,0 +1,552 @@
+{"id":"e-0001","category":"Health","group":"direct","variant":"","text":"연 주임님은 치매 초기라 약속을 자주 잊어요.","sensitive":true}
+{"id":"e-0002","category":"Health","group":"direct","variant":"","text":"제 동생은 치매 초기라 약속을 자주 잊어요.","sensitive":true}
+{"id":"e-0003","category":"Health","group":"variant","variant":"spacing","text":"석 팀장님은 치 매 초기라 약속을 자주 잊어요.","sensitive":true}
+{"id":"e-0004","category":"Health","group":"variant","variant":"nfd","text":"석 팀장님은 치매 초기라 약속을 자주 잊어요.","sensitive":true}
+{"id":"e-0005","category":"Health","group":"split","variant":"","text":"배서진 연구원 얘기예요. 아무튼 이번 주는 바빠요. 치매 초기라 약속을 자주 잊어요.","sensitive":true}
+{"id":"e-0006","category":"Health","group":"direct","variant":"","text":"저희 아버지는 항암 주사를 맞고 있어요.","sensitive":true}
+{"id":"e-0007","category":"Health","group":"direct","variant":"","text":"우 실장님은 항암 주사를 맞고 있어요.","sensitive":true}
+{"id":"e-0008","category":"Health","group":"variant","variant":"spacing","text":"저희 아버지는 항 암 주사를 맞고 있어요.","sensitive":true}
+{"id":"e-0009","category":"Health","group":"variant","variant":"nfd","text":"제 동생은 항암 주사를 맞고 있어요.","sensitive":true}
+{"id":"e-0010","category":"Health","group":"split","variant":"","text":"연 주임님 얘기예요. 그건 그렇고 내일 비 온대요. 항암 주사를 맞고 있어요.","sensitive":true}
+{"id":"e-0011","category":"Health","group":"direct","variant":"","text":"석 팀장님은 임신 3개월이라 야근을 못 해요.","sensitive":true}
+{"id":"e-0012","category":"Health","group":"direct","variant":"","text":"추 교수님은 임신 3개월이라 야근을 못 해요.","sensitive":true}
+{"id":"e-0013","category":"Health","group":"variant","variant":"spacing","text":"추 교수님은 임 신 3개월이라 야근을 못 해요.","sensitive":true}
+{"id":"e-0014","category":"Health","group":"variant","variant":"nfd","text":"한도윤 주무관은 임신 3개월이라 야근을 못 해요.","sensitive":true}
+{"id":"e-0015","category":"Health","group":"split","variant":"","text":"제 동생 얘기예요. 아무튼 이번 주는 바빠요. 임신 3개월이라 야근을 못 해요.","sensitive":true}
+{"id":"e-0016","category":"Health","group":"evasive","variant":"","text":"배서진 연구원은 인슐린 펌프를 차고 다녀서 허리에 기계가 달려 있어요.","sensitive":true}
+{"id":"e-0017","category":"Health","group":"evasive","variant":"","text":"제 동생은 인슐린 펌프를 차고 다녀서 허리에 기계가 달려 있어요.","sensitive":true}
+{"id":"e-0018","category":"Health","group":"evasive","variant":"","text":"한도윤 주무관은 인슐린 펌프를 차고 다녀서 허리에 기계가 달려 있어요.","sensitive":true}
+{"id":"e-0019","category":"Health","group":"evasive","variant":"","text":"연 주임님은 심장에 스텐트를 넣은 뒤로 무리한 운동을 못 해요.","sensitive":true}
+{"id":"e-0020","category":"Health","group":"evasive","variant":"","text":"연 주임님은 심장에 스텐트를 넣은 뒤로 무리한 운동을 못 해요.","sensitive":true}
+{"id":"e-0021","category":"Health","group":"evasive","variant":"","text":"저는 심장에 스텐트를 넣은 뒤로 무리한 운동을 못 해요.","sensitive":true}
+{"id":"e-0022","category":"Health","group":"evasive","variant":"","text":"노하은 대리는 매주 화요일마다 투석 받으러 일찍 나가요.","sensitive":true}
+{"id":"e-0023","category":"Health","group":"evasive","variant":"","text":"제 동생은 매주 화요일마다 투석 받으러 일찍 나가요.","sensitive":true}
+{"id":"e-0024","category":"Health","group":"evasive","variant":"","text":"한도윤 주무관은 매주 화요일마다 투석 받으러 일찍 나가요.","sensitive":true}
+{"id":"e-0025","category":"Health","group":"evasive","variant":"","text":"제 동생은 눈이 점점 안 보여서 큰 글씨 화면을 써요.","sensitive":true}
+{"id":"e-0026","category":"Health","group":"evasive","variant":"","text":"노하은 대리는 눈이 점점 안 보여서 큰 글씨 화면을 써요.","sensitive":true}
+{"id":"e-0027","category":"Health","group":"evasive","variant":"","text":"한도윤 주무관은 눈이 점점 안 보여서 큰 글씨 화면을 써요.","sensitive":true}
+{"id":"e-0028","category":"Health","group":"evasive","variant":"","text":"배서진 연구원은 상담 선생님이 약을 늘리자고 했대요.","sensitive":true}
+{"id":"e-0029","category":"Health","group":"evasive","variant":"","text":"연 주임님은 상담 선생님이 약을 늘리자고 했대요.","sensitive":true}
+{"id":"e-0030","category":"Health","group":"evasive","variant":"","text":"저는 상담 선생님이 약을 늘리자고 했대요.","sensitive":true}
+{"id":"e-0031","category":"Health","group":"evasive","variant":"","text":"저희 아버지는 불안할 때 먹는 약을 늘 가방에 넣고 다녀요.","sensitive":true}
+{"id":"e-0032","category":"Health","group":"evasive","variant":"","text":"저는 불안할 때 먹는 약을 늘 가방에 넣고 다녀요.","sensitive":true}
+{"id":"e-0033","category":"Health","group":"evasive","variant":"","text":"저는 불안할 때 먹는 약을 늘 가방에 넣고 다녀요.","sensitive":true}
+{"id":"e-0034","category":"Health","group":"evasive","variant":"","text":"제 동생은 다리를 다쳐서 깁스를 하고 목발을 짚어요.","sensitive":true}
+{"id":"e-0035","category":"Health","group":"evasive","variant":"","text":"저는 다리를 다쳐서 깁스를 하고 목발을 짚어요.","sensitive":true}
+{"id":"e-0036","category":"Health","group":"evasive","variant":"","text":"저희 아버지는 다리를 다쳐서 깁스를 하고 목발을 짚어요.","sensitive":true}
+{"id":"e-0037","category":"Health","group":"evasive","variant":"","text":"한도윤 주무관은 보청기를 껴야 회의 말소리가 들린대요.","sensitive":true}
+{"id":"e-0038","category":"Health","group":"evasive","variant":"","text":"저희 아버지는 보청기를 껴야 회의 말소리가 들린대요.","sensitive":true}
+{"id":"e-0039","category":"Health","group":"evasive","variant":"","text":"저는 보청기를 껴야 회의 말소리가 들린대요.","sensitive":true}
+{"id":"e-0040","category":"Health","group":"evasive","variant":"","text":"제 동생은 배 속 아기 때문에 출장은 못 간대요.","sensitive":true}
+{"id":"e-0041","category":"Health","group":"evasive","variant":"","text":"우 실장님은 배 속 아기 때문에 출장은 못 간대요.","sensitive":true}
+{"id":"e-0042","category":"Health","group":"evasive","variant":"","text":"우 실장님은 배 속 아기 때문에 출장은 못 간대요.","sensitive":true}
+{"id":"e-0043","category":"Health","group":"evasive","variant":"","text":"배서진 연구원은 피검사에서 간 수치가 높게 나왔대요.","sensitive":true}
+{"id":"e-0044","category":"Health","group":"evasive","variant":"","text":"저는 피검사에서 간 수치가 높게 나왔대요.","sensitive":true}
+{"id":"e-0045","category":"Health","group":"evasive","variant":"","text":"배서진 연구원은 피검사에서 간 수치가 높게 나왔대요.","sensitive":true}
+{"id":"e-0046","category":"Health","group":"general","variant":"","text":"치매 예방 운동을 정리해 주세요.","sensitive":false}
+{"id":"e-0047","category":"Health","group":"general","variant":"","text":"항암 부작용 관리법을 알려 주세요.","sensitive":false}
+{"id":"e-0048","category":"Health","group":"general","variant":"","text":"임신 중 업무 배려 제도를 정리해 주세요.","sensitive":false}
+{"id":"e-0049","category":"Belief","group":"direct","variant":"","text":"우 실장님은 성당에서 혼배성사를 올렸어요.","sensitive":true}
+{"id":"e-0050","category":"Belief","group":"direct","variant":"","text":"추 교수님은 성당에서 혼배성사를 올렸어요.","sensitive":true}
+{"id":"e-0051","category":"Belief","group":"variant","variant":"spacing","text":"노하은 대리는 성 당에서 혼배성사를 올렸어요.","sensitive":true}
+{"id":"e-0052","category":"Belief","group":"variant","variant":"nfd","text":"노하은 대리는 성당에서 혼배성사를 올렸어요.","sensitive":true}
+{"id":"e-0053","category":"Belief","group":"split","variant":"","text":"노하은 대리 얘기예요. 그건 그렇고 내일 비 온대요. 성당에서 혼배성사를 올렸어요.","sensitive":true}
+{"id":"e-0054","category":"Belief","group":"direct","variant":"","text":"추 교수님은 기독교 모임 회장이에요.","sensitive":true}
+{"id":"e-0055","category":"Belief","group":"direct","variant":"","text":"노하은 대리는 기독교 모임 회장이에요.","sensitive":true}
+{"id":"e-0056","category":"Belief","group":"variant","variant":"spacing","text":"석 팀장님은 기 독 교 모임 회장이에요.","sensitive":true}
+{"id":"e-0057","category":"Belief","group":"variant","variant":"zwsp","text":"연 주임님은 기​독​교 모임 회장이에요.","sensitive":true}
+{"id":"e-0058","category":"Belief","group":"split","variant":"","text":"연 주임님 얘기예요. 아무튼 이번 주는 바빠요. 기독교 모임 회장이에요.","sensitive":true}
+{"id":"e-0059","category":"Belief","group":"direct","variant":"","text":"저희 아버지는 무슬림이라 술자리에 안 와요.","sensitive":true}
+{"id":"e-0060","category":"Belief","group":"direct","variant":"","text":"노하은 대리는 무슬림이라 술자리에 안 와요.","sensitive":true}
+{"id":"e-0061","category":"Belief","group":"variant","variant":"spacing","text":"연 주임님은 무 슬 림이라 술자리에 안 와요.","sensitive":true}
+{"id":"e-0062","category":"Belief","group":"variant","variant":"zwsp","text":"연 주임님은 무​슬​림이라 술자리에 안 와요.","sensitive":true}
+{"id":"e-0063","category":"Belief","group":"split","variant":"","text":"한도윤 주무관 얘기예요. 그건 그렇고 내일 비 온대요. 무슬림이라 술자리에 안 와요.","sensitive":true}
+{"id":"e-0064","category":"Belief","group":"evasive","variant":"","text":"노하은 대리는 사순절이라 고기를 안 먹는대요.","sensitive":true}
+{"id":"e-0065","category":"Belief","group":"evasive","variant":"","text":"연 주임님은 사순절이라 고기를 안 먹는대요.","sensitive":true}
+{"id":"e-0066","category":"Belief","group":"evasive","variant":"","text":"저는 사순절이라 고기를 안 먹는대요.","sensitive":true}
+{"id":"e-0067","category":"Belief","group":"evasive","variant":"","text":"석 팀장님은 매일 아침 묵주기도를 바쳐요.","sensitive":true}
+{"id":"e-0068","category":"Belief","group":"evasive","variant":"","text":"저희 아버지는 매일 아침 묵주기도를 바쳐요.","sensitive":true}
+{"id":"e-0069","category":"Belief","group":"evasive","variant":"","text":"저희 아버지는 매일 아침 묵주기도를 바쳐요.","sensitive":true}
+{"id":"e-0070","category":"Belief","group":"evasive","variant":"","text":"추 교수님은 단식 기간이라 점심을 거른대요.","sensitive":true}
+{"id":"e-0071","category":"Belief","group":"evasive","variant":"","text":"추 교수님은 단식 기간이라 점심을 거른대요.","sensitive":true}
+{"id":"e-0072","category":"Belief","group":"evasive","variant":"","text":"저희 아버지는 단식 기간이라 점심을 거른대요.","sensitive":true}
+{"id":"e-0073","category":"Belief","group":"evasive","variant":"","text":"석 팀장님은 스님께 계를 받고 법명을 얻었대요.","sensitive":true}
+{"id":"e-0074","category":"Belief","group":"evasive","variant":"","text":"저는 스님께 계를 받고 법명을 얻었대요.","sensitive":true}
+{"id":"e-0075","category":"Belief","group":"evasive","variant":"","text":"저는 스님께 계를 받고 법명을 얻었대요.","sensitive":true}
+{"id":"e-0076","category":"Belief","group":"evasive","variant":"","text":"추 교수님은 십자가 목걸이를 늘 차고 다녀요.","sensitive":true}
+{"id":"e-0077","category":"Belief","group":"evasive","variant":"","text":"저는 십자가 목걸이를 늘 차고 다녀요.","sensitive":true}
+{"id":"e-0078","category":"Belief","group":"evasive","variant":"","text":"노하은 대리는 십자가 목걸이를 늘 차고 다녀요.","sensitive":true}
+{"id":"e-0079","category":"Belief","group":"evasive","variant":"","text":"배서진 연구원은 수요예배 때문에 수요일 저녁엔 못 남아요.","sensitive":true}
+{"id":"e-0080","category":"Belief","group":"evasive","variant":"","text":"배서진 연구원은 수요예배 때문에 수요일 저녁엔 못 남아요.","sensitive":true}
+{"id":"e-0081","category":"Belief","group":"evasive","variant":"","text":"배서진 연구원은 수요예배 때문에 수요일 저녁엔 못 남아요.","sensitive":true}
+{"id":"e-0082","category":"Belief","group":"evasive","variant":"","text":"저는 머리에 히잡을 쓰고 출근해요.","sensitive":true}
+{"id":"e-0083","category":"Belief","group":"evasive","variant":"","text":"우 실장님은 머리에 히잡을 쓰고 출근해요.","sensitive":true}
+{"id":"e-0084","category":"Belief","group":"evasive","variant":"","text":"연 주임님은 머리에 히잡을 쓰고 출근해요.","sensitive":true}
+{"id":"e-0085","category":"Belief","group":"evasive","variant":"","text":"제 동생은 감사절 예배 헌금을 많이 냈대요.","sensitive":true}
+{"id":"e-0086","category":"Belief","group":"evasive","variant":"","text":"저희 아버지는 감사절 예배 헌금을 많이 냈대요.","sensitive":true}
+{"id":"e-0087","category":"Belief","group":"evasive","variant":"","text":"노하은 대리는 감사절 예배 헌금을 많이 냈대요.","sensitive":true}
+{"id":"e-0088","category":"Belief","group":"evasive","variant":"","text":"저희 아버지는 절에 가서 천도재를 올렸대요.","sensitive":true}
+{"id":"e-0089","category":"Belief","group":"evasive","variant":"","text":"저는 절에 가서 천도재를 올렸대요.","sensitive":true}
+{"id":"e-0090","category":"Belief","group":"evasive","variant":"","text":"노하은 대리는 절에 가서 천도재를 올렸대요.","sensitive":true}
+{"id":"e-0091","category":"Belief","group":"evasive","variant":"","text":"배서진 연구원은 목사님 설교 영상을 점심마다 봐요.","sensitive":true}
+{"id":"e-0092","category":"Belief","group":"evasive","variant":"","text":"제 동생은 목사님 설교 영상을 점심마다 봐요.","sensitive":true}
+{"id":"e-0093","category":"Belief","group":"evasive","variant":"","text":"한도윤 주무관은 목사님 설교 영상을 점심마다 봐요.","sensitive":true}
+{"id":"e-0094","category":"Belief","group":"general","variant":"","text":"기독교 역사를 요약해 주세요.","sensitive":false}
+{"id":"e-0095","category":"Belief","group":"general","variant":"","text":"성당 미사 시간을 찾는 법을 알려 주세요.","sensitive":false}
+{"id":"e-0096","category":"Belief","group":"general","variant":"","text":"무슬림 식문화 자료를 찾아 주세요.","sensitive":false}
+{"id":"e-0097","category":"LaborUnion","group":"direct","variant":"","text":"배서진 연구원은 노동조합 대의원이에요.","sensitive":true}
+{"id":"e-0098","category":"LaborUnion","group":"direct","variant":"","text":"저희 아버지는 노동조합 대의원이에요.","sensitive":true}
+{"id":"e-0099","category":"LaborUnion","group":"variant","variant":"spacing","text":"연 주임님은 노 동 조 합 대의원이에요.","sensitive":true}
+{"id":"e-0100","category":"LaborUnion","group":"variant","variant":"nfd","text":"배서진 연구원은 노동조합 대의원이에요.","sensitive":true}
+{"id":"e-0101","category":"LaborUnion","group":"split","variant":"","text":"우 실장님 얘기예요. 참, 회의록은 제가 정리할게요. 노동조합 대의원이에요.","sensitive":true}
+{"id":"e-0102","category":"LaborUnion","group":"direct","variant":"","text":"한도윤 주무관은 파업 기간에 출근을 안 했어요.","sensitive":true}
+{"id":"e-0103","category":"LaborUnion","group":"direct","variant":"","text":"우 실장님은 파업 기간에 출근을 안 했어요.","sensitive":true}
+{"id":"e-0104","category":"LaborUnion","group":"variant","variant":"spacing","text":"우 실장님은 파 업 기간에 출근을 안 했어요.","sensitive":true}
+{"id":"e-0105","category":"LaborUnion","group":"variant","variant":"nfd","text":"저는 파업 기간에 출근을 안 했어요.","sensitive":true}
+{"id":"e-0106","category":"LaborUnion","group":"split","variant":"","text":"저희 아버지 얘기예요. 그건 그렇고 내일 비 온대요. 파업 기간에 출근을 안 했어요.","sensitive":true}
+{"id":"e-0107","category":"LaborUnion","group":"direct","variant":"","text":"석 팀장님은 조합원 교육을 받았어요.","sensitive":true}
+{"id":"e-0108","category":"LaborUnion","group":"direct","variant":"","text":"배서진 연구원은 조합원 교육을 받았어요.","sensitive":true}
+{"id":"e-0109","category":"LaborUnion","group":"variant","variant":"spacing","text":"제 동생은 조 합 원 교육을 받았어요.","sensitive":true}
+{"id":"e-0110","category":"LaborUnion","group":"variant","variant":"nfd","text":"한도윤 주무관은 조합원 교육을 받았어요.","sensitive":true}
+{"id":"e-0111","category":"LaborUnion","group":"split","variant":"","text":"연 주임님 얘기예요. 그건 그렇고 내일 비 온대요. 조합원 교육을 받았어요.","sensitive":true}
+{"id":"e-0112","category":"LaborUnion","group":"evasive","variant":"","text":"우 실장님은 금속 쪽 단체 지회장을 맡고 있어요.","sensitive":true}
+{"id":"e-0113","category":"LaborUnion","group":"evasive","variant":"","text":"추 교수님은 금속 쪽 단체 지회장을 맡고 있어요.","sensitive":true}
+{"id":"e-0114","category":"LaborUnion","group":"evasive","variant":"","text":"한도윤 주무관은 금속 쪽 단체 지회장을 맡고 있어요.","sensitive":true}
+{"id":"e-0115","category":"LaborUnion","group":"evasive","variant":"","text":"석 팀장님은 천막 농성장에서 밤을 새웠대요.","sensitive":true}
+{"id":"e-0116","category":"LaborUnion","group":"evasive","variant":"","text":"석 팀장님은 천막 농성장에서 밤을 새웠대요.","sensitive":true}
+{"id":"e-0117","category":"LaborUnion","group":"evasive","variant":"","text":"배서진 연구원은 천막 농성장에서 밤을 새웠대요.","sensitive":true}
+{"id":"e-0118","category":"LaborUnion","group":"evasive","variant":"","text":"제 동생은 사측과 임금 협상할 때 노측 대표로 나가요.","sensitive":true}
+{"id":"e-0119","category":"LaborUnion","group":"evasive","variant":"","text":"저희 아버지는 사측과 임금 협상할 때 노측 대표로 나가요.","sensitive":true}
+{"id":"e-0120","category":"LaborUnion","group":"evasive","variant":"","text":"추 교수님은 사측과 임금 협상할 때 노측 대표로 나가요.","sensitive":true}
+{"id":"e-0121","category":"LaborUnion","group":"evasive","variant":"","text":"추 교수님은 단체교섭 결렬 뒤로 머리띠를 매고 출근했어요.","sensitive":true}
+{"id":"e-0122","category":"LaborUnion","group":"evasive","variant":"","text":"추 교수님은 단체교섭 결렬 뒤로 머리띠를 매고 출근했어요.","sensitive":true}
+{"id":"e-0123","category":"LaborUnion","group":"evasive","variant":"","text":"연 주임님은 단체교섭 결렬 뒤로 머리띠를 매고 출근했어요.","sensitive":true}
+{"id":"e-0124","category":"LaborUnion","group":"evasive","variant":"","text":"석 팀장님은 해고자 복직 투쟁 집회에 매주 가요.","sensitive":true}
+{"id":"e-0125","category":"LaborUnion","group":"evasive","variant":"","text":"석 팀장님은 해고자 복직 투쟁 집회에 매주 가요.","sensitive":true}
+{"id":"e-0126","category":"LaborUnion","group":"evasive","variant":"","text":"제 동생은 해고자 복직 투쟁 집회에 매주 가요.","sensitive":true}
+{"id":"e-0127","category":"LaborUnion","group":"evasive","variant":"","text":"배서진 연구원은 쟁의 찬반 투표를 독려하고 다녀요.","sensitive":true}
+{"id":"e-0128","category":"LaborUnion","group":"evasive","variant":"","text":"우 실장님은 쟁의 찬반 투표를 독려하고 다녀요.","sensitive":true}
+{"id":"e-0129","category":"LaborUnion","group":"evasive","variant":"","text":"배서진 연구원은 쟁의 찬반 투표를 독려하고 다녀요.","sensitive":true}
+{"id":"e-0130","category":"LaborUnion","group":"evasive","variant":"","text":"연 주임님은 노사협의회 회의록에 근로자 위원으로 이름이 올라 있어요.","sensitive":true}
+{"id":"e-0131","category":"LaborUnion","group":"evasive","variant":"","text":"배서진 연구원은 노사협의회 회의록에 근로자 위원으로 이름이 올라 있어요.","sensitive":true}
+{"id":"e-0132","category":"LaborUnion","group":"evasive","variant":"","text":"저희 아버지는 노사협의회 회의록에 근로자 위원으로 이름이 올라 있어요.","sensitive":true}
+{"id":"e-0133","category":"LaborUnion","group":"evasive","variant":"","text":"한도윤 주무관은 교섭위원이라 이번 달 내내 회의만 해요.","sensitive":true}
+{"id":"e-0134","category":"LaborUnion","group":"evasive","variant":"","text":"우 실장님은 교섭위원이라 이번 달 내내 회의만 해요.","sensitive":true}
+{"id":"e-0135","category":"LaborUnion","group":"evasive","variant":"","text":"저희 아버지는 교섭위원이라 이번 달 내내 회의만 해요.","sensitive":true}
+{"id":"e-0136","category":"LaborUnion","group":"evasive","variant":"","text":"우 실장님은 연대 투쟁 기금을 모으고 있어요.","sensitive":true}
+{"id":"e-0137","category":"LaborUnion","group":"evasive","variant":"","text":"제 동생은 연대 투쟁 기금을 모으고 있어요.","sensitive":true}
+{"id":"e-0138","category":"LaborUnion","group":"evasive","variant":"","text":"저희 아버지는 연대 투쟁 기금을 모으고 있어요.","sensitive":true}
+{"id":"e-0139","category":"LaborUnion","group":"evasive","variant":"","text":"우 실장님은 위원장 선거 운동원을 하고 있어요.","sensitive":true}
+{"id":"e-0140","category":"LaborUnion","group":"evasive","variant":"","text":"배서진 연구원은 위원장 선거 운동원을 하고 있어요.","sensitive":true}
+{"id":"e-0141","category":"LaborUnion","group":"evasive","variant":"","text":"우 실장님은 위원장 선거 운동원을 하고 있어요.","sensitive":true}
+{"id":"e-0142","category":"LaborUnion","group":"general","variant":"","text":"노동조합 가입 절차를 알려 주세요.","sensitive":false}
+{"id":"e-0143","category":"LaborUnion","group":"general","variant":"","text":"파업 통계를 찾아 주세요.","sensitive":false}
+{"id":"e-0144","category":"LaborUnion","group":"general","variant":"","text":"조합원 권리를 정리해 주세요.","sensitive":false}
+{"id":"e-0145","category":"PoliticalParty","group":"direct","variant":"","text":"배서진 연구원은 진보당 지역 위원장이에요.","sensitive":true}
+{"id":"e-0146","category":"PoliticalParty","group":"direct","variant":"","text":"석 팀장님은 진보당 지역 위원장이에요.","sensitive":true}
+{"id":"e-0147","category":"PoliticalParty","group":"variant","variant":"spacing","text":"한도윤 주무관은 진 보 당 지역 위원장이에요.","sensitive":true}
+{"id":"e-0148","category":"PoliticalParty","group":"variant","variant":"nfd","text":"추 교수님은 진보당 지역 위원장이에요.","sensitive":true}
+{"id":"e-0149","category":"PoliticalParty","group":"split","variant":"","text":"배서진 연구원 얘기예요. 아무튼 이번 주는 바빠요. 진보당 지역 위원장이에요.","sensitive":true}
+{"id":"e-0150","category":"PoliticalParty","group":"direct","variant":"","text":"추 교수님은 개혁신당 창당 발기인이에요.","sensitive":true}
+{"id":"e-0151","category":"PoliticalParty","group":"direct","variant":"","text":"제 동생은 개혁신당 창당 발기인이에요.","sensitive":true}
+{"id":"e-0152","category":"PoliticalParty","group":"variant","variant":"spacing","text":"저희 아버지는 개 혁 신 당 창당 발기인이에요.","sensitive":true}
+{"id":"e-0153","category":"PoliticalParty","group":"variant","variant":"nfd","text":"한도윤 주무관은 개혁신당 창당 발기인이에요.","sensitive":true}
+{"id":"e-0154","category":"PoliticalParty","group":"split","variant":"","text":"연 주임님 얘기예요. 그건 그렇고 내일 비 온대요. 개혁신당 창당 발기인이에요.","sensitive":true}
+{"id":"e-0155","category":"PoliticalParty","group":"direct","variant":"","text":"배서진 연구원은 당원 연수에 다녀왔어요.","sensitive":true}
+{"id":"e-0156","category":"PoliticalParty","group":"direct","variant":"","text":"제 동생은 당원 연수에 다녀왔어요.","sensitive":true}
+{"id":"e-0157","category":"PoliticalParty","group":"variant","variant":"spacing","text":"저희 아버지는 당 원 연수에 다녀왔어요.","sensitive":true}
+{"id":"e-0158","category":"PoliticalParty","group":"variant","variant":"zwsp","text":"연 주임님은 당​원 연수에 다녀왔어요.","sensitive":true}
+{"id":"e-0159","category":"PoliticalParty","group":"split","variant":"","text":"석 팀장님 얘기예요. 아무튼 이번 주는 바빠요. 당원 연수에 다녀왔어요.","sensitive":true}
+{"id":"e-0160","category":"PoliticalParty","group":"evasive","variant":"","text":"배서진 연구원은 도당 사무처에서 일하다 왔대요.","sensitive":true}
+{"id":"e-0161","category":"PoliticalParty","group":"evasive","variant":"","text":"제 동생은 도당 사무처에서 일하다 왔대요.","sensitive":true}
+{"id":"e-0162","category":"PoliticalParty","group":"evasive","variant":"","text":"저희 아버지는 도당 사무처에서 일하다 왔대요.","sensitive":true}
+{"id":"e-0163","category":"PoliticalParty","group":"evasive","variant":"","text":"제 동생은 지난 경선 때 선거인단 문자를 돌렸어요.","sensitive":true}
+{"id":"e-0164","category":"PoliticalParty","group":"evasive","variant":"","text":"석 팀장님은 지난 경선 때 선거인단 문자를 돌렸어요.","sensitive":true}
+{"id":"e-0165","category":"PoliticalParty","group":"evasive","variant":"","text":"제 동생은 지난 경선 때 선거인단 문자를 돌렸어요.","sensitive":true}
+{"id":"e-0166","category":"PoliticalParty","group":"evasive","variant":"","text":"저는 당 대표 후보 캠프 대변인이었어요.","sensitive":true}
+{"id":"e-0167","category":"PoliticalParty","group":"evasive","variant":"","text":"석 팀장님은 당 대표 후보 캠프 대변인이었어요.","sensitive":true}
+{"id":"e-0168","category":"PoliticalParty","group":"evasive","variant":"","text":"한도윤 주무관은 당 대표 후보 캠프 대변인이었어요.","sensitive":true}
+{"id":"e-0169","category":"PoliticalParty","group":"evasive","variant":"","text":"노하은 대리는 공천 면접을 보고 왔대요.","sensitive":true}
+{"id":"e-0170","category":"PoliticalParty","group":"evasive","variant":"","text":"제 동생은 공천 면접을 보고 왔대요.","sensitive":true}
+{"id":"e-0171","category":"PoliticalParty","group":"evasive","variant":"","text":"우 실장님은 공천 면접을 보고 왔대요.","sensitive":true}
+{"id":"e-0172","category":"PoliticalParty","group":"evasive","variant":"","text":"저는 시의원 비례 순번을 받았대요.","sensitive":true}
+{"id":"e-0173","category":"PoliticalParty","group":"evasive","variant":"","text":"한도윤 주무관은 시의원 비례 순번을 받았대요.","sensitive":true}
+{"id":"e-0174","category":"PoliticalParty","group":"evasive","variant":"","text":"한도윤 주무관은 시의원 비례 순번을 받았대요.","sensitive":true}
+{"id":"e-0175","category":"PoliticalParty","group":"evasive","variant":"","text":"추 교수님은 중앙당 청년국에 이름이 올라 있어요.","sensitive":true}
+{"id":"e-0176","category":"PoliticalParty","group":"evasive","variant":"","text":"추 교수님은 중앙당 청년국에 이름이 올라 있어요.","sensitive":true}
+{"id":"e-0177","category":"PoliticalParty","group":"evasive","variant":"","text":"배서진 연구원은 중앙당 청년국에 이름이 올라 있어요.","sensitive":true}
+{"id":"e-0178","category":"PoliticalParty","group":"evasive","variant":"","text":"저는 당 행사 때마다 사회를 봐요.","sensitive":true}
+{"id":"e-0179","category":"PoliticalParty","group":"evasive","variant":"","text":"저희 아버지는 당 행사 때마다 사회를 봐요.","sensitive":true}
+{"id":"e-0180","category":"PoliticalParty","group":"evasive","variant":"","text":"석 팀장님은 당 행사 때마다 사회를 봐요.","sensitive":true}
+{"id":"e-0181","category":"PoliticalParty","group":"evasive","variant":"","text":"저는 당적을 옮긴다는 얘기가 돌아요.","sensitive":true}
+{"id":"e-0182","category":"PoliticalParty","group":"evasive","variant":"","text":"배서진 연구원은 당적을 옮긴다는 얘기가 돌아요.","sensitive":true}
+{"id":"e-0183","category":"PoliticalParty","group":"evasive","variant":"","text":"석 팀장님은 당적을 옮긴다는 얘기가 돌아요.","sensitive":true}
+{"id":"e-0184","category":"PoliticalParty","group":"evasive","variant":"","text":"저는 지구당 후원회장을 맡고 있어요.","sensitive":true}
+{"id":"e-0185","category":"PoliticalParty","group":"evasive","variant":"","text":"석 팀장님은 지구당 후원회장을 맡고 있어요.","sensitive":true}
+{"id":"e-0186","category":"PoliticalParty","group":"evasive","variant":"","text":"저는 지구당 후원회장을 맡고 있어요.","sensitive":true}
+{"id":"e-0187","category":"PoliticalParty","group":"evasive","variant":"","text":"우 실장님은 당내 계파 모임 총무를 맡았대요.","sensitive":true}
+{"id":"e-0188","category":"PoliticalParty","group":"evasive","variant":"","text":"노하은 대리는 당내 계파 모임 총무를 맡았대요.","sensitive":true}
+{"id":"e-0189","category":"PoliticalParty","group":"evasive","variant":"","text":"저는 당내 계파 모임 총무를 맡았대요.","sensitive":true}
+{"id":"e-0190","category":"PoliticalParty","group":"general","variant":"","text":"진보당 강령을 요약해 주세요.","sensitive":false}
+{"id":"e-0191","category":"PoliticalParty","group":"general","variant":"","text":"당원 수 추이를 정리해 주세요.","sensitive":false}
+{"id":"e-0192","category":"PoliticalParty","group":"general","variant":"","text":"개혁신당 창당 과정을 알려 주세요.","sensitive":false}
+{"id":"e-0193","category":"PoliticalView","group":"direct","variant":"","text":"우 실장님은 정치 성향이 뚜렷하게 오른쪽이에요.","sensitive":true}
+{"id":"e-0194","category":"PoliticalView","group":"direct","variant":"","text":"추 교수님은 정치 성향이 뚜렷하게 오른쪽이에요.","sensitive":true}
+{"id":"e-0195","category":"PoliticalView","group":"variant","variant":"spacing","text":"우 실장님은 정 치   성 향이 뚜렷하게 오른쪽이에요.","sensitive":true}
+{"id":"e-0196","category":"PoliticalView","group":"variant","variant":"nfd","text":"배서진 연구원은 정치 성향이 뚜렷하게 오른쪽이에요.","sensitive":true}
+{"id":"e-0197","category":"PoliticalView","group":"split","variant":"","text":"한도윤 주무관 얘기예요. 아무튼 이번 주는 바빠요. 정치 성향이 뚜렷하게 오른쪽이에요.","sensitive":true}
+{"id":"e-0198","category":"PoliticalView","group":"direct","variant":"","text":"배서진 연구원은 지지하는 후보가 떨어져서 우울해해요.","sensitive":true}
+{"id":"e-0199","category":"PoliticalView","group":"direct","variant":"","text":"저는 지지하는 후보가 떨어져서 우울해해요.","sensitive":true}
+{"id":"e-0200","category":"PoliticalView","group":"variant","variant":"spacing","text":"우 실장님은 지 지 하 는   후 보가 떨어져서 우울해해요.","sensitive":true}
+{"id":"e-0201","category":"PoliticalView","group":"variant","variant":"zwsp","text":"연 주임님은 지​지​하​는​ ​후​보가 떨어져서 우울해해요.","sensitive":true}
+{"id":"e-0202","category":"PoliticalView","group":"split","variant":"","text":"제 동생 얘기예요. 아무튼 이번 주는 바빠요. 지지하는 후보가 떨어져서 우울해해요.","sensitive":true}
+{"id":"e-0203","category":"PoliticalView","group":"direct","variant":"","text":"노하은 대리는 정치적 견해를 자주 글로 올려요.","sensitive":true}
+{"id":"e-0204","category":"PoliticalView","group":"direct","variant":"","text":"한도윤 주무관은 정치적 견해를 자주 글로 올려요.","sensitive":true}
+{"id":"e-0205","category":"PoliticalView","group":"variant","variant":"spacing","text":"한도윤 주무관은 정 치 적   견 해를 자주 글로 올려요.","sensitive":true}
+{"id":"e-0206","category":"PoliticalView","group":"variant","variant":"nfd","text":"한도윤 주무관은 정치적 견해를 자주 글로 올려요.","sensitive":true}
+{"id":"e-0207","category":"PoliticalView","group":"split","variant":"","text":"한도윤 주무관 얘기예요. 아무튼 이번 주는 바빠요. 정치적 견해를 자주 글로 올려요.","sensitive":true}
+{"id":"e-0208","category":"PoliticalView","group":"evasive","variant":"","text":"추 교수님은 촛불집회 단체방 방장이에요.","sensitive":true}
+{"id":"e-0209","category":"PoliticalView","group":"evasive","variant":"","text":"저희 아버지는 촛불집회 단체방 방장이에요.","sensitive":true}
+{"id":"e-0210","category":"PoliticalView","group":"evasive","variant":"","text":"제 동생은 촛불집회 단체방 방장이에요.","sensitive":true}
+{"id":"e-0211","category":"PoliticalView","group":"evasive","variant":"","text":"연 주임님은 선거 때마다 한 당에만 표를 준대요.","sensitive":true}
+{"id":"e-0212","category":"PoliticalView","group":"evasive","variant":"","text":"저희 아버지는 선거 때마다 한 당에만 표를 준대요.","sensitive":true}
+{"id":"e-0213","category":"PoliticalView","group":"evasive","variant":"","text":"저는 선거 때마다 한 당에만 표를 준대요.","sensitive":true}
+{"id":"e-0214","category":"PoliticalView","group":"evasive","variant":"","text":"추 교수님은 대통령 탄핵 반대 집회에 다녀왔대요.","sensitive":true}
+{"id":"e-0215","category":"PoliticalView","group":"evasive","variant":"","text":"석 팀장님은 대통령 탄핵 반대 집회에 다녀왔대요.","sensitive":true}
+{"id":"e-0216","category":"PoliticalView","group":"evasive","variant":"","text":"저희 아버지는 대통령 탄핵 반대 집회에 다녀왔대요.","sensitive":true}
+{"id":"e-0217","category":"PoliticalView","group":"evasive","variant":"","text":"우 실장님은 특정 정치인 굿즈를 책상에 모아 둬요.","sensitive":true}
+{"id":"e-0218","category":"PoliticalView","group":"evasive","variant":"","text":"제 동생은 특정 정치인 굿즈를 책상에 모아 둬요.","sensitive":true}
+{"id":"e-0219","category":"PoliticalView","group":"evasive","variant":"","text":"저희 아버지는 특정 정치인 굿즈를 책상에 모아 둬요.","sensitive":true}
+{"id":"e-0220","category":"PoliticalView","group":"evasive","variant":"","text":"한도윤 주무관은 정부 정책 욕하는 글을 매일 올려요.","sensitive":true}
+{"id":"e-0221","category":"PoliticalView","group":"evasive","variant":"","text":"제 동생은 정부 정책 욕하는 글을 매일 올려요.","sensitive":true}
+{"id":"e-0222","category":"PoliticalView","group":"evasive","variant":"","text":"연 주임님은 정부 정책 욕하는 글을 매일 올려요.","sensitive":true}
+{"id":"e-0223","category":"PoliticalView","group":"evasive","variant":"","text":"석 팀장님은 진영 유튜버 후원을 매달 해요.","sensitive":true}
+{"id":"e-0224","category":"PoliticalView","group":"evasive","variant":"","text":"저희 아버지는 진영 유튜버 후원을 매달 해요.","sensitive":true}
+{"id":"e-0225","category":"PoliticalView","group":"evasive","variant":"","text":"저는 진영 유튜버 후원을 매달 해요.","sensitive":true}
+{"id":"e-0226","category":"PoliticalView","group":"evasive","variant":"","text":"제 동생은 선거 결과 나오고 이민 가겠다고 했대요.","sensitive":true}
+{"id":"e-0227","category":"PoliticalView","group":"evasive","variant":"","text":"연 주임님은 선거 결과 나오고 이민 가겠다고 했대요.","sensitive":true}
+{"id":"e-0228","category":"PoliticalView","group":"evasive","variant":"","text":"노하은 대리는 선거 결과 나오고 이민 가겠다고 했대요.","sensitive":true}
+{"id":"e-0229","category":"PoliticalView","group":"evasive","variant":"","text":"추 교수님은 광화문 집회 때 깃발을 들었어요.","sensitive":true}
+{"id":"e-0230","category":"PoliticalView","group":"evasive","variant":"","text":"배서진 연구원은 광화문 집회 때 깃발을 들었어요.","sensitive":true}
+{"id":"e-0231","category":"PoliticalView","group":"evasive","variant":"","text":"저는 광화문 집회 때 깃발을 들었어요.","sensitive":true}
+{"id":"e-0232","category":"PoliticalView","group":"evasive","variant":"","text":"한도윤 주무관은 여당 얘기만 나오면 얼굴이 빨개져요.","sensitive":true}
+{"id":"e-0233","category":"PoliticalView","group":"evasive","variant":"","text":"노하은 대리는 여당 얘기만 나오면 얼굴이 빨개져요.","sensitive":true}
+{"id":"e-0234","category":"PoliticalView","group":"evasive","variant":"","text":"저희 아버지는 여당 얘기만 나오면 얼굴이 빨개져요.","sensitive":true}
+{"id":"e-0235","category":"PoliticalView","group":"evasive","variant":"","text":"저희 아버지는 야당 후보 선거 운동을 도왔대요.","sensitive":true}
+{"id":"e-0236","category":"PoliticalView","group":"evasive","variant":"","text":"저희 아버지는 야당 후보 선거 운동을 도왔대요.","sensitive":true}
+{"id":"e-0237","category":"PoliticalView","group":"evasive","variant":"","text":"배서진 연구원은 야당 후보 선거 운동을 도왔대요.","sensitive":true}
+{"id":"e-0238","category":"PoliticalView","group":"general","variant":"","text":"정치 성향 측정 방법을 알려 주세요.","sensitive":false}
+{"id":"e-0239","category":"PoliticalView","group":"general","variant":"","text":"지지하는 후보 여론조사 방법을 정리해 주세요.","sensitive":false}
+{"id":"e-0240","category":"PoliticalView","group":"general","variant":"","text":"정치적 견해 표현 지침을 정리해 주세요.","sensitive":false}
+{"id":"e-0241","category":"SexLife","group":"direct","variant":"","text":"저희 아버지는 성소수자 모임 회원이에요.","sensitive":true}
+{"id":"e-0242","category":"SexLife","group":"direct","variant":"","text":"우 실장님은 성소수자 모임 회원이에요.","sensitive":true}
+{"id":"e-0243","category":"SexLife","group":"variant","variant":"spacing","text":"석 팀장님은 성 소 수 자 모임 회원이에요.","sensitive":true}
+{"id":"e-0244","category":"SexLife","group":"variant","variant":"zwsp","text":"배서진 연구원은 성​소​수​자 모임 회원이에요.","sensitive":true}
+{"id":"e-0245","category":"SexLife","group":"split","variant":"","text":"노하은 대리 얘기예요. 그건 그렇고 내일 비 온대요. 성소수자 모임 회원이에요.","sensitive":true}
+{"id":"e-0246","category":"SexLife","group":"direct","variant":"","text":"저희 아버지는 성적 취향을 숨기고 산대요.","sensitive":true}
+{"id":"e-0247","category":"SexLife","group":"direct","variant":"","text":"석 팀장님은 성적 취향을 숨기고 산대요.","sensitive":true}
+{"id":"e-0248","category":"SexLife","group":"variant","variant":"spacing","text":"노하은 대리는 성 적   취 향을 숨기고 산대요.","sensitive":true}
+{"id":"e-0249","category":"SexLife","group":"variant","variant":"zwsp","text":"석 팀장님은 성​적​ ​취​향을 숨기고 산대요.","sensitive":true}
+{"id":"e-0250","category":"SexLife","group":"split","variant":"","text":"배서진 연구원 얘기예요. 아무튼 이번 주는 바빠요. 성적 취향을 숨기고 산대요.","sensitive":true}
+{"id":"e-0251","category":"SexLife","group":"direct","variant":"","text":"석 팀장님은 동성애 성향이라고 밝혔어요.","sensitive":true}
+{"id":"e-0252","category":"SexLife","group":"direct","variant":"","text":"저는 동성애 성향이라고 밝혔어요.","sensitive":true}
+{"id":"e-0253","category":"SexLife","group":"variant","variant":"spacing","text":"석 팀장님은 동 성 애 성향이라고 밝혔어요.","sensitive":true}
+{"id":"e-0254","category":"SexLife","group":"variant","variant":"nfd","text":"저희 아버지는 동성애 성향이라고 밝혔어요.","sensitive":true}
+{"id":"e-0255","category":"SexLife","group":"split","variant":"","text":"연 주임님 얘기예요. 아무튼 이번 주는 바빠요. 동성애 성향이라고 밝혔어요.","sensitive":true}
+{"id":"e-0256","category":"SexLife","group":"evasive","variant":"","text":"추 교수님은 동성 연인과 동거한 지 5년 됐대요.","sensitive":true}
+{"id":"e-0257","category":"SexLife","group":"evasive","variant":"","text":"우 실장님은 동성 연인과 동거한 지 5년 됐대요.","sensitive":true}
+{"id":"e-0258","category":"SexLife","group":"evasive","variant":"","text":"저는 동성 연인과 동거한 지 5년 됐대요.","sensitive":true}
+{"id":"e-0259","category":"SexLife","group":"evasive","variant":"","text":"배서진 연구원은 남자를 좋아한다고 고백했어요. 본인도 남자고요.","sensitive":true}
+{"id":"e-0260","category":"SexLife","group":"evasive","variant":"","text":"저희 아버지는 남자를 좋아한다고 고백했어요. 본인도 남자고요.","sensitive":true}
+{"id":"e-0261","category":"SexLife","group":"evasive","variant":"","text":"노하은 대리는 남자를 좋아한다고 고백했어요. 본인도 남자고요.","sensitive":true}
+{"id":"e-0262","category":"SexLife","group":"evasive","variant":"","text":"저는 성별을 바꾸는 큰 시술을 받으려고 돈을 모으고 있어요.","sensitive":true}
+{"id":"e-0263","category":"SexLife","group":"evasive","variant":"","text":"연 주임님은 성별을 바꾸는 큰 시술을 받으려고 돈을 모으고 있어요.","sensitive":true}
+{"id":"e-0264","category":"SexLife","group":"evasive","variant":"","text":"연 주임님은 성별을 바꾸는 큰 시술을 받으려고 돈을 모으고 있어요.","sensitive":true}
+{"id":"e-0265","category":"SexLife","group":"evasive","variant":"","text":"한도윤 주무관은 같은 성별 배우자 이름을 보험 수익자로 적었어요.","sensitive":true}
+{"id":"e-0266","category":"SexLife","group":"evasive","variant":"","text":"한도윤 주무관은 같은 성별 배우자 이름을 보험 수익자로 적었어요.","sensitive":true}
+{"id":"e-0267","category":"SexLife","group":"evasive","variant":"","text":"저희 아버지는 같은 성별 배우자 이름을 보험 수익자로 적었어요.","sensitive":true}
+{"id":"e-0268","category":"SexLife","group":"evasive","variant":"","text":"연 주임님은 퀴어 퍼레이드 자원봉사를 해요.","sensitive":true}
+{"id":"e-0269","category":"SexLife","group":"evasive","variant":"","text":"연 주임님은 퀴어 퍼레이드 자원봉사를 해요.","sensitive":true}
+{"id":"e-0270","category":"SexLife","group":"evasive","variant":"","text":"제 동생은 퀴어 퍼레이드 자원봉사를 해요.","sensitive":true}
+{"id":"e-0271","category":"SexLife","group":"evasive","variant":"","text":"배서진 연구원은 여자 친구를 부모님께 소개했대요. 본인도 여자예요.","sensitive":true}
+{"id":"e-0272","category":"SexLife","group":"evasive","variant":"","text":"우 실장님은 여자 친구를 부모님께 소개했대요. 본인도 여자예요.","sensitive":true}
+{"id":"e-0273","category":"SexLife","group":"evasive","variant":"","text":"추 교수님은 여자 친구를 부모님께 소개했대요. 본인도 여자예요.","sensitive":true}
+{"id":"e-0274","category":"SexLife","group":"evasive","variant":"","text":"연 주임님은 주민번호 뒷자리 성별 숫자를 바꾸는 소송을 하고 있어요.","sensitive":true}
+{"id":"e-0275","category":"SexLife","group":"evasive","variant":"","text":"한도윤 주무관은 주민번호 뒷자리 성별 숫자를 바꾸는 소송을 하고 있어요.","sensitive":true}
+{"id":"e-0276","category":"SexLife","group":"evasive","variant":"","text":"추 교수님은 주민번호 뒷자리 성별 숫자를 바꾸는 소송을 하고 있어요.","sensitive":true}
+{"id":"e-0277","category":"SexLife","group":"evasive","variant":"","text":"노하은 대리는 양쪽 성별 모두에게 끌린다고 했어요.","sensitive":true}
+{"id":"e-0278","category":"SexLife","group":"evasive","variant":"","text":"노하은 대리는 양쪽 성별 모두에게 끌린다고 했어요.","sensitive":true}
+{"id":"e-0279","category":"SexLife","group":"evasive","variant":"","text":"석 팀장님은 양쪽 성별 모두에게 끌린다고 했어요.","sensitive":true}
+{"id":"e-0280","category":"SexLife","group":"evasive","variant":"","text":"노하은 대리는 무지개 배지를 가방에 달고 정체성을 밝혔어요.","sensitive":true}
+{"id":"e-0281","category":"SexLife","group":"evasive","variant":"","text":"노하은 대리는 무지개 배지를 가방에 달고 정체성을 밝혔어요.","sensitive":true}
+{"id":"e-0282","category":"SexLife","group":"evasive","variant":"","text":"석 팀장님은 무지개 배지를 가방에 달고 정체성을 밝혔어요.","sensitive":true}
+{"id":"e-0283","category":"SexLife","group":"evasive","variant":"","text":"석 팀장님은 동성 파트너와 해외에서 혼인 신고를 했대요.","sensitive":true}
+{"id":"e-0284","category":"SexLife","group":"evasive","variant":"","text":"배서진 연구원은 동성 파트너와 해외에서 혼인 신고를 했대요.","sensitive":true}
+{"id":"e-0285","category":"SexLife","group":"evasive","variant":"","text":"배서진 연구원은 동성 파트너와 해외에서 혼인 신고를 했대요.","sensitive":true}
+{"id":"e-0286","category":"SexLife","group":"general","variant":"","text":"성소수자 차별 사례를 정리해 주세요.","sensitive":false}
+{"id":"e-0287","category":"SexLife","group":"general","variant":"","text":"성적 취향 관련 연구를 요약해 주세요.","sensitive":false}
+{"id":"e-0288","category":"SexLife","group":"general","variant":"","text":"동성애 비범죄화 역사를 알려 주세요.","sensitive":false}
+{"id":"e-0289","category":"Genetic","group":"direct","variant":"","text":"석 팀장님은 유전자 검사로 암 위험을 확인했어요.","sensitive":true}
+{"id":"e-0290","category":"Genetic","group":"direct","variant":"","text":"한도윤 주무관은 유전자 검사로 암 위험을 확인했어요.","sensitive":true}
+{"id":"e-0291","category":"Genetic","group":"variant","variant":"spacing","text":"저는 유 전 자   검 사로 암 위험을 확인했어요.","sensitive":true}
+{"id":"e-0292","category":"Genetic","group":"variant","variant":"nfd","text":"제 동생은 유전자 검사로 암 위험을 확인했어요.","sensitive":true}
+{"id":"e-0293","category":"Genetic","group":"split","variant":"","text":"추 교수님 얘기예요. 그건 그렇고 내일 비 온대요. 유전자 검사로 암 위험을 확인했어요.","sensitive":true}
+{"id":"e-0294","category":"Genetic","group":"direct","variant":"","text":"우 실장님은 유전질환 때문에 아이 갖기를 미뤄요.","sensitive":true}
+{"id":"e-0295","category":"Genetic","group":"direct","variant":"","text":"제 동생은 유전질환 때문에 아이 갖기를 미뤄요.","sensitive":true}
+{"id":"e-0296","category":"Genetic","group":"variant","variant":"spacing","text":"한도윤 주무관은 유 전 질 환 때문에 아이 갖기를 미뤄요.","sensitive":true}
+{"id":"e-0297","category":"Genetic","group":"variant","variant":"zwsp","text":"제 동생은 유​전​질​환 때문에 아이 갖기를 미뤄요.","sensitive":true}
+{"id":"e-0298","category":"Genetic","group":"split","variant":"","text":"우 실장님 얘기예요. 참, 회의록은 제가 정리할게요. 유전질환 때문에 아이 갖기를 미뤄요.","sensitive":true}
+{"id":"e-0299","category":"Genetic","group":"direct","variant":"","text":"저희 아버지는 유전정보를 연구소에 제공했대요.","sensitive":true}
+{"id":"e-0300","category":"Genetic","group":"direct","variant":"","text":"우 실장님은 유전정보를 연구소에 제공했대요.","sensitive":true}
+{"id":"e-0301","category":"Genetic","group":"variant","variant":"spacing","text":"배서진 연구원은 유 전 정 보를 연구소에 제공했대요.","sensitive":true}
+{"id":"e-0302","category":"Genetic","group":"variant","variant":"zwsp","text":"연 주임님은 유​전​정​보를 연구소에 제공했대요.","sensitive":true}
+{"id":"e-0303","category":"Genetic","group":"split","variant":"","text":"배서진 연구원 얘기예요. 참, 회의록은 제가 정리할게요. 유전정보를 연구소에 제공했대요.","sensitive":true}
+{"id":"e-0304","category":"Genetic","group":"evasive","variant":"","text":"제 동생은 집안 남자들이 다 같은 근육병을 앓았대요.","sensitive":true}
+{"id":"e-0305","category":"Genetic","group":"evasive","variant":"","text":"노하은 대리는 집안 남자들이 다 같은 근육병을 앓았대요.","sensitive":true}
+{"id":"e-0306","category":"Genetic","group":"evasive","variant":"","text":"연 주임님은 집안 남자들이 다 같은 근육병을 앓았대요.","sensitive":true}
+{"id":"e-0307","category":"Genetic","group":"evasive","variant":"","text":"저는 혈액으로 가족력 검사를 받았는데 양성이래요.","sensitive":true}
+{"id":"e-0308","category":"Genetic","group":"evasive","variant":"","text":"연 주임님은 혈액으로 가족력 검사를 받았는데 양성이래요.","sensitive":true}
+{"id":"e-0309","category":"Genetic","group":"evasive","variant":"","text":"노하은 대리는 혈액으로 가족력 검사를 받았는데 양성이래요.","sensitive":true}
+{"id":"e-0310","category":"Genetic","group":"evasive","variant":"","text":"우 실장님은 태아 염색체 검사 결과가 안 좋았대요.","sensitive":true}
+{"id":"e-0311","category":"Genetic","group":"evasive","variant":"","text":"석 팀장님은 태아 염색체 검사 결과가 안 좋았대요.","sensitive":true}
+{"id":"e-0312","category":"Genetic","group":"evasive","variant":"","text":"석 팀장님은 태아 염색체 검사 결과가 안 좋았대요.","sensitive":true}
+{"id":"e-0313","category":"Genetic","group":"evasive","variant":"","text":"저희 아버지는 조상 찾기 키트로 혈연을 확인했대요.","sensitive":true}
+{"id":"e-0314","category":"Genetic","group":"evasive","variant":"","text":"석 팀장님은 조상 찾기 키트로 혈연을 확인했대요.","sensitive":true}
+{"id":"e-0315","category":"Genetic","group":"evasive","variant":"","text":"노하은 대리는 조상 찾기 키트로 혈연을 확인했대요.","sensitive":true}
+{"id":"e-0316","category":"Genetic","group":"evasive","variant":"","text":"노하은 대리는 부모 둘 다 같은 변이 보인자래요.","sensitive":true}
+{"id":"e-0317","category":"Genetic","group":"evasive","variant":"","text":"저희 아버지는 부모 둘 다 같은 변이 보인자래요.","sensitive":true}
+{"id":"e-0318","category":"Genetic","group":"evasive","variant":"","text":"우 실장님은 부모 둘 다 같은 변이 보인자래요.","sensitive":true}
+{"id":"e-0319","category":"Genetic","group":"evasive","variant":"","text":"제 동생은 가족력 때문에 예방 절제를 고민해요.","sensitive":true}
+{"id":"e-0320","category":"Genetic","group":"evasive","variant":"","text":"우 실장님은 가족력 때문에 예방 절제를 고민해요.","sensitive":true}
+{"id":"e-0321","category":"Genetic","group":"evasive","variant":"","text":"석 팀장님은 가족력 때문에 예방 절제를 고민해요.","sensitive":true}
+{"id":"e-0322","category":"Genetic","group":"evasive","variant":"","text":"배서진 연구원은 아이가 신생아 선별 검사에서 이상이 나왔대요.","sensitive":true}
+{"id":"e-0323","category":"Genetic","group":"evasive","variant":"","text":"추 교수님은 아이가 신생아 선별 검사에서 이상이 나왔대요.","sensitive":true}
+{"id":"e-0324","category":"Genetic","group":"evasive","variant":"","text":"제 동생은 아이가 신생아 선별 검사에서 이상이 나왔대요.","sensitive":true}
+{"id":"e-0325","category":"Genetic","group":"evasive","variant":"","text":"저희 아버지는 친자 확인 결과를 법원에 냈대요.","sensitive":true}
+{"id":"e-0326","category":"Genetic","group":"evasive","variant":"","text":"노하은 대리는 친자 확인 결과를 법원에 냈대요.","sensitive":true}
+{"id":"e-0327","category":"Genetic","group":"evasive","variant":"","text":"저희 아버지는 친자 확인 결과를 법원에 냈대요.","sensitive":true}
+{"id":"e-0328","category":"Genetic","group":"evasive","variant":"","text":"제 동생은 염기서열 분석 결과지를 받았대요.","sensitive":true}
+{"id":"e-0329","category":"Genetic","group":"evasive","variant":"","text":"우 실장님은 염기서열 분석 결과지를 받았대요.","sensitive":true}
+{"id":"e-0330","category":"Genetic","group":"evasive","variant":"","text":"추 교수님은 염기서열 분석 결과지를 받았대요.","sensitive":true}
+{"id":"e-0331","category":"Genetic","group":"evasive","variant":"","text":"추 교수님은 외가 쪽 내력 때문에 해마다 정밀 검사를 받아요.","sensitive":true}
+{"id":"e-0332","category":"Genetic","group":"evasive","variant":"","text":"추 교수님은 외가 쪽 내력 때문에 해마다 정밀 검사를 받아요.","sensitive":true}
+{"id":"e-0333","category":"Genetic","group":"evasive","variant":"","text":"추 교수님은 외가 쪽 내력 때문에 해마다 정밀 검사를 받아요.","sensitive":true}
+{"id":"e-0334","category":"Genetic","group":"general","variant":"","text":"유전자 검사 규제를 정리해 주세요.","sensitive":false}
+{"id":"e-0335","category":"Genetic","group":"general","variant":"","text":"유전질환 지원 제도를 찾아 주세요.","sensitive":false}
+{"id":"e-0336","category":"Genetic","group":"general","variant":"","text":"유전정보 보호 법령을 알려 주세요.","sensitive":false}
+{"id":"e-0337","category":"Criminal","group":"direct","variant":"","text":"저희 아버지는 전과자라는 소문이 돌아요.","sensitive":true}
+{"id":"e-0338","category":"Criminal","group":"direct","variant":"","text":"저는 전과자라는 소문이 돌아요.","sensitive":true}
+{"id":"e-0339","category":"Criminal","group":"variant","variant":"spacing","text":"노하은 대리는 전 과 자라는 소문이 돌아요.","sensitive":true}
+{"id":"e-0340","category":"Criminal","group":"variant","variant":"nfd","text":"추 교수님은 전과자라는 소문이 돌아요.","sensitive":true}
+{"id":"e-0341","category":"Criminal","group":"split","variant":"","text":"노하은 대리 얘기예요. 아무튼 이번 주는 바빠요. 전과자라는 소문이 돌아요.","sensitive":true}
+{"id":"e-0342","category":"Criminal","group":"direct","variant":"","text":"제 동생은 복역 중에 자격증을 땄대요.","sensitive":true}
+{"id":"e-0343","category":"Criminal","group":"direct","variant":"","text":"배서진 연구원은 복역 중에 자격증을 땄대요.","sensitive":true}
+{"id":"e-0344","category":"Criminal","group":"variant","variant":"spacing","text":"우 실장님은 복 역 중에 자격증을 땄대요.","sensitive":true}
+{"id":"e-0345","category":"Criminal","group":"variant","variant":"zwsp","text":"석 팀장님은 복​역 중에 자격증을 땄대요.","sensitive":true}
+{"id":"e-0346","category":"Criminal","group":"split","variant":"","text":"한도윤 주무관 얘기예요. 참, 회의록은 제가 정리할게요. 복역 중에 자격증을 땄대요.","sensitive":true}
+{"id":"e-0347","category":"Criminal","group":"direct","variant":"","text":"저희 아버지는 예전에 체포된 적이 있어요.","sensitive":true}
+{"id":"e-0348","category":"Criminal","group":"direct","variant":"","text":"우 실장님은 예전에 체포된 적이 있어요.","sensitive":true}
+{"id":"e-0349","category":"Criminal","group":"variant","variant":"spacing","text":"추 교수님은 예전에 체 포된 적이 있어요.","sensitive":true}
+{"id":"e-0350","category":"Criminal","group":"variant","variant":"nfd","text":"추 교수님은 예전에 체포된 적이 있어요.","sensitive":true}
+{"id":"e-0351","category":"Criminal","group":"split","variant":"","text":"연 주임님 얘기예요. 그건 그렇고 내일 비 온대요. 예전에 체포된 적이 있어요.","sensitive":true}
+{"id":"e-0352","category":"Criminal","group":"evasive","variant":"","text":"노하은 대리는 징역 2년을 살고 작년에 나왔어요.","sensitive":true}
+{"id":"e-0353","category":"Criminal","group":"evasive","variant":"","text":"저희 아버지는 징역 2년을 살고 작년에 나왔어요.","sensitive":true}
+{"id":"e-0354","category":"Criminal","group":"evasive","variant":"","text":"연 주임님은 징역 2년을 살고 작년에 나왔어요.","sensitive":true}
+{"id":"e-0355","category":"Criminal","group":"evasive","variant":"","text":"저는 보석으로 풀려나 재판을 받고 있어요.","sensitive":true}
+{"id":"e-0356","category":"Criminal","group":"evasive","variant":"","text":"제 동생은 보석으로 풀려나 재판을 받고 있어요.","sensitive":true}
+{"id":"e-0357","category":"Criminal","group":"evasive","variant":"","text":"추 교수님은 보석으로 풀려나 재판을 받고 있어요.","sensitive":true}
+{"id":"e-0358","category":"Criminal","group":"evasive","variant":"","text":"배서진 연구원은 접근금지 명령 때문에 그 동네에 못 간대요.","sensitive":true}
+{"id":"e-0359","category":"Criminal","group":"evasive","variant":"","text":"추 교수님은 접근금지 명령 때문에 그 동네에 못 간대요.","sensitive":true}
+{"id":"e-0360","category":"Criminal","group":"evasive","variant":"","text":"저희 아버지는 접근금지 명령 때문에 그 동네에 못 간대요.","sensitive":true}
+{"id":"e-0361","category":"Criminal","group":"evasive","variant":"","text":"추 교수님은 벌금을 못 내서 노역을 했대요.","sensitive":true}
+{"id":"e-0362","category":"Criminal","group":"evasive","variant":"","text":"추 교수님은 벌금을 못 내서 노역을 했대요.","sensitive":true}
+{"id":"e-0363","category":"Criminal","group":"evasive","variant":"","text":"저는 벌금을 못 내서 노역을 했대요.","sensitive":true}
+{"id":"e-0364","category":"Criminal","group":"evasive","variant":"","text":"석 팀장님은 사기 사건 피고인으로 재판에 나가요.","sensitive":true}
+{"id":"e-0365","category":"Criminal","group":"evasive","variant":"","text":"저희 아버지는 사기 사건 피고인으로 재판에 나가요.","sensitive":true}
+{"id":"e-0366","category":"Criminal","group":"evasive","variant":"","text":"배서진 연구원은 사기 사건 피고인으로 재판에 나가요.","sensitive":true}
+{"id":"e-0367","category":"Criminal","group":"evasive","variant":"","text":"우 실장님은 소년원에 다녀온 적이 있대요.","sensitive":true}
+{"id":"e-0368","category":"Criminal","group":"evasive","variant":"","text":"추 교수님은 소년원에 다녀온 적이 있대요.","sensitive":true}
+{"id":"e-0369","category":"Criminal","group":"evasive","variant":"","text":"추 교수님은 소년원에 다녀온 적이 있대요.","sensitive":true}
+{"id":"e-0370","category":"Criminal","group":"evasive","variant":"","text":"저는 음주 뺑소니로 면허가 영구 취소됐대요.","sensitive":true}
+{"id":"e-0371","category":"Criminal","group":"evasive","variant":"","text":"석 팀장님은 음주 뺑소니로 면허가 영구 취소됐대요.","sensitive":true}
+{"id":"e-0372","category":"Criminal","group":"evasive","variant":"","text":"석 팀장님은 음주 뺑소니로 면허가 영구 취소됐대요.","sensitive":true}
+{"id":"e-0373","category":"Criminal","group":"evasive","variant":"","text":"저희 아버지는 보호관찰관이 매달 찾아온대요.","sensitive":true}
+{"id":"e-0374","category":"Criminal","group":"evasive","variant":"","text":"제 동생은 보호관찰관이 매달 찾아온대요.","sensitive":true}
+{"id":"e-0375","category":"Criminal","group":"evasive","variant":"","text":"노하은 대리는 보호관찰관이 매달 찾아온대요.","sensitive":true}
+{"id":"e-0376","category":"Criminal","group":"evasive","variant":"","text":"우 실장님은 수배가 풀린 지 얼마 안 됐대요.","sensitive":true}
+{"id":"e-0377","category":"Criminal","group":"evasive","variant":"","text":"노하은 대리는 수배가 풀린 지 얼마 안 됐대요.","sensitive":true}
+{"id":"e-0378","category":"Criminal","group":"evasive","variant":"","text":"석 팀장님은 수배가 풀린 지 얼마 안 됐대요.","sensitive":true}
+{"id":"e-0379","category":"Criminal","group":"evasive","variant":"","text":"한도윤 주무관은 전자발찌 충전 때문에 야근을 못 해요.","sensitive":true}
+{"id":"e-0380","category":"Criminal","group":"evasive","variant":"","text":"석 팀장님은 전자발찌 충전 때문에 야근을 못 해요.","sensitive":true}
+{"id":"e-0381","category":"Criminal","group":"evasive","variant":"","text":"석 팀장님은 전자발찌 충전 때문에 야근을 못 해요.","sensitive":true}
+{"id":"e-0382","category":"Criminal","group":"general","variant":"","text":"전과자 재취업 지원 제도를 알려 주세요.","sensitive":false}
+{"id":"e-0383","category":"Criminal","group":"general","variant":"","text":"복역 기간 계산법을 정리해 주세요.","sensitive":false}
+{"id":"e-0384","category":"Criminal","group":"general","variant":"","text":"체포 절차를 요약해 주세요.","sensitive":false}
+{"id":"e-0385","category":"Biometric","group":"direct","variant":"","text":"저희 아버지는 지문인식 정보를 회사에 등록했어요.","sensitive":true}
+{"id":"e-0386","category":"Biometric","group":"direct","variant":"","text":"저는 지문인식 정보를 회사에 등록했어요.","sensitive":true}
+{"id":"e-0387","category":"Biometric","group":"variant","variant":"spacing","text":"추 교수님은 지 문 인 식 정보를 회사에 등록했어요.","sensitive":true}
+{"id":"e-0388","category":"Biometric","group":"variant","variant":"zwsp","text":"우 실장님은 지​문​인​식 정보를 회사에 등록했어요.","sensitive":true}
+{"id":"e-0389","category":"Biometric","group":"split","variant":"","text":"연 주임님 얘기예요. 아무튼 이번 주는 바빠요. 지문인식 정보를 회사에 등록했어요.","sensitive":true}
+{"id":"e-0390","category":"Biometric","group":"direct","variant":"","text":"배서진 연구원은 얼굴인식 데이터를 다시 등록했어요.","sensitive":true}
+{"id":"e-0391","category":"Biometric","group":"direct","variant":"","text":"석 팀장님은 얼굴인식 데이터를 다시 등록했어요.","sensitive":true}
+{"id":"e-0392","category":"Biometric","group":"variant","variant":"spacing","text":"노하은 대리는 얼 굴 인 식 데이터를 다시 등록했어요.","sensitive":true}
+{"id":"e-0393","category":"Biometric","group":"variant","variant":"zwsp","text":"노하은 대리는 얼​굴​인​식 데이터를 다시 등록했어요.","sensitive":true}
+{"id":"e-0394","category":"Biometric","group":"split","variant":"","text":"석 팀장님 얘기예요. 아무튼 이번 주는 바빠요. 얼굴인식 데이터를 다시 등록했어요.","sensitive":true}
+{"id":"e-0395","category":"Biometric","group":"direct","variant":"","text":"우 실장님은 생체정보 제공 동의서를 냈어요.","sensitive":true}
+{"id":"e-0396","category":"Biometric","group":"direct","variant":"","text":"추 교수님은 생체정보 제공 동의서를 냈어요.","sensitive":true}
+{"id":"e-0397","category":"Biometric","group":"variant","variant":"spacing","text":"석 팀장님은 생 체 정 보 제공 동의서를 냈어요.","sensitive":true}
+{"id":"e-0398","category":"Biometric","group":"variant","variant":"nfd","text":"노하은 대리는 생체정보 제공 동의서를 냈어요.","sensitive":true}
+{"id":"e-0399","category":"Biometric","group":"split","variant":"","text":"제 동생 얘기예요. 아무튼 이번 주는 바빠요. 생체정보 제공 동의서를 냈어요.","sensitive":true}
+{"id":"e-0400","category":"Biometric","group":"evasive","variant":"","text":"한도윤 주무관은 검지 무늬를 대야 사무실 문이 열려요.","sensitive":true}
+{"id":"e-0401","category":"Biometric","group":"evasive","variant":"","text":"저희 아버지는 검지 무늬를 대야 사무실 문이 열려요.","sensitive":true}
+{"id":"e-0402","category":"Biometric","group":"evasive","variant":"","text":"한도윤 주무관은 검지 무늬를 대야 사무실 문이 열려요.","sensitive":true}
+{"id":"e-0403","category":"Biometric","group":"evasive","variant":"","text":"저희 아버지는 눈 사진으로 결재 시스템에 들어가요.","sensitive":true}
+{"id":"e-0404","category":"Biometric","group":"evasive","variant":"","text":"배서진 연구원은 눈 사진으로 결재 시스템에 들어가요.","sensitive":true}
+{"id":"e-0405","category":"Biometric","group":"evasive","variant":"","text":"한도윤 주무관은 눈 사진으로 결재 시스템에 들어가요.","sensitive":true}
+{"id":"e-0406","category":"Biometric","group":"evasive","variant":"","text":"연 주임님은 얼굴을 카메라에 비춰 출근 도장을 찍어요.","sensitive":true}
+{"id":"e-0407","category":"Biometric","group":"evasive","variant":"","text":"추 교수님은 얼굴을 카메라에 비춰 출근 도장을 찍어요.","sensitive":true}
+{"id":"e-0408","category":"Biometric","group":"evasive","variant":"","text":"연 주임님은 얼굴을 카메라에 비춰 출근 도장을 찍어요.","sensitive":true}
+{"id":"e-0409","category":"Biometric","group":"evasive","variant":"","text":"노하은 대리는 손바닥 혈관 무늬를 은행에 등록했어요.","sensitive":true}
+{"id":"e-0410","category":"Biometric","group":"evasive","variant":"","text":"한도윤 주무관은 손바닥 혈관 무늬를 은행에 등록했어요.","sensitive":true}
+{"id":"e-0411","category":"Biometric","group":"evasive","variant":"","text":"석 팀장님은 손바닥 혈관 무늬를 은행에 등록했어요.","sensitive":true}
+{"id":"e-0412","category":"Biometric","group":"evasive","variant":"","text":"연 주임님은 목소리 샘플로 본인 확인을 해요.","sensitive":true}
+{"id":"e-0413","category":"Biometric","group":"evasive","variant":"","text":"우 실장님은 목소리 샘플로 본인 확인을 해요.","sensitive":true}
+{"id":"e-0414","category":"Biometric","group":"evasive","variant":"","text":"추 교수님은 목소리 샘플로 본인 확인을 해요.","sensitive":true}
+{"id":"e-0415","category":"Biometric","group":"evasive","variant":"","text":"노하은 대리는 걸음걸이 영상을 보안팀이 저장해 갔대요.","sensitive":true}
+{"id":"e-0416","category":"Biometric","group":"evasive","variant":"","text":"저는 걸음걸이 영상을 보안팀이 저장해 갔대요.","sensitive":true}
+{"id":"e-0417","category":"Biometric","group":"evasive","variant":"","text":"추 교수님은 걸음걸이 영상을 보안팀이 저장해 갔대요.","sensitive":true}
+{"id":"e-0418","category":"Biometric","group":"evasive","variant":"","text":"제 동생은 엄지 무늬 정보를 출입 서버에 올렸어요.","sensitive":true}
+{"id":"e-0419","category":"Biometric","group":"evasive","variant":"","text":"한도윤 주무관은 엄지 무늬 정보를 출입 서버에 올렸어요.","sensitive":true}
+{"id":"e-0420","category":"Biometric","group":"evasive","variant":"","text":"우 실장님은 엄지 무늬 정보를 출입 서버에 올렸어요.","sensitive":true}
+{"id":"e-0421","category":"Biometric","group":"evasive","variant":"","text":"석 팀장님은 얼굴 특징점 데이터를 사원증에 넣었대요.","sensitive":true}
+{"id":"e-0422","category":"Biometric","group":"evasive","variant":"","text":"석 팀장님은 얼굴 특징점 데이터를 사원증에 넣었대요.","sensitive":true}
+{"id":"e-0423","category":"Biometric","group":"evasive","variant":"","text":"우 실장님은 얼굴 특징점 데이터를 사원증에 넣었대요.","sensitive":true}
+{"id":"e-0424","category":"Biometric","group":"evasive","variant":"","text":"저는 서명할 때 손 떨림 패턴을 등록했대요.","sensitive":true}
+{"id":"e-0425","category":"Biometric","group":"evasive","variant":"","text":"노하은 대리는 서명할 때 손 떨림 패턴을 등록했대요.","sensitive":true}
+{"id":"e-0426","category":"Biometric","group":"evasive","variant":"","text":"노하은 대리는 서명할 때 손 떨림 패턴을 등록했대요.","sensitive":true}
+{"id":"e-0427","category":"Biometric","group":"evasive","variant":"","text":"우 실장님은 눈동자 무늬로 금고를 연대요.","sensitive":true}
+{"id":"e-0428","category":"Biometric","group":"evasive","variant":"","text":"노하은 대리는 눈동자 무늬로 금고를 연대요.","sensitive":true}
+{"id":"e-0429","category":"Biometric","group":"evasive","variant":"","text":"한도윤 주무관은 눈동자 무늬로 금고를 연대요.","sensitive":true}
+{"id":"e-0430","category":"Biometric","group":"general","variant":"","text":"지문인식 원리를 설명해 주세요.","sensitive":false}
+{"id":"e-0431","category":"Biometric","group":"general","variant":"","text":"얼굴인식 오류율 자료를 찾아 주세요.","sensitive":false}
+{"id":"e-0432","category":"Biometric","group":"general","variant":"","text":"생체정보 처리 지침을 요약해 주세요.","sensitive":false}
+{"id":"e-0433","category":"Ethnicity","group":"direct","variant":"","text":"석 팀장님은 민족 정체성 때문에 고민이 많아요.","sensitive":true}
+{"id":"e-0434","category":"Ethnicity","group":"direct","variant":"","text":"저희 아버지는 민족 정체성 때문에 고민이 많아요.","sensitive":true}
+{"id":"e-0435","category":"Ethnicity","group":"variant","variant":"spacing","text":"연 주임님은 민 족 정체성 때문에 고민이 많아요.","sensitive":true}
+{"id":"e-0436","category":"Ethnicity","group":"variant","variant":"zwsp","text":"저는 민​족 정체성 때문에 고민이 많아요.","sensitive":true}
+{"id":"e-0437","category":"Ethnicity","group":"split","variant":"","text":"석 팀장님 얘기예요. 참, 회의록은 제가 정리할게요. 민족 정체성 때문에 고민이 많아요.","sensitive":true}
+{"id":"e-0438","category":"Ethnicity","group":"direct","variant":"","text":"석 팀장님은 혈통이 절반은 터키계예요.","sensitive":true}
+{"id":"e-0439","category":"Ethnicity","group":"direct","variant":"","text":"저희 아버지는 혈통이 절반은 터키계예요.","sensitive":true}
+{"id":"e-0440","category":"Ethnicity","group":"variant","variant":"spacing","text":"저희 아버지는 혈 통이 절반은 터키계예요.","sensitive":true}
+{"id":"e-0441","category":"Ethnicity","group":"variant","variant":"nfd","text":"추 교수님은 혈통이 절반은 터키계예요.","sensitive":true}
+{"id":"e-0442","category":"Ethnicity","group":"split","variant":"","text":"배서진 연구원 얘기예요. 그건 그렇고 내일 비 온대요. 혈통이 절반은 터키계예요.","sensitive":true}
+{"id":"e-0443","category":"Ethnicity","group":"direct","variant":"","text":"저는 인종 차별을 겪었다고 했어요.","sensitive":true}
+{"id":"e-0444","category":"Ethnicity","group":"direct","variant":"","text":"한도윤 주무관은 인종 차별을 겪었다고 했어요.","sensitive":true}
+{"id":"e-0445","category":"Ethnicity","group":"variant","variant":"spacing","text":"한도윤 주무관은 인 종 차별을 겪었다고 했어요.","sensitive":true}
+{"id":"e-0446","category":"Ethnicity","group":"variant","variant":"zwsp","text":"석 팀장님은 인​종 차별을 겪었다고 했어요.","sensitive":true}
+{"id":"e-0447","category":"Ethnicity","group":"split","variant":"","text":"우 실장님 얘기예요. 참, 회의록은 제가 정리할게요. 인종 차별을 겪었다고 했어요.","sensitive":true}
+{"id":"e-0448","category":"Ethnicity","group":"evasive","variant":"","text":"배서진 연구원은 아버지가 우즈베크 사람이고 어머니가 한국 사람이에요.","sensitive":true}
+{"id":"e-0449","category":"Ethnicity","group":"evasive","variant":"","text":"석 팀장님은 아버지가 우즈베크 사람이고 어머니가 한국 사람이에요.","sensitive":true}
+{"id":"e-0450","category":"Ethnicity","group":"evasive","variant":"","text":"노하은 대리는 아버지가 우즈베크 사람이고 어머니가 한국 사람이에요.","sensitive":true}
+{"id":"e-0451","category":"Ethnicity","group":"evasive","variant":"","text":"저희 아버지는 조선족 3세라고 했어요.","sensitive":true}
+{"id":"e-0452","category":"Ethnicity","group":"evasive","variant":"","text":"배서진 연구원은 조선족 3세라고 했어요.","sensitive":true}
+{"id":"e-0453","category":"Ethnicity","group":"evasive","variant":"","text":"석 팀장님은 조선족 3세라고 했어요.","sensitive":true}
+{"id":"e-0454","category":"Ethnicity","group":"evasive","variant":"","text":"저는 외할아버지가 미국 흑인이었대요.","sensitive":true}
+{"id":"e-0455","category":"Ethnicity","group":"evasive","variant":"","text":"추 교수님은 외할아버지가 미국 흑인이었대요.","sensitive":true}
+{"id":"e-0456","category":"Ethnicity","group":"evasive","variant":"","text":"한도윤 주무관은 외할아버지가 미국 흑인이었대요.","sensitive":true}
+{"id":"e-0457","category":"Ethnicity","group":"evasive","variant":"","text":"추 교수님은 부모님이 베트남에서 오셨어요.","sensitive":true}
+{"id":"e-0458","category":"Ethnicity","group":"evasive","variant":"","text":"연 주임님은 부모님이 베트남에서 오셨어요.","sensitive":true}
+{"id":"e-0459","category":"Ethnicity","group":"evasive","variant":"","text":"배서진 연구원은 부모님이 베트남에서 오셨어요.","sensitive":true}
+{"id":"e-0460","category":"Ethnicity","group":"evasive","variant":"","text":"연 주임님은 귀화 전 국적이 네팔이었어요.","sensitive":true}
+{"id":"e-0461","category":"Ethnicity","group":"evasive","variant":"","text":"노하은 대리는 귀화 전 국적이 네팔이었어요.","sensitive":true}
+{"id":"e-0462","category":"Ethnicity","group":"evasive","variant":"","text":"추 교수님은 귀화 전 국적이 네팔이었어요.","sensitive":true}
+{"id":"e-0463","category":"Ethnicity","group":"evasive","variant":"","text":"저는 피부색 때문에 면접관이 국적을 물었대요.","sensitive":true}
+{"id":"e-0464","category":"Ethnicity","group":"evasive","variant":"","text":"추 교수님은 피부색 때문에 면접관이 국적을 물었대요.","sensitive":true}
+{"id":"e-0465","category":"Ethnicity","group":"evasive","variant":"","text":"배서진 연구원은 피부색 때문에 면접관이 국적을 물었대요.","sensitive":true}
+{"id":"e-0466","category":"Ethnicity","group":"evasive","variant":"","text":"연 주임님은 할머니가 일본에서 오신 분이에요.","sensitive":true}
+{"id":"e-0467","category":"Ethnicity","group":"evasive","variant":"","text":"우 실장님은 할머니가 일본에서 오신 분이에요.","sensitive":true}
+{"id":"e-0468","category":"Ethnicity","group":"evasive","variant":"","text":"저희 아버지는 할머니가 일본에서 오신 분이에요.","sensitive":true}
+{"id":"e-0469","category":"Ethnicity","group":"evasive","variant":"","text":"우 실장님은 중앙아시아 고려인 후손이래요.","sensitive":true}
+{"id":"e-0470","category":"Ethnicity","group":"evasive","variant":"","text":"추 교수님은 중앙아시아 고려인 후손이래요.","sensitive":true}
+{"id":"e-0471","category":"Ethnicity","group":"evasive","variant":"","text":"저는 중앙아시아 고려인 후손이래요.","sensitive":true}
+{"id":"e-0472","category":"Ethnicity","group":"evasive","variant":"","text":"저는 탈북민 가정에서 자랐대요.","sensitive":true}
+{"id":"e-0473","category":"Ethnicity","group":"evasive","variant":"","text":"우 실장님은 탈북민 가정에서 자랐대요.","sensitive":true}
+{"id":"e-0474","category":"Ethnicity","group":"evasive","variant":"","text":"우 실장님은 탈북민 가정에서 자랐대요.","sensitive":true}
+{"id":"e-0475","category":"Ethnicity","group":"evasive","variant":"","text":"석 팀장님은 외가가 몽골 유목민 집안이래요.","sensitive":true}
+{"id":"e-0476","category":"Ethnicity","group":"evasive","variant":"","text":"배서진 연구원은 외가가 몽골 유목민 집안이래요.","sensitive":true}
+{"id":"e-0477","category":"Ethnicity","group":"evasive","variant":"","text":"배서진 연구원은 외가가 몽골 유목민 집안이래요.","sensitive":true}
+{"id":"e-0478","category":"Ethnicity","group":"general","variant":"","text":"민족 분쟁 사례를 정리해 주세요.","sensitive":false}
+{"id":"e-0479","category":"Ethnicity","group":"general","variant":"","text":"혈통 개념을 설명해 주세요.","sensitive":false}
+{"id":"e-0480","category":"Ethnicity","group":"general","variant":"","text":"인종 통계 기준을 알려 주세요.","sensitive":false}
+{"id":"e-0481","category":"Credential","group":"direct","variant":"","text":"비밀번호는 river#Stone19로 해 뒀어요.","sensitive":true}
+{"id":"e-0482","category":"Credential","group":"direct","variant":"","text":"비밀번호는 Kx2!pV7nQe로 해 뒀어요.","sensitive":true}
+{"id":"e-0483","category":"Credential","group":"variant","variant":"spacing","text":"비 밀 번 호는 Gs6&bN1cXo로 해 뒀어요.","sensitive":true}
+{"id":"e-0484","category":"Credential","group":"variant","variant":"zwsp","text":"비​밀​번​호는 Hw5@qT8zLm로 해 뒀어요.","sensitive":true}
+{"id":"e-0485","category":"Credential","group":"split","variant":"","text":"저희 아버지 계정 얘기예요. 아무튼 이번 주는 바빠요. 비밀번호는 river#Stone19로 해 뒀어요.","sensitive":true}
+{"id":"e-0486","category":"Credential","group":"direct","variant":"","text":"암호는 Hw5@qT8zLm예요.","sensitive":true}
+{"id":"e-0487","category":"Credential","group":"direct","variant":"","text":"암호는 river#Stone19예요.","sensitive":true}
+{"id":"e-0488","category":"Credential","group":"variant","variant":"spacing","text":"암 호는 Kx2!pV7nQe예요.","sensitive":true}
+{"id":"e-0489","category":"Credential","group":"variant","variant":"zwsp","text":"암​호는 Dm9$wR4tYu예요.","sensitive":true}
+{"id":"e-0490","category":"Credential","group":"split","variant":"","text":"연 주임님 계정 얘기예요. 그건 그렇고 내일 비 온대요. 암호는 river#Stone19예요.","sensitive":true}
+{"id":"e-0491","category":"Credential","group":"direct","variant":"","text":"인증코드는 river#Stone19입니다.","sensitive":true}
+{"id":"e-0492","category":"Credential","group":"direct","variant":"","text":"인증코드는 Dm9$wR4tYu입니다.","sensitive":true}
+{"id":"e-0493","category":"Credential","group":"variant","variant":"spacing","text":"인 증 코 드는 Gs6&bN1cXo입니다.","sensitive":true}
+{"id":"e-0494","category":"Credential","group":"variant","variant":"zwsp","text":"인​증​코​드는 Gs6&bN1cXo입니다.","sensitive":true}
+{"id":"e-0495","category":"Credential","group":"split","variant":"","text":"우 실장님 계정 얘기예요. 아무튼 이번 주는 바빠요. 인증코드는 Hw5@qT8zLm입니다.","sensitive":true}
+{"id":"e-0496","category":"Credential","group":"evasive","variant":"","text":"관리 화면에 Gs6&bN1cXo 치고 들어가면 돼요.","sensitive":true}
+{"id":"e-0497","category":"Credential","group":"evasive","variant":"","text":"관리 화면에 Gs6&bN1cXo 치고 들어가면 돼요.","sensitive":true}
+{"id":"e-0498","category":"Credential","group":"evasive","variant":"","text":"관리 화면에 Gs6&bN1cXo 치고 들어가면 돼요.","sensitive":true}
+{"id":"e-0499","category":"Credential","group":"evasive","variant":"","text":"노트북 잠금 풀 때 Kx2!pV7nQe 넣어요.","sensitive":true}
+{"id":"e-0500","category":"Credential","group":"evasive","variant":"","text":"노트북 잠금 풀 때 Dm9$wR4tYu 넣어요.","sensitive":true}
+{"id":"e-0501","category":"Credential","group":"evasive","variant":"","text":"노트북 잠금 풀 때 river#Stone19 넣어요.","sensitive":true}
+{"id":"e-0502","category":"Credential","group":"evasive","variant":"","text":"사내 메신저 처음 켤 때 Kx2!pV7nQe 써요.","sensitive":true}
+{"id":"e-0503","category":"Credential","group":"evasive","variant":"","text":"사내 메신저 처음 켤 때 Kx2!pV7nQe 써요.","sensitive":true}
+{"id":"e-0504","category":"Credential","group":"evasive","variant":"","text":"사내 메신저 처음 켤 때 river#Stone19 써요.","sensitive":true}
+{"id":"e-0505","category":"Credential","group":"evasive","variant":"","text":"회계 시스템 열 때 넣는 글자가 river#Stone19예요.","sensitive":true}
+{"id":"e-0506","category":"Credential","group":"evasive","variant":"","text":"회계 시스템 열 때 넣는 글자가 Dm9$wR4tYu예요.","sensitive":true}
+{"id":"e-0507","category":"Credential","group":"evasive","variant":"","text":"회계 시스템 열 때 넣는 글자가 Kx2!pV7nQe예요.","sensitive":true}
+{"id":"e-0508","category":"Credential","group":"evasive","variant":"","text":"서버실 문 숫자판에 Hw5@qT8zLm 누르면 열려요.","sensitive":true}
+{"id":"e-0509","category":"Credential","group":"evasive","variant":"","text":"서버실 문 숫자판에 Kx2!pV7nQe 누르면 열려요.","sensitive":true}
+{"id":"e-0510","category":"Credential","group":"evasive","variant":"","text":"서버실 문 숫자판에 river#Stone19 누르면 열려요.","sensitive":true}
+{"id":"e-0511","category":"Credential","group":"evasive","variant":"","text":"사내 원격망 붙을 때 Kx2!pV7nQe 넣으세요.","sensitive":true}
+{"id":"e-0512","category":"Credential","group":"evasive","variant":"","text":"사내 원격망 붙을 때 Dm9$wR4tYu 넣으세요.","sensitive":true}
+{"id":"e-0513","category":"Credential","group":"evasive","variant":"","text":"사내 원격망 붙을 때 Gs6&bN1cXo 넣으세요.","sensitive":true}
+{"id":"e-0514","category":"Credential","group":"evasive","variant":"","text":"백업 장비 열 때 river#Stone19 입력해요.","sensitive":true}
+{"id":"e-0515","category":"Credential","group":"evasive","variant":"","text":"백업 장비 열 때 river#Stone19 입력해요.","sensitive":true}
+{"id":"e-0516","category":"Credential","group":"evasive","variant":"","text":"백업 장비 열 때 Gs6&bN1cXo 입력해요.","sensitive":true}
+{"id":"e-0517","category":"Credential","group":"evasive","variant":"","text":"공유 드라이브 잠금은 Hw5@qT8zLm로 풀려요.","sensitive":true}
+{"id":"e-0518","category":"Credential","group":"evasive","variant":"","text":"공유 드라이브 잠금은 Hw5@qT8zLm로 풀려요.","sensitive":true}
+{"id":"e-0519","category":"Credential","group":"evasive","variant":"","text":"공유 드라이브 잠금은 Kx2!pV7nQe로 풀려요.","sensitive":true}
+{"id":"e-0520","category":"Credential","group":"evasive","variant":"","text":"인사 시스템 첫 화면에 Kx2!pV7nQe 넣으면 돼요.","sensitive":true}
+{"id":"e-0521","category":"Credential","group":"evasive","variant":"","text":"인사 시스템 첫 화면에 Gs6&bN1cXo 넣으면 돼요.","sensitive":true}
+{"id":"e-0522","category":"Credential","group":"evasive","variant":"","text":"인사 시스템 첫 화면에 Gs6&bN1cXo 넣으면 돼요.","sensitive":true}
+{"id":"e-0523","category":"Credential","group":"evasive","variant":"","text":"결재 앱 잠금 해제 글자는 Gs6&bN1cXo예요.","sensitive":true}
+{"id":"e-0524","category":"Credential","group":"evasive","variant":"","text":"결재 앱 잠금 해제 글자는 Dm9$wR4tYu예요.","sensitive":true}
+{"id":"e-0525","category":"Credential","group":"evasive","variant":"","text":"결재 앱 잠금 해제 글자는 Dm9$wR4tYu예요.","sensitive":true}
+{"id":"e-0526","category":"Credential","group":"general","variant":"","text":"비밀번호 분실 시 절차를 알려 주세요.","sensitive":false}
+{"id":"e-0527","category":"Credential","group":"general","variant":"","text":"암호 정책 예시를 정리해 주세요.","sensitive":false}
+{"id":"e-0528","category":"Credential","group":"general","variant":"","text":"인증코드 유효 시간 기준을 알려 주세요.","sensitive":false}
+{"id":"e-0529","category":"None","group":"personal","variant":"","text":"제 동생은 내일 오전 보고를 맡았어요.","sensitive":false}
+{"id":"e-0530","category":"None","group":"personal","variant":"","text":"배서진 연구원은 내일 오전 보고를 맡았어요.","sensitive":false}
+{"id":"e-0531","category":"None","group":"personal","variant":"","text":"노하은 대리는 견적서 금액을 다시 맞춰 봤어요.","sensitive":false}
+{"id":"e-0532","category":"None","group":"personal","variant":"","text":"노하은 대리는 견적서 금액을 다시 맞춰 봤어요.","sensitive":false}
+{"id":"e-0533","category":"None","group":"personal","variant":"","text":"우 실장님은 고객사 방문 일정을 잡았어요.","sensitive":false}
+{"id":"e-0534","category":"None","group":"personal","variant":"","text":"석 팀장님은 고객사 방문 일정을 잡았어요.","sensitive":false}
+{"id":"e-0535","category":"None","group":"personal","variant":"","text":"연 주임님은 회의실 예약을 바꿨어요.","sensitive":false}
+{"id":"e-0536","category":"None","group":"personal","variant":"","text":"석 팀장님은 회의실 예약을 바꿨어요.","sensitive":false}
+{"id":"e-0537","category":"None","group":"personal","variant":"","text":"저희 아버지는 분기 계획서를 마감했어요.","sensitive":false}
+{"id":"e-0538","category":"None","group":"personal","variant":"","text":"배서진 연구원은 분기 계획서를 마감했어요.","sensitive":false}
+{"id":"e-0539","category":"None","group":"personal","variant":"","text":"제 동생은 신규 거래처 계약서를 검토했어요.","sensitive":false}
+{"id":"e-0540","category":"None","group":"personal","variant":"","text":"석 팀장님은 신규 거래처 계약서를 검토했어요.","sensitive":false}
+{"id":"e-0541","category":"None","group":"personal","variant":"","text":"제 동생은 프로젝트 일정표를 다시 짰어요.","sensitive":false}
+{"id":"e-0542","category":"None","group":"personal","variant":"","text":"우 실장님은 프로젝트 일정표를 다시 짰어요.","sensitive":false}
+{"id":"e-0543","category":"None","group":"personal","variant":"","text":"추 교수님은 출장 경비 정산을 올렸어요.","sensitive":false}
+{"id":"e-0544","category":"None","group":"personal","variant":"","text":"우 실장님은 출장 경비 정산을 올렸어요.","sensitive":false}
+{"id":"e-0545","category":"None","group":"personal","variant":"","text":"석 팀장님은 교육 자료를 번역하고 있어요.","sensitive":false}
+{"id":"e-0546","category":"None","group":"personal","variant":"","text":"한도윤 주무관은 교육 자료를 번역하고 있어요.","sensitive":false}
+{"id":"e-0547","category":"None","group":"personal","variant":"","text":"저희 아버지는 팀 회식 장소를 정했어요.","sensitive":false}
+{"id":"e-0548","category":"None","group":"personal","variant":"","text":"추 교수님은 팀 회식 장소를 정했어요.","sensitive":false}
+{"id":"e-0549","category":"None","group":"personal","variant":"","text":"제 동생은 새 모니터를 주문했어요.","sensitive":false}
+{"id":"e-0550","category":"None","group":"personal","variant":"","text":"석 팀장님은 새 모니터를 주문했어요.","sensitive":false}
+{"id":"e-0551","category":"None","group":"personal","variant":"","text":"석 팀장님은 보고서 표 서식을 고쳤어요.","sensitive":false}
+{"id":"e-0552","category":"None","group":"personal","variant":"","text":"제 동생은 보고서 표 서식을 고쳤어요.","sensitive":false}
