@@ -4,6 +4,7 @@
 #include <boost/asio/co_spawn.hpp>
 #include <boost/asio/detached.hpp>
 #include <boost/asio/post.hpp>
+#include <boost/asio/strand.hpp>
 #include <boost/asio/use_awaitable.hpp>
 #include <boost/beast/core.hpp>
 #include <boost/beast/http.hpp>
@@ -228,7 +229,9 @@ asio::awaitable<void> accept_loop(std::shared_ptr<Server::Shared> shared) {
             continue;
         }
         ++shared->connections;
-        asio::co_spawn(shared->acceptor.get_executor(), session(shared, std::move(socket)), asio::detached);
+        // 연결 하나의 일(읽기·쓰기·처리·취소 신호)은 strand 하나에서 차례로 돈다
+        asio::co_spawn(asio::make_strand(shared->acceptor.get_executor()), session(shared, std::move(socket)),
+                       asio::detached);
     }
 }
 

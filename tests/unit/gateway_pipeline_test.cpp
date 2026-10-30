@@ -2,9 +2,13 @@
 // provider 로 나가는 본문에 원문이 없는지를 본다.
 #include "prompt_airlock/gateway/pipeline.hpp"
 
+#include <boost/asio/as_tuple.hpp>
+#include <boost/asio/bind_cancellation_slot.hpp>
+#include <boost/asio/cancellation_signal.hpp>
 #include <boost/asio/co_spawn.hpp>
 #include <boost/asio/io_context.hpp>
 #include <boost/asio/post.hpp>
+#include <boost/asio/steady_timer.hpp>
 #include <boost/asio/thread_pool.hpp>
 #include <boost/asio/use_future.hpp>
 #include <gtest/gtest.h>
@@ -12,8 +16,11 @@
 
 #include <atomic>
 #include <chrono>
+#include <condition_variable>
 #include <future>
 #include <memory>
+#include <mutex>
+#include <stop_token>
 #include <string>
 #include <vector>
 
@@ -29,10 +36,22 @@ namespace detect = prompt_airlock::detect;
 namespace gw = prompt_airlock::gateway;
 using json = nlohmann::json;
 
+// 살아 있는 가명 범위 수. 범위 하나에 하나 만들고 범위가 사라질 때 함께 사라진다.
+struct LiveScope {
+    explicit LiveScope(std::atomic<int>& count) : count_(count) { ++count_; }
+    LiveScope(const LiveScope&) = delete;
+    LiveScope& operator=(const LiveScope&) = delete;
+    ~LiveScope() { --count_; }
+
+private:
+    std::atomic<int>& count_;
+};
+
 // 가짜 범위가 실패하도록 고를 수 있게 감싼다.
 class TestScope {
 public:
-    TestScope(std::shared_ptr<pa_test::FakeVault> vault, bool fail_issue) : vault_(std::move(vault)), fail_(fail_issue) {}
+    TestScope(std::shared_ptr<pa_test::FakeVault> vault, bool fail_issue, std::atomic<int>& live)
+        : vault_(std::move(vault)), fail_(fail_issue), live_(std::make_shared<LiveScope>(live)) {}
     std::expected<core::Token, core::ProtectionError> issue(core::EntityType type, std::string_view value) {
         if (fail_) {
             return std::unexpected(core::ProtectionError::IssuerUnavailable);
@@ -46,6 +65,7 @@ public:
 private:
     std::shared_ptr<pa_test::FakeVault> vault_;
     bool fail_;
+    std::shared_ptr<LiveScope> live_;
 };
 
 class FailingNer final : public detect::NerScanner {
@@ -54,6 +74,28 @@ public:
                                                                         const detect::DetectionView&, std::stop_token) const override {
         return std::unexpected(core::DetectError::Unavailable);
     }
+};
+
+// 취소 신호가 올 때까지(최대 5초) 기다린다. 신호를 받으면 NerPool 처럼 Timeout 을 낸다.
+class StopNer final : public detect::NerScanner {
+public:
+    std::expected<std::vector<core::EntitySpan>, core::DetectError> scan(std::string_view, core::SegmentIndex,
+                                                                        const detect::DetectionView&,
+                                                                        std::stop_token stop) const override {
+        std::unique_lock lock(mutex_);
+        (void)changed_.wait_for(lock, stop, std::chrono::seconds(5), [] { return false; });
+        if (stop.stop_requested()) {
+            stopped_ = true;
+            return std::unexpected(core::DetectError::Timeout);
+        }
+        return std::vector<core::EntitySpan>{};
+    }
+    bool stopped() const { return stopped_; }
+
+private:
+    mutable std::mutex mutex_;
+    mutable std::condition_variable_any changed_;
+    mutable std::atomic<bool> stopped_{false};
 };
 
 // 문이 열릴 때까지(최대 5초) 기다렸다가 아무것도 찾지 않는다. 기다리다 시간이 다 됐는지를 남긴다.
@@ -80,14 +122,15 @@ private:
 
 class GatewayPipeline : public ::testing::Test {
 protected:
-    gw::Pipeline make(const detect::Detectors& detectors, std::size_t in_flight_limit = gw::pipeline_in_flight_limit) {
+    gw::Pipeline make(const detect::Detectors& detectors, std::size_t in_flight_limit = gw::pipeline_in_flight_limit,
+                      std::chrono::milliseconds time_limit = gw::request_time_limit) {
         return gw::Pipeline(
             detectors,
             [this]() -> std::expected<gw::PseudonymScope, core::VaultError> {
                 if (vault_down_) {
                     return std::unexpected(core::VaultError::Unavailable);
                 }
-                return gw::PseudonymScope(TestScope(vault_, issuer_fails_));
+                return gw::PseudonymScope(TestScope(vault_, issuer_fails_, live_scopes_));
             },
             [this](std::string body) -> asio::awaitable<std::expected<gw::ProviderReply, gw::ProviderError>> {
                 ++provider_calls_;
@@ -95,12 +138,18 @@ protected:
                 if (during_first_provider_call_ && provider_calls_ == 1) {
                     co_await during_first_provider_call_();
                 }
+                if (provider_hangs_) {
+                    // 답하지 않는 provider. 취소되면 바로 돌아온다(실제 클라이언트가 연결을 끊는 것과 같다).
+                    asio::steady_timer never(co_await asio::this_coro::executor, std::chrono::hours(1));
+                    (void)co_await never.async_wait(asio::as_tuple(asio::use_awaitable));
+                    co_return std::unexpected(gw::ProviderError::Unavailable);
+                }
                 if (provider_fails_) {
                     co_return std::unexpected(gw::ProviderError::Timeout);
                 }
                 co_return gw::ProviderReply{200, answer_ ? answer_(sent_.back()) : pa_mock::make_answer(sent_.back())};
             },
-            *core::OutputTokenCap::make(512), "demo-alias", work_.get_executor(), nullptr, in_flight_limit);
+            *core::OutputTokenCap::make(512), "demo-alias", work_.get_executor(), nullptr, in_flight_limit, time_limit);
     }
 
     gw::JsonResponse run(const gw::Pipeline& pipeline, std::string body,
@@ -143,6 +192,8 @@ protected:
     bool vault_down_ = false;
     bool issuer_fails_ = false;
     bool provider_fails_ = false;
+    bool provider_hangs_ = false;
+    std::atomic<int> live_scopes_{0};
     int provider_calls_ = 0;
     std::vector<std::string> sent_;
 };
@@ -273,6 +324,52 @@ TEST_F(GatewayPipeline, DetectionDoesNotHoldTheIoThread) {
     EXPECT_EQ(reply.get().status, 200u);
     EXPECT_GT(ner->calls(), 0);
     EXPECT_FALSE(ner->timed_out());
+}
+
+TEST_F(GatewayPipeline, TimeLimitCutsAHangingProviderAndDropsTheScope) {
+    provider_hangs_ = true;
+    const auto pipeline = make(detectors_, gw::pipeline_in_flight_limit, std::chrono::milliseconds(200));
+    const auto start = std::chrono::steady_clock::now();
+    const auto reply = run(pipeline, ask("연락처 010-2345-6789"));
+    EXPECT_EQ(reply.status, 504u);
+    EXPECT_EQ(code_of(reply), "timeout");
+    EXPECT_LT(std::chrono::steady_clock::now() - start, std::chrono::seconds(5));  // provider 를 기다리지 않는다
+    EXPECT_EQ(provider_calls_, 1);
+    EXPECT_EQ(live_scopes_.load(), 0);  // 응답 전에 범위를 지웠다
+}
+
+TEST_F(GatewayPipeline, TimeLimitStopsWaitingDetectionWithoutProvider) {
+    const auto ner = std::make_shared<StopNer>();
+    const auto stuck = detect::Detectors::make({}, ner);
+    ASSERT_TRUE(stuck.has_value());
+    const auto pipeline = make(*stuck, gw::pipeline_in_flight_limit, std::chrono::milliseconds(200));
+    const auto start = std::chrono::steady_clock::now();
+    const auto reply = run(pipeline, ask("회의 안건 정리"));
+    EXPECT_EQ(reply.status, 504u);
+    EXPECT_LT(std::chrono::steady_clock::now() - start, std::chrono::seconds(3));  // NER 의 5초를 다 기다리지 않는다
+    EXPECT_TRUE(ner->stopped());
+    EXPECT_EQ(provider_calls_, 0);
+    EXPECT_EQ(live_scopes_.load(), 0);
+}
+
+TEST_F(GatewayPipeline, CallerCancelDuringProviderEndsAsCancelled) {
+    provider_hangs_ = true;
+    const auto pipeline = make(detectors_);
+    asio::io_context io;
+    asio::cancellation_signal client_gone;
+    during_first_provider_call_ = [&]() -> asio::awaitable<void> {
+        // 연결 끊김: 서버가 처리 중인 요청에 asio 취소를 보낸다
+        asio::post(io, [&] { client_gone.emit(asio::cancellation_type::terminal); });
+        co_return;
+    };
+    auto reply = asio::co_spawn(
+        io, pipeline.handle(gw::AcceptedRequest{nullptr, *core::resolve_grade(core::GradePolicy::OOnly, {}), ask("연락처 010-2345-6789")}),
+        asio::bind_cancellation_slot(client_gone.slot(), asio::use_future));
+    io.run();
+    const auto cancelled = reply.get();
+    EXPECT_EQ(code_of(cancelled), "cancelled");
+    EXPECT_EQ(provider_calls_, 1);
+    EXPECT_EQ(live_scopes_.load(), 0);
 }
 
 TEST_F(GatewayPipeline, ResponseChecksRejectUnsafeAnswers) {
