@@ -110,7 +110,8 @@ std::expected<std::vector<pc::EntitySpan>, NerError> NerEngine::detect(std::stri
 
 std::expected<std::vector<pc::EntitySpan>, NerError> NerEngine::detect_all(std::string_view text,
                                                                            pc::SegmentIndex segment,
-                                                                           const detect::DetectionView& view) {
+                                                                           const detect::DetectionView& view,
+                                                                           std::stop_token stop) {
     const auto tokens = tokenizer_.encode(view.units);
     const auto body = std::span(tokens).subspan(1, tokens.size() - 2);
     // 문장 끝: 토큰의 마지막 글자가 문장 부호이거나, 다음 토큰과의 사이에 줄바꿈이 있다.
@@ -130,6 +131,9 @@ std::expected<std::vector<pc::EntitySpan>, NerError> NerEngine::detect_all(std::
     }
     std::vector<pc::EntitySpan> out;
     for (const auto& w : *windows) {
+        if (stop.stop_requested()) {
+            return std::unexpected(NerError::Stopped);
+        }
         if (auto r = infer(text, segment, view, 0, body.subspan(w.first, w.end - w.first), tokens.front().id,
                            tokens.back().id, out);
             !r) {

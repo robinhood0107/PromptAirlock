@@ -189,7 +189,7 @@ class FailingNer final : public pd::NerScanner {
 public:
     explicit FailingNer(pc::DetectError error) : error_(error) {}
     std::expected<std::vector<pc::EntitySpan>, pc::DetectError> scan(std::string_view, pc::SegmentIndex,
-                                                                     const pd::DetectionView&) const override {
+                                                                     const pd::DetectionView&, std::stop_token) const override {
         return std::unexpected(error_);
     }
 

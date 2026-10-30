@@ -7,6 +7,7 @@
 #include <filesystem>
 #include <fstream>
 #include <nlohmann/json.hpp>
+#include <stop_token>
 #include <string>
 #include <utility>
 #include <vector>
@@ -311,4 +312,19 @@ TEST(NerEngine, LabelCountMismatchIsUnavailable) {
     const auto result = small->detect(text, pc::SegmentIndex{0}, *view, {0, static_cast<std::uint32_t>(view->units.size())});
     ASSERT_FALSE(result);
     EXPECT_EQ(result.error(), pn::NerError::Unavailable);
+}
+
+TEST(NerEngine, StopIsCheckedBeforeEveryWindow) {
+    std::string text;
+    for (int i = 0; i < 400; ++i) {
+        text += "이영희가 먼저 갔다. ";
+    }
+    const auto view = pd::make_view(text);
+    ASSERT_TRUE(view);
+    std::stop_source stop;
+    stop.request_stop();
+    const auto stopped = engine().detect_all(text, pc::SegmentIndex{0}, *view, stop.get_token());
+    ASSERT_FALSE(stopped);
+    EXPECT_EQ(stopped.error(), pn::NerError::Stopped);
+    EXPECT_TRUE(engine().detect_all(text, pc::SegmentIndex{0}, *view));  // 신호가 없으면 끝까지 돈다
 }

@@ -23,7 +23,7 @@ public:
         : name_(std::move(name)), error_(error) {}
 
     std::expected<std::vector<pc::EntitySpan>, pc::DetectError> scan(std::string_view text, pc::SegmentIndex segment,
-                                                                     const pd::DetectionView&) const override {
+                                                                     const pd::DetectionView&, std::stop_token) const override {
         if (error_) {
             return std::unexpected(*error_);
         }

@@ -1,7 +1,10 @@
 // 서버 골격 시험: 루프백에 실제로 띄우고 TLS 로 붙는다. handler 는 받은 내용을 기록만 한다.
 #include "prompt_airlock/gateway/server.hpp"
 
+#include <boost/asio/as_tuple.hpp>
 #include <boost/asio/ssl.hpp>
+#include <boost/asio/steady_timer.hpp>
+#include <boost/asio/use_awaitable.hpp>
 #include <boost/beast/core.hpp>
 #include <boost/beast/http.hpp>
 #include <boost/beast/ssl.hpp>
@@ -10,6 +13,7 @@
 #include <openssl/ssl.h>
 
 #include <atomic>
+#include <condition_variable>
 #include <mutex>
 #include <optional>
 #include <span>
@@ -54,10 +58,23 @@ protected:
         limits.io_timeout = std::chrono::seconds(5);
         pa_test::retry_listen([&] { server_.emplace(io_, *server_tls_, tcp::endpoint(asio::ip::make_address("127.0.0.1"), 0), auth_,
                         [this](gw::AcceptedRequest request) -> asio::awaitable<gw::JsonResponse> {
-                            std::scoped_lock lock(mutex_);
-                            ++handled_;
-                            last_origin_ = request.origin->name;
-                            last_body_ = request.body;
+                            {
+                                std::scoped_lock lock(mutex_);
+                                ++handled_;
+                                last_origin_ = request.origin->name;
+                                last_body_ = request.body;
+                            }
+                            changed_.notify_all();
+                            if (hold_) {
+                                // 오래 걸리는 처리. 취소되면 바로 돌아온다.
+                                asio::steady_timer slow(co_await asio::this_coro::executor, std::chrono::seconds(10));
+                                const auto [ec] = co_await slow.async_wait(asio::as_tuple(asio::use_awaitable));
+                                {
+                                    std::scoped_lock lock(mutex_);
+                                    cancelled_ = ec == asio::error::operation_aborted;
+                                }
+                                changed_.notify_all();
+                            }
                             co_return gw::JsonResponse{200, R"({"ok":true})"};
                         },
                         limits); });
@@ -139,6 +156,9 @@ protected:
     std::thread thread_;
     std::uint16_t port_ = 0;
     std::mutex mutex_;
+    std::condition_variable changed_;
+    std::atomic<bool> hold_{false};
+    bool cancelled_ = false;
     int handled_ = 0;
     std::string last_origin_;
     std::string last_body_;
@@ -218,6 +238,26 @@ TEST_F(GatewayServer, ForbiddenCipherCannotConnect) {
     SSL_CTX_set_cipher_list(chacha, "ECDHE-ECDSA-CHACHA20-POLY1305");
     EXPECT_FALSE(send(request("open-token"), chacha).has_value());
     EXPECT_EQ(handled(), 0);
+}
+
+TEST_F(GatewayServer, ClientDisconnectCancelsTheRunningHandler) {
+    hold_ = true;
+    asio::io_context io;
+    beast::ssl_stream<beast::tcp_stream> stream(io, *client_tls_);
+    SSL_set_tlsext_host_name(stream.native_handle(), "localhost");
+    SSL_set1_host(stream.native_handle(), "localhost");
+    ASSERT_FALSE(pa_test::retry_connect(beast::get_lowest_layer(stream), tcp::endpoint(asio::ip::make_address("127.0.0.1"), port_)));
+    stream.handshake(asio::ssl::stream_base::client);
+    auto req = request("open-token");
+    req.prepare_payload();
+    http::write(stream, req);
+    std::unique_lock lock(mutex_);
+    ASSERT_TRUE(changed_.wait_for(lock, std::chrono::seconds(5), [&] { return handled_ == 1; }));
+    lock.unlock();
+    beast::get_lowest_layer(stream).socket().close();  // TLS 종료 알림 없이 끊는다(시간 초과로 떠나는 클라이언트)
+    lock.lock();
+    // handler 가 10초를 다 쓰지 않고 취소를 받는다
+    EXPECT_TRUE(changed_.wait_for(lock, std::chrono::seconds(5), [&] { return cancelled_; }));
 }
 
 }  // namespace

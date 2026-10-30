@@ -21,6 +21,8 @@ enum class EntryError : std::uint8_t {
     Unavailable,           // 503: 처리 단계를 아직 쓸 수 없음
     Overloaded,            // 503: 처리 중 요청이 상한에 닿음
     ProviderFailed,        // 502: provider 연결 실패·시간 초과·오류 응답
+    Timeout,               // 504: 요청 전체 시간 상한을 넘김
+    Cancelled,             // 499: 처리 중 클라이언트가 연결을 끊음(받을 사람이 없어 감사 기록용)
 };
 
 struct JsonResponse {

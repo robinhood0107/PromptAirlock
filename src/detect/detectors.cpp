@@ -78,14 +78,15 @@ std::expected<Detectors, core::InputError> Detectors::make(std::span<const std::
 }
 
 std::expected<std::vector<core::EntitySpan>, core::DetectError> Detectors::detect_segment(
-    std::string_view text, core::SegmentIndex segment) const {
+    std::string_view text, core::SegmentIndex segment, std::stop_token stop) const {
     SensitiveTally ignored;
-    return scan(text, segment, ignored);
+    return scan(text, segment, ignored, stop);
 }
 
 std::expected<std::vector<core::EntitySpan>, core::DetectError> Detectors::scan(std::string_view text,
                                                                              core::SegmentIndex segment,
-                                                                             SensitiveTally& tally) const {
+                                                                             SensitiveTally& tally,
+                                                                             std::stop_token stop) const {
     const auto view = make_view(text);
     if (!view) {
         return std::unexpected(view.error());
@@ -108,7 +109,7 @@ std::expected<std::vector<core::EntitySpan>, core::DetectError> Detectors::scan(
     }
     rules::find_organizations(*view, chars, hits);
     if (ner_) {
-        const auto names = ner_->scan(text, segment, *view);
+        const auto names = ner_->scan(text, segment, *view, stop);
         if (!names) {
             return std::unexpected(names.error());
         }
@@ -144,7 +145,7 @@ std::expected<std::vector<core::EntitySpan>, core::DetectError> Detectors::scan(
 }
 
 std::expected<std::vector<core::EncodedFinding>, core::DetectError> Detectors::scan_encoded(
-    std::string_view text, core::SegmentIndex segment) const {
+    std::string_view text, core::SegmentIndex segment, std::stop_token stop) const {
     const auto candidates = encoded_candidates(text);
     if (candidates.size() > max_encoded_candidates) {
         return std::unexpected(core::DetectError::Overloaded);
@@ -153,7 +154,7 @@ std::expected<std::vector<core::EncodedFinding>, core::DetectError> Detectors::s
     const auto collect = [&](std::string_view decoded,
                              core::EntityTypeSet& targets) -> std::expected<void, core::DetectError> {
         SensitiveTally ignored;
-        const auto found = scan(decoded, segment, ignored);
+        const auto found = scan(decoded, segment, ignored, stop);
         if (!found) {
             return std::unexpected(found.error());
         }
@@ -198,13 +199,14 @@ std::expected<std::vector<core::EncodedFinding>, core::DetectError> Detectors::s
     return out;
 }
 
-std::expected<DocumentDetection, core::DetectError> Detectors::detect(const core::PromptDocument& document) const {
+std::expected<DocumentDetection, core::DetectError> Detectors::detect(const core::PromptDocument& document,
+                                                                  std::stop_token stop) const {
     DocumentDetection result;
     const auto segments = document.segments();
     for (std::uint32_t i = 0; i < segments.size(); ++i) {
         const auto text = segments[i].text();
         if (result.entities.size() <= core::max_entities) {
-            auto found = scan(text, core::SegmentIndex{i}, result.sensitive_passed);
+            auto found = scan(text, core::SegmentIndex{i}, result.sensitive_passed, stop);
             if (!found) {
                 return std::unexpected(found.error());
             }
@@ -213,7 +215,7 @@ std::expected<DocumentDetection, core::DetectError> Detectors::detect(const core
             result.entities.insert(result.entities.end(), found->begin(),
                                    found->begin() + static_cast<std::ptrdiff_t>(take));
         }
-        auto encoded = scan_encoded(text, core::SegmentIndex{i});
+        auto encoded = scan_encoded(text, core::SegmentIndex{i}, stop);
         if (!encoded) {
             return std::unexpected(encoded.error());
         }

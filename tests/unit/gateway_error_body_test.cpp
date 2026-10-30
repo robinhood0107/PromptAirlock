@@ -23,6 +23,10 @@ TEST(GatewayErrorBody, EntryErrorsUseCompatibleShape) {
     const auto busy = gw::error_response(gw::EntryError::Overloaded);
     EXPECT_EQ(busy.status, 503u);
     EXPECT_EQ(json::parse(busy.body)["error"]["code"], "overloaded");
+    const auto late = gw::error_response(gw::EntryError::Timeout);
+    EXPECT_EQ(late.status, 504u);
+    EXPECT_EQ(json::parse(late.body)["error"]["code"], "timeout");
+    EXPECT_EQ(json::parse(gw::error_response(gw::EntryError::Cancelled).body)["error"]["code"], "cancelled");
 }
 
 TEST(GatewayErrorBody, RejectionCarriesOnlyCodeAndTypes) {
