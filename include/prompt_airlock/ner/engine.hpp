@@ -9,6 +9,7 @@
 #include <memory>
 #include <optional>
 #include <span>
+#include <stop_token>
 #include <string_view>
 #include <vector>
 
@@ -36,6 +37,7 @@ enum class NerError : std::uint8_t {
     Unavailable,   // 추론 실패, 출력 모양 불일치
     InvalidSpan,   // 구간이 보기 밖이거나 탐지 결과가 원문과 맞지 않는다
     TooManyWindows,  // detect_all 의 창이 max_ner_windows 를 넘는다
+    Stopped,         // detect_all 이 창 사이에서 중단 신호를 봤다
 };
 
 // 모델 label 하나의 해석. type 이 없으면 O 또는 관심 밖 label 이다.
@@ -59,8 +61,10 @@ public:
 
     // 보기 전체. 길면 문장 창(windows.hpp)으로 나눠 창마다 추론하고, 겹친 창에서 같은 결과는 하나만 남긴다.
     // 겹친 창이 같은 이름을 다른 길이로 찾으면 둘 다 남는다(정책 단계의 merge_entities 가 넓은 쪽으로 합친다).
+    // 창마다 추론 전에 stop 을 본다. 추론 한 번(256 token p95 32 ms)은 끝까지 돈다(ORT 의 중단 플래그는 원자 변수가 아니라 쓰지 않는다).
     [[nodiscard]] std::expected<std::vector<core::EntitySpan>, NerError> detect_all(
-        std::string_view text, core::SegmentIndex segment, const detect::DetectionView& view);
+        std::string_view text, core::SegmentIndex segment, const detect::DetectionView& view,
+        std::stop_token stop = {});
 
 private:
     NerEngine(WordPieceTokenizer tokenizer, OrtSession session, std::vector<NerLabel> labels);

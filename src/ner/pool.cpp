@@ -27,6 +27,8 @@ using Result = std::expected<std::vector<pc::EntitySpan>, pc::DetectError>;
             return pc::DetectError::Overloaded;
         case NerError::InvalidSpan:
             return pc::DetectError::InvalidSpan;
+        case NerError::Stopped:  // 기다리던 요청이 떠난 뒤라 이 결과는 아무도 받지 않는다
+            return pc::DetectError::Timeout;
         case NerError::InputTooLong:  // detect_all 은 창으로 나누므로 생기지 않는다
         case NerError::Unavailable:
             break;
@@ -39,8 +41,8 @@ public:
     explicit EngineWorker(NerEngine engine) : engine_(std::move(engine)) {}
 
     Result run(std::string_view text, pc::SegmentIndex segment, const detect::DetectionView& view,
-               std::stop_token) override {
-        auto found = engine_.detect_all(text, segment, view);
+               std::stop_token stop) override {
+        auto found = engine_.detect_all(text, segment, view, stop);
         if (!found) {
             return std::unexpected(to_detect_error(found.error()));
         }
