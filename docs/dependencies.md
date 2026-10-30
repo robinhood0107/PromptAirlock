@@ -20,6 +20,7 @@
 | OpenSSL | 3.6.5 | Apache-2.0 | `src/tls`(TLS 협상 범위, ADR 0014), `src/gateway`(HTTPS 입출력) | Windows DLL, Linux 정적 |
 | nlohmann-json | 3.12.0 | MIT | `src/ner`(tokenizer.json 읽기), `src/gateway`(설정·오류 응답, ADR 0020), `src/audit`(감사 기록) | 헤더만 |
 | gtest | 1.18.0 | BSD-3-Clause | 시험만 | 배포하지 않음 |
+| sentencepiece | 0.2.1 | Apache-2.0 | `tests/measure` 의 문장 판별 후보 측정만(vcpkg 기능 `sentence-spike`, 기본 빌드에 없음, ADR 0022) | 배포하지 않음(정적, 측정 도구에만) |
 
 ## 공식 배포본과 모델(CMake 가 고정 해시로 받음)
 
