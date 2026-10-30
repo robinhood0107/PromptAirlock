@@ -1,6 +1,6 @@
 // 문장 판별 후보 측정(Phase 7.5-2). PA_SENTENCE_SPIKE 구성에서만 만들고 직접 실행한다.
-//   sentence_candidate_measure --model e5|e5base|minilm|nli [--set final] [--threshold T] [--explain] [--dir 모델 폴더]
-//                              [--split] [--gate] [--topk K]
+//   sentence_candidate_measure --model e5|e5base|e5q|e5baseq|minilm|arctic|nli|mdeberta|minilm6 [--set final] [--threshold T] [--explain] [--dir 모델 폴더]
+//                              [--split] [--gate] [--topk K] [--head --l2 L] [--verify 문장 함의 모델] [--shortcut]
 // 후보 모델을 학습 없이(결정 #147) 돌려 문장마다 점수를 내고, 지금 규칙(NER 켬) 결과와 합쳐(OR) 막는 비율을 잰다.
 //   임베딩(e5, minilm): 범주별 예시 문장과의 최대 코사인 유사도에서 업무·일반 문장과의 최대 유사도를 뺀 값.
 //   문장 함의(nli): 범주별 가설을 함의할 확률의 최댓값.
@@ -34,6 +34,7 @@
 #include <map>
 #include <memory>
 #include <nlohmann/json.hpp>
+#include <optional>
 #include <string>
 #include <string_view>
 #include <vector>
@@ -102,17 +103,23 @@ double percentile(std::vector<double> v, double p) {
     return v[std::min(v.size() - 1, static_cast<std::size_t>(p * static_cast<double>(v.size())))];
 }
 
-// XLM-R 토큰화. SentencePiece 조각 번호를 모델 어휘 번호로 옮긴다(앞의 특수 조각 4개 때문에 한 칸 밀린다).
+// SentencePiece 토큰화. 조각 번호를 모델 어휘 번호로 옮긴다. XLM-R 은 앞의 특수 조각 4개 때문에 한 칸 밀리고(shift 1),
+// DeBERTa-v3 는 그대로다(shift 0). unk 는 두 어휘 모두 3번이다.
 class Tokenizer {
 public:
-    Tokenizer(const fs::path& spm_model, const fs::path& tokenizer_json) {
+    Tokenizer(const fs::path& spm_model, const fs::path& tokenizer_json, int shift) : shift_(shift) {
         if (!sp_.Load(spm_model.string()).ok()) {
             throw std::runtime_error("sentencepiece model");
         }
-        // 모델 어휘와 조각 번호가 정말 한 칸 밀린 관계인지 시작할 때 확인한다(4 부터 2,000 까지).
+        // 모델 어휘와 조각 번호가 정말 shift 만큼 밀린 관계인지 시작할 때 어휘 전체를 확인한다(덧붙인 특수 조각은 뺀다).
         const auto vocab = read_json(tokenizer_json).at("model").at("vocab");
-        for (int hf = 4; hf < 2000; ++hf) {
-            if (vocab.at(hf).at(0).get<std::string>() != sp_.IdToPiece(hf - 1)) {
+        const auto unk = vocab.at(3).at(0).get<std::string>();
+        if (unk != "<unk>" && unk != "[UNK]") {
+            throw std::runtime_error("vocabulary 3 is not unk");
+        }
+        const auto end = std::min<std::size_t>(vocab.size(), static_cast<std::size_t>(sp_.GetPieceSize() + shift));
+        for (std::size_t hf = 4; hf < end; ++hf) {
+            if (vocab.at(hf).at(0).get<std::string>() != sp_.IdToPiece(static_cast<int>(hf) - shift)) {
                 throw std::runtime_error("vocabulary mismatch at " + std::to_string(hf));
             }
         }
@@ -124,7 +131,7 @@ public:
         std::vector<std::int64_t> out;
         out.reserve(pieces.size());
         for (const int p : pieces) {
-            out.push_back(p == 0 ? 3 : p + 1);  // 조각 0(unk)은 모델 어휘 3
+            out.push_back(p == sp_.unk_id() ? 3 : p + shift_);
         }
         return out;
     }
@@ -132,11 +139,16 @@ public:
 
 private:
     sentencepiece::SentencePieceProcessor sp_;
+    int shift_;
     std::size_t vocab_size_ = 0;
 };
 
-constexpr std::int64_t bos = 0;
-constexpr std::int64_t eos = 2;
+// 문장 앞뒤 특수 토큰. XLM-R: <s> A </s></s> B </s>, DeBERTa-v3: [CLS] A [SEP] B [SEP]
+struct Special {
+    std::int64_t bos;
+    std::int64_t eos;
+    bool double_sep;
+};
 constexpr std::size_t max_tokens = 512;
 
 class Model {
@@ -186,40 +198,84 @@ private:
     std::string output_;
 };
 
-std::vector<std::int64_t> single(const Tokenizer& tok, std::string_view text) {
-    auto ids = tok.ids(text);
+// 후보 모델 하나의 파일과 입력 형식.
+struct Spec {
+    fs::path onnx, spm, tokenizer, config;
+    std::string prefix;
+    int shift = 1;
+    Special special{0, 2, true};
+    bool cls = false;  // 문장 벡터를 첫 토큰(CLS)으로(아니면 평균 풀링)
+    bool nli = false;
+};
+
+struct Candidate {
+    Candidate(Ort::Env& env, Spec s) : spec(std::move(s)), tok(spec.spm, spec.tokenizer, spec.shift), model(env, spec.onnx) {
+        if (!spec.nli) {
+            return;
+        }
+        bool found = false;
+        for (const auto& [k, v] : read_json(spec.config).at("id2label").items()) {
+            if (v.get<std::string>().starts_with("entail")) {
+                entail = std::stoul(k);
+                found = true;
+            }
+        }
+        if (!found) {
+            throw std::runtime_error("no entailment label");
+        }
+    }
+    Spec spec;
+    Tokenizer tok;
+    Model model;
+    std::size_t entail = 0;
+};
+
+std::vector<std::int64_t> single(const Candidate& c, std::string_view text) {
+    auto ids = c.tok.ids(text);
     if (ids.size() > max_tokens - 2) {
         ids.resize(max_tokens - 2);
     }
-    ids.insert(ids.begin(), bos);
-    ids.push_back(eos);
+    ids.insert(ids.begin(), c.spec.special.bos);
+    ids.push_back(c.spec.special.eos);
     return ids;
 }
 
-// 문장 쌍: <s> A </s></s> B </s>
-std::vector<std::int64_t> pair(const Tokenizer& tok, std::string_view a, std::string_view b) {
-    auto x = tok.ids(a);
-    const auto y = tok.ids(b);
+std::vector<std::int64_t> pair(const Candidate& c, std::string_view a, std::string_view b) {
+    auto x = c.tok.ids(a);
+    const auto y = c.tok.ids(b);
     if (x.size() + y.size() > max_tokens - 4) {
         x.resize(max_tokens - 4 - y.size());
     }
-    std::vector<std::int64_t> ids{bos};
+    std::vector<std::int64_t> ids{c.spec.special.bos};
     ids.insert(ids.end(), x.begin(), x.end());
-    ids.push_back(eos);
-    ids.push_back(eos);
+    ids.push_back(c.spec.special.eos);
+    if (c.spec.special.double_sep) {
+        ids.push_back(c.spec.special.eos);
+    }
     ids.insert(ids.end(), y.begin(), y.end());
-    ids.push_back(eos);
+    ids.push_back(c.spec.special.eos);
     return ids;
 }
 
-// 평균 풀링 뒤 길이 1로 맞춘 문장 벡터.
-std::vector<float> embed(Model& model, const Tokenizer& tok, const std::string& text) {
+// 문장 함의 모델이 text 가 hypothesis 를 함의한다고 볼 확률.
+double entail_prob(Candidate& c, std::string_view text, std::string_view hypothesis) {
     std::vector<std::int64_t> shape;
-    const auto out = model.run(single(tok, text), shape);
+    const auto logits = c.model.run(pair(c, text, hypothesis), shape);
+    double denom = 0.0;
+    for (const float l : logits) {
+        denom += std::exp(static_cast<double>(l));
+    }
+    return std::exp(static_cast<double>(logits.at(c.entail))) / denom;
+}
+
+// 평균 풀링(또는 첫 토큰) 뒤 길이 1로 맞춘 문장 벡터.
+std::vector<float> embed(Candidate& c, const std::string& text) {
+    std::vector<std::int64_t> shape;
+    const auto out = c.model.run(single(c, c.spec.prefix + text), shape);
     if (shape.size() != 3) {
         throw std::runtime_error("embedding output rank");
     }
-    const auto n = static_cast<std::size_t>(shape[1]);
+    const auto n = c.spec.cls ? 1 : static_cast<std::size_t>(shape[1]);
     const auto h = static_cast<std::size_t>(shape[2]);
     std::vector<float> v(h, 0.0F);
     for (std::size_t i = 0; i < n; ++i) {
@@ -302,6 +358,9 @@ int main(int argc, char** argv) {
     bool head = false;      // 임베딩 위에 선형 분류기(로지스틱 회귀)를 학습해 점수를 낸다(결정 #159)
     double l2 = 1e-3;       // 분류기 L2 규제 세기
     bool shortcut = false;  // 지름길 시험(이름 바꾸기, 말끝 바꾸기, 정상 문장에 사람 표지 붙이기)
+    // 2단 판별: 분류기가 고른 범주의 가설 하나를 문장 함의 모델로 확인해 점수 = 분류기 확률 x 함의 확률.
+    // 분류기 확률이 0.1 미만이면 확인하지 않고 0 으로 둔다(지금까지 범주 문턱값은 모두 0.2 이상).
+    std::string verify_name;
     fs::path dir;
     for (int i = 1; i < argc; ++i) {
         const std::string_view arg = argv[i];
@@ -329,15 +388,11 @@ int main(int argc, char** argv) {
             shortcut = true;
         } else if (arg == "--topk" && i + 1 < argc) {
             topk = std::max<std::size_t>(1, std::strtoul(argv[++i], nullptr, 10));
+        } else if (arg == "--verify" && i + 1 < argc) {
+            verify_name = argv[++i];
         } else if (arg == "--dir" && i + 1 < argc) {
             dir = argv[++i];
         }
-    }
-    const bool nli = model_name == "nli";
-    if (model_name != "e5" && model_name != "e5base" && model_name != "e5q" && model_name != "e5baseq" && model_name != "minilm" &&
-        !nli) {
-        std::printf("--model e5|e5base|e5q|e5baseq|minilm|nli\n");
-        return 2;
     }
     const bool final_set = set_name == "final" || set_name == "final2";
     if (set_name != "dev" && set_name != "dev2" && !final_set) {
@@ -360,31 +415,46 @@ int main(int argc, char** argv) {
         dir = fs::path(base != nullptr ? base : ".") / ".cache" / "prompt-airlock" / "models" / "phase75";
 #endif
     }
-    struct Files {
-        fs::path onnx, spm, tokenizer;
-        std::string prefix;
+    const auto spec_of = [&](const std::string& name) {
+        const fs::path e5s = dir / "intfloat_multilingual-e5-small/onnx";
+        const fs::path e5b = dir / "intfloat_multilingual-e5-base/onnx";
+        const fs::path para = dir / "sentence-transformers_paraphrase-multilingual-MiniLM-L12-v2";
+        const fs::path bge = dir / "protectai_MoritzLaurer-bge-m3-zeroshot-v2.0-c-onnx";
+        const fs::path mdeb = dir / "MoritzLaurer_mDeBERTa-v3-base-xnli-multilingual-nli-2mil7";
+        const fs::path ml6 = dir / "MoritzLaurer_multilingual-MiniLMv2-L6-mnli-xnli/onnx";
+        const fs::path arc = dir / "Snowflake_snowflake-arctic-embed-m-v2.0";
+        Spec s;
+        if (name == "e5" || name == "e5q") {
+            s = {e5s / (name == "e5" ? "model.onnx" : "model_qint8_avx512_vnni.onnx"), e5s / "sentencepiece.bpe.model", e5s / "tokenizer.json", {}, "query: "};
+        } else if (name == "e5base" || name == "e5baseq") {
+            s = {e5b / (name == "e5base" ? "model.onnx" : "model_qint8_avx512_vnni.onnx"), e5b / "sentencepiece.bpe.model", e5b / "tokenizer.json", {}, "query: "};
+        } else if (name == "minilm") {
+            s = {para / "onnx/model.onnx", para / "sentencepiece.bpe.model", para / "tokenizer.json", {}, ""};
+        } else if (name == "arctic") {
+            // int8 판. SentencePiece 파일이 없어 e5 의 XLM-R 조각 파일을 쓰고, 어휘가 같은지는 Tokenizer 가 전체를 확인한다.
+            s = {arc / "onnx/model_quantized.onnx", e5s / "sentencepiece.bpe.model", arc / "tokenizer.json", {}, "query: "};
+            s.cls = true;
+        } else if (name == "nli") {
+            s = {bge / "model.onnx", bge / "sentencepiece.bpe.model", bge / "tokenizer.json", bge / "config.json", ""};
+            s.nli = true;
+        } else if (name == "mdeberta") {
+            s = {mdeb / "onnx/model_quantized.onnx", mdeb / "spm.model", mdeb / "tokenizer.json", mdeb / "config.json", "", 0, {1, 2, false}};
+            s.nli = true;
+        } else if (name == "minilm6") {
+            s = {ml6 / "model.onnx", ml6 / "sentencepiece.bpe.model", ml6 / "tokenizer.json", ml6 / "config.json", ""};
+            s.nli = true;
+        } else {
+            return std::optional<Spec>{};
+        }
+        return std::optional<Spec>{s};
     };
-    const Files files = model_name == "e5"
-        ? Files{dir / "intfloat_multilingual-e5-small/onnx/model.onnx", dir / "intfloat_multilingual-e5-small/onnx/sentencepiece.bpe.model",
-                dir / "intfloat_multilingual-e5-small/onnx/tokenizer.json", "query: "}
-        : model_name == "e5base"
-        ? Files{dir / "intfloat_multilingual-e5-base/onnx/model.onnx", dir / "intfloat_multilingual-e5-base/onnx/sentencepiece.bpe.model",
-                dir / "intfloat_multilingual-e5-base/onnx/tokenizer.json", "query: "}
-        : model_name == "e5q"
-        ? Files{dir / "intfloat_multilingual-e5-small/onnx/model_qint8_avx512_vnni.onnx",
-                dir / "intfloat_multilingual-e5-small/onnx/sentencepiece.bpe.model", dir / "intfloat_multilingual-e5-small/onnx/tokenizer.json",
-                "query: "}
-        : model_name == "e5baseq"
-        ? Files{dir / "intfloat_multilingual-e5-base/onnx/model_qint8_avx512_vnni.onnx",
-                dir / "intfloat_multilingual-e5-base/onnx/sentencepiece.bpe.model", dir / "intfloat_multilingual-e5-base/onnx/tokenizer.json",
-                "query: "}
-        : model_name == "minilm"
-        ? Files{dir / "sentence-transformers_paraphrase-multilingual-MiniLM-L12-v2/onnx/model.onnx",
-                dir / "sentence-transformers_paraphrase-multilingual-MiniLM-L12-v2/sentencepiece.bpe.model",
-                dir / "sentence-transformers_paraphrase-multilingual-MiniLM-L12-v2/tokenizer.json", ""}
-        : Files{dir / "protectai_MoritzLaurer-bge-m3-zeroshot-v2.0-c-onnx/model.onnx",
-                dir / "protectai_MoritzLaurer-bge-m3-zeroshot-v2.0-c-onnx/sentencepiece.bpe.model",
-                dir / "protectai_MoritzLaurer-bge-m3-zeroshot-v2.0-c-onnx/tokenizer.json", ""};
+    const auto spec = spec_of(model_name);
+    const auto verify_spec = verify_name.empty() ? std::optional<Spec>{} : spec_of(verify_name);
+    if (!spec || (!verify_name.empty() && (!verify_spec || !verify_spec->nli || !head))) {
+        std::printf("--model e5|e5base|e5q|e5baseq|minilm|arctic|nli|mdeberta|minilm6 [--verify nli|mdeberta|minilm6 with --head]\n");
+        return 2;
+    }
+    const bool nli = spec->nli;
 
     const fs::path sentence_dir = PA_SENTENCE_FIXTURE_DIR;
     // 셋: dev(7.5 개발용), final(7.5 판정용, 이미 봄), dev2(7.6 개발용 = dev + dev2 문장 + NER 셋 둘), final2(7.6 판정용)
@@ -414,8 +484,8 @@ int main(int argc, char** argv) {
         add_negatives("ner-heldout2.jsonl");
     }
     const auto data = read_json(sentence_dir / "candidates.json");
-    std::printf("model: %s, set: %s, records: %zu, split: %d, gate: %d, topk: %zu\n", model_name.c_str(), set_name.c_str(), records.size(),
-                split ? 1 : 0, gate ? 1 : 0, topk);
+    std::printf("model: %s, verify: %s, set: %s, records: %zu, split: %d, gate: %d, topk: %zu\n", model_name.c_str(),
+                verify_name.empty() ? "-" : verify_name.c_str(), set_name.c_str(), records.size(), split ? 1 : 0, gate ? 1 : 0, topk);
     std::vector<std::string> markers;
     for (const auto& m : data.at("person_markers")) {
         markers.push_back(m.get<std::string>());
@@ -450,8 +520,9 @@ int main(int argc, char** argv) {
     const double before_mb = peak_mb();
     Ort::Env env{ORT_LOGGING_LEVEL_ERROR, "phase75"};
     const auto load_start = std::chrono::steady_clock::now();
-    const Tokenizer tok(files.spm, files.tokenizer);
-    Model model(env, files.onnx);
+    Candidate cand(env, *spec);
+    const auto verifier = verify_spec ? std::make_unique<Candidate>(env, *verify_spec) : nullptr;
+    const Tokenizer& tok = cand.tok;
     const double load_ms = std::chrono::duration<double, std::milli>(std::chrono::steady_clock::now() - load_start).count();
     std::vector<std::string> categories;
     for (const auto& [name, _] : data.at("categories").items()) {
@@ -459,30 +530,16 @@ int main(int argc, char** argv) {
     }
 
     std::vector<double> ms;
-    std::size_t entail = 0;
     std::map<std::string, std::vector<std::vector<float>>> examples;
     std::vector<std::vector<float>> negative_vectors;
-    if (nli) {
-        const auto config = read_json(files.onnx.parent_path() / "config.json");
-        bool found = false;
-        for (const auto& [k, v] : config.at("id2label").items()) {
-            if (v.get<std::string>().starts_with("entail")) {
-                entail = std::stoul(k);
-                found = true;
-            }
-        }
-        if (!found) {
-            std::printf("no entailment label\n");
-            return 2;
-        }
-    } else {
+    if (!nli) {
         for (const auto& c : categories) {
             for (const auto& e : data.at("categories").at(c).at("examples")) {
-                examples[c].push_back(embed(model, tok, files.prefix + e.get<std::string>()));
+                examples[c].push_back(embed(cand, e.get<std::string>()));
             }
         }
         for (const auto& e : data.at("negatives")) {
-            negative_vectors.push_back(embed(model, tok, files.prefix + e.get<std::string>()));
+            negative_vectors.push_back(embed(cand, e.get<std::string>()));
         }
     }
 
@@ -504,7 +561,7 @@ int main(int argc, char** argv) {
             return it == categories.end() ? classes - 1 : static_cast<std::size_t>(it - categories.begin());
         };
         for (const auto& r : load_lines(sentence_dir / "sentence-train.jsonl", false)) {
-            xs.push_back(embed(model, tok, files.prefix + r.text));
+            xs.push_back(embed(cand, r.text));
             ys.push_back(r.sensitive ? label_of(r.category) : classes - 1);
         }
         for (const auto& [c, v] : examples) {
@@ -628,7 +685,7 @@ int main(int argc, char** argv) {
     const auto score_one = [&](const std::string& text, std::string& predicted) {
         double best = -1e9;
         if (head) {
-            const auto v = embed(model, tok, files.prefix + text);
+            const auto v = embed(cand, text);
             const std::size_t d = v.size();
             std::vector<double> logit(classes, 0.0);
             for (std::size_t c = 0; c < classes; ++c) {
@@ -650,17 +707,14 @@ int main(int argc, char** argv) {
                     predicted = categories[c];
                 }
             }
+            if (verifier) {
+                best *= best >= 0.1 ? entail_prob(*verifier, text, data.at("categories").at(predicted).at("hypothesis").get<std::string>()) : 0.0;
+            }
             return best;
         }
         if (nli) {
             for (const auto& c : categories) {
-                std::vector<std::int64_t> shape;
-                const auto logits = model.run(pair(tok, text, data.at("categories").at(c).at("hypothesis").get<std::string>()), shape);
-                double denom = 0.0;
-                for (const float l : logits) {
-                    denom += std::exp(static_cast<double>(l));
-                }
-                const double p = std::exp(static_cast<double>(logits.at(entail))) / denom;
+                const double p = entail_prob(cand, text, data.at("categories").at(c).at("hypothesis").get<std::string>());
                 if (p > best) {
                     best = p;
                     predicted = c;
@@ -668,7 +722,7 @@ int main(int argc, char** argv) {
             }
             return best;
         }
-        const auto v = embed(model, tok, files.prefix + text);
+        const auto v = embed(cand, text);
         double neg = -1.0;
         for (const auto& n : negative_vectors) {
             neg = std::max(neg, dot(v, n));
