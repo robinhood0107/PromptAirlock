@@ -15,7 +15,9 @@
 #ifdef _WIN32
 #include <windows.h>
 #else
+#include <poll.h>
 #include <signal.h>
+#include <unistd.h>
 #endif
 
 namespace pc = prompt_airlock::core;
@@ -204,3 +206,20 @@ TEST(VaultClientE2E, ConcurrentScopesShareOneService) {
         EXPECT_EQ(failures[static_cast<std::size_t>(t)], 0) << "thread " << t;
     }
 }
+
+#ifndef _WIN32
+// Vault 는 부모가 열어 둔 다른 서술자(소켓 등)를 물려받지 않는다(#140). Windows 는 물려줄 핸들 목록을 따로 정한다.
+TEST(VaultClientE2E, VaultDoesNotInheritOtherDescriptors) {
+    int fds[2];
+    ASSERT_EQ(::pipe(fds), 0);  // asio 소켓처럼 CLOEXEC 없이 연다
+    pv::VaultService service(options());
+    ASSERT_TRUE(service.open_scope());  // 이때 Vault 가 뜬다
+    ::close(fds[1]);
+    // 쓰는 끝을 쥔 프로세스가 없으면 읽는 끝에서 바로 끝(EOF)이 보인다
+    pollfd p{fds[0], POLLIN, 0};
+    ASSERT_EQ(::poll(&p, 1, 2000), 1);  // 물려받았다면 2초 뒤 0 으로 실패한다(read 에서 멈추지 않게)
+    char c = 0;
+    EXPECT_EQ(::read(fds[0], &c, 1), 0);
+    ::close(fds[0]);
+}
+#endif

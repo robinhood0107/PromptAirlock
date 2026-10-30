@@ -367,6 +367,8 @@ Result<VaultProcess> VaultProcess::spawn(const SpawnOptions& opts) {
     // dup2 대상(0, 1)은 CLOEXEC 가 풀린다. 나머지 파이프 끝은 CLOEXEC 로 자식에 남지 않는다.
     posix_spawn_file_actions_adddup2(&fa, in_r.fd, 0);
     posix_spawn_file_actions_adddup2(&fa, out_w.fd, 1);
+    // 그 밖의 서술자는 자식에서 모두 닫는다. asio 소켓(듣기·클라이언트·provider)은 CLOEXEC 가 없어 그대로 넘어간다(#140).
+    posix_spawn_file_actions_addclosefrom_np(&fa, 3);
 
     const std::string exe = opts.exe.string();
     std::vector<std::string> args_store;
