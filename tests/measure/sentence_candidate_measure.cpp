@@ -274,11 +274,26 @@ bool must_block(const std::string& group) {
 
 }  // namespace
 
+// 95% Wilson 구간(백분율). 표본이 작을 때도 0-100 을 넘지 않는다.
+std::pair<double, double> wilson(std::size_t k, std::size_t n) {
+    if (n == 0) {
+        return {0.0, 0.0};
+    }
+    const double z = 1.96;
+    const double p = static_cast<double>(k) / static_cast<double>(n);
+    const double nn = static_cast<double>(n);
+    const double center = (p + z * z / (2 * nn)) / (1 + z * z / nn);
+    const double half = z * std::sqrt(p * (1 - p) / nn + z * z / (4 * nn * nn)) / (1 + z * z / nn);
+    return {100.0 * std::max(0.0, center - half), 100.0 * std::min(1.0, center + half)};
+}
+
 int main(int argc, char** argv) {
     std::string model_name;
-    bool final_set = false;
+    std::string set_name = "dev";
     bool explain = false;
     double fixed = std::nan("");
+    double alpha = std::nan("");  // 범주별 문턱값: 범주마다 통과 문장 점수의 (1 - alpha) 분위수(개발용 셋에서만)
+    fs::path thresholds_file;     // 범주별 문턱값을 파일에서 읽어 고정(판정용 셋)
     bool split = false;
     bool gate = false;
     std::size_t topk = 1;
@@ -287,11 +302,14 @@ int main(int argc, char** argv) {
         const std::string_view arg = argv[i];
         if (arg == "--model" && i + 1 < argc) {
             model_name = argv[++i];
-        } else if (arg == "--set" && i + 1 < argc && std::string_view(argv[i + 1]) == "final") {
-            final_set = true;
-            ++i;
+        } else if (arg == "--set" && i + 1 < argc) {
+            set_name = argv[++i];
         } else if (arg == "--threshold" && i + 1 < argc) {
             fixed = std::atof(argv[++i]);
+        } else if (arg == "--alpha" && i + 1 < argc) {
+            alpha = std::atof(argv[++i]);
+        } else if (arg == "--thresholds-file" && i + 1 < argc) {
+            thresholds_file = argv[++i];
         } else if (arg == "--explain") {
             explain = true;
         } else if (arg == "--split") {
@@ -305,8 +323,18 @@ int main(int argc, char** argv) {
         }
     }
     const bool nli = model_name == "nli";
-    if (model_name != "e5" && model_name != "e5base" && model_name != "minilm" && !nli) {
-        std::printf("--model e5|e5base|minilm|nli\n");
+    if (model_name != "e5" && model_name != "e5base" && model_name != "e5q" && model_name != "e5baseq" && model_name != "minilm" &&
+        !nli) {
+        std::printf("--model e5|e5base|e5q|e5baseq|minilm|nli\n");
+        return 2;
+    }
+    const bool final_set = set_name == "final" || set_name == "final2";
+    if (set_name != "dev" && set_name != "dev2" && !final_set) {
+        std::printf("--set dev|dev2|final|final2\n");
+        return 2;
+    }
+    if (final_set && !std::isnan(alpha)) {
+        std::printf("--alpha picks thresholds from the set itself; use it only on dev sets\n");
         return 2;
     }
     if (dir.empty()) {
@@ -331,6 +359,14 @@ int main(int argc, char** argv) {
         : model_name == "e5base"
         ? Files{dir / "intfloat_multilingual-e5-base/onnx/model.onnx", dir / "intfloat_multilingual-e5-base/onnx/sentencepiece.bpe.model",
                 dir / "intfloat_multilingual-e5-base/onnx/tokenizer.json", "query: "}
+        : model_name == "e5q"
+        ? Files{dir / "intfloat_multilingual-e5-small/onnx/model_qint8_avx512_vnni.onnx",
+                dir / "intfloat_multilingual-e5-small/onnx/sentencepiece.bpe.model", dir / "intfloat_multilingual-e5-small/onnx/tokenizer.json",
+                "query: "}
+        : model_name == "e5baseq"
+        ? Files{dir / "intfloat_multilingual-e5-base/onnx/model_qint8_avx512_vnni.onnx",
+                dir / "intfloat_multilingual-e5-base/onnx/sentencepiece.bpe.model", dir / "intfloat_multilingual-e5-base/onnx/tokenizer.json",
+                "query: "}
         : model_name == "minilm"
         ? Files{dir / "sentence-transformers_paraphrase-multilingual-MiniLM-L12-v2/onnx/model.onnx",
                 dir / "sentence-transformers_paraphrase-multilingual-MiniLM-L12-v2/sentencepiece.bpe.model",
@@ -340,12 +376,35 @@ int main(int argc, char** argv) {
                 dir / "protectai_MoritzLaurer-bge-m3-zeroshot-v2.0-c-onnx/tokenizer.json", ""};
 
     const fs::path sentence_dir = PA_SENTENCE_FIXTURE_DIR;
-    auto records = load_lines(sentence_dir / (final_set ? "sentence-final.jsonl" : "sentence-dev.jsonl"), false);
-    const auto negatives = load_lines(fs::path(PA_NER_FIXTURE_DIR) / (final_set ? "ner-final.jsonl" : "ner-large.jsonl"), true);
-    records.insert(records.end(), negatives.begin(), negatives.end());
+    // 셋: dev(7.5 개발용), final(7.5 판정용, 이미 봄), dev2(7.6 개발용 = dev + dev2 문장 + NER 셋 둘), final2(7.6 판정용)
+    const fs::path ner_dir = PA_NER_FIXTURE_DIR;
+    std::vector<Record> records;
+    const auto add_sentences = [&](const char* file) {
+        auto more = load_lines(sentence_dir / file, false);
+        records.insert(records.end(), more.begin(), more.end());
+    };
+    const auto add_negatives = [&](const char* file) {
+        auto more = load_lines(ner_dir / file, true);
+        records.insert(records.end(), more.begin(), more.end());
+    };
+    if (set_name == "dev") {
+        add_sentences("sentence-dev.jsonl");
+        add_negatives("ner-large.jsonl");
+    } else if (set_name == "final") {
+        add_sentences("sentence-final.jsonl");
+        add_negatives("ner-final.jsonl");
+    } else if (set_name == "dev2") {
+        add_sentences("sentence-dev.jsonl");
+        add_sentences("sentence-dev2.jsonl");
+        add_negatives("ner-large.jsonl");
+        add_negatives("ner-heldout.jsonl");
+    } else {
+        add_sentences("sentence-final2.jsonl");
+        add_negatives("ner-heldout2.jsonl");
+    }
     const auto data = read_json(sentence_dir / "candidates.json");
-    std::printf("model: %s, set: %s, records: %zu, split: %d, gate: %d, topk: %zu\n", model_name.c_str(), final_set ? "final" : "dev",
-                records.size(), split ? 1 : 0, gate ? 1 : 0, topk);
+    std::printf("model: %s, set: %s, records: %zu, split: %d, gate: %d, topk: %zu\n", model_name.c_str(), set_name.c_str(), records.size(),
+                split ? 1 : 0, gate ? 1 : 0, topk);
     std::vector<std::string> markers;
     for (const auto& m : data.at("person_markers")) {
         markers.push_back(m.get<std::string>());
@@ -494,13 +553,21 @@ int main(int argc, char** argv) {
     }
     const double after_mb = peak_mb();
 
-    // 3. 표
-    const auto evaluate = [&](double t, bool print_categories) {
+    // 3. 표. 문턱값은 판별기가 고른 범주마다 다를 수 있다(범주별 문턱값). 전역 문턱값은 모든 범주에 같은 값.
+    using Thresholds = std::map<std::string, double>;
+    const auto uniform = [&](double t) {
+        Thresholds m;
+        for (const auto& c : categories) {
+            m[c] = t;
+        }
+        return m;
+    };
+    const auto evaluate = [&](const Thresholds& th, bool print_categories) {
         std::map<std::string, Tally> by_group;
         std::map<std::string, std::map<std::string, Tally>> by_category;
         for (const auto& r : records) {
             const bool usable = !gate || r.person || r.predicted == "Credential";
-            const bool blocked = r.rule_blocked || (usable && r.score >= t);
+            const bool blocked = r.rule_blocked || (usable && r.score >= th.at(r.predicted));
             auto& g = by_group[r.group];
             ++g.total;
             g.blocked += blocked ? 1 : 0;
@@ -514,6 +581,28 @@ int main(int argc, char** argv) {
         }
         return std::pair{by_group, by_category};
     };
+    // 범주마다 판별기가 판정에 쓰는 통과 문장(규칙이 이미 막지 않은 것)의 점수 (1 - a) 분위수.
+    const auto per_category = [&](double a) {
+        std::map<std::string, std::vector<double>> benign_scores;
+        for (const auto& r : records) {
+            const bool usable = !gate || r.person || r.predicted == "Credential";
+            if (!r.sensitive && usable && !r.rule_blocked) {
+                benign_scores[r.predicted].push_back(r.score);
+            }
+        }
+        Thresholds m;
+        for (const auto& c : categories) {
+            auto& v = benign_scores[c];
+            if (v.empty()) {
+                m[c] = 1e9;  // 이 범주로 판정된 통과 문장이 없으면 기준을 정할 근거가 없어 판별기를 쓰지 않는다
+                continue;
+            }
+            std::ranges::sort(v);
+            const auto k = static_cast<std::size_t>(std::ceil((1.0 - a) * static_cast<double>(v.size())));
+            m[c] = k >= v.size() ? v.back() + 1e-6 : v[k];
+        }
+        return m;
+    };
     const auto pct = [](const Tally& t) { return t.total == 0 ? 0.0 : 100.0 * static_cast<double>(t.blocked) / static_cast<double>(t.total); };
     const auto benign = [&](const std::map<std::string, Tally>& g) {
         Tally all;
@@ -525,44 +614,82 @@ int main(int argc, char** argv) {
         }
         return all;
     };
+    const auto sweep_row = [&](const char* label, const Thresholds& th) {
+        const auto [g, _] = evaluate(th, false);
+        Tally ner;
+        for (const auto& [name, tl] : g) {
+            if (name.starts_with("ner-")) {
+                ner.total += tl.total;
+                ner.blocked += tl.blocked;
+            }
+        }
+        std::printf("%-18s %6.1f %6.1f %6.1f %6.1f | %6.1f %6.1f %6.1f %6.1f\n", label, pct(g.at("direct")), pct(g.at("variant")),
+                    pct(g.at("split")), pct(g.at("evasive")), pct(g.at("general")), pct(g.at("personal")), pct(ner), pct(benign(g)));
+    };
 
     std::printf("load ms %.0f, peak MB before %.0f after %.0f (+%.0f)\n", load_ms, before_mb, after_mb, after_mb - before_mb);
     std::printf("classifier ms per sentence: p50 %.3f  p95 %.3f  max %.3f (n=%zu); 256-token text (%zu pieces): p50 %.3f  p95 %.3f\n",
                 percentile(ms, 0.5), percentile(ms, 0.95), *std::ranges::max_element(ms), ms.size(), tok.ids(long_text).size(),
                 percentile(ms256, 0.5), percentile(ms256, 0.95));
-    if (std::isnan(fixed)) {
+
+    Thresholds chosen;
+    if (!thresholds_file.empty()) {
+        for (const auto& [c, v] : read_json(thresholds_file).items()) {
+            chosen[c] = v.get<double>();
+        }
+        for (const auto& c : categories) {
+            if (!chosen.contains(c)) {
+                std::printf("thresholds file has no %s\n", c.c_str());
+                return 2;
+            }
+        }
+    } else if (!std::isnan(alpha)) {
+        chosen = per_category(alpha);
+    } else if (!std::isnan(fixed)) {
+        chosen = uniform(fixed);
+    } else {
         std::vector<double> scores;
         for (const auto& r : records) {
             scores.push_back(r.score);
         }
         std::ranges::sort(scores);
         std::printf("\nrule OR (score >= t). recall%%: direct variant split evasive | false block%%: general personal ner-all benign-all\n");
+        std::printf("global threshold by score percentile\n");
         for (int q = 50; q <= 100; q += 2) {
             const double t = scores[std::min(scores.size() - 1, scores.size() * static_cast<std::size_t>(q) / 100)];
-            const auto [g, _] = evaluate(t, false);
-            Tally ner;
-            for (const auto& [name, tl] : g) {
-                if (name.starts_with("ner-")) {
-                    ner.total += tl.total;
-                    ner.blocked += tl.blocked;
-                }
-            }
-            std::printf("q%3d t=%8.4f  %6.1f %6.1f %6.1f %6.1f | %6.1f %6.1f %6.1f %6.1f\n", q, t, pct(g.at("direct")), pct(g.at("variant")),
-                        pct(g.at("split")), pct(g.at("evasive")), pct(g.at("general")), pct(g.at("personal")), pct(ner), pct(benign(g)));
+            char label[32];
+            std::snprintf(label, sizeof label, "q%3d t=%8.4f", q, t);
+            sweep_row(label, uniform(t));
+        }
+        std::printf("per-category threshold by benign quantile (1 - alpha)\n");
+        for (const double a : {0.005, 0.01, 0.02, 0.03, 0.04, 0.05, 0.06, 0.08, 0.10, 0.15, 0.20}) {
+            char label[32];
+            std::snprintf(label, sizeof label, "alpha=%.3f", a);
+            sweep_row(label, per_category(a));
         }
         return 0;
     }
-    const auto [g, c] = evaluate(fixed, true);
-    std::printf("\nthreshold %.4f (rule OR score >= t)\n%-16s %6s %8s %8s\n", fixed, "group", "n", "blocked", "rate%");
-    for (const auto& [name, t] : g) {
-        std::printf("%-16s %6zu %8zu %8.1f  %s\n", name.c_str(), t.total, t.blocked, pct(t), must_block(name) ? "recall" : "false block");
+
+    const auto [g, c] = evaluate(chosen, true);
+    std::printf("\nthresholds:");
+    json out;
+    for (const auto& [cat, t] : chosen) {
+        out[cat] = t;
     }
-    const auto b = benign(g);
-    std::printf("%-16s %6zu %8zu %8.1f  false block\n", "benign-all", b.total, b.blocked, pct(b));
+    std::printf(" %s\n", out.dump().c_str());
+    std::printf("\n%-16s %6s %8s %8s  %-16s\n", "group", "n", "blocked", "rate%", "95% interval");
+    const auto line = [&](const std::string& name, const Tally& t, const char* meaning) {
+        const auto [lo, hi] = wilson(t.blocked, t.total);
+        std::printf("%-16s %6zu %8zu %8.1f  %5.1f-%5.1f      %s\n", name.c_str(), t.total, t.blocked, pct(t), lo, hi, meaning);
+    };
+    for (const auto& [name, t] : g) {
+        line(name, t, must_block(name) ? "recall" : "false block");
+    }
+    line("benign-all", benign(g), "false block");
     std::printf("\nrate%% by category (blocked/n)\n%-15s", "category");
     const std::vector<std::string> groups = {"direct", "variant", "split", "evasive", "general", "personal"};
     for (const auto& name : groups) {
-        std::printf(" %13s", name.c_str());
+        std::printf(" %15s", name.c_str());
     }
     std::printf("\n");
     for (const auto& [category, row] : c) {
@@ -573,12 +700,25 @@ int main(int argc, char** argv) {
         for (const auto& name : groups) {
             const auto it = row.find(name);
             if (it == row.end()) {
-                std::printf(" %13s", "-");
+                std::printf(" %15s", "-");
             } else {
-                std::printf(" %5.1f (%2zu/%2zu)", pct(it->second), it->second.blocked, it->second.total);
+                std::printf(" %5.1f (%3zu/%3zu)", pct(it->second), it->second.blocked, it->second.total);
             }
         }
         std::printf("\n");
     }
+    // 판별기가 고른 범주별로 잘못 막은 통과 문장 수(어느 범주 문턱값이 오차단을 만드는지)
+    std::map<std::string, std::size_t> false_by_pred;
+    for (const auto& r : records) {
+        const bool usable = !gate || r.person || r.predicted == "Credential";
+        if (!r.sensitive && !r.rule_blocked && usable && r.score >= chosen.at(r.predicted)) {
+            ++false_by_pred[r.predicted];
+        }
+    }
+    std::printf("\nclassifier false blocks by predicted category:");
+    for (const auto& [cat, n] : false_by_pred) {
+        std::printf(" %s=%zu", cat.c_str(), n);
+    }
+    std::printf("\n");
     return 0;
 }
