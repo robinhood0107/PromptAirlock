@@ -32,6 +32,8 @@ BASES = {
     "xlmr-base": dict(dir="FacebookAI_xlm-roberta-base", clean=False),  # CC100, 조건 확인 필요
     "e5-small": dict(dir="intfloat_multilingual-e5-small", clean=False),  # 비상업 자료 포함(참고)
     "e5-base": dict(dir="intfloat_multilingual-e5-base", clean=False),
+    "klue-large": dict(dir="klue_roberta-large", clean=False),  # 한국어 전용, 사전학습 자료 일부 조건 확인 필요
+    "kcelectra": dict(dir="beomi_KcELECTRA-base-v2022", clean=False),  # MIT, 사전학습 자료가 뉴스 댓글
 }
 
 
