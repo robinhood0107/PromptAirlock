@@ -18,6 +18,7 @@ from transformers import AutoModelForSequenceClassification, AutoTokenizer
 from common import CATEGORIES, FIXTURES, NONE, Dev3, Scorer, evaluate, pick_thresholds, read_jsonl, verdict
 
 HF = Path(os.environ.get("LOCALAPPDATA", str(Path.home() / ".cache"))) / "prompt-airlock" / "models" / "hf"
+REAL = Path(__file__).resolve().parents[2] / "corpora" / "labels" / "real"
 
 # clean: 학습 데이터 조건이 카드에 상업 가능으로 밝혀진 것(#173). 나머지는 참고 비교 또는 조건 확인 필요.
 BASES = {
@@ -35,13 +36,18 @@ BASES = {
 
 
 def training_set(sets=("train2",)):
-    """(문장, 클래스) 목록. 고른 학습 셋(train2, train3)과 7.6 학습 셋, candidates.json 의 예시·정상 문장."""
-    data = [(r["text"], CATEGORIES.index(r["category"]) if r["sensitive"] else NONE)
-            for f in [f"sentence-{s}.jsonl" for s in sets] + ["sentence-train.jsonl"] for r in read_jsonl(FIXTURES / f)]
-    cand = json.loads((FIXTURES / "candidates.json").read_text(encoding="utf-8"))
-    for c, v in cand["categories"].items():
-        data += [(e, CATEGORIES.index(c)) for e in v["examples"]]
-    data += [(e, NONE) for e in cand["negatives"]]
+    """(문장, 클래스) 목록. 합성 셋(train2, train3)을 고르면 7.6 학습 셋과 candidates.json 의 예시·정상 문장을 함께 넣는다.
+    real 은 정답을 붙인 말뭉치 학습 몫(corpora/labels/real/train.jsonl, 저장소 밖 로컬 자료)이다."""
+    synthetic = [s for s in sets if s != "real"]
+    files = [FIXTURES / f"sentence-{s}.jsonl" for s in synthetic] + ([FIXTURES / "sentence-train.jsonl"] if synthetic else [])
+    if "real" in sets:
+        files.append(REAL / "train.jsonl")
+    data = [(r["text"], CATEGORIES.index(r["category"]) if r["sensitive"] else NONE) for f in files for r in read_jsonl(f)]
+    if synthetic:
+        cand = json.loads((FIXTURES / "candidates.json").read_text(encoding="utf-8"))
+        for c, v in cand["categories"].items():
+            data += [(e, CATEGORIES.index(c)) for e in v["examples"]]
+        data += [(e, NONE) for e in cand["negatives"]]
     return data
 
 
@@ -111,7 +117,7 @@ def main():
     ap.add_argument("--batch", type=int, default=32)
     ap.add_argument("--maxlen", type=int, default=128)
     ap.add_argument("--gate", default="person", choices=["person", "person2"])
-    ap.add_argument("--data", default="train2", help="학습 셋: train2 또는 train2+train3")
+    ap.add_argument("--data", default="train2", help="학습 셋을 + 로 잇는다: train2, train3, real(예: train2+train3+real)")
     ap.add_argument("--save", action="store_true", help="학습한 모델을 <out>/<바탕>-seed<N> 에 저장(ONNX 내보내기용)")
     a = ap.parse_args()
     out = Path(a.out)
