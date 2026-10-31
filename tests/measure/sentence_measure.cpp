@@ -1,13 +1,14 @@
 // 문장 단위 민감정보 기준선 측정(Phase 7.5-1). 기본 빌드·ctest 에 넣지 않고 직접 실행한다.
 //   cmake --build <빌드 디렉터리> --target sentence_measure && <빌드 디렉터리>/tests/measure/sentence_measure [--set final|dev3] [--no-ner]
-//                                                                 [--rules-out 파일 [--docs 폴더]]
+//                                                                 [--rules-out 파일 [--docs 폴더] [--lines 파일]]
 // 합성 셋(tests/fixtures/sentence)의 무리·범주마다 지금 탐지기가 막는 비율을 잰다. 막아야 하는 무리는 재현율,
 // 통과해야 하는 무리(general, personal)와 NER 합성 셋의 업무 문장은 잘못 막는 비율(오차단)이다.
 // 제품과 같이 NER 을 켠 탐지기를 기본으로 하고, --no-ner 는 결정론 규칙만 잰다. 통과 기준은 이 기준선을 본 뒤 정한다
 // (결정 #147). 원문은 출력하지 않고 놓친 문장의 id 만 --explain 으로 낸다.
 // --rules-out 은 판별기 실험(Phase 7.7, 결정 #174)이 규칙 판정을 제품과 같은 탐지기로 받도록 문장마다 규칙 결과를 JSONL 로 쓴다.
 // 셋 문장, dev3 이면 지름길 쌍(shortcut-dev3.jsonl)의 두 문장, --docs 폴더의 .txt 를 문장으로 나눈 것을 넣는다.
-// 실제 문서(--docs)는 원문이 파일에 들어가므로 출력 파일은 저장소 밖 보호 폴더에 둔다. 화면에는 개수만 낸다.
+// --lines 는 {"id","text"} JSONL 의 줄마다 "line:<id>" 로 넣는다(정답 붙인 말뭉치 셋 평가용).
+// 실제 문서(--docs)와 말뭉치(--lines)는 원문이 파일에 들어가므로 출력 파일은 저장소 밖 보호 폴더에 둔다. 화면에는 개수만 낸다.
 #include <algorithm>
 #include <chrono>
 #include <cstdio>
@@ -87,6 +88,7 @@ int main(int argc, char** argv) {
     bool dev3 = false;
     fs::path rules_out;
     fs::path docs;
+    fs::path lines;
     for (int i = 1; i < argc; ++i) {
         const std::string_view arg = argv[i];
         if (arg == "--no-ner") {
@@ -103,6 +105,8 @@ int main(int argc, char** argv) {
             rules_out = argv[++i];
         } else if (arg == "--docs" && i + 1 < argc) {
             docs = argv[++i];
+        } else if (arg == "--lines" && i + 1 < argc) {
+            lines = argv[++i];
         }
     }
     const fs::path sentence_dir = PA_SENTENCE_FIXTURE_DIR;
@@ -268,6 +272,17 @@ int main(int argc, char** argv) {
                     write("doc/" + path.filename().string() + "#" + std::to_string(n), parts[n].substr(first, last - first + 1));
                 }
                 ++files;
+            }
+        }
+        if (!lines.empty()) {
+            std::ifstream in(lines, std::ios::binary);
+            std::string line;
+            while (std::getline(in, line)) {
+                if (line.empty()) {
+                    continue;
+                }
+                const auto r = nlohmann::json::parse(line);
+                write("line:" + r.at("id").get<std::string>(), r.at("text").get<std::string>());
             }
         }
         out.flush();
