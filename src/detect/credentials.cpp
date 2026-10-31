@@ -45,6 +45,13 @@ struct Value {
 // ("비밀번호는 주기적으로 바꾸세요", "password is required" 는 값이 아니다).
 [[nodiscard]] std::optional<Value> value_after(std::u32string_view text, std::size_t marker_end) {
     std::size_t i = skip_blank(text, marker_end);
+    for (const auto s : data::marker_suffixes) {
+        if (text.substr(i, s.size()) == s) {
+            marker_end = i + s.size();
+            i = skip_blank(text, marker_end);
+            break;
+        }
+    }
     bool strong = false;
     if (i < text.size() && (text[i] == U':' || text[i] == U'=')) {
         strong = true;

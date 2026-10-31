@@ -32,6 +32,9 @@ inline constexpr auto common_words = std::to_array<std::string_view>({
     "windows", "office", "android", "iphone", "galaxy", "version", "update", "release", "python", "java",
 });
 
+// 표지어와 구분 사이에 낄 수 있는 말("OTP 번호는", "PIN 코드:"). #146 댓글(2026-10-30)에서 찾은 빈틈.
+inline constexpr auto marker_suffixes = std::to_array<std::u32string_view>({U"번호", U"코드", U"값", U"number", U"code"});
+
 // 표지어 뒤 구분으로 받는 한국어 조사와 영어 "is".
 inline constexpr auto marker_particles = std::to_array<std::u32string_view>({U"은", U"는", U"이", U"가", U"is"});
 
