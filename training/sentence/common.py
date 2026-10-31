@@ -52,6 +52,7 @@ def wilson(k, n, z=1.96):
 
 
 def rate(k, n):
+    k, n = int(k), int(n)  # numpy 정수가 섞여 와도 JSON 으로 쓸 수 있게
     lo, hi = wilson(k, n)
     return {"k": k, "n": n, "pct": 100.0 * k / n if n else 0.0, "low": lo, "high": hi}
 
@@ -143,7 +144,7 @@ def pick_thresholds(dev, scorer, alpha):
             continue
         v.sort()
         k = math.ceil((1.0 - alpha) * len(v))
-        th[c] = v[-1] + 1e-6 if k >= len(v) else v[k]
+        th[c] = float(v[-1] + 1e-6 if k >= len(v) else v[k])
     return th
 
 
@@ -191,5 +192,6 @@ def verdict(m):
             continue
         limit = CRITERIA["add_max"] if axis.endswith("_add") else CRITERIA["flip_max"]
         checks[f"axis_{axis}"] = v["pct"] <= limit
+    checks = {k: bool(v) for k, v in checks.items()}
     checks["all"] = all(checks.values())
     return checks
