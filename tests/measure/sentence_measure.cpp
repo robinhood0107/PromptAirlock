@@ -142,22 +142,54 @@ int main(int argc, char** argv) {
             bool person = std::ranges::any_of(markers, [&](const std::string& m) { return text.find(m) != std::string::npos; });
             bool credential = false;
             bool sensitive = false;
+            std::vector<pc::ByteSpan> names;
             if (found) {
                 for (const auto& e : *found) {
                     person = person || e.type() == pc::EntityType::Person;
                     credential = credential || e.type() == pc::EntityType::Credential;
                     sensitive = sensitive || e.type() == pc::EntityType::SensitivePersonalInfo;
+                    if (e.type() == pc::EntityType::Person) {
+                        names.push_back(e.span());
+                    }
+                }
+            }
+            // masked: NER 사람 범위를 "OOO" 로 바꾼 문장(7.6 의 이름 가리기와 같은 방식, 뒤에서부터 바꾸고 겹치면 건너뜀).
+            std::ranges::sort(names, std::greater<>());
+            std::string masked = text;
+            std::size_t limit = masked.size();
+            for (const auto& s : names) {
+                if (s.end().value() <= limit) {
+                    masked.replace(s.begin().value(), s.size(), "OOO");
+                    limit = s.begin().value();
                 }
             }
             // error 는 탐지 실패다. 제품에서는 차단이므로 실험도 막은 것으로 센다.
-            out << nlohmann::json{{"key", key}, {"text", text}, {"error", !found}, {"credential", credential}, {"sensitive", sensitive},
-                                  {"person", person}}
+            out << nlohmann::json{{"key", key},           {"text", text},     {"masked", masked}, {"error", !found},
+                                  {"credential", credential}, {"sensitive", sensitive}, {"person", person}}
                        .dump()
                 << '\n';
             ++written;
         };
         for (const auto& r : records) {
             write(r.id, r.text);
+        }
+        // 학습 재료(학습 전용 셋, candidates.json 의 범주 예시와 정상 문장)도 같은 방식으로 넣는다(이름 가리기 학습용).
+        for (const auto& r : load(sentence_dir / "sentence-train.jsonl")) {
+            write("train:" + r.id, r.text);
+        }
+        {
+            std::ifstream in(sentence_dir / "candidates.json", std::ios::binary);
+            const auto data = nlohmann::json::parse(in);
+            for (const auto& [c, v] : data.at("categories").items()) {
+                std::size_t n = 0;
+                for (const auto& e : v.at("examples")) {
+                    write("ex:" + c + ":" + std::to_string(n++), e.get<std::string>());
+                }
+            }
+            std::size_t n = 0;
+            for (const auto& e : data.at("negatives")) {
+                write("neg:" + std::to_string(n++), e.get<std::string>());
+            }
         }
         if (dev3) {
             std::ifstream in(sentence_dir / "shortcut-dev3.jsonl", std::ios::binary);
