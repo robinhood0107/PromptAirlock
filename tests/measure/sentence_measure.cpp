@@ -1,9 +1,13 @@
 // 문장 단위 민감정보 기준선 측정(Phase 7.5-1). 기본 빌드·ctest 에 넣지 않고 직접 실행한다.
-//   cmake --build <빌드 디렉터리> --target sentence_measure && <빌드 디렉터리>/tests/measure/sentence_measure [--set final] [--no-ner]
+//   cmake --build <빌드 디렉터리> --target sentence_measure && <빌드 디렉터리>/tests/measure/sentence_measure [--set final|dev3] [--no-ner]
+//                                                                 [--rules-out 파일 [--docs 폴더]]
 // 합성 셋(tests/fixtures/sentence)의 무리·범주마다 지금 탐지기가 막는 비율을 잰다. 막아야 하는 무리는 재현율,
 // 통과해야 하는 무리(general, personal)와 NER 합성 셋의 업무 문장은 잘못 막는 비율(오차단)이다.
 // 제품과 같이 NER 을 켠 탐지기를 기본으로 하고, --no-ner 는 결정론 규칙만 잰다. 통과 기준은 이 기준선을 본 뒤 정한다
 // (결정 #147). 원문은 출력하지 않고 놓친 문장의 id 만 --explain 으로 낸다.
+// --rules-out 은 판별기 실험(Phase 7.7, 결정 #174)이 규칙 판정을 제품과 같은 탐지기로 받도록 문장마다 규칙 결과를 JSONL 로 쓴다.
+// 셋 문장, dev3 이면 지름길 쌍(shortcut-dev3.jsonl)의 두 문장, --docs 폴더의 .txt 를 문장으로 나눈 것을 넣는다.
+// 실제 문서(--docs)는 원문이 파일에 들어가므로 출력 파일은 저장소 밖 보호 폴더에 둔다. 화면에는 개수만 낸다.
 #include <algorithm>
 #include <chrono>
 #include <cstdio>
@@ -18,6 +22,7 @@
 
 #include "prompt_airlock/detect/detectors.hpp"
 #include "prompt_airlock/ner/pool.hpp"
+#include "sentence_split.hpp"
 
 namespace fs = std::filesystem;
 namespace pc = prompt_airlock::core;
@@ -79,6 +84,9 @@ int main(int argc, char** argv) {
     bool use_ner = true;
     bool explain = false;
     bool final_set = false;
+    bool dev3 = false;
+    fs::path rules_out;
+    fs::path docs;
     for (int i = 1; i < argc; ++i) {
         const std::string_view arg = argv[i];
         if (arg == "--no-ner") {
@@ -88,13 +96,22 @@ int main(int argc, char** argv) {
         } else if (arg == "--set" && i + 1 < argc && std::string_view(argv[i + 1]) == "final") {
             final_set = true;
             ++i;
+        } else if (arg == "--set" && i + 1 < argc && std::string_view(argv[i + 1]) == "dev3") {
+            dev3 = true;
+            ++i;
+        } else if (arg == "--rules-out" && i + 1 < argc) {
+            rules_out = argv[++i];
+        } else if (arg == "--docs" && i + 1 < argc) {
+            docs = argv[++i];
         }
     }
     const fs::path sentence_dir = PA_SENTENCE_FIXTURE_DIR;
     const fs::path ner_dir = PA_NER_FIXTURE_DIR;
-    auto records = load(sentence_dir / (final_set ? "sentence-final.jsonl" : "sentence-dev.jsonl"));
-    const auto negatives = load_ner_negatives(ner_dir / (final_set ? "ner-final.jsonl" : "ner-large.jsonl"));
-    std::printf("set: %s, sentences: %zu, ner negatives: %zu, ner: %s\n", final_set ? "final" : "dev", records.size(),
+    auto records = load(sentence_dir / (final_set ? "sentence-final.jsonl" : dev3 ? "sentence-dev3.jsonl" : "sentence-dev.jsonl"));
+    // dev3 는 헷갈리는 정상 문장을 셋 안에 두므로 NER 셋 문장을 더하지 않는다.
+    const auto negatives =
+        dev3 ? std::vector<Record>{} : load_ner_negatives(ner_dir / (final_set ? "ner-final.jsonl" : "ner-large.jsonl"));
+    std::printf("set: %s, sentences: %zu, ner negatives: %zu, ner: %s\n", final_set ? "final" : dev3 ? "dev3" : "dev", records.size(),
                 negatives.size(), use_ner ? "on" : "off");
     records.insert(records.end(), negatives.begin(), negatives.end());
 
@@ -108,6 +125,82 @@ int main(int argc, char** argv) {
         pool = *made;
     }
     const auto detectors = *pd::Detectors::make({}, pool);
+
+    if (!rules_out.empty()) {
+        // 개인 표지(candidates.json 의 person_markers 또는 NER 사람)도 함께 쓴다. 판별기는 이것이 있을 때만 쓴다(--gate).
+        std::vector<std::string> markers;
+        {
+            std::ifstream in(sentence_dir / "candidates.json", std::ios::binary);
+            for (const auto& m : nlohmann::json::parse(in).at("person_markers")) {
+                markers.push_back(m.get<std::string>());
+            }
+        }
+        std::ofstream out(rules_out, std::ios::binary);
+        std::size_t written = 0;
+        const auto write = [&](const std::string& key, const std::string& text) {
+            const auto found = detectors.detect_segment(text, pc::SegmentIndex{0});
+            bool person = std::ranges::any_of(markers, [&](const std::string& m) { return text.find(m) != std::string::npos; });
+            bool credential = false;
+            bool sensitive = false;
+            if (found) {
+                for (const auto& e : *found) {
+                    person = person || e.type() == pc::EntityType::Person;
+                    credential = credential || e.type() == pc::EntityType::Credential;
+                    sensitive = sensitive || e.type() == pc::EntityType::SensitivePersonalInfo;
+                }
+            }
+            // error 는 탐지 실패다. 제품에서는 차단이므로 실험도 막은 것으로 센다.
+            out << nlohmann::json{{"key", key}, {"text", text}, {"error", !found}, {"credential", credential}, {"sensitive", sensitive},
+                                  {"person", person}}
+                       .dump()
+                << '\n';
+            ++written;
+        };
+        for (const auto& r : records) {
+            write(r.id, r.text);
+        }
+        if (dev3) {
+            std::ifstream in(sentence_dir / "shortcut-dev3.jsonl", std::ios::binary);
+            std::string line;
+            for (std::size_t n = 0; std::getline(in, line); ++n) {
+                const auto p = nlohmann::json::parse(line);
+                write("pair" + std::to_string(n) + ":a", p.at("a").get<std::string>());
+                write("pair" + std::to_string(n) + ":b", p.at("b").get<std::string>());
+            }
+        }
+        std::size_t files = 0;
+        if (!docs.empty()) {
+            std::vector<fs::path> paths;
+            for (const auto& e : fs::directory_iterator(docs)) {
+                if (e.is_regular_file() && e.path().extension() == ".txt") {
+                    paths.push_back(e.path());
+                }
+            }
+            std::ranges::sort(paths);
+            for (const auto& path : paths) {
+                std::ifstream in(path, std::ios::binary);
+                std::string text((std::istreambuf_iterator<char>(in)), std::istreambuf_iterator<char>());
+                // 메모장 등이 붙이는 UTF-8 BOM 과 Windows 줄 끝의 \r 을 뺀다.
+                if (text.starts_with("\xEF\xBB\xBF")) {
+                    text.erase(0, 3);
+                }
+                std::erase(text, '\r');
+                const auto parts = split_sentences(text);
+                for (std::size_t n = 0; n < parts.size(); ++n) {
+                    const auto first = parts[n].find_first_not_of(" \n\t");
+                    if (first == std::string::npos) {
+                        continue;
+                    }
+                    const auto last = parts[n].find_last_not_of(" \n\t");
+                    write("doc/" + path.filename().string() + "#" + std::to_string(n), parts[n].substr(first, last - first + 1));
+                }
+                ++files;
+            }
+        }
+        out.flush();
+        std::printf("rules-out: %zu lines, documents %zu\n", written, files);
+        return out ? 0 : 1;
+    }
 
     std::map<std::string, Tally> by_group;
     std::map<std::string, std::map<std::string, Tally>> by_category;  // 범주 -> 무리
