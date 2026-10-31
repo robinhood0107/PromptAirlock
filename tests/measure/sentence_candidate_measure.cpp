@@ -41,6 +41,7 @@
 
 #include "prompt_airlock/detect/detectors.hpp"
 #include "prompt_airlock/ner/pool.hpp"
+#include "sentence_split.hpp"
 
 namespace fs = std::filesystem;
 namespace pc = prompt_airlock::core;
@@ -292,25 +293,6 @@ std::vector<float> embed(Candidate& c, const std::string& text) {
         x = static_cast<float>(x / norm);
     }
     return v;
-}
-
-// 마침표·물음표·느낌표·줄바꿈 뒤에서 문장을 나눈다. 빈 문장은 버린다.
-std::vector<std::string> sentences(const std::string& text) {
-    std::vector<std::string> out;
-    std::string cur;
-    for (std::size_t i = 0; i < text.size(); ++i) {
-        const char c = text[i];
-        cur.push_back(c);
-        const bool end = c == '.' || c == '?' || c == '!' || c == '\n';
-        if (end && (i + 1 == text.size() || text[i + 1] == ' ' || text[i + 1] == '\n')) {
-            out.push_back(cur);
-            cur.clear();
-        }
-    }
-    if (cur.find_first_not_of(" \n") != std::string::npos) {
-        out.push_back(cur);
-    }
-    return out;
 }
 
 double dot(const std::vector<float>& a, const std::vector<float>& b) {
@@ -781,7 +763,7 @@ int main(int argc, char** argv) {
             return score_one(text, predicted);
         }
         double best = -1e9;
-        for (const auto& s : sentences(text)) {
+        for (const auto& s : split_sentences(text)) {
             std::string p;
             const double v = score_one(s, p);
             if (v > best) {

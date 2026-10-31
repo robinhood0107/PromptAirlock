@@ -33,6 +33,16 @@ vcpkg 포트가 아니라 고정 주소에서 받아 SHA-256 을 확인한 뒤�
 
 - 배포 묶음에는 ONNX Runtime 의 ThirdPartyNotices 와 모델 출처·저작자 고지를 함께 넣습니다. 모델 학습 데이터와 백본 가중치에 관한 남은 확인은 배포 전에 닫습니다.
 
+## 오프라인 학습 도구(Python, `training/`)
+
+문장 판별기 실험과 학습에만 씁니다(결정 #174). 제품 빌드·CI 빌드·런타임·배포 묶음에는 들어가지 않습니다. 판은 `training/requirements.txt` 로 고정합니다.
+
+| 패키지 | 판 | 라이선스 | 쓰는 곳 |
+|---|---|---|---|
+| numpy | 2.5.1 | BSD-3-Clause | 분류기 학습, 평가 계산 |
+| onnxruntime | 1.30.0 | MIT | 후보 모델 문장 벡터(C++ 과 같은 판) |
+| tokenizers | 0.22.2 | Apache-2.0 | 후보 모델 tokenizer.json 읽기 |
+
 ## Rust Vault(`vault/crates/prompt-airlock-vault`)
 
 직접 쓰는 crate
