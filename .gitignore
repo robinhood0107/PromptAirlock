@@ -81,3 +81,8 @@ Desktop.ini
 *.swp
 *.swo
 *~
+
+# 오프라인 학습 도구의 가상환경과 문장 벡터 캐시
+training/.venv/
+training/.cache/
+__pycache__/
