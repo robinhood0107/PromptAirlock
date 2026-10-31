@@ -42,6 +42,10 @@ vcpkg 포트가 아니라 고정 주소에서 받아 SHA-256 을 확인한 뒤�
 | numpy | 2.5.1 | BSD-3-Clause | 분류기 학습, 평가 계산 |
 | onnxruntime | 1.30.0 | MIT | 후보 모델 문장 벡터(C++ 과 같은 판) |
 | tokenizers | 0.22.2 | Apache-2.0 | 후보 모델 tokenizer.json 읽기 |
+| torch(CUDA 12.8 판) | 2.10.0 | BSD-3-Clause | 바탕 모델 전체 미세조정 |
+| transformers | 5.3.0 | Apache-2.0 | 바탕 모델 불러오기, 분류 머리 |
+| safetensors | 0.7.0 | Apache-2.0 | 가중치 파일 읽기 |
+| onnx | 1.19.1 | Apache-2.0 | 미세조정 모델 ONNX 내보내기 |
 
 ## Rust Vault(`vault/crates/prompt-airlock-vault`)
 

@@ -135,6 +135,41 @@ int main(int argc, char** argv) {
                 markers.push_back(m.get<std::string>());
             }
         }
+        // 개인 조건 v2(person-references.json, Phase 7.8-1): 소유 표현 x 친족어, 가리키는 말 x 사람 명사, 3인칭 대명사.
+        // "그 분야", "이 분기" 를 잡지 않도록 앞은 글 처음·공백·문장 부호, 뒤는 글 끝·공백·문장 부호·조사 첫 글자만 받는다.
+        std::vector<std::string> references;
+        {
+            std::ifstream in(sentence_dir / "person-references.json", std::ios::binary);
+            const auto r = nlohmann::json::parse(in);
+            for (const auto& p : r.at("possessives")) {
+                for (const auto& k : r.at("kin")) {
+                    references.push_back(p.get<std::string>() + k.get<std::string>());
+                }
+            }
+            for (const auto& p : r.at("pointers")) {
+                for (const auto& n : r.at("nouns")) {
+                    references.push_back(p.get<std::string>() + n.get<std::string>());
+                }
+            }
+            for (const auto& p : r.at("pronouns")) {
+                references.push_back(p.get<std::string>());
+            }
+        }
+        const std::vector<std::string> particles = {"은", "는", "이", "가", "을", "를", "의", "도", "한", "에", "께", "랑", "하", "과", "와", "만", "들", "님", "네", "말", "쪽", "이랑"};
+        const auto refers_to_person = [&](const std::string& text) {
+            for (const auto& ref : references) {
+                for (auto at = text.find(ref); at != std::string::npos; at = text.find(ref, at + 1)) {
+                    const bool left = at == 0 || std::string_view(" \n\t\"'(,.:[").find(text[at - 1]) != std::string_view::npos;
+                    const auto rest = std::string_view(text).substr(at + ref.size());
+                    const bool right = rest.empty() || std::string_view(" \n\t\"'),.?!:;]").find(rest.front()) != std::string_view::npos ||
+                                       std::ranges::any_of(particles, [&](const std::string& p) { return rest.starts_with(p); });
+                    if (left && right) {
+                        return true;
+                    }
+                }
+            }
+            return false;
+        };
         std::ofstream out(rules_out, std::ios::binary);
         std::size_t written = 0;
         const auto write = [&](const std::string& key, const std::string& text) {
@@ -164,8 +199,14 @@ int main(int argc, char** argv) {
                 }
             }
             // error 는 탐지 실패다. 제품에서는 차단이므로 실험도 막은 것으로 센다.
-            out << nlohmann::json{{"key", key},           {"text", text},     {"masked", masked}, {"error", !found},
-                                  {"credential", credential}, {"sensitive", sensitive}, {"person", person}}
+            out << nlohmann::json{{"key", key},
+                                  {"text", text},
+                                  {"masked", masked},
+                                  {"error", !found},
+                                  {"credential", credential},
+                                  {"sensitive", sensitive},
+                                  {"person", person},
+                                  {"person2", person || refers_to_person(text)}}
                        .dump()
                 << '\n';
             ++written;

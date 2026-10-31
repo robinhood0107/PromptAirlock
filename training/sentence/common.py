@@ -107,8 +107,9 @@ def rule_block(rule, sensitive, category):
 class Scorer:
     """문장별 확률(probs: 문장 -> 클래스별 확률)로 글 하나의 점수와 판정을 낸다(--split --gate 와 같은 방식)."""
 
-    def __init__(self, probs, masked, thresholds=None):
-        self.probs, self.masked, self.thresholds = probs, masked, thresholds
+    def __init__(self, probs, masked, thresholds=None, gate="person"):
+        # gate: 개인 조건 칸. "person" 은 7.6 과 같은 조건, "person2" 는 친족·가리키는 말을 더한 v2(person-references.json).
+        self.probs, self.masked, self.thresholds, self.gate = probs, masked, thresholds, gate
 
     def score(self, rule):
         best, pred = -1.0, None
@@ -121,7 +122,7 @@ class Scorer:
 
     def warn(self, rule):
         score, pred = self.score(rule)
-        usable = rule["person"] or pred == "Credential"
+        usable = rule[self.gate] or pred == "Credential"
         return usable and score >= self.thresholds[pred]
 
     def flagged(self, rule, sensitive=False, category=None):
@@ -135,7 +136,7 @@ def pick_thresholds(dev, scorer, alpha):
         if r["half"] != "select" or r["sensitive"] or rule_block(r["rule"], False, None):
             continue
         s, pred = scorer.score(r["rule"])
-        if r["rule"]["person"] or pred == "Credential":
+        if r["rule"][scorer.gate] or pred == "Credential":
             scores[pred].append(s)
     th = {}
     for c, v in scores.items():
