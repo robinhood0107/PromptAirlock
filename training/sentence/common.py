@@ -95,6 +95,44 @@ class Dev3:
         return sorted(out)
 
 
+class RealSet:
+    """정답 붙인 말뭉치 셋(저장소 밖 로컬 자료). dev 는 문턱값 고르기에만, test(자연 분포)와 test-targeted(드문 범주)는 평가에만 쓴다.
+    규칙 판정은 sentence_measure --lines 결과("line:<id>")를 쓴다."""
+
+    PARTS = ("dev", "test", "test-targeted")
+
+    def __init__(self, real_dir, rules_path):
+        rules = {r["key"]: r for r in read_jsonl(rules_path) if r["key"].startswith("line:")}
+        self.parts = {}
+        for name in self.PARTS:
+            rows = read_jsonl(Path(real_dir) / f"{name}.jsonl")
+            for r in rows:
+                r["rule"] = rules["line:" + r["id"]]
+            self.parts[name] = rows
+
+    def texts(self):
+        return sorted({s for rows in self.parts.values() for r in rows for s in split_sentences(r["rule"]["text"])})
+
+
+def evaluate_real(rows, scorer):
+    """문장마다 정답이 있는 셋의 재현율·범주 일치·정상 경고. 경고 모드라 민감 문장은 규칙 차단이나 판별기 경고면 잡은 것이다."""
+    pos = [r for r in rows if r["sensitive"]]
+    neg = [r for r in rows if not r["sensitive"]]
+
+    def right(r):
+        return rule_block(r["rule"], True, r["category"]) or (scorer.warn(r["rule"]) and scorer.score(r["rule"])[1] == r["category"])
+
+    return {
+        "recall": rate(sum(scorer.flagged(r["rule"], True, r["category"]) for r in pos), len(pos)),
+        "category_right": rate(sum(right(r) for r in pos), len(pos)),
+        "rule_recall": rate(sum(rule_block(r["rule"], True, r["category"]) for r in pos), len(pos)),
+        "benign_warn": rate(sum(scorer.warn(r["rule"]) and not rule_block(r["rule"], False, None) for r in neg), len(neg)),
+        "benign_flagged": rate(sum(scorer.flagged(r["rule"]) for r in neg), len(neg)),
+        "by_category": {c: rate(sum(scorer.flagged(r["rule"], True, c) for r in pos if r["category"] == c),
+                                sum(r["category"] == c for r in pos)) for c in CATEGORIES},
+    }
+
+
 def rule_block(rule, sensitive, category):
     # 민감 문장은 맞는 종류로 막아야 막은 것이고(인증 정보는 Credential, 나머지는 민감정보), 정상 문장은 무엇이든 나오면 막은 것이다.
     if rule["error"]:
@@ -129,11 +167,12 @@ class Scorer:
         return rule_block(rule, sensitive, category) or self.warn(rule)
 
 
-def pick_thresholds(dev, scorer, alpha):
+def pick_thresholds(dev, scorer, alpha, extra=()):
     # 범주마다 고르는 쪽 정상 문장(규칙이 막지 않았고 판별기를 쓰는 것)의 점수 (1 - alpha) 분위수. C++ per_category 와 같은 식.
+    # extra: 고르는 쪽에 더할 문장(정답 붙인 말뭉치 dev). dev3 고르는 쪽과 합쳐 한 벌의 문턱값을 정한다.
     scores = {c: [] for c in CATEGORIES}
-    for r in dev.records:
-        if r["half"] != "select" or r["sensitive"] or rule_block(r["rule"], False, None):
+    for r in [r for r in dev.records if r["half"] == "select"] + list(extra):
+        if r["sensitive"] or rule_block(r["rule"], False, None):
             continue
         s, pred = scorer.score(r["rule"])
         if r["rule"][scorer.gate] or pred == "Credential":

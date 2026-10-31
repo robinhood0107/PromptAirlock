@@ -15,7 +15,7 @@ import numpy as np
 import torch
 from transformers import AutoModelForSequenceClassification, AutoTokenizer
 
-from common import CATEGORIES, FIXTURES, NONE, Dev3, Scorer, evaluate, pick_thresholds, read_jsonl, verdict
+from common import CATEGORIES, FIXTURES, NONE, Dev3, RealSet, Scorer, evaluate, evaluate_real, pick_thresholds, read_jsonl, verdict
 
 HF = Path(os.environ.get("LOCALAPPDATA", str(Path.home() / ".cache"))) / "prompt-airlock" / "models" / "hf"
 REAL = Path(__file__).resolve().parents[2] / "corpora" / "labels" / "real"
@@ -118,6 +118,7 @@ def main():
     ap.add_argument("--maxlen", type=int, default=128)
     ap.add_argument("--gate", default="person", choices=["person", "person2"])
     ap.add_argument("--data", default="train2", help="학습 셋을 + 로 잇는다: train2, train3, real(예: train2+train3+real)")
+    ap.add_argument("--real-rules", default="", help="정답 붙인 말뭉치 셋의 규칙 판정(sentence_measure --lines 결과). 주면 문턱값을 dev3 고르는 쪽 + 말뭉치 dev 로 정하고 말뭉치 test 도 잰다")
     ap.add_argument("--save", action="store_true", help="학습한 모델을 <out>/<바탕>-seed<N> 에 저장(ONNX 내보내기용)")
     a = ap.parse_args()
     out = Path(a.out)
@@ -125,6 +126,9 @@ def main():
     device = "cuda"
     dev = Dev3(a.rules)
     texts = dev.texts(False)
+    real = RealSet(REAL, a.real_rules) if a.real_rules else None
+    if real:
+        texts = sorted(set(texts) | set(real.texts()))
     data = training_set(a.data.split("+"))
     for base in a.models.split(","):
         runs = []
@@ -137,10 +141,18 @@ def main():
             probs = probabilities(tok, model, texts, a.maxlen, device)
             for alpha in map(float, a.alpha.split(",")):
                 sc = Scorer(probs, False, gate=a.gate)
-                sc.thresholds = pick_thresholds(dev, sc, alpha)
+                sc.thresholds = pick_thresholds(dev, sc, alpha, real.parts["dev"] if real else ())
                 m = evaluate(dev, sc, "test")
                 runs.append(dict(seed=seed, alpha=alpha, loss=loss, train_acc=train_acc, train_seconds=train_s, thresholds=sc.thresholds,
                                  test=m, select=evaluate(dev, sc, "select"), verdict=verdict(m)))
+                if real:
+                    runs[-1]["real"] = {name: evaluate_real(rows, sc) for name, rows in real.parts.items()}
+                    runs[-1]["real"]["test+targeted"] = evaluate_real(real.parts["test"] + real.parts["test-targeted"], sc)
+                    rm = runs[-1]["real"]
+                    print(f"  real dev recall {rm["dev"]["recall"]["pct"]:.1f} warn {rm["dev"]["benign_warn"]["pct"]:.1f} | "
+                          f"test recall {rm["test"]["recall"]["pct"]:.1f} warn {rm["test"]["benign_warn"]["pct"]:.1f} "
+                          f"(high {rm["test"]["benign_warn"]["high"]:.1f}) | targeted recall {rm["test-targeted"]["recall"]["pct"]:.1f} "
+                          f"hard-none warn {rm["test-targeted"]["benign_warn"]["pct"]:.1f}", flush=True)
                 print(f"{base} seed{seed} a{alpha:g}: evasive {m['evasive']['pct']:.1f} (low {m['evasive']['low']:.1f}) "
                       f"warn {m['benign_warn']['pct']:.1f} (high {m['benign_warn']['high']:.1f}) "
                       + " ".join(f"{k} {v['pct']:.1f}" for k, v in m["axes"].items())
