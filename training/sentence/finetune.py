@@ -34,10 +34,10 @@ BASES = {
 }
 
 
-def training_set():
-    """(문장, 클래스) 목록. train2 와 7.6 학습 셋, candidates.json 의 예시·정상 문장."""
+def training_set(sets=("train2",)):
+    """(문장, 클래스) 목록. 고른 학습 셋(train2, train3)과 7.6 학습 셋, candidates.json 의 예시·정상 문장."""
     data = [(r["text"], CATEGORIES.index(r["category"]) if r["sensitive"] else NONE)
-            for f in ("sentence-train2.jsonl", "sentence-train.jsonl") for r in read_jsonl(FIXTURES / f)]
+            for f in [f"sentence-{s}.jsonl" for s in sets] + ["sentence-train.jsonl"] for r in read_jsonl(FIXTURES / f)]
     cand = json.loads((FIXTURES / "candidates.json").read_text(encoding="utf-8"))
     for c, v in cand["categories"].items():
         data += [(e, CATEGORIES.index(c)) for e in v["examples"]]
@@ -110,6 +110,8 @@ def main():
     ap.add_argument("--lr", type=float, default=3e-5)
     ap.add_argument("--batch", type=int, default=32)
     ap.add_argument("--maxlen", type=int, default=128)
+    ap.add_argument("--gate", default="person", choices=["person", "person2"])
+    ap.add_argument("--data", default="train2", help="학습 셋: train2 또는 train2+train3")
     ap.add_argument("--save", action="store_true", help="학습한 모델을 <out>/<바탕>-seed<N> 에 저장(ONNX 내보내기용)")
     a = ap.parse_args()
     out = Path(a.out)
@@ -117,7 +119,7 @@ def main():
     device = "cuda"
     dev = Dev3(a.rules)
     texts = dev.texts(False)
-    data = training_set()
+    data = training_set(a.data.split("+"))
     for base in a.models.split(","):
         runs = []
         for seed in map(int, a.seeds.split(",")):
@@ -128,7 +130,7 @@ def main():
             train_acc = float(np.mean([train_probs[t].argmax() == lab for t, lab in data]))
             probs = probabilities(tok, model, texts, a.maxlen, device)
             for alpha in map(float, a.alpha.split(",")):
-                sc = Scorer(probs, False)
+                sc = Scorer(probs, False, gate=a.gate)
                 sc.thresholds = pick_thresholds(dev, sc, alpha)
                 m = evaluate(dev, sc, "test")
                 runs.append(dict(seed=seed, alpha=alpha, loss=loss, train_acc=train_acc, train_seconds=train_s, thresholds=sc.thresholds,
@@ -143,7 +145,7 @@ def main():
                 tok.save_pretrained(out / f"{base}-seed{seed}")
             del model
             torch.cuda.empty_cache()
-        rec = dict(base=base, clean=BASES[base]["clean"], train_n=len(data), epochs=a.epochs, lr=a.lr, batch=a.batch, maxlen=a.maxlen,
+        rec = dict(base=base, clean=BASES[base]["clean"], data=a.data, gate=a.gate, train_n=len(data), epochs=a.epochs, lr=a.lr, batch=a.batch, maxlen=a.maxlen,
                    torch=torch.__version__, runs=runs)
         (out / f"{base}.json").write_text(json.dumps(rec, ensure_ascii=False, indent=1), encoding="utf-8")
 
