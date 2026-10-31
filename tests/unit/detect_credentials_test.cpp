@@ -42,6 +42,10 @@ TEST(DetectCredentials, Positives) {
         {"Authorization: Basic dXNlcjpwYXNz", "dXNlcjpwYXNz"},
         {"로그인 계정 정보 Xy7#mK2pQ", "Xy7#mK2pQ"},
         {"パスワード：abc123", "abc123"},
+        {"OTP 번호는 551207 이에요", "551207"},
+        {"OTP번호는 551207 이에요", "551207"},
+        {"PIN 코드: 7391", "7391"},
+        {"pin code is 7391", "7391"},
     };
     for (const auto& [text, value] : cases) {
         const auto found = credentials(text);
@@ -61,6 +65,8 @@ TEST(DetectCredentials, Negatives) {
              "ID: user01 만 알려 드립니다",
              "passcode2 field",
              "로그인 요청 REQ-2026-001234 처리",
+             "OTP 번호는 문자로 받으세요",
+             "비밀번호 값은 바꾸지 마세요",
          }) {
         EXPECT_TRUE(credentials(text).empty()) << text;
     }
