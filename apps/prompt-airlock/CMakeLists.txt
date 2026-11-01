@@ -3,7 +3,10 @@ set(PA_VAULT_EXE "${CMAKE_BINARY_DIR}/cargo/release/prompt-airlock-vault${CMAKE_
 add_executable(prompt-airlock main.cpp)
 target_link_libraries(prompt-airlock PRIVATE prompt_airlock_audit prompt_airlock_gateway prompt_airlock_provider prompt_airlock_tls
                       prompt_airlock_vault_client prompt_airlock_ner pa_options)
-target_compile_definitions(prompt-airlock PRIVATE "PA_VAULT_EXE=\"${PA_VAULT_EXE}\"" PA_NER_MODEL_DIR="${PA_NER_MODEL_DIR}")
+# 문장 판별기 모델(ADR 0023)은 저장소 밖에서 학습해 내보낸 파일을 이 폴더에 둔다(classifier.json 해시로 고정).
+set(PA_SENTENCE_MODEL_DIR "${CMAKE_BINARY_DIR}/models/sentence" CACHE PATH "문장 판별기 모델 폴더")
+target_compile_definitions(prompt-airlock PRIVATE "PA_VAULT_EXE=\"${PA_VAULT_EXE}\"" PA_NER_MODEL_DIR="${PA_NER_MODEL_DIR}"
+                           PA_SENTENCE_MODEL_DIR="${PA_SENTENCE_MODEL_DIR}")
 add_dependencies(prompt-airlock prompt_airlock_vault)
 pa_copy_runtime_dlls(prompt-airlock)
 if(MSVC)

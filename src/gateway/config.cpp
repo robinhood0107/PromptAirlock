@@ -281,7 +281,7 @@ std::expected<Config, ConfigError> parse_config(std::string_view json_text, cons
     if (guard.found()) {
         return fail(ConfigProblem::Duplicate, "");
     }
-    if (auto r = only_keys(root, {"listen", "provider", "origins", "internal_terms", "output_token_cap", "history_retention_days"}, ""); !r) {
+    if (auto r = only_keys(root, {"listen", "provider", "origins", "internal_terms", "output_token_cap", "history_retention_days", "sentence_warn"}, ""); !r) {
         return std::unexpected(r.error());
     }
     Config config;
@@ -310,6 +310,13 @@ std::expected<Config, ConfigError> parse_config(std::string_view json_text, cons
             return fail(ConfigProblem::InvalidValue, "history_retention_days");
         }
         config.history_retention_days = static_cast<int>(n);
+    }
+    if (root.contains("sentence_warn")) {
+        auto value = member(root, "sentence_warn", "", json::value_t::boolean);
+        if (!value) {
+            return std::unexpected(value.error());
+        }
+        config.sentence_warn = (*value)->get<bool>();
     }
     return config;
 }

@@ -7,6 +7,7 @@ add_library(prompt_airlock_ner
   engine.cpp
   model_files.cpp
   pool.cpp
+  sentence_classifier.cpp
   session.cpp
   tokenizer.cpp
   windows.cpp)

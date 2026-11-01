@@ -36,6 +36,14 @@ target_compile_definitions(sentence_measure PRIVATE PA_NER_MODEL_DIR="${PA_NER_M
                            PA_SENTENCE_FIXTURE_DIR="${PROJECT_SOURCE_DIR}/tests/fixtures/sentence")
 pa_copy_runtime_dlls(sentence_measure)
 
+# 제품 문장 판별기(Phase 7.8-3): Python 과의 확률 일치, 판별 시간, 메모리. 모델은 저장소 밖 폴더를 인자로 준다.
+add_executable(sentence_classifier_measure EXCLUDE_FROM_ALL sentence_classifier_measure.cpp)
+target_link_libraries(sentence_classifier_measure PRIVATE prompt_airlock_ner pa_options nlohmann_json::nlohmann_json)
+if(WIN32)
+  target_link_libraries(sentence_classifier_measure PRIVATE psapi)
+endif()
+pa_copy_runtime_dlls(sentence_classifier_measure)
+
 # 문장 판별 후보 측정(Phase 7.5-2). 기본 빌드에는 없고, vcpkg 기능 sentence-spike(sentencepiece)를 켠 구성에서만 만든다.
 #   cmake --preset win-release -B build/win-release-spike -DVCPKG_MANIFEST_FEATURES=sentence-spike -DPA_SENTENCE_SPIKE=ON
 option(PA_SENTENCE_SPIKE "Phase 7.5 문장 판별 후보 측정 도구" OFF)

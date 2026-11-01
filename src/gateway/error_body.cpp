@@ -95,4 +95,15 @@ JsonResponse error_response(const core::UserRejection& rejection) {
     return {shape.status, render(shape, types)};
 }
 
+JsonResponse confirm_response(std::string_view token, const std::vector<std::string>& categories) {
+    json error = {{"message", "The prompt may contain sensitive personal information. Check it and resend the same request "
+                              "with the X-Prompt-Airlock-Confirm header to send it anyway."},
+                  {"type", "invalid_request_error"},
+                  {"param", nullptr},
+                  {"code", "confirmation_required"},
+                  {"categories", categories},
+                  {"confirm_token", token}};
+    return {409, json{{"error", std::move(error)}}.dump()};
+}
+
 }  // namespace prompt_airlock::gateway

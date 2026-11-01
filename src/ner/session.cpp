@@ -43,15 +43,15 @@ OrtSession& OrtSession::operator=(OrtSession&&) noexcept = default;
 OrtSession::~OrtSession() = default;
 
 std::expected<OrtSession, SessionError> OrtSession::create(std::shared_ptr<const OrtEnv> env,
-                                                           std::span<const std::byte> onnx) {
-    if (!env) {
+                                                           std::span<const std::byte> onnx, int intra_threads) {
+    if (!env || intra_threads < 1) {
         return std::unexpected(SessionError::Load);
     }
     try {
         auto impl = std::make_unique<Impl>();
         impl->env = std::move(env);
         Ort::SessionOptions options;
-        options.SetIntraOpNumThreads(1);
+        options.SetIntraOpNumThreads(intra_threads);
         options.SetInterOpNumThreads(1);
         options.SetExecutionMode(ExecutionMode::ORT_SEQUENTIAL);
         options.SetGraphOptimizationLevel(GraphOptimizationLevel::ORT_ENABLE_ALL);
@@ -100,13 +100,15 @@ std::expected<Logits, SessionError> OrtSession::run(std::span<const std::int64_t
 
         const auto info = outputs.front().GetTensorTypeAndShapeInfo();
         const auto out_shape = info.GetShape();
-        if (info.GetElementType() != ONNX_TENSOR_ELEMENT_DATA_TYPE_FLOAT || out_shape.size() != 3 ||
-            out_shape[0] != 1 || out_shape[1] != n || out_shape[2] <= 0) {
+        // token 마다 [1, n, labels](NER) 또는 글 하나에 [1, labels](문장 판별기).
+        const bool per_token = out_shape.size() == 3 && out_shape[1] == n;
+        if (info.GetElementType() != ONNX_TENSOR_ELEMENT_DATA_TYPE_FLOAT || !(per_token || out_shape.size() == 2) ||
+            out_shape[0] != 1 || out_shape.back() <= 0) {
             return std::unexpected(SessionError::BadOutput);
         }
         Logits logits;
-        logits.length = ids.size();
-        logits.labels = static_cast<std::size_t>(out_shape[2]);
+        logits.length = per_token ? ids.size() : 1;
+        logits.labels = static_cast<std::size_t>(out_shape.back());
         const float* data = outputs.front().GetTensorData<float>();
         logits.values.assign(data, data + logits.length * logits.labels);
         return logits;

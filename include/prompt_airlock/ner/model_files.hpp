@@ -6,6 +6,7 @@
 #include <expected>
 #include <filesystem>
 #include <string>
+#include <string_view>
 #include <vector>
 
 namespace prompt_airlock::ner {
@@ -26,6 +27,11 @@ struct VerifiedModelFiles {
     std::string tokenizer;
     std::string config;
 };
+
+// path 를 읽어 SHA-256 이 want_sha256 과 같을 때만 바이트를 돌려준다. 없거나 읽을 수 없으면 Missing,
+// max_bytes 보다 크거나 해시가 다르면 Mismatch(큰 파일은 읽지 않고 다른 파일로 본다).
+[[nodiscard]] std::expected<std::vector<std::byte>, ModelFilesError> read_pinned_file(
+    const std::filesystem::path& path, std::string_view want_sha256, std::uintmax_t max_bytes = 100ULL * 1024 * 1024);
 
 // dir 안의 model.onnx, tokenizer.json, config.json 을 읽어 SHA-256 을 상수와 비교한다.
 // 파일이 없거나 읽을 수 없으면 Missing, 해시가 다르면 Mismatch.

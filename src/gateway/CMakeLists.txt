@@ -7,6 +7,7 @@ find_package(OpenSSL REQUIRED)
 add_library(prompt_airlock_gateway
   auth.cpp
   config.cpp
+  confirm.cpp
   error_body.cpp
   pipeline.cpp
   provider_json.cpp

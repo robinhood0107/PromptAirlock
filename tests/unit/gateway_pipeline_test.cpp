@@ -123,7 +123,7 @@ private:
 class GatewayPipeline : public ::testing::Test {
 protected:
     gw::Pipeline make(const detect::Detectors& detectors, std::size_t in_flight_limit = gw::pipeline_in_flight_limit,
-                      std::chrono::milliseconds time_limit = gw::request_time_limit) {
+                      std::chrono::milliseconds time_limit = gw::request_time_limit, gw::SentenceCheck sentence = {}) {
         return gw::Pipeline(
             detectors,
             [this]() -> std::expected<gw::PseudonymScope, core::VaultError> {
@@ -149,15 +149,17 @@ protected:
                 }
                 co_return gw::ProviderReply{200, answer_ ? answer_(sent_.back()) : pa_mock::make_answer(sent_.back())};
             },
-            *core::OutputTokenCap::make(512), "demo-alias", work_.get_executor(), nullptr, in_flight_limit, time_limit);
+            *core::OutputTokenCap::make(512), "demo-alias", work_.get_executor(), nullptr, in_flight_limit, time_limit,
+            std::move(sentence));
     }
 
     gw::JsonResponse run(const gw::Pipeline& pipeline, std::string body,
-                         core::GradePolicy policy = core::GradePolicy::OOnly) {
+                         core::GradePolicy policy = core::GradePolicy::OOnly, std::string confirm = {}) {
         asio::io_context io;
         auto grade = core::resolve_grade(policy, {});
-        auto future = asio::co_spawn(io, pipeline.handle(gw::AcceptedRequest{nullptr, *grade, std::move(body)}),
-                                     asio::use_future);
+        auto future = asio::co_spawn(
+            io, pipeline.handle(gw::AcceptedRequest{nullptr, *grade, std::move(body), {}, std::move(confirm)}),
+            asio::use_future);
         io.run();
         return future.get();
     }
@@ -281,6 +283,65 @@ TEST_F(GatewayPipeline, InfrastructureFailuresFailClosed) {
     ASSERT_TRUE(broken.has_value());
     const auto ner_down = make(*broken);
     EXPECT_EQ(code_of(run(ner_down, ask("회의 안건 정리"))), core::reason_code_name(core::ReasonCode::DetectorUnavailable));
+    EXPECT_EQ(provider_calls_, 0);
+}
+
+// 가짜 판별기: "정신과" 가 든 메시지를 Health 로 본다. 불린 횟수와 받은 사람 여부를 남긴다.
+gw::SentenceCheck fake_sentence(std::atomic<int>& calls, bool fail = false) {
+    return [&calls, fail](std::string_view text, bool, std::stop_token)
+               -> std::expected<std::optional<std::string>, core::DetectError> {
+        ++calls;
+        if (fail) {
+            return std::unexpected(core::DetectError::Unavailable);
+        }
+        return text.find("정신과") != std::string_view::npos ? std::optional<std::string>("Health") : std::nullopt;
+    };
+}
+
+TEST_F(GatewayPipeline, WarnModeAsksOnceThenSendsWithTheToken) {
+    std::atomic<int> calls{0};
+    const auto pipeline = make(detectors_, gw::pipeline_in_flight_limit, gw::request_time_limit, fake_sentence(calls));
+    const auto body = ask("동료가 요즘 정신과 다닌대요. 일정 조정 부탁드립니다.");
+    const auto first = run(pipeline, body);
+    EXPECT_EQ(first.status, 409u);
+    EXPECT_EQ(code_of(first), "confirmation_required");
+    EXPECT_EQ(first.body.find("정신과"), std::string::npos);  // 문장은 되돌려 주지 않는다
+    const auto error = json::parse(first.body)["error"];
+    EXPECT_EQ(error["categories"], json::array({"Health"}));
+    const auto token = error["confirm_token"].get<std::string>();
+    EXPECT_EQ(token.size(), gw::confirm_token_chars);
+    EXPECT_EQ(provider_calls_, 0);
+    EXPECT_EQ(live_scopes_, 0);
+
+    EXPECT_EQ(run(pipeline, body, core::GradePolicy::OOnly, token).status, 200u);
+    EXPECT_EQ(provider_calls_, 1);
+    // 한 번 쓴 표지는 다시 쓸 수 없다
+    EXPECT_EQ(run(pipeline, body, core::GradePolicy::OOnly, token).status, 409u);
+    EXPECT_EQ(provider_calls_, 1);
+    // 걸리지 않는 요청은 표지 없이 그대로 간다
+    EXPECT_EQ(run(pipeline, ask("회의 안건 정리")).status, 200u);
+    EXPECT_EQ(provider_calls_, 2);
+}
+
+TEST_F(GatewayPipeline, WarnTokenIsBoundToTheBody) {
+    std::atomic<int> calls{0};
+    const auto pipeline = make(detectors_, gw::pipeline_in_flight_limit, gw::request_time_limit, fake_sentence(calls));
+    const auto token =
+        json::parse(run(pipeline, ask("김 과장이 정신과 진료를 받는다고 합니다.")).body)["error"]["confirm_token"].get<std::string>();
+    EXPECT_EQ(run(pipeline, ask("이 대리가 정신과 진료를 받는다고 합니다."), core::GradePolicy::OOnly, token).status, 409u);
+    EXPECT_EQ(run(pipeline, ask("김 과장이 정신과 진료를 받는다고 합니다."), core::GradePolicy::OOnly, "0123").status, 409u);
+    EXPECT_EQ(provider_calls_, 0);
+}
+
+TEST_F(GatewayPipeline, WarnModeFailsClosedAndSkipsRuleBlockedRequests) {
+    std::atomic<int> calls{0};
+    const auto failing = make(detectors_, gw::pipeline_in_flight_limit, gw::request_time_limit, fake_sentence(calls, true));
+    EXPECT_EQ(code_of(run(failing, ask("회의 안건 정리"))), core::reason_code_name(core::ReasonCode::DetectorUnavailable));
+    EXPECT_EQ(calls, 1);
+    // 규칙이 막은 요청은 판별기까지 가지 않는다
+    EXPECT_EQ(code_of(run(failing, ask("제 주민번호는 900101-1234567 입니다"))),
+              core::reason_code_name(core::ReasonCode::EntityBlocked));
+    EXPECT_EQ(calls, 1);
     EXPECT_EQ(provider_calls_, 0);
 }
 

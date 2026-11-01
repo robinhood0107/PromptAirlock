@@ -69,6 +69,7 @@ foreach(name IN ITEMS
     ner_fixture_test
     ner_model_files_test
     ner_pool_test
+    ner_sentence_classifier_test
     ner_session_test
     ner_tokenizer_test
     ner_windows_test)
@@ -87,6 +88,7 @@ target_link_libraries(tls_context_test PRIVATE prompt_airlock_tls pa_test_cert)
 foreach(name IN ITEMS
     gateway_auth_test
     gateway_config_test
+    gateway_confirm_test
     gateway_error_body_test
     gateway_pipeline_test
     gateway_response_json_test
