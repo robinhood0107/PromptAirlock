@@ -1,7 +1,8 @@
 // 게이트웨이 실행 파일.
 //   prompt-airlock serve <config.json>      설정 하나로 Vault, NER pool, HTTPS 서버를 띄운다
 //   prompt-airlock issue-token <origin>      출처 token 을 발급한다(원문은 이때 한 번만 출력, 설정에는 해시만)
-//   prompt-airlock protect-credential <평문 파일> <출력 파일>   provider 자격 증명을 보호 저장한다(Windows DPAPI, Linux 0600)
+//   prompt-airlock protect-credential <평문 파일|-> <출력 파일>   provider 자격 증명을 보호 저장한다(Windows DPAPI, Linux 0600).
+//                                       - 는 표준 입력. 실행 중인 게이트웨이는 다음 요청부터 새 값을 쓴다(ADR 0026)
 //   prompt-airlock audit verify|list <감사 폴더> [줄 수]       감사 기록을 로컬에서 검증·열람한다(관리 기록은 admin/ 에)
 #include <boost/asio/io_context.hpp>
 #include <boost/asio/thread_pool.hpp>
@@ -13,6 +14,7 @@
 #include <cstdio>
 #include <exception>
 #include <fstream>
+#include <iostream>
 #include <iterator>
 #include <optional>
 #include <random>
@@ -223,27 +225,22 @@ int issue_token(std::string_view origin) {
     return 0;
 }
 
-int protect_credential_file(const std::filesystem::path& in, const std::filesystem::path& out) {
-    auto plain = read_file(in);
+int protect_credential_file(std::string_view in, const std::filesystem::path& out) {
+    // 갱신 작업이 평문을 디스크에 남기지 않도록 - 면 표준 입력에서 읽는다.
+    auto plain = in == "-" ? std::optional<std::string>(std::string(std::istreambuf_iterator<char>(std::cin), {}))
+                           : read_file(std::filesystem::path(in));
     if (!plain) {
         return fail("cannot read the plain credential file");
     }
     const prompt_airlock::core::SensitiveText owned(std::move(*plain));
-    auto sealed = prompt_airlock::provider::protect_credential(owned.view());
-    if (!sealed) {
-        return fail("cannot protect the credential");
+    if (auto stored = prompt_airlock::provider::store_credential(out, owned.view()); !stored) {
+        return fail(stored.error() == prompt_airlock::provider::CredentialError::NotProtected
+                        ? "cannot protect the credential"
+                        : "cannot replace the protected credential file (try again)");
     }
-    {
-        std::ofstream file(out, std::ios::binary | std::ios::trunc);
-        file << *sealed;
-        if (!file) {
-            return fail("cannot write the protected credential file");
-        }
+    if (in != "-") {
+        std::printf("protected credential written to %s; delete the plain file\n", out.string().c_str());
     }
-    std::error_code ec;
-    std::filesystem::permissions(out, std::filesystem::perms::owner_read | std::filesystem::perms::owner_write,
-                                 std::filesystem::perm_options::replace, ec);
-    std::printf("protected credential written to %s; delete the plain file\n", out.string().c_str());
     return 0;
 }
 
@@ -310,7 +307,7 @@ int main(int argc, char** argv) try {
         return audit_command(argv[2], argv[3], argc == 5 ? std::atoi(argv[4]) : 20);
     }
     std::fputs("usage: prompt-airlock serve <config.json>\n       prompt-airlock issue-token <origin-name>\n"
-               "       prompt-airlock protect-credential <plain-file> <out-file>\n"
+               "       prompt-airlock protect-credential <plain-file|-> <out-file>\n"
                "       prompt-airlock audit verify|list <audit-dir> [lines]\n",
                stderr);
     return 2;
