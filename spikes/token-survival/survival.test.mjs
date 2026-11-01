@@ -128,3 +128,32 @@ test('가짜 서버로 끝까지: 요청 모양, 재시도, 요약', async () =>
     server.close();
   }
 });
+
+test('게이트웨이 측정: 사업자등록번호 검증 숫자와 사례 원문', async () => {
+  const { businessNumber, buildRawCases } = await import('./gateway.mjs');
+  const seq = [0.05, 0.25, 0.35, 0.45, 0.55, 0.65, 0.75, 0.85, 0.05];  // 1,2,3,4,5,6,7,8,0
+  let i = 0;
+  assert.equal(businessNumber(() => seq[i++]), '123-45-67800');  // 검증 숫자 0(탐지기 시험의 유효 번호와 같음)
+  const a = buildRawCases({ count: 16, seed: 7, internalTerms: ['한빛시청'] });
+  const b = buildRawCases({ count: 16, seed: 7, internalTerms: ['한빛시청'] });
+  assert.deepEqual(a, b);
+  for (const c of a) {
+    assert.ok(!c.prompt.includes('{'), c.id);
+    assert.equal(new Set(c.values).size, c.values.length);
+  }
+});
+
+test('게이트웨이 측정: 감사 기록을 요청 순서대로 묶는다', async () => {
+  const { groupAudit } = await import('./gateway.mjs');
+  const groups = groupAudit([
+    { kind: 'start' },
+    { kind: 'egress', request_id: 'r1', sent: { m: 1 } },
+    { kind: 'egress_answer', request_id: 'r1', answer: '{}' },
+    { kind: 'request', request_id: 'r1', status: 200 },
+    { kind: 'request', request_id: 'r2', status: 400, reason: 'blocked' },
+  ]);
+  assert.deepEqual(groups, [
+    { sent: { m: 1 }, answer: '{}', status: 200, reason: null },
+    { status: 400, reason: 'blocked' },
+  ]);
+});

@@ -26,7 +26,7 @@ export function makeToken(label, next) {
   return `${OPEN}${label}_${random}${CLOSE}`;
 }
 
-const TASKS = [
+export const TASKS = [
   { id: 'summary', text: '다음 글을 두 문장으로 요약해 주세요.' },
   { id: 'reply', text: '다음 메일에 정중한 답장을 써 주세요.' },
   { id: 'list', text: '다음 내용에서 할 일을 목록으로 정리해 주세요.' },
@@ -35,7 +35,7 @@ const TASKS = [
 ];
 
 // 자리표시 {LABEL} 를 token 으로 바꾼다. 같은 문장 안 같은 이름은 같은 token 을 쓴다.
-const TEMPLATES = [
+export const TEMPLATES = [
   '{PERSON} 과장이 {ORGANIZATION} 회의 결과를 {EMAIL} 로 보내 달라고 했습니다.',
   '{PERSON} 주무관은 다음 주 {INTERNAL_TERM} 점검 일정을 {KOREAN_PHONE} 으로 알려 주었습니다.',
   '{ORGANIZATION} 담당자 {PERSON} 님과 {PERSON2} 님이 예산 자료를 검토했습니다.',
