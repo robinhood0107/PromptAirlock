@@ -11,7 +11,7 @@
 
 namespace prompt_airlock::ner {
 
-// 모델 출력 [length, labels]. 한 요청의 입력 하나에 대한 결과다.
+// 모델 출력 [length, labels]. 한 요청의 입력 하나에 대한 결과다. 글 하나에 한 줄을 내는 모델(문장 판별기)은 length 1.
 struct Logits {
     std::size_t length = 0;
     std::size_t labels = 0;
@@ -42,13 +42,14 @@ private:
     std::unique_ptr<Impl> impl_;
 };
 
-// CPU, intra/inter-op thread 1개, 순차 실행. 한 세션은 한 번에 한 스레드만 쓴다.
+// CPU, inter-op thread 1개, 순차 실행. intra-op thread 는 기본 1개(NER worker 마다 세션 하나).
 class OrtSession {
 public:
     // onnx 는 이미 확인한 모델 바이트다. 세션이 복사해 가므로 만든 뒤 바로 버려도 된다.
     // 입력 이름이 input_ids, attention_mask, token_type_ids 가 아니면 거부한다.
     [[nodiscard]] static std::expected<OrtSession, SessionError> create(std::shared_ptr<const OrtEnv> env,
-                                                                        std::span<const std::byte> onnx);
+                                                                        std::span<const std::byte> onnx,
+                                                                        int intra_threads = 1);
 
     OrtSession(OrtSession&&) noexcept;
     OrtSession& operator=(OrtSession&&) noexcept;
