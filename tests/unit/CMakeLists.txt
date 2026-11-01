@@ -69,6 +69,7 @@ foreach(name IN ITEMS
     ner_fixture_test
     ner_model_files_test
     ner_pool_test
+    ner_sentence_classifier_test
     ner_session_test
     ner_tokenizer_test
     ner_windows_test)
