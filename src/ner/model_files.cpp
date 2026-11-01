@@ -13,34 +13,6 @@
 namespace prompt_airlock::ner {
 namespace {
 
-// 기대하는 파일은 모두 100 MiB 보다 작다. 이보다 크면 읽지 않고 다른 파일로 본다.
-constexpr std::uintmax_t max_file_bytes = 100ULL * 1024 * 1024;
-
-[[nodiscard]] std::expected<std::vector<std::byte>, ModelFilesError> read_checked(const std::filesystem::path& path,
-                                                                               std::string_view want_sha256) {
-    std::error_code ec;
-    const auto size = std::filesystem::file_size(path, ec);
-    if (ec) {
-        return std::unexpected(ModelFilesError::Missing);
-    }
-    if (size > max_file_bytes) {
-        return std::unexpected(ModelFilesError::Mismatch);
-    }
-    std::ifstream in(path, std::ios::binary);
-    if (!in) {
-        return std::unexpected(ModelFilesError::Missing);
-    }
-    std::vector<std::byte> bytes(static_cast<std::size_t>(size));
-    in.read(reinterpret_cast<char*>(bytes.data()), static_cast<std::streamsize>(bytes.size()));
-    if (static_cast<std::size_t>(in.gcount()) != bytes.size()) {
-        return std::unexpected(ModelFilesError::Missing);
-    }
-    if (core::sha256_hex(bytes) != want_sha256) {
-        return std::unexpected(ModelFilesError::Mismatch);
-    }
-    return bytes;
-}
-
 [[nodiscard]] std::string to_string(const std::vector<std::byte>& bytes) {
     return {reinterpret_cast<const char*>(bytes.data()), bytes.size()};
 }
@@ -71,17 +43,43 @@ constexpr std::uintmax_t max_file_bytes = 100ULL * 1024 * 1024;
 
 }  // namespace
 
+std::expected<std::vector<std::byte>, ModelFilesError> read_pinned_file(const std::filesystem::path& path,
+                                                                        std::string_view want_sha256,
+                                                                        std::uintmax_t max_bytes) {
+    std::error_code ec;
+    const auto size = std::filesystem::file_size(path, ec);
+    if (ec) {
+        return std::unexpected(ModelFilesError::Missing);
+    }
+    if (size > max_bytes) {
+        return std::unexpected(ModelFilesError::Mismatch);
+    }
+    std::ifstream in(path, std::ios::binary);
+    if (!in) {
+        return std::unexpected(ModelFilesError::Missing);
+    }
+    std::vector<std::byte> bytes(static_cast<std::size_t>(size));
+    in.read(reinterpret_cast<char*>(bytes.data()), static_cast<std::streamsize>(bytes.size()));
+    if (static_cast<std::size_t>(in.gcount()) != bytes.size()) {
+        return std::unexpected(ModelFilesError::Missing);
+    }
+    if (core::sha256_hex(bytes) != want_sha256) {
+        return std::unexpected(ModelFilesError::Mismatch);
+    }
+    return bytes;
+}
+
 std::expected<VerifiedModelFiles, ModelFilesError> read_verified_model_files(const std::filesystem::path& dir) {
     // 작은 파일부터 확인해 잘못된 디렉터리를 모델 전체를 읽기 전에 거른다.
-    auto tokenizer = read_checked(dir / "tokenizer.json", tokenizer_sha256);
+    auto tokenizer = read_pinned_file(dir / "tokenizer.json", tokenizer_sha256);
     if (!tokenizer) {
         return std::unexpected(tokenizer.error());
     }
-    auto config = read_checked(dir / "config.json", config_sha256);
+    auto config = read_pinned_file(dir / "config.json", config_sha256);
     if (!config) {
         return std::unexpected(config.error());
     }
-    auto model = read_checked(dir / "model.onnx", model_sha256);
+    auto model = read_pinned_file(dir / "model.onnx", model_sha256);
     if (!model) {
         return std::unexpected(model.error());
     }
