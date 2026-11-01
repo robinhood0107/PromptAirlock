@@ -27,5 +27,6 @@
 | [0021](0021-audit-and-operations.md) | 감사 기록과 운영 | 확정 |
 | [0022](0022-sentence-classifier.md) | 문장 단위 민감정보 판별기 | 확정 |
 | [0023](0023-sentence-warn-mode.md) | 문장 판별기 경고 모드 | 확정 |
+| [0024](0024-license-and-distribution.md) | 라이선스와 배포 방식: AGPL + 상용 이중 라이선스, 설치형만 | 확정 |
 
 결정을 바꿀 때는 해당 문서의 상태를 "대체됨"으로 바꾸고 새 번호로 문서를 추가한다.
