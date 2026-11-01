@@ -7,6 +7,7 @@
 #include <boost/asio/ip/tcp.hpp>
 #include <boost/asio/ssl/context.hpp>
 
+#include <cstddef>
 #include <filesystem>
 #include <memory>
 #include <string>
@@ -28,6 +29,8 @@ public:
     [[nodiscard]] boost::asio::ip::tcp::endpoint local_endpoint() const;
     // 지금까지 받은 요청 본문(인증에 성공한 것만).
     [[nodiscard]] std::vector<std::string> received() const;
+    // 받아들인 연결 수(인증과 상관없이). 보내기 전에 막혔는지 확인할 때 쓴다.
+    [[nodiscard]] std::size_t connections() const;
 
     struct State;
 

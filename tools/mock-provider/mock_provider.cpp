@@ -10,6 +10,7 @@
 #include <boost/beast/ssl.hpp>
 #include <nlohmann/json.hpp>
 
+#include <atomic>
 #include <fstream>
 #include <mutex>
 #include <utility>
@@ -42,6 +43,7 @@ struct MockProvider::State {
     MockOptions options;
     mutable std::mutex mutex;
     std::vector<std::string> bodies;
+    std::atomic<std::size_t> accepted{0};
 };
 
 namespace {
@@ -108,6 +110,7 @@ asio::awaitable<void> accept_loop(std::shared_ptr<MockProvider::State> state) {
             co_return;
         }
         if (!ec) {
+            ++state->accepted;
             asio::co_spawn(state->acceptor.get_executor(), session(state, std::move(socket)), asio::detached);
         }
     }
@@ -172,6 +175,8 @@ void MockProvider::stop() {
 }
 
 tcp::endpoint MockProvider::local_endpoint() const { return state_->acceptor.local_endpoint(); }
+
+std::size_t MockProvider::connections() const { return state_->accepted; }
 
 std::vector<std::string> MockProvider::received() const {
     std::scoped_lock lock(state_->mutex);
