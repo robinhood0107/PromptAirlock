@@ -8,7 +8,7 @@ import path from 'node:path';
 import test from 'node:test';
 
 import { buildCases, classify, inventedTokens, makeToken, requestBody, responseText, rng, summarize } from './lib.mjs';
-import { makeAuth, run } from './survival.mjs';
+import { makeAuth, resolveEndpoint, run } from './survival.mjs';
 
 const token = '⟦PERSON_7Q2MK4XD9A⟧';
 
@@ -49,6 +49,18 @@ test('인증 설정이 없거나 비면 실행하지 않는다', async () => {
   assert.throws(() => makeAuth({ type: 'bearer-env', env: 'PA_TS_MISSING' }, {}));
   assert.throws(() => makeAuth({ type: 'unknown' }, {}));
   assert.equal(await makeAuth({ type: 'bearer-env', env: 'K' }, { K: 'abc' })(), 'abc');
+});
+
+test('주소의 {project_id} 는 서비스 계정 키에서 채운다', () => {
+  const dir = mkdtempSync(path.join(tmpdir(), 'pa-ts-'));
+  const keyFile = path.join(dir, 'key.json');
+  writeFileSync(keyFile, JSON.stringify({ project_id: 'demo-123' }));
+  const auth = { type: 'service-account', path: keyFile };
+  assert.equal(resolveEndpoint('https://x/v1/projects/{project_id}/chat', auth), 'https://x/v1/projects/demo-123/chat');
+  assert.equal(resolveEndpoint('https://x/fixed', { type: 'bearer-env', env: 'K' }), 'https://x/fixed');
+  assert.throws(() => resolveEndpoint('https://x/{project_id}', { type: 'bearer-env', env: 'K' }));
+  writeFileSync(keyFile, '{}');
+  assert.throws(() => resolveEndpoint('https://x/{project_id}', auth));
 });
 
 test('서비스 계정 키로 서명한 JWT 를 access token 으로 바꾸고 재사용한다', async () => {

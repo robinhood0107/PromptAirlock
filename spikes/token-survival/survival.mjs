@@ -89,8 +89,18 @@ async function post(url, body, bearer, { retries = 3, fetchImpl = fetch } = {}) 
   }
 }
 
+// 주소의 {project_id} 를 서비스 계정 키의 project_id 로 채운다. 키 파일만 바꿔 끼우면 주소도 따라간다.
+export function resolveEndpoint(endpoint, auth) {
+  if (!endpoint.includes('{project_id}')) return endpoint;
+  if (auth?.type !== 'service-account') throw new Error('{project_id} 는 service-account 인증에서만 채울 수 있다');
+  const { project_id: id } = JSON.parse(readFileSync(auth.path, 'utf8'));
+  if (!id) throw new Error('서비스 계정 키에 project_id 가 없다');
+  return endpoint.replaceAll('{project_id}', id);
+}
+
 export async function run(config, { env = process.env, log = console.log, fetchImpl = fetch } = {}) {
   const bearer = makeAuth(config.auth, env, fetchImpl);
+  const endpoint = resolveEndpoint(config.endpoint, config.auth);
   const cases = buildCases({ count: config.cases ?? 40, seed: config.seed ?? 20261018 });
   const conditions = config.conditions ?? ['plain', 'hint'];
   const records = [];
@@ -99,7 +109,7 @@ export async function run(config, { env = process.env, log = console.log, fetchI
       const body = requestBody({ model: config.model, maxTokens: config.max_tokens ?? 1024, hint: condition === 'hint', prompt: item.prompt });
       const record = { id: item.id, condition, tokens: item.tokens };
       try {
-        const text = responseText(await post(config.endpoint, body, bearer, { fetchImpl }));
+        const text = responseText(await post(endpoint, body, bearer, { fetchImpl }));
         if (text === null) throw new Error('응답에 글자가 없다');
         record.response = text;
         record.classes = Object.fromEntries(item.tokens.map((t) => [t, classify(t, text)]));

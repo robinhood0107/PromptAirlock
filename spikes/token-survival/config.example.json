@@ -1,5 +1,5 @@
 {
-  "endpoint": "https://aiplatform.googleapis.com/v1/projects/PROJECT_ID/locations/global/endpoints/openapi/chat/completions",
+  "endpoint": "https://aiplatform.googleapis.com/v1/projects/{project_id}/locations/global/endpoints/openapi/chat/completions",
   "model": "MODEL_ID",
   "auth": { "type": "service-account", "path": "secrets/vertex-service-account.json" },
   "max_tokens": 1024,
