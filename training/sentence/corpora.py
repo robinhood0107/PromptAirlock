@@ -1,10 +1,12 @@
 # NIA 데이터 공유 플랫폼(aihub.or.kr) 말뭉치를 문장 단위 JSONL 로 바꾼다(결정 #181). 학습 데이터 준비 전용이며 제품에는 들어가지 않는다.
-# 사용: python corpora.py <말뭉치 폴더(corpora)> [--only 86,98] [--max-docs N]
+# 사용: python corpora.py <말뭉치 폴더(corpora)> [--only 86,98] [--max-docs N] [--set sealed]
+#   --set sealed 는 판정용 데이터셋(corpora/sealed/<번호>/, 결정 #190)을 sentences/sealed-<번호>.jsonl 과 stats-sealed.json 으로 쓴다.
 # 원본 zip 은 풀지 않고 그대로 읽어 <말뭉치 폴더>/sentences/aihub-<번호>.jsonl 과 개수 요약(stats.json)을 쓴다.
 # 원문은 저장소·화면에 남기지 않는다(플랫폼 이용정책: 제3자 제공·재배포 제한). 화면에는 개수만 내고 출력 파일도 저장소 밖(git 제외)에 둔다.
 # 한 줄: {"uid", "ds", "split"(플랫폼의 학습/검증 구분), "doc", "spk", "text", "hint"(데이터셋이 준 분류 코드)}
 import argparse
 import base64
+import csv
 import hashlib
 import json
 import re
@@ -28,7 +30,8 @@ def members(ds_dir, kind, suffix=".json"):
     """(플랫폼 학습/검증, 파일 이름, 읽기 함수)를 낸다. kind: 라벨링(label) 또는 원천(source).
     zip 이 있으면 zip 에서, 지웠으면 MANIFEST.json 에 적힌 풀어 둔 위치에서 읽는다(학습/검증 구분도 원장 값)."""
     root = ds_dir.parents[1]
-    zips = json.loads((root / "MANIFEST.json").read_text(encoding="utf-8"))[ds_dir.name]["zips"]
+    manifest = root / "MANIFEST.json" if ds_dir.parent.name == "aihub" else ds_dir.parent / "MANIFEST.json"
+    zips = json.loads(manifest.read_text(encoding="utf-8"))[ds_dir.name]["zips"]
     for rel, info in sorted(zips.items()):
         if info["kind"] != kind:
             continue
@@ -215,6 +218,105 @@ def ds71968(d):
             yield split, o["info"].get("caseNoID") or name, "court", s.get("text", ""), {**hint, "section": s.get("title")}
 
 
+# 판정용(sealed) 데이터셋. 학습에는 쓰지 않는다(결정 #190).
+def jload(read, ds):
+    """깨진 JSON 파일은 건너뛰고 개수만 남긴다(544 원본에 있다). 빈 파일은 빈 dict."""
+    try:
+        return load(read, ds) or {}
+    except json.JSONDecodeError:
+        UNREADABLE[ds] += 1
+        return {}
+
+
+def utterances(d):
+    """71302·71305·71694: 라벨링 JSON 의 utterances[].text."""
+    for split, name, read in members(d, "label"):
+        o = jload(read, d.name)
+        if not o:
+            continue
+        info = o.get("info", {})
+        hint = {k: info.get(k) for k in ("topic", "relation", "situation", "keyword") if info.get(k)}
+        for u in o.get("utterances", []):
+            yield split, info.get("id") or name, u.get("speaker") or str(u.get("persona_id") or u.get("role") or ""), u.get("text"), hint
+
+
+def ds71630(d):
+    for split, name, read in members(d, "label"):
+        o = jload(read, d.name)
+        if not o:
+            continue
+        hint = {"topic": o.get("topicInfo", {}).get("topicTitle")}
+        for session in o.get("sessionInfo", []):
+            for u in session.get("dialog", []):
+                yield split, o.get("FileInfo", {}).get("filename") or name, u.get("speaker"), u.get("utterance"), hint
+
+
+def ds71618(d):
+    for split, name, read in members(d, "source"):
+        if "상담기록" not in name:
+            continue  # 학생 기초 정보(설문 점수)는 문장이 아니다
+        o = jload(read, d.name)
+        for r in (o.values() if isinstance(o, dict) else o):
+            meta = r.get("meta", {})
+            for c in r.get("conversation", []):
+                for u in c.get("utterances", []):
+                    who = "student" if str(u.get("speaker_idx", "")).startswith("S") else "counselor"
+                    yield split, f"{meta.get('student_idx')}-{meta.get('counseling_idx')}", who, u.get("utterance"), {"category": c.get("conv_category")}
+
+
+def ds71791(d):
+    for split, name, read in members(d, "source"):
+        o = jload(read, d.name)
+        for t in o.get("test", []):
+            yield split, o.get("meta", {}).get("tester_id") or name, "student", t.get("answer_full"), {"question": t.get("question_id")}
+
+
+def ds544(d):
+    for split, _, read in members(d, "label"):
+        for info in jload(read, d.name).get("info", []):
+            a = info["annotations"]
+            for line in a["lines"]:
+                # 줄 앞의 "A." 같은 화자 표시를 뗀다
+                yield split, info["filename"], line["speaker"]["id"], re.sub(r"^[A-Z]\.", "", line["text"]), {"subject": a.get("subject")}
+
+
+def ds71875(d):
+    for split, name, read in members(d, "label"):
+        o = jload(read, d.name)
+        yield split, f"qa-{o.get('qa_id')}", "question", o.get("question"), {"domain": o.get("domain")}
+    for split, name, read in members(d, "source"):
+        o = jload(read, d.name)
+        yield split, o.get("c_id") or name, "document", o.get("content"), {"domain": o.get("domain"), "source": o.get("source_spec")}
+
+
+def ds71795(d):
+    for split, name, read in members(d, "label"):
+        o = jload(read, d.name)
+        hint = {"meeting": o.get("meeting_name"), "committee": o.get("committee_name")}
+        for side in ("question", "answer"):
+            yield split, o.get("id") or name, side, (o.get(side) or {}).get("comment"), hint
+
+
+def ds71788(d):
+    for split, name, read in members(d, "source"):
+        for doc in jload(read, d.name).get("data", []):
+            hint = {"main": doc.get("category_main"), "middle": doc.get("category_middle"), "collection": doc.get("collection_name")}
+            for para in (doc.get("corpus") or "").splitlines():
+                yield split, doc.get("source_id") or name, "document", para, hint
+
+
+def ds71848(d):
+    for split, name, read in members(d, "source", ".csv"):
+        rows = csv.reader(read().splitlines())
+        next(rows, None)  # 머리글: 판결문 번호, 구분, 문장 번호, 내용
+        for r in rows:
+            if len(r) >= 4:
+                yield split, name, "court", r[3], {"section": r[1]}
+
+
+SEALED = {"71848": ds71848, "71305": utterances, "71630": ds71630, "71302": utterances, "71618": ds71618, "71791": ds71791,
+          "71694": utterances, "544": ds544, "71875": ds71875, "71795": ds71795, "71788": ds71788}
+
 PARSERS = {"86": ds86, "98": ds98, "114": ds114, "543": ds543, "558": ds558, "569": ds569, "580": ds580, "619": ds619,
            "71806": ds71806, "71807": None, "71844": consulting, "71852": consulting, "71926": consulting, "71968": ds71968}
 
@@ -224,17 +326,19 @@ def main():
     ap.add_argument("root")
     ap.add_argument("--only", default="")
     ap.add_argument("--max-docs", type=int, default=0, help="71807 처럼 아주 큰 데이터셋에서 읽을 문서 파일 수 상한(0 은 전부)")
+    ap.add_argument("--set", default="aihub", choices=("aihub", "sealed"))
     a = ap.parse_args()
     root = Path(a.root)
     out_dir = root / "sentences"
     out_dir.mkdir(exist_ok=True)
-    stats_path = out_dir / "stats.json"
+    parsers = PARSERS if a.set == "aihub" else SEALED
+    stats_path = out_dir / ("stats.json" if a.set == "aihub" else f"stats-{a.set}.json")
     stats = json.loads(stats_path.read_text(encoding="utf-8")) if stats_path.exists() else {}
-    for ds in (a.only.split(",") if a.only else PARSERS):
-        d = root / "aihub" / ds
-        gen = ds71807(d, a.max_docs) if ds == "71807" else PARSERS[ds](d)
+    for ds in (a.only.split(",") if a.only else parsers):
+        d = root / a.set / ds
+        gen = ds71807(d, a.max_docs) if ds == "71807" else parsers[ds](d)
         seen, n_units, n_sent, spk, splits, docs = set(), 0, 0, Counter(), Counter(), set()
-        with open(out_dir / f"aihub-{ds}.jsonl", "w", encoding="utf-8") as out:
+        with open(out_dir / f"{a.set}-{ds}.jsonl", "w", encoding="utf-8") as out:
             for split, doc, who, unit, hint in gen:
                 n_units += 1
                 docs.add(doc)
@@ -250,7 +354,7 @@ def main():
                     n_sent += 1
                     spk[who] += 1
                     splits[split] += 1
-                    out.write(json.dumps({"uid": f"aihub-{ds}-{n_sent:08d}", "ds": ds, "split": split, "doc": str(doc), "spk": who,
+                    out.write(json.dumps({"uid": f"{a.set}-{ds}-{n_sent:08d}", "ds": ds, "split": split, "doc": str(doc), "spk": who,
                                           "text": s, "hint": hint}, ensure_ascii=False) + "\n")
         stats[ds] = {"repaired_files": REPAIRED[ds], "empty_files": EMPTY[ds], "unreadable_files": UNREADABLE[ds], "units": n_units, "docs": len(docs), "sentences": n_sent, "speakers": dict(spk.most_common(8)), "splits": dict(splits),
                      "max_docs": a.max_docs if ds == "71807" else 0}

@@ -1,5 +1,7 @@
 # 말뭉치 정리(Phase 7.8-1, 결정 #182): 출처 원장, 라벨링·원천 쌍 검증, 압축 풀기, 검증된 zip 지우기.
-# 사용: python corpora_prep.py <말뭉치 폴더(corpora)> [--extract] [--delete]
+# 사용: python corpora_prep.py <말뭉치 폴더(corpora)> [--extract] [--delete] [--set sealed]
+#   --set sealed 는 학습에 쓰지 않는 판정용 데이터셋(corpora/sealed/<번호>/, 결정 #190)을 다룬다. 데이터셋 목록은 저장소 밖
+#               sealed/DATASETS.json({"번호": [이름, 구축 연도]}), 원장은 sealed/MANIFEST.json 에 둔다.
 #   (인자 없음) 출처 원장 MANIFEST.json 과 쌍 검증만. 원문은 화면에 내지 않고 개수만 낸다.
 #   --extract   텍스트 파일을 aihub/<번호>/extracted/{label,source}/<zip 이름>/ 아래에 푼다. 음성(.m4a, .mp3)은 풀지 않는다.
 #               71807 원천(메타데이터 약 299만 개의 작은 JSON)은 파일로 풀지 않고 같은 내용을 문서 한 줄씩 담은
@@ -81,12 +83,17 @@ def main():
     ap.add_argument("root")
     ap.add_argument("--extract", action="store_true")
     ap.add_argument("--delete", action="store_true")
+    ap.add_argument("--set", default="aihub", choices=("aihub", "sealed"))
     a = ap.parse_args()
     root = Path(a.root)
-    manifest_path = root / "MANIFEST.json"
+    if a.set == "aihub":
+        datasets, manifest_path = DATASETS, root / "MANIFEST.json"
+    else:
+        datasets = json.loads((root / a.set / "DATASETS.json").read_text(encoding="utf-8"))
+        manifest_path = root / a.set / "MANIFEST.json"
     manifest = json.loads(manifest_path.read_text(encoding="utf-8")) if manifest_path.exists() else {}
-    for ds, (name, year) in DATASETS.items():
-        d = root / "aihub" / ds
+    for ds, (name, year) in datasets.items():
+        d = root / a.set / ds
         entry = manifest.setdefault(ds, {"name": name, "year": year, "page": f"https://www.aihub.or.kr/aihubdata/data/view.do?dataSetSn={ds}",
                                           "attribution": f"이 결과물은 한국지능정보사회진흥원(NIA)의 사업결과인 「{name}」({year})을 활용하였습니다.",
                                           "zips": {}})
@@ -116,14 +123,14 @@ def main():
         manifest_path.write_text(json.dumps(manifest, ensure_ascii=False, indent=1), encoding="utf-8")
         print(ds, name, f"zips={len(entry['zips'])}", json.dumps(entry["pairs"], ensure_ascii=False), flush=True)
     if a.extract:
-        extract(root, manifest)
+        extract(root, a.set, manifest)
         manifest_path.write_text(json.dumps(manifest, ensure_ascii=False, indent=1), encoding="utf-8")
     if a.delete:
         delete(root, manifest)
         manifest_path.write_text(json.dumps(manifest, ensure_ascii=False, indent=1), encoding="utf-8")
 
 
-def extract(root, manifest):
+def extract(root, subset, manifest):
     for ds, entry in manifest.items():
         for rel, info in entry["zips"].items():
             z = root / rel
@@ -132,7 +139,7 @@ def extract(root, manifest):
             if info["audio"] == info["members"]:
                 info["extracted"] = {"skipped": "audio"}
                 continue
-            dest = root / "aihub" / ds / "extracted" / info["kind"] / Path(rel).stem
+            dest = root / subset / ds / "extracted" / info["kind"] / Path(rel).stem
             n, total = 0, 0
             with zipfile.ZipFile(z) as zf:
                 if ds == "71807" and info["kind"] == "source":
