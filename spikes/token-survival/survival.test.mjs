@@ -140,6 +140,7 @@ test('게이트웨이 측정: 사업자등록번호 검증 숫자와 사례 원�
   for (const c of a) {
     assert.ok(!c.prompt.includes('{'), c.id);
     assert.equal(new Set(c.values).size, c.values.length);
+    for (const v of c.values.filter((x) => x.startsWith('010-'))) assert.match(v, /^010-[2-9]\d{3}-\d{4}$/);
   }
 });
 

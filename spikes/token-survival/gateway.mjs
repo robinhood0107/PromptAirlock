@@ -35,7 +35,7 @@ export function buildRawCases({ count, seed, internalTerms }) {
     PERSON: () => pick(PEOPLE),
     ORGANIZATION: () => pick(ORGS),
     EMAIL: () => `user${digits(4)}@example.com`,
-    KOREAN_PHONE: () => `010-${digits(4)}-${digits(4)}`,
+    KOREAN_PHONE: () => `010-${2 + Math.floor(next() * 8)}${digits(3)}-${digits(4)}`,  // 010 가운데 자리는 2~9 로 시작(쓰는 번호만, 탐지 규칙과 같음)
     INTERNAL_TERM: () => pick(internalTerms),
     KOREAN_BUSINESS_NO: () => businessNumber(next),
     IP_ADDRESS: () => `203.0.113.${1 + Math.floor(next() * 254)}`,
