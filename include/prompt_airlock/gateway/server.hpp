@@ -33,7 +33,8 @@ struct AcceptedRequest {
     const Origin* origin;
     core::OpenGrade grade;
     std::string body;
-    std::string client;  // 접속 주소(감사 기록용)
+    std::string client;   // 접속 주소(감사 기록용)
+    std::string confirm;  // 경고 확인 표지(X-Prompt-Airlock-Confirm, ADR 0023). 없으면 빈 문자열
 };
 
 // 요청 처리. 여러 연결이 함께 부르므로 스레드 안전해야 한다.
