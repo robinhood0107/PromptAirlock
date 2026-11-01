@@ -4,6 +4,8 @@
 
 #include <cstdint>
 #include <string>
+#include <string_view>
+#include <vector>
 
 #include "prompt_airlock/core/reason.hpp"
 
@@ -32,5 +34,7 @@ struct JsonResponse {
 
 [[nodiscard]] JsonResponse error_response(EntryError error);
 [[nodiscard]] JsonResponse error_response(const core::UserRejection& rejection);
+// 경고 모드 확인 요청(409, ADR 0023). 판별기가 본 범주 이름과 확인 표지만 담는다. 문장·위치·점수는 담지 않는다.
+[[nodiscard]] JsonResponse confirm_response(std::string_view token, const std::vector<std::string>& categories);
 
 }  // namespace prompt_airlock::gateway

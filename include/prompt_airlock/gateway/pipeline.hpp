@@ -28,6 +28,7 @@
 #include "prompt_airlock/core/request_params.hpp"
 #include "prompt_airlock/core/restore.hpp"
 #include "prompt_airlock/detect/detectors.hpp"
+#include "prompt_airlock/gateway/confirm.hpp"
 #include "prompt_airlock/gateway/error_body.hpp"
 #include "prompt_airlock/gateway/server.hpp"
 
@@ -80,6 +81,11 @@ enum class ProviderError : std::uint8_t { Unavailable, Timeout, BadResponse };
 using ProviderCall =
     std::function<boost::asio::awaitable<std::expected<ProviderReply, ProviderError>>(std::string body)>;
 
+// 문장 판별(경고 모드, ADR 0023). text 는 메시지 segment 하나, named_person 은 NER 이 그 segment 에서 사람을 찾았는지다.
+// 걸리면 범주 이름, 아니면 nullopt. 판별하지 못하면 탐지 실패로 거절한다(fail closed).
+using SentenceCheck = std::function<std::expected<std::optional<std::string>, core::DetectError>(
+    std::string_view text, bool named_person, std::stop_token stop)>;
+
 // 측정(#143)으로 확정(#144). NER 대기열 16칸, Vault 연결 8개보다 많이 받아도 안에서 기다릴 뿐이다.
 // 동시 32개 과부하에서 16개를 받고 나머지는 바로 거절했고, 받은 요청의 왕복 p95 는 약 4초였다.
 inline constexpr unsigned pipeline_work_threads = 4;
@@ -94,12 +100,14 @@ public:
     Pipeline(const detect::Detectors& detectors, ScopeOpener open_scope, ProviderCall provider,
              core::OutputTokenCap output_cap, std::string model_alias, boost::asio::any_io_executor work,
              audit::AuditLog* audit = nullptr, std::size_t in_flight_limit = pipeline_in_flight_limit,
-             std::chrono::milliseconds time_limit = request_time_limit);
+             std::chrono::milliseconds time_limit = request_time_limit, SentenceCheck sentence = {});
 
     // audit 가 있으면 요청 결과와 외부 전송 이력을 남긴다. 기록하지 못하면 거절한다(ADR 0021).
     // 처리 중 요청이 in_flight_limit 에 닿아 있으면 아무 단계도 거치지 않고 503 overloaded 로 끝낸다.
     // time_limit 을 넘기면 504 timeout, 부른 쪽이 asio 취소를 보내면 cancelled 로 끝낸다. 취소 신호를 주고받으므로
     // 한 요청은 strand(또는 스레드 하나)에서 불러야 한다.
+    // sentence 가 있으면 규칙을 통과한 요청의 메시지를 판별해, 걸리면 409 confirmation_required 와 확인 표지를 돌려준다.
+    // 같은 본문에 그 표지를 붙여 다시 보내면 한 번 통과한다(ADR 0023).
     [[nodiscard]] boost::asio::awaitable<JsonResponse> handle(AcceptedRequest request) const;
 
 private:
@@ -122,6 +130,8 @@ private:
     audit::AuditLog* audit_;
     std::size_t in_flight_limit_;
     std::chrono::milliseconds time_limit_;
+    SentenceCheck sentence_;        // 비어 있으면 경고 모드를 쓰지 않는다
+    mutable ConfirmLedger confirms_;
     mutable std::atomic<std::size_t> in_flight_{0};
 };
 

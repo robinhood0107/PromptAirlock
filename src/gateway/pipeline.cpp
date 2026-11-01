@@ -3,6 +3,7 @@
 #include "prompt_airlock/core/provider_boundary.hpp"
 #include "prompt_airlock/core/residual.hpp"
 #include "prompt_airlock/core/restore.hpp"
+#include "prompt_airlock/core/sha256.hpp"
 #include "prompt_airlock/gateway/provider_json.hpp"
 #include "prompt_airlock/gateway/request_json.hpp"
 #include "prompt_airlock/gateway/response_json.hpp"
@@ -22,9 +23,11 @@
 #include <chrono>
 #include <exception>
 #include <random>
+#include <span>
 #include <string_view>
 #include <type_traits>
 #include <variant>
+#include <vector>
 
 namespace prompt_airlock::gateway {
 namespace {
@@ -92,6 +95,7 @@ struct Pipeline::Trace {
     std::string reason;
     nlohmann::json blocked = nlohmann::json::array();
     nlohmann::json entities = nlohmann::json::object();
+    nlohmann::json sentence;  // 경고 모드: 걸린 범주 이름과 사용자 확인 여부만
 
     JsonResponse reject(const core::Rejection& rejection) {
         const auto user = rejection.for_user();
@@ -108,7 +112,8 @@ struct Pipeline::Trace {
 
 Pipeline::Pipeline(const detect::Detectors& detectors, ScopeOpener open_scope, ProviderCall provider,
                    core::OutputTokenCap output_cap, std::string model_alias, asio::any_io_executor work,
-                   audit::AuditLog* audit, std::size_t in_flight_limit, std::chrono::milliseconds time_limit)
+                   audit::AuditLog* audit, std::size_t in_flight_limit, std::chrono::milliseconds time_limit,
+                   SentenceCheck sentence)
     : detectors_(detectors),
       open_scope_(std::move(open_scope)),
       provider_(std::move(provider)),
@@ -117,7 +122,8 @@ Pipeline::Pipeline(const detect::Detectors& detectors, ScopeOpener open_scope, P
       work_(std::move(work)),
       audit_(audit),
       in_flight_limit_(in_flight_limit),
-      time_limit_(time_limit) {}
+      time_limit_(time_limit),
+      sentence_(std::move(sentence)) {}
 
 asio::awaitable<JsonResponse> Pipeline::handle(AcceptedRequest request) const {
     const auto start = std::chrono::steady_clock::now();
@@ -155,6 +161,9 @@ asio::awaitable<JsonResponse> Pipeline::handle(AcceptedRequest request) const {
             fields["reason"] = trace.reason;
             fields["blocked_types"] = trace.blocked;
         }
+        if (!trace.sentence.is_null()) {
+            fields["sentence_warn"] = trace.sentence;
+        }
         if (!audit_->append("request", reply.status == 200 ? "info" : "warn", std::move(fields))) {
             co_return error_response(EntryError::Unavailable);  // 기록하지 못한 요청은 내보내지 않는다
         }
@@ -187,6 +196,8 @@ asio::awaitable<JsonResponse> Pipeline::run(AcceptedRequest request, Trace& trac
 // JSON 읽기부터 외부 전송 이력까지. 거절이면 그 응답을 돌려준다.
 std::expected<Pipeline::Outbound, JsonResponse> Pipeline::prepare(AcceptedRequest request, Trace& trace,
                                                                 std::stop_token stop) const {
+    // 확인 표지는 받은 본문 바이트 그대로에 묶는다
+    const std::string body_sha256 = sentence_ ? core::sha256_hex(std::as_bytes(std::span(request.body))) : std::string();
     auto parsed = parse_request(request.body);
     if (!parsed) {
         return std::unexpected(trace.reject(parsed.error()));
@@ -207,6 +218,39 @@ std::expected<Pipeline::Outbound, JsonResponse> Pipeline::prepare(AcceptedReques
     auto checked = core::check_policy(std::move(raw), detected->entities, core::Policy::standard(output_cap_));
     if (!checked) {
         return std::unexpected(trace.reject(checked.error()));
+    }
+    if (sentence_) {
+        // 경고 모드(ADR 0023): 규칙이 막지 않은 요청의 메시지만 판별한다. 판별하지 못하면 거절한다.
+        std::vector<std::string> categories;
+        const auto segments = checked->document().segments();
+        for (std::uint32_t i = 0; i < segments.size(); ++i) {
+            if (!std::holds_alternative<core::MessageSource>(segments[i].source())) {
+                continue;
+            }
+            const bool named_person = std::ranges::any_of(detected->entities, [&](const core::EntitySpan& e) {
+                return e.segment().value() == i && e.type() == core::EntityType::Person;
+            });
+            const auto hit = sentence_(segments[i].text(), named_person, stop);
+            if (!hit) {
+                return std::unexpected(trace.reject(core::Rejection::from_error(hit.error())));
+            }
+            if (*hit && std::ranges::find(categories, **hit) == categories.end()) {
+                categories.push_back(**hit);
+            }
+        }
+        if (!categories.empty()) {
+            const auto now = ConfirmLedger::Clock::now();
+            const bool confirmed = !request.confirm.empty() && confirms_.redeem(request.confirm, body_sha256, now);
+            trace.sentence = {{"categories", categories}, {"confirmed", confirmed}};
+            if (!confirmed) {
+                const auto token = confirms_.issue(body_sha256, now);
+                if (!token) {
+                    return std::unexpected(trace.fail(EntryError::Overloaded));
+                }
+                trace.reason = "confirmation_required";
+                return std::unexpected(confirm_response(*token, categories));
+            }
+        }
     }
     auto scope = open_scope_();
     if (!scope) {
