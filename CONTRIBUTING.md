@@ -39,5 +39,9 @@ CI는 공개 후 실행됩니다. PR 병합은 required status로 차단할 수 
 - 공개가 승인된 자료만 포함합니다. 로컬 설계·작업 문서와 참고자료는 기존 제외 정책을 유지합니다.
 - 비밀값, 원문 개인정보, 민감한 원본 응답을 코드·fixture·로그·PR에 포함하지 않습니다.
 - 테스트에는 합성 데이터를 사용합니다.
-- 프로젝트 라이선스는 `AGPL-3.0-only`입니다.
-- 외부 코드·dependency·모델·dataset은 추가 전에 license, provenance, 배포·NOTICE 조건을 검토합니다.
+- 프로젝트 라이선스는 `AGPL-3.0-only`이며, 같은 코드를 상용 라이선스로도 제공합니다([ADR 0024](docs/adr/0024-license-and-distribution.md)).
+- 외부 코드·dependency·모델·dataset은 추가 전에 license, provenance, 배포·NOTICE 조건을 검토합니다. GPL·AGPL·LGPL·MPL 계열과 비상업 조건 자료는 제품과 배포 묶음에 넣지 않습니다.
+
+## 외부 기여
+
+지금은 외부 PR을 받지 않습니다. 이중 라이선스를 유지하려면 모든 코드의 저작권이 한곳에 있어야 하기 때문입니다. 버그 제보와 제안은 이슈로 남겨 주세요.

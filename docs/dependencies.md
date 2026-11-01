@@ -5,6 +5,7 @@
 - C++ 의존성은 vcpkg manifest(`vcpkg.json`)와 baseline `19780d9cdf84d0944cf9a318666703b89ab6629c` 로 판을 고정합니다(ADR 0005).
 - Rust 의존성은 `vault/Cargo.lock` 으로 판과 해시를 고정하고 `--locked` 로만 빌드합니다.
 - 배포 묶음을 만들 때(ADR 0012) 각 라이브러리의 저작권·라이선스 고지를 함께 넣습니다. Apache-2.0 라이브러리는 NOTICE 내용도 넣습니다.
+- 상용 라이선스도 함께 제공하므로(ADR 0024) 제품 코드와 배포 묶음에는 허용적 라이선스만 들입니다. GPL·AGPL·LGPL·MPL 계열과 비상업 조건 모델·데이터는 넣지 않습니다.
 - OpenSSL 3 은 Apache-2.0 이라 AGPL-3.0 과 함께 배포할 수 있습니다(OpenSSL 1.x 의 이전 라이선스 문제는 3.0 부터 없습니다).
 
 ## C++ (vcpkg)
