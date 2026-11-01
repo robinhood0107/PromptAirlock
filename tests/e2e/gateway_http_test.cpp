@@ -87,10 +87,12 @@ protected:
         const tcp::endpoint loopback(asio::ip::make_address("127.0.0.1"), 0);
         pa_test::retry_listen([&] { mock_.emplace(io_, *server_tls_, loopback, pa_mock::MockOptions{"provider-secret", {}}); });
         mock_->start();
+        const std::filesystem::path credential_file = audit_dir_.string() + ".cred";
+        ASSERT_TRUE(prompt_airlock::provider::store_credential(credential_file, "provider-secret").has_value());
         provider_.emplace(*client_tls_,
                           prompt_airlock::provider::Endpoint{"127.0.0.1", mock_->local_endpoint().port(),
                                                              "/v1/chat/completions"},
-                          core::SensitiveText::copy_of("provider-secret"));
+                          credential_file);
         pipeline_.emplace(
             *detectors_,
             [this]() -> std::expected<gw::PseudonymScope, core::VaultError> {

@@ -29,5 +29,6 @@
 | [0023](0023-sentence-warn-mode.md) | 문장 판별기 경고 모드 | 확정 |
 | [0024](0024-license-and-distribution.md) | 라이선스와 배포 방식: AGPL + 상용 이중 라이선스, 설치형만 | 확정 |
 | [0025](0025-sentence-warn-mode-judgment.md) | 문장 판별기 경고 모드 봉인 판정: 미채택 | 확정 |
+| [0026](0026-short-lived-provider-credential.md) | 짧은 수명 provider 자격 증명: 요청마다 읽고 밖에서 갱신 | 확정 |
 
 결정을 바꿀 때는 해당 문서의 상태를 "대체됨"으로 바꾸고 새 번호로 문서를 추가한다.

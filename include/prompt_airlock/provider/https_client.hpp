@@ -1,5 +1,6 @@
 // provider HTTPS 클라이언트(Chat Completions 호환). provider 주소와 자격 증명은 이 계층만 가진다.
-// 요청마다 연결을 새로 열고(TLS 검증 포함) 응답을 받은 뒤 닫는다. 클라이언트 요청 헤더는 넘기지 않는다.
+// 요청마다 자격 증명 파일을 읽고 연결을 새로 열어(TLS 검증 포함) 응답을 받은 뒤 닫는다. 클라이언트 요청 헤더는 넘기지 않는다.
+// 짧은 수명 자격 증명은 밖에서 파일을 바꿔 끼우면 다음 요청부터 쓴다(ADR 0026).
 #pragma once
 
 #include <boost/asio/awaitable.hpp>
@@ -37,20 +38,25 @@ enum class CredentialError : std::uint8_t { Unreadable, Empty, InvalidCharacter,
 // 평문 자격 증명을 파일에 쓸 바이트로 바꾼다. Windows 는 DPAPI 로 암호화하고, Linux 는 그대로 둔다(쓰는 쪽이 0600 으로 쓴다).
 [[nodiscard]] std::expected<std::string, CredentialError> protect_credential(std::string_view plain);
 
+// 보호한 자격 증명을 path 에 쓴다. 옆 임시 파일(Linux 0600)에 다 쓴 뒤 이름을 바꿔 한 번에 갈아 끼우므로,
+// 요청마다 읽는 쪽이 반쯤 쓴 파일을 보지 않는다. 읽는 중이라 바꿔 끼우지 못하면 Unreadable(부른 쪽이 다시 시도).
+[[nodiscard]] std::expected<void, CredentialError> store_credential(const std::filesystem::path& path,
+                                                                   std::string_view plain);
+
 class HttpsClient {
 public:
     // tls 는 make_client_context 로 만든 것이고 HttpsClient 보다 오래 살아야 한다.
-    HttpsClient(boost::asio::ssl::context& tls, Endpoint endpoint, core::SensitiveText credential,
+    HttpsClient(boost::asio::ssl::context& tls, Endpoint endpoint, std::filesystem::path credential_file,
                 ClientLimits limits = {});
 
-    // 여러 요청이 함께 불러도 된다(상태를 바꾸지 않는다).
+    // 여러 요청이 함께 불러도 된다(상태를 바꾸지 않는다). 자격 증명을 읽지 못하면 연결하지 않고 Unavailable.
     [[nodiscard]] boost::asio::awaitable<std::expected<gateway::ProviderReply, gateway::ProviderError>> send(
         std::string body) const;
 
 private:
     boost::asio::ssl::context& tls_;
     Endpoint endpoint_;
-    core::SensitiveText credential_;
+    std::filesystem::path credential_file_;
     ClientLimits limits_;
 };
 

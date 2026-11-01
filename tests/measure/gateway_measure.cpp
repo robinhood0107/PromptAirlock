@@ -19,6 +19,7 @@
 #include <cstdio>
 #include <cstdlib>
 #include <filesystem>
+#include <stdexcept>
 #include <map>
 #include <mutex>
 #include <optional>
@@ -140,10 +141,14 @@ public:
         const tcp::endpoint loopback(asio::ip::make_address("127.0.0.1"), 0);
         mock_.emplace(io_, *server_tls_, loopback, pa_mock::MockOptions{"provider-secret", {}});
         mock_->start();
+        const std::filesystem::path credential_file = std::filesystem::temp_directory_path() / "pa-gateway-measure.cred";
+        if (!prompt_airlock::provider::store_credential(credential_file, "provider-secret")) {
+            throw std::runtime_error("cannot write the test credential file");
+        }
         provider_.emplace(*client_tls_,
                           prompt_airlock::provider::Endpoint{"127.0.0.1", mock_->local_endpoint().port(),
                                                              "/v1/chat/completions"},
-                          core::SensitiveText::copy_of("provider-secret"));
+                          credential_file);
         pipeline_.emplace(
             *detectors_,
             [this]() -> std::expected<gw::PseudonymScope, core::VaultError> {
