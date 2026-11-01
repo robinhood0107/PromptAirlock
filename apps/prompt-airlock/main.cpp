@@ -29,6 +29,7 @@
 #include "prompt_airlock/gateway/pipeline.hpp"
 #include "prompt_airlock/gateway/server.hpp"
 #include "prompt_airlock/ner/pool.hpp"
+#include "prompt_airlock/ner/sentence_classifier.hpp"
 #include "prompt_airlock/provider/https_client.hpp"
 #include "prompt_airlock/tls/context.hpp"
 #include "prompt_airlock/vault_client/service.hpp"
@@ -95,6 +96,28 @@ int serve(const std::filesystem::path& config_path) {
     if (!ner) {
         return fail("NER model files are missing or do not match the pinned hashes");
     }
+    // 경고 모드(ADR 0023): 켰는데 판별기를 불러오지 못하면 기동하지 않는다(판별 없이 보내지 않는다).
+    gw::SentenceCheck sentence;
+    if (config->sentence_warn) {
+        auto classifier = prompt_airlock::ner::SentenceClassifier::make(PA_SENTENCE_MODEL_DIR);
+        if (!classifier) {
+            return fail("sentence classifier files are missing or do not match the pinned hashes");
+        }
+        sentence = [classifier = *classifier](std::string_view text, bool named_person, std::stop_token stop)
+            -> std::expected<std::optional<std::string>, core::DetectError> {
+            auto hit = classifier->classify(text, named_person, stop);
+            if (!hit) {
+                using prompt_airlock::ner::SentenceError;
+                return std::unexpected(hit.error() == SentenceError::Overloaded ? core::DetectError::Overloaded
+                                       : hit.error() == SentenceError::Timeout  ? core::DetectError::Timeout
+                                                                                : core::DetectError::Unavailable);
+            }
+            if (!*hit) {
+                return std::nullopt;
+            }
+            return (*hit)->category;
+        };
+    }
     std::vector<std::string_view> terms(config->internal_terms.begin(), config->internal_terms.end());
     auto detectors = prompt_airlock::detect::Detectors::make(terms, *ner);
     if (!detectors) {
@@ -127,7 +150,8 @@ int serve(const std::filesystem::path& config_path) {
             return gw::PseudonymScope(std::move(*scope));
         },
         [&provider](std::string body) { return provider.send(std::move(body)); }, config->output_token_cap,
-        config->provider.model, work.get_executor(), audit_log->get());
+        config->provider.model, work.get_executor(), audit_log->get(), gw::pipeline_in_flight_limit, gw::request_time_limit,
+        std::move(sentence));
     if (cert_days && *cert_days < 30) {
         std::fprintf(stderr, "prompt-airlock: warning: listen certificate expires in %d days\n", *cert_days);
         (void)(*audit_log)->append("cert_expiry", "warn", {{"days_left", *cert_days}});

@@ -65,6 +65,11 @@ TEST(GatewayConfig, OptionalFieldsTakeDefaults) {
     EXPECT_EQ(config->output_token_cap.value(), 4096u);
     EXPECT_TRUE(config->provider.trust_file.empty());
     EXPECT_EQ(config->provider.port, 443);
+    EXPECT_FALSE(config->sentence_warn);
+    j["sentence_warn"] = true;
+    EXPECT_TRUE(parse(j)->sentence_warn);
+    j["sentence_warn"] = "yes";
+    EXPECT_FALSE(parse(j).has_value());
 }
 
 TEST(GatewayConfig, RejectsMalformedDocuments) {
