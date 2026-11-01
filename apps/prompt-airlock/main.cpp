@@ -86,8 +86,8 @@ int serve(const std::filesystem::path& config_path) {
     if (!client_tls) {
         return fail("provider trust store rejected");
     }
-    auto credential = prompt_airlock::provider::load_credential(config->provider.credential_file);
-    if (!credential) {
+    // 기동 때 한 번 읽어 설정 실수를 바로 알린다. 실행 중에는 요청마다 다시 읽는다(ADR 0026).
+    if (!prompt_airlock::provider::load_credential(config->provider.credential_file)) {
         return fail("provider credential file is missing, empty or has invalid characters");
     }
 
@@ -138,7 +138,8 @@ int serve(const std::filesystem::path& config_path) {
         return fail("cannot write the audit log");
     }
     prompt_airlock::provider::HttpsClient provider(
-        *client_tls, {config->provider.host, config->provider.port, config->provider.target}, std::move(*credential));
+        *client_tls, {config->provider.host, config->provider.port, config->provider.target},
+        config->provider.credential_file);
     asio::thread_pool work(gw::pipeline_work_threads);
     gw::Pipeline pipeline(
         *detectors,

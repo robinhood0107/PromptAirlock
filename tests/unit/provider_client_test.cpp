@@ -44,13 +44,19 @@ protected:
 
     std::expected<gw::ProviderReply, gw::ProviderError> send(std::string host, std::string credential,
                                                              std::string body) {
+        EXPECT_TRUE(pv::store_credential(credential_file_, credential).has_value());
+        return send_with_file(std::move(host), std::move(body));
+    }
+    std::expected<gw::ProviderReply, gw::ProviderError> send_with_file(std::string host, std::string body) {
         pv::HttpsClient client(*client_tls_, {std::move(host), mock_->local_endpoint().port(), "/v1/chat/completions"},
-                               core::SensitiveText::copy_of(credential), {std::chrono::seconds(5)});
+                               credential_file_, {std::chrono::seconds(5)});
         asio::io_context io;
         auto future = asio::co_spawn(io, client.send(std::move(body)), asio::use_future);
         io.run();
         return future.get();
     }
+
+    const std::filesystem::path credential_file_ = std::filesystem::temp_directory_path() / "pa-provider-client.cred";
 
     pa_test::TestCertificate cert_;
     std::optional<asio::ssl::context> server_tls_;
@@ -82,8 +88,9 @@ TEST_F(ProviderClient, RefusesUntrustedProvider) {
     const auto other = pa_test::make_test_certificate();
     auto tls = prompt_airlock::tls::make_client_context(std::string_view{other.certificate_pem});
     ASSERT_TRUE(tls.has_value());
+    ASSERT_TRUE(pv::store_credential(credential_file_, "provider-secret").has_value());
     pv::HttpsClient client(*tls, {"127.0.0.1", mock_->local_endpoint().port(), "/v1/chat/completions"},
-                           core::SensitiveText::copy_of("provider-secret"), {std::chrono::seconds(5)});
+                           credential_file_, {std::chrono::seconds(5)});
     asio::io_context io;
     auto future = asio::co_spawn(io, client.send("{}"), asio::use_future);
     io.run();
@@ -96,6 +103,41 @@ TEST_F(ProviderClient, WrongCredentialIsAnErrorStatus) {
     ASSERT_TRUE(reply.has_value());
     EXPECT_EQ(reply->status, 401u);
     EXPECT_TRUE(mock_->received().empty());
+}
+
+TEST_F(ProviderClient, UsesReplacedCredentialOnNextRequest) {
+    // 실행 중에 자격 증명 파일을 바꿔 끼우면 재기동 없이 다음 요청부터 새 값을 쓴다(ADR 0026).
+    EXPECT_EQ(send("127.0.0.1", "expired-token", "{}")->status, 401u);
+    EXPECT_EQ(send("127.0.0.1", "provider-secret", "{}")->status, 200u);
+    EXPECT_EQ(mock_->received().size(), 1u);
+}
+
+TEST_F(ProviderClient, UnreadableCredentialMakesNoCall) {
+    // 파일이 없거나 보호되지 않았으면 연결하지 않고 실패한다(실패하면 막는 쪽).
+    std::filesystem::remove(credential_file_);
+    EXPECT_EQ(send_with_file("127.0.0.1", "{}").error(), gw::ProviderError::Unavailable);
+    std::ofstream(credential_file_, std::ios::binary | std::ios::trunc) << "provider-secret";
+#ifndef _WIN32
+    std::filesystem::permissions(credential_file_, std::filesystem::perms::others_read, std::filesystem::perm_options::add);
+#endif
+    EXPECT_EQ(send_with_file("127.0.0.1", "{}").error(), gw::ProviderError::Unavailable);
+    EXPECT_TRUE(mock_->received().empty());
+    EXPECT_EQ(mock_->connections(), 0u);
+}
+
+TEST(ProviderCredential, StoreReplacesFileAtomically) {
+    const auto path = std::filesystem::temp_directory_path() / "pa-cred-store.bin";
+    std::filesystem::remove(path);
+    ASSERT_TRUE(pv::store_credential(path, "first-token\n").has_value());
+    ASSERT_TRUE(pv::store_credential(path, "second-token").has_value());  // 있는 파일을 바꿔 끼운다
+    const auto read = pv::load_credential(path);
+    ASSERT_TRUE(read.has_value());
+    EXPECT_EQ(read->view(), "second-token");
+    EXPECT_FALSE(std::filesystem::exists(path.string() + ".tmp"));
+#ifndef _WIN32
+    const auto perms = std::filesystem::status(path).permissions();
+    EXPECT_EQ(perms & (std::filesystem::perms::group_all | std::filesystem::perms::others_all), std::filesystem::perms::none);
+#endif
 }
 
 TEST(ProviderCredential, ReadsOnlyProtectedFiles) {

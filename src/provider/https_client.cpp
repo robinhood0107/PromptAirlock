@@ -92,11 +92,46 @@ std::expected<std::string, CredentialError> protect_credential(std::string_view 
 #endif
 }
 
-HttpsClient::HttpsClient(asio::ssl::context& tls, Endpoint endpoint, core::SensitiveText credential,
+std::expected<void, CredentialError> store_credential(const std::filesystem::path& path, std::string_view plain) {
+    auto sealed = protect_credential(plain);
+    if (!sealed) {
+        return std::unexpected(sealed.error());
+    }
+    auto temp = path;
+    temp += ".tmp";
+    std::error_code ec;
+    std::filesystem::remove(temp, ec);
+    {
+        std::ofstream file(temp, std::ios::binary | std::ios::trunc);
+        // 내용을 쓰기 전에 소유자만 읽고 쓰게 한다(Linux 는 이 권한이어야 load_credential 이 읽는다).
+        std::filesystem::permissions(temp, std::filesystem::perms::owner_read | std::filesystem::perms::owner_write,
+                                     std::filesystem::perm_options::replace, ec);
+        if (!file || ec) {
+            return std::unexpected(CredentialError::Unreadable);
+        }
+        file << *sealed;
+        if (!file.flush()) {
+            return std::unexpected(CredentialError::Unreadable);
+        }
+    }
+    std::filesystem::rename(temp, path, ec);
+    if (ec) {
+        std::filesystem::remove(temp, ec);
+        return std::unexpected(CredentialError::Unreadable);
+    }
+    return {};
+}
+
+HttpsClient::HttpsClient(asio::ssl::context& tls, Endpoint endpoint, std::filesystem::path credential_file,
                          ClientLimits limits)
-    : tls_(tls), endpoint_(std::move(endpoint)), credential_(std::move(credential)), limits_(limits) {}
+    : tls_(tls), endpoint_(std::move(endpoint)), credential_file_(std::move(credential_file)), limits_(limits) {}
 
 asio::awaitable<Result> HttpsClient::send(std::string body) const {
+    // 보내기 직전에 읽어 바꿔 끼운 자격 증명을 쓴다. 읽지 못하면 연결도 하지 않는다(실패하면 막는 쪽).
+    const auto credential = load_credential(credential_file_);
+    if (!credential) {
+        co_return std::unexpected(gateway::ProviderError::Unavailable);
+    }
     const auto executor = co_await asio::this_coro::executor;
     tcp::resolver resolver(executor);
     auto [resolve_error, results] =
@@ -130,7 +165,7 @@ asio::awaitable<Result> HttpsClient::send(std::string body) const {
     req.set(http::field::content_type, "application/json");
     req.set(http::field::accept, "application/json");
     req.set(http::field::user_agent, "prompt-airlock");
-    req.set(http::field::authorization, std::string("Bearer ") + std::string(credential_.view()));
+    req.set(http::field::authorization, std::string("Bearer ") + std::string(credential->view()));
     req.keep_alive(false);
     req.body() = std::move(body);
     req.prepare_payload();
