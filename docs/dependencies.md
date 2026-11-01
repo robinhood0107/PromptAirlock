@@ -32,7 +32,14 @@ vcpkg 포트가 아니라 고정 주소에서 받아 SHA-256 을 확인한 뒤�
 | ONNX Runtime(공식 배포본, Windows x64·Linux x64) | 1.30.0 | MIT | `src/ner`(NER 추론, CPU) | 공유 라이브러리(`cmake/OnnxRuntime.cmake`) |
 | NER 모델 `atonlee/koelectra-ko-pii-ner`(model.onnx fp32, tokenizer.json, config.json) | 커밋 `1e75c01e707232401883cf364151bbe2e560c708` | Apache-2.0 | `src/ner`(사람·기관 이름 찾기) | 데이터 파일, 실행 파일 옆 `models/ner/`(`cmake/NerModel.cmake`) |
 
-- 배포 묶음에는 ONNX Runtime 의 ThirdPartyNotices 와 모델 출처·저작자 고지를 함께 넣습니다. 모델 학습 데이터와 백본 가중치에 관한 남은 확인은 배포 전에 닫습니다.
+- 배포 묶음에는 ONNX Runtime 의 ThirdPartyNotices 와 모델 출처·저작자 고지를 함께 넣습니다(`THIRD_PARTY_NOTICES.md`).
+- 모델 학습 데이터와 바탕 모델 조건은 #198 에서 원문으로 확인했습니다. 남은 것은 바탕 모델 사전학습 자료(모두의 말뭉치)의 결과물 공개 승인 여부 하나이며, 배포 전에 문의합니다(#102).
+
+## 배포 묶음에 넣지 않는 모델
+
+| 이름 | 판 | 라이선스 | 쓰는 곳 | 메모 |
+|---|---|---|---|---|
+| 문장 판별기(바탕 `beomi/KcELECTRA-base-v2022` 를 미세조정) | `classifier.json` SHA-256 `9876ee49…` | 바탕 MIT | `src/ner/sentence_classifier.cpp`(설정 `sentence_warn` 을 켤 때만) | 기본 꺼짐(ADR 0025). 바탕 사전학습 자료가 제작자가 모은 뉴스 댓글이라, 다시 채택하려면 조건을 따로 판단합니다(#198) |
 
 ## 오프라인 학습 도구(Python, `training/`)
 
