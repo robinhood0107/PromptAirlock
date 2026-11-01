@@ -41,4 +41,6 @@ workflow preset은 configure, build, test를 차례로 실행하며 Rust Vault�
 
 소스 공개 의무 없이 기관 안에 설치해 쓰려면 상용 라이선스를 따로 제공합니다. 배포는 설치형만 하며, 조건은 [ADR 0024](docs/adr/0024-license-and-distribution.md)에 있습니다.
 
+함께 배포하는 라이브러리·모델의 저작자와 라이선스는 [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md)에 있습니다.
+
 Copyright (C) 2026 robinhood0107
