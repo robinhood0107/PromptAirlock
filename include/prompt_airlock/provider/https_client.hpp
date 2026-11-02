@@ -14,7 +14,7 @@
 #include <string>
 
 #include "prompt_airlock/core/sensitive.hpp"
-#include "prompt_airlock/gateway/pipeline.hpp"
+#include "prompt_airlock/gateway/provider_port.hpp"
 
 namespace prompt_airlock::provider {
 
