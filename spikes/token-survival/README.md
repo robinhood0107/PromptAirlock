@@ -14,7 +14,7 @@
 
 설정과 키는 저장소의 `secrets/` 폴더에 둔다. 이 폴더는 `.gitignore`로 추적에서 빠진다. 커밋·이슈·로그에 키를 남기지 않는다.
 
-1. `config.example.json`을 `secrets/token-survival.json`으로 복사하고 `endpoint`, `model`을 채운다.
+1. `config.example.json`을 `secrets/token-survival.json`으로 복사하고 `endpoint`, `model`을 채운다. Vertex 주소의 `{project_id}`는 그대로 두면 서비스 계정 키의 `project_id`로 채워지므로, 키 파일만 바꿔 끼우면 된다.
 2. 인증을 고른다.
    - `{"type": "service-account", "path": "secrets/서비스 계정 키.json"}`: Vertex용 서비스 계정 키 파일(JSON)을 두면 도구가 access token으로 바꿔 쓴다(gcloud 불필요, 만료 5분 전 갱신).
    - `{"type": "gcloud"}`: gcloud가 설치돼 있고 `gcloud auth application-default login`을 해 두었으면 그 access token을 쓴다(45분마다 갱신).
@@ -29,6 +29,23 @@ node spikes/token-survival/survival.mjs secrets/token-survival.json
 ```
 
 결과는 `secrets/token-survival-out/<시각>.json`(사례별 답과 판정, 조건별 요약)에 남는다. 요약은 `[Measure]` 이슈로 올리되 서비스·모델 이름과 답 원문은 올리지 않는다.
+
+## 게이트웨이를 거친 측정(Phase 10-2)
+
+`gateway.mjs` 는 같은 사례 틀에 token 대신 합성 원문(가짜 이름, 기관, 전화번호, 메일, 사업자등록번호, 문서용 IP, 내부 용어)을 넣어 실행 중인 게이트웨이로 차례로 보낸다. 게이트웨이 감사 기록의 `egress`(실제로 보낸 가명 본문)와 `egress_answer`(복원 전 답)를 읽어 위와 같은 채점을 하고, 원문 값이 보낸 본문에 남았는지와 게이트웨이 결과(복원, 거절 사유)를 센다. 게이트웨이는 한 번에 한 요청만 받는다고 보고 감사 기록 순서로 사례를 맞추므로, 측정 중에는 다른 요청을 보내지 않는다.
+
+1. 게이트웨이 설정(`secrets/` 아래)의 provider 를 실제 주소로 두고 `prompt-airlock serve` 로 띄운다.
+2. 자격 증명은 갱신 작업처럼 넣는다(ADR 0026). 게이트웨이 설정을 두 번째 인자로 주면 그 `provider.url`도 키의 프로젝트에 맞춘다(바뀌면 게이트웨이를 다시 띄운다).
+
+   ```bash
+   node spikes/token-survival/print-token.mjs secrets/token-survival.json <게이트웨이 설정> | prompt-airlock protect-credential - <설정의 credential_file>
+   ```
+
+3. 측정 설정(`gateway`, `ca`, `token_file`, `audit_dir`, `out_dir`, `model`, `max_tokens`, `cases`, `seed`, `conditions`, `internal_terms`)을 만들고 돌린다.
+
+   ```bash
+   node spikes/token-survival/gateway.mjs secrets/<측정 설정>.json
+   ```
 
 ## 도구 시험
 
