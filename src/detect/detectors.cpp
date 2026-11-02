@@ -7,6 +7,7 @@
 
 #include "data/account_context_terms.hpp"
 #include "data/credential_markers.hpp"
+#include "data/institution_labels.hpp"
 #include "data/personal_markers.hpp"
 #include "data/sensitive_category_terms.hpp"
 #include "prompt_airlock/detect/encoded.hpp"
@@ -33,10 +34,37 @@ namespace {
                       static_cast<std::uint32_t>(last - view.units.begin()), entity.type(), entity.detector()};
 }
 
+// 설정에서 온 단어를 보기와 같은 정규화로 바꾸고 단어 안 공백을 뺀다. 같은 글자로 비교하려면 필요하다.
+[[nodiscard]] std::expected<std::vector<std::u32string>, core::InputError> normalize_terms(
+    std::span<const std::string_view> terms) {
+    std::vector<std::u32string> normalized;
+    normalized.reserve(terms.size());
+    for (const auto term : terms) {
+        const auto view = make_view(term);
+        if (!view) {
+            return std::unexpected(core::InputError::InvalidUtf8);
+        }
+        std::u32string text;
+        for (const auto& unit : view->units) {
+            if (!is_term_space(unit.value)) {
+                text.push_back(unit.value);
+            }
+        }
+        if (text.empty()) {
+            return std::unexpected(core::InputError::EmptyContent);
+        }
+        normalized.push_back(std::move(text));
+    }
+    return normalized;
+}
+
 }  // namespace
 
-Detectors::Detectors(TermMatcher internal_terms, std::shared_ptr<const NerScanner> ner)
+Detectors::Detectors(TermMatcher internal_terms, TermMatcher institution_labels, std::vector<IdFormat> id_formats,
+                     std::shared_ptr<const NerScanner> ner)
     : internal_terms_(std::move(internal_terms)),
+      institution_labels_(std::move(institution_labels)),
+      id_formats_(std::move(id_formats)),
       ner_(std::move(ner)),
       account_context_(TermMatcher::make(data::account_context_terms)),
       secret_markers_(TermMatcher::make(data::secret_markers)),
@@ -53,28 +81,28 @@ Detectors::Detectors(TermMatcher internal_terms, std::shared_ptr<const NerScanne
       self_statements_(TermMatcher::make(data::self_statements)) {}
 
 std::expected<Detectors, core::InputError> Detectors::make(std::span<const std::string_view> internal_terms,
-                                                         std::shared_ptr<const NerScanner> ner) {
-    // 보호어도 보기와 같은 정규화를 거쳐야 같은 글자로 비교된다.
-    std::vector<std::u32string> normalized;
-    normalized.reserve(internal_terms.size());
-    for (const auto term : internal_terms) {
-        const auto view = make_view(term);
-        if (!view) {
-            return std::unexpected(core::InputError::InvalidUtf8);
-        }
-        std::u32string text;
-        for (const auto& unit : view->units) {
-            if (!is_term_space(unit.value)) {
-                text.push_back(unit.value);
-            }
-        }
-        if (text.empty()) {
-            return std::unexpected(core::InputError::EmptyContent);
-        }
-        normalized.push_back(std::move(text));
+                                                         std::shared_ptr<const NerScanner> ner,
+                                                         const InstitutionPolicy& policy) {
+    auto terms = normalize_terms(internal_terms);
+    if (!terms) {
+        return std::unexpected(terms.error());
     }
-    const std::vector<std::u32string_view> views(normalized.begin(), normalized.end());
-    return Detectors(TermMatcher::make(views), std::move(ner));
+    // 업종 표지어(이미 NFKC) 뒤에 기관 표지어를 붙인다. 같은 말이 겹쳐도 일치기는 한 번만 낸다.
+    std::vector<std::string_view> added(policy.id_labels.begin(), policy.id_labels.end());
+    auto labels = normalize_terms(added);
+    if (!labels) {
+        return std::unexpected(labels.error());
+    }
+    std::vector<std::u32string_view> label_views(labels->begin(), labels->end());
+    for (const auto industry : policy.industries) {
+        const auto built_in = data::institution_labels(industry);
+        label_views.insert(label_views.end(), built_in.begin(), built_in.end());
+    }
+    std::ranges::sort(label_views);
+    const auto [first, last] = std::ranges::unique(label_views);
+    label_views.erase(first, last);
+    const std::vector<std::u32string_view> term_views(terms->begin(), terms->end());
+    return Detectors(TermMatcher::make(term_views), TermMatcher::make(label_views), policy.id_formats, std::move(ner));
 }
 
 std::expected<std::vector<core::EntitySpan>, core::DetectError> Detectors::detect_segment(
@@ -108,6 +136,7 @@ std::expected<std::vector<core::EntitySpan>, core::DetectError> Detectors::scan(
         hits.push_back({hit.first_unit, hit.last_unit, core::EntityType::InternalTerm, core::DetectorKind::InternalTerm});
     }
     rules::find_organizations(*view, chars, hits);
+    rules::find_institution_ids(*view, chars, institution_labels_, id_formats_, hits);
     if (ner_) {
         const auto names = ner_->scan(text, segment, *view, stop);
         if (!names) {
