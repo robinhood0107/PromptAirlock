@@ -104,6 +104,9 @@ private:
     std::string mini_stream_;
 };
 
+// PDF 글자 층(PDFium). PA_WITH_PDFIUM 없이 빌드하면 Unsupported.
+[[nodiscard]] std::expected<void, ExtractError> extract_pdf(std::span<const std::byte> file, Context& context);
+
 // hwp 5.0(CFB 안 FileHeader·BodyText). 암호·배포용·DRM 문서는 Encrypted.
 [[nodiscard]] std::expected<void, ExtractError> extract_hwp(const Cfb& cfb, Context& context);
 

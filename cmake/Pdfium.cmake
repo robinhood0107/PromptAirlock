@@ -1,0 +1,36 @@
+# PDFium(결정 #229): 우리가 공식 소스를 판 고정으로 빌드한 결과를 PA_PDFIUM_DIR 에서 읽는다.
+# 모양: <dir>/include/*.h, <dir>/lib/libpdfium.a(Linux) 또는 pdfium.lib·pdfium.dll(Windows), <dir>/REVISION, <dir>/SHA256SUMS.
+# 라이브러리 해시가 PA_PDFIUM_SHA256 과 다르면 설정이 실패한다. 경로를 주지 않으면 PDFium 없이 빌드하고 PDF 는 거절한다.
+set(PA_PDFIUM_DIR "" CACHE PATH "PDFium 빌드 결과 폴더(비우면 PDF 를 받지 않음)")
+set(PA_PDFIUM_REVISION b75764a1def138ff0f308c637865f195774ccdc4)
+if(WIN32)
+  set(PA_PDFIUM_LIB "lib/pdfium.lib")
+  set(PA_PDFIUM_SHA256 "")
+else()
+  set(PA_PDFIUM_LIB "lib/libpdfium.a")
+  set(PA_PDFIUM_SHA256 4f83dec1a3c9b55e5c0cd69cdcceb98cdf4fac603930218105e7603256a949be)
+endif()
+
+set(PA_WITH_PDFIUM OFF)
+if(PA_PDFIUM_DIR)
+  file(READ "${PA_PDFIUM_DIR}/REVISION" revision)
+  if(NOT revision MATCHES "^${PA_PDFIUM_REVISION}")
+    message(FATAL_ERROR "PDFium 판이 다르다(기대 ${PA_PDFIUM_REVISION})")
+  endif()
+  file(SHA256 "${PA_PDFIUM_DIR}/${PA_PDFIUM_LIB}" actual)
+  if(NOT PA_PDFIUM_SHA256 OR NOT actual STREQUAL PA_PDFIUM_SHA256)
+    message(FATAL_ERROR "PDFium 라이브러리 해시가 다르다: ${actual}")
+  endif()
+  add_library(pa::pdfium STATIC IMPORTED GLOBAL)
+  set_target_properties(pa::pdfium PROPERTIES
+    IMPORTED_LOCATION "${PA_PDFIUM_DIR}/${PA_PDFIUM_LIB}"
+    INTERFACE_INCLUDE_DIRECTORIES "${PA_PDFIUM_DIR}/include")
+  if(NOT WIN32)
+    find_package(Threads REQUIRED)
+    set_property(TARGET pa::pdfium PROPERTY INTERFACE_LINK_LIBRARIES Threads::Threads ${CMAKE_DL_LIBS})
+  endif()
+  set(PA_WITH_PDFIUM ON)
+  message(STATUS "PDFium ${PA_PDFIUM_REVISION} 를 쓴다: ${PA_PDFIUM_DIR}")
+else()
+  message(STATUS "PDFium 없이 빌드한다(PDF 는 unsupported)")
+endif()

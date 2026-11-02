@@ -8,6 +8,7 @@ add_library(prompt_airlock_extract
   hwp.cpp
   hwpx.cpp
   ooxml.cpp
+  pdf.cpp
   text.cpp
   xml.cpp
   zip.cpp)
@@ -39,4 +40,9 @@ if(MSVC)
   target_compile_options(prompt-airlock-extract PRIVATE /WX)
 else()
   target_compile_options(prompt-airlock-extract PRIVATE -Werror)
+endif()
+
+if(PA_WITH_PDFIUM)
+  target_link_libraries(prompt_airlock_extract PRIVATE pa::pdfium)
+  target_compile_definitions(prompt_airlock_extract PRIVATE PA_WITH_PDFIUM)
 endif()

@@ -12,7 +12,7 @@
 
 namespace prompt_airlock::extract {
 
-enum class DocumentFormat : std::uint8_t { Text, Csv, Markdown, Html, Docx, Xlsx, Pptx, Hwpx, Hwpml, Hwp, Zip };
+enum class DocumentFormat : std::uint8_t { Text, Csv, Markdown, Html, Docx, Xlsx, Pptx, Hwpx, Hwpml, Hwp, Pdf, Zip };
 
 enum class ExtractError : std::uint8_t {
     TooLarge,        // 파일·풀린 크기·출력이 상한을 넘음
@@ -58,6 +58,7 @@ struct ExtractLimits {
     std::size_t nested_documents = 64;
     std::size_t xml_depth = 256;
     std::size_t output_bytes = 8U << 20;   // 뽑은 글자 합
+    std::size_t pdf_pages = 2000;
 };
 
 // name_hint 는 파일 이름의 확장자(소문자, 점 없이, 비어도 됨). 글자 형식(txt·csv·md·htm)을 가릴 때만 쓴다.

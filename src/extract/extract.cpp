@@ -165,7 +165,8 @@ std::expected<DocumentFormat, ExtractError> extract_into(std::span<const std::by
         return r ? std::expected<DocumentFormat, ExtractError>(DocumentFormat::Hwp) : std::unexpected(r.error());
     }
     if (head.starts_with("%PDF-")) {
-        return std::unexpected(ExtractError::Unsupported);  // 11.5-2
+        auto r = extract_pdf(file, context);
+        return r ? std::expected<DocumentFormat, ExtractError>(DocumentFormat::Pdf) : std::unexpected(r.error());
     }
     return extract_text(file, hint, context);
 }

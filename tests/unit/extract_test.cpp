@@ -224,7 +224,6 @@ TEST(ExtractLimits, HostileXmlAndBrokenFiles) {
     // CFB 머리만 있고 몸이 없는 파일. 옛 형식·hwp 판정은 extract_hwp_test 가 진짜 CFB 로 본다.
     EXPECT_EQ(run(std::string("\xD0\xCF\x11\xE0\xA1\xB1\x1A\xE1", 8)).error(), ex::ExtractError::Damaged);
     EXPECT_EQ(run(std::string("\xD0\xCF\x11\xE0\xA1\xB1\x1A\xE1", 8), "hwp").error(), ex::ExtractError::Damaged);
-    EXPECT_EQ(run("%PDF-1.7\n").error(), ex::ExtractError::Unsupported);
 }
 
 TEST(ExtractProtocol, RoundTripAndRejectsBadOutput) {
