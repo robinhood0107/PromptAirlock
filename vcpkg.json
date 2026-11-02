@@ -5,11 +5,17 @@
   "dependencies": [
     "boost-asio",
     "boost-beast",
+    "expat",
     "gtest",
+    {
+      "name": "libzip",
+      "default-features": false
+    },
     "nlohmann-json",
     "openssl",
     "protobuf",
-    "utf8proc"
+    "utf8proc",
+    "zlib"
   ],
   "features": {
     "sentence-spike": {

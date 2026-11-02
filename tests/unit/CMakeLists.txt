@@ -110,3 +110,15 @@ target_link_libraries(provider_client_test PRIVATE prompt_airlock_provider promp
 # 감사 기록(ADR 0021).
 pa_add_gtest(audit_log_test audit_log_test.cpp)
 target_link_libraries(audit_log_test PRIVATE prompt_airlock_audit)
+
+# 문서 추출(ADR 0028). 해석 시험은 시험 안에서 libzip 으로 문서를 만든다.
+find_package(libzip CONFIG REQUIRED)
+pa_add_gtest(extract_test extract_test.cpp)
+target_link_libraries(extract_test PRIVATE prompt_airlock_extract prompt_airlock_extract_client libzip::zip)
+add_executable(extract_test_child extract_test_child.cpp)
+target_link_libraries(extract_test_child PRIVATE pa_options)
+pa_add_gtest(extract_runner_test extract_runner_test.cpp)
+target_link_libraries(extract_runner_test PRIVATE prompt_airlock_extract_client)
+target_compile_definitions(extract_runner_test PRIVATE "PA_TEST_CHILD=\"$<TARGET_FILE:extract_test_child>\""
+                           "PA_EXTRACT_EXE=\"$<TARGET_FILE:prompt-airlock-extract>\"")
+add_dependencies(extract_runner_test extract_test_child prompt-airlock-extract)
