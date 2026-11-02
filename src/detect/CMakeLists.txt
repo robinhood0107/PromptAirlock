@@ -7,6 +7,7 @@ add_library(prompt_airlock_detect
   detectors.cpp
   encoded.cpp
   identifiers.cpp
+  institution.cpp
   network.cpp
   organization.cpp
   scan.cpp

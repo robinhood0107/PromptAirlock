@@ -11,6 +11,7 @@
 
 #include "prompt_airlock/core/request_params.hpp"
 #include "prompt_airlock/core/types.hpp"
+#include "prompt_airlock/detect/institution.hpp"
 
 namespace prompt_airlock::gateway {
 
@@ -42,6 +43,7 @@ struct Config {
     ProviderConfig provider;
     std::vector<Origin> origins;
     std::vector<std::string> internal_terms;  // 기관 보호어: 자기 기관·계열사·거래처 이름
+    detect::InstitutionPolicy policy;          // 기관 정책 묶음: 업종, 기관 번호 표지어·형식(ADR 0027)
     core::OutputTokenCap output_token_cap = core::OutputTokenCap::standard();
     int history_retention_days = 365;  // 감사·이력 보존 기간, 365 이상(ADR 0021)
     bool sentence_warn = false;        // 문장 판별기 경고 모드(ADR 0023). 켜면 모델을 불러오지 못할 때 기동하지 않는다

@@ -22,7 +22,7 @@ enum class GradeOrigin : std::uint8_t { Header, SourceDefault };
 // 처리 방식. 값이 클수록 엄격하다.
 enum class Action : std::uint8_t { Pass = 0, Tokenize = 1, Block = 2 };
 
-// 개인정보·비밀 종류 17개(ADR 0015, 0016).
+// 개인정보·비밀 종류 18개(ADR 0015, 0016, 0027).
 enum class EntityType : std::uint8_t {
     Person,
     Organization,
@@ -41,8 +41,9 @@ enum class EntityType : std::uint8_t {
     KoreanPassportNo,
     KoreanDriverLicenseNo,
     KoreanAlienRegistrationNo,
+    InstitutionId,  // 기관 번호: 업종 표지어 뒤 값, 기관 형식 마스크(ADR 0027)
 };
-inline constexpr std::size_t entity_type_count = 17;
+inline constexpr std::size_t entity_type_count = 18;
 
 // 메시지 역할. 외부 형식의 역할 문자열과는 JSON 경계(Phase 8)에서만 연결한다.
 enum class MessageRole : std::uint8_t { System, Developer, User, Model };
@@ -80,6 +81,7 @@ inline constexpr std::size_t max_entities = 512;
         case EntityType::Email:
         case EntityType::IpAddress:
         case EntityType::InternalTerm:
+        case EntityType::InstitutionId:
             return Action::Tokenize;
     }
     return Action::Block;
@@ -117,6 +119,7 @@ inline constexpr std::size_t max_entities = 512;
         case EntityType::KoreanPassportNo: return "KOREAN_PASSPORT_NO";
         case EntityType::KoreanDriverLicenseNo: return "KOREAN_DRIVER_LICENSE_NO";
         case EntityType::KoreanAlienRegistrationNo: return "KOREAN_ALIEN_REGISTRATION_NO";
+        case EntityType::InstitutionId: return "INSTITUTION_ID";
     }
     return "INVALID";
 }

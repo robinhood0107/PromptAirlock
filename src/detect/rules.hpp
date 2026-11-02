@@ -11,6 +11,7 @@
 #include <vector>
 
 #include "prompt_airlock/core/types.hpp"
+#include "prompt_airlock/detect/institution.hpp"
 #include "prompt_airlock/detect/scan.hpp"
 #include "prompt_airlock/detect/sensitive.hpp"
 #include "prompt_airlock/detect/terms.hpp"
@@ -106,5 +107,9 @@ void find_secrets(std::u32string_view text, std::vector<Hit>& out);
 // 기관명: 앞말 + 기관 꼬리(바름제약, Bluewave솔루션즈)인 어절과, (주)·주식회사 뒤 어절. NER 이 놓친 기관을 보탠다
 // (Phase 7-3). 꼬리 목록은 organization.hpp.
 void find_organizations(const DetectionView& view, std::u32string_view text, std::vector<Hit>& out);
+
+// 기관 번호(ADR 0027): labels 표지어 뒤 번호와 formats 형식 마스크. 둘 다 INSTITUTION_ID.
+void find_institution_ids(const DetectionView& view, std::u32string_view text, const TermMatcher& labels,
+                          std::span<const IdFormat> formats, std::vector<Hit>& out);
 
 }  // namespace prompt_airlock::detect::rules

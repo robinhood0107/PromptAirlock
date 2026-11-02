@@ -13,6 +13,7 @@
 #include "prompt_airlock/core/encoded.hpp"
 #include "prompt_airlock/core/entity.hpp"
 #include "prompt_airlock/core/error.hpp"
+#include "prompt_airlock/detect/institution.hpp"
 #include "prompt_airlock/detect/ner_scanner.hpp"
 #include "prompt_airlock/detect/sensitive.hpp"
 #include "prompt_airlock/detect/terms.hpp"
@@ -34,8 +35,10 @@ public:
     // 기관 보호어(Phase 8 설정이 넘긴다). UTF-8 이 아니면 InvalidUtf8, 정규화 뒤 비면 EmptyContent.
     // ner 가 있으면 segment 마다(인코딩을 푼 텍스트와 잔여 검사 포함) 사람·기관 이름도 찾는다.
     // 비워 두면 NER 없이 결정론 규칙만 돈다(시험용). 제품 조립은 항상 NerPool 을 넘긴다.
+    // policy 는 기관 정책 묶음(ADR 0027). 기관 표지어도 보호어와 같은 검증을 거친다. 상한은 설정이 본다.
     [[nodiscard]] static std::expected<Detectors, core::InputError> make(std::span<const std::string_view> internal_terms,
-                                                                         std::shared_ptr<const NerScanner> ner = {});
+                                                                         std::shared_ptr<const NerScanner> ner = {},
+                                                                         const InstitutionPolicy& policy = {});
 
     // stop 은 NER 까지 넘긴다(요청 취소 신호). 결정론 규칙은 짧아서 확인하지 않는다.
     [[nodiscard]] std::expected<DocumentDetection, core::DetectError> detect(const core::PromptDocument& document,
@@ -46,13 +49,16 @@ public:
         std::string_view text, core::SegmentIndex segment, std::stop_token stop = {}) const;
 
 private:
-    Detectors(TermMatcher internal_terms, std::shared_ptr<const NerScanner> ner);
+    Detectors(TermMatcher internal_terms, TermMatcher institution_labels, std::vector<IdFormat> id_formats,
+              std::shared_ptr<const NerScanner> ner);
     [[nodiscard]] std::expected<std::vector<core::EntitySpan>, core::DetectError> scan(
         std::string_view text, core::SegmentIndex segment, SensitiveTally& tally, std::stop_token stop) const;
     // 덩어리를 깊이 2까지 풀고 푼 결과를 같은 탐지기로 본다.
     [[nodiscard]] std::expected<std::vector<core::EncodedFinding>, core::DetectError> scan_encoded(
         std::string_view text, core::SegmentIndex segment, std::stop_token stop) const;
     TermMatcher internal_terms_;
+    TermMatcher institution_labels_;  // 업종 + 기관 표지어
+    std::vector<IdFormat> id_formats_;
     std::shared_ptr<const NerScanner> ner_;  // 여러 Detectors 사본이 같은 pool 을 함께 쓴다
     TermMatcher account_context_;   // 계좌 문맥어(data/account_context_terms.hpp)
     TermMatcher secret_markers_;    // 인증 표지어(data/credential_markers.hpp)

@@ -43,7 +43,7 @@ TEST(CoreEntity, RejectsSpanOutsideOrInsideCharacter) {
 
 TEST(CoreEntity, RejectsOutOfRangeEnums) {
     constexpr auto text = "abc"sv;
-    EXPECT_EQ(pc::EntitySpan::make(text, pc::SegmentIndex{0}, span(0, 1), static_cast<pc::EntityType>(17),
+    EXPECT_EQ(pc::EntitySpan::make(text, pc::SegmentIndex{0}, span(0, 1), static_cast<pc::EntityType>(pc::entity_type_count),
                                    pc::DetectorKind::Pattern)
                   .error(),
               pc::InputError::ValueOutOfRange);

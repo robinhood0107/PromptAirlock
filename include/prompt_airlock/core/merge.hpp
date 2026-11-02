@@ -23,8 +23,8 @@ struct MergedEntity {
 // 같은 segment 에서 구간이 겹치면(맞닿기만 하면 따로) 하나로 합친다.
 // 결과는 (segment, 시작) 순으로 정렬되고 서로 겹치지 않으며, 입력 순서와 무관하다.
 // 대표 종류는 이긴 처리 방식을 가진 종류 중 고정 우선순위로 고른다:
-// 차단 종류는 enum 순, 가명화 종류는 Email, IpAddress, KoreanPhone, KoreanBusinessNo, InternalTerm,
-// Organization, Person 순(형식 있는 값 > 기관 보호어 > 이름·조직).
+// 차단 종류는 enum 순, 가명화 종류는 Email, IpAddress, KoreanPhone, KoreanBusinessNo, InstitutionId,
+// InternalTerm, Organization, Person 순(형식 있는 값 > 기관 보호어 > 이름·조직).
 [[nodiscard]] std::vector<MergedEntity> merge_entities(std::span<const EntitySpan> spans);
 
 }  // namespace prompt_airlock::core

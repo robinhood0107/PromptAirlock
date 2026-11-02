@@ -137,3 +137,43 @@ TEST(GatewayConfig, RejectsBadValues) {
 }
 
 }  // namespace
+
+TEST(GatewayConfig, ReadsInstitutionPolicy) {
+    auto j = valid();
+    j["policy"] = {{"industries", json::array({"hospital", "bank"})},
+                   {"id_labels", json::array({"학번"})},
+                   {"id_formats", json::array({"HR-####-###"})}};
+    const auto config = parse(j);
+    ASSERT_TRUE(config.has_value());
+    namespace pd = prompt_airlock::detect;
+    EXPECT_EQ(config->policy.industries, (std::vector<pd::Industry>{pd::Industry::Hospital, pd::Industry::Bank}));
+    EXPECT_EQ(config->policy.id_labels, std::vector<std::string>{"학번"});
+    EXPECT_EQ(config->policy.id_formats.size(), 1U);
+    // 없으면 빈 정책이다(업종 표지어도 기관 번호 규칙도 없음).
+    const auto plain = parse(valid());
+    ASSERT_TRUE(plain.has_value());
+    EXPECT_TRUE(plain->policy.industries.empty() && plain->policy.id_labels.empty() && plain->policy.id_formats.empty());
+}
+
+TEST(GatewayConfig, RejectsBadInstitutionPolicy) {
+    const auto with = [](json policy) {
+        auto j = valid();
+        j["policy"] = std::move(policy);
+        return j;
+    };
+    expect_error(with(json::array()), ConfigProblem::WrongType, "policy");
+    expect_error(with({{"rules", json::array()}}), ConfigProblem::UnknownKey, "policy.rules");
+    expect_error(with({{"industries", "bank"}}), ConfigProblem::WrongType, "policy.industries");
+    expect_error(with({{"industries", json::array({"Bank"})}}), ConfigProblem::InvalidValue, "policy.industries[0]");
+    expect_error(with({{"industries", json::array({"bank", "bank"})}}), ConfigProblem::Duplicate, "policy.industries[1]");
+    expect_error(with({{"id_labels", json::array({""})}}), ConfigProblem::InvalidValue, "policy.id_labels[0]");
+    expect_error(with({{"id_labels", json::array({1})}}), ConfigProblem::WrongType, "policy.id_labels[0]");
+    expect_error(with({{"id_labels", json::array({std::string(33, 'a')})}}), ConfigProblem::InvalidValue,
+                 "policy.id_labels[0]");
+    expect_error(with({{"id_formats", json::array({"####"})}}), ConfigProblem::InvalidValue, "policy.id_formats[0]");
+    json many = json::array();
+    for (int i = 0; i < 17; ++i) {
+        many.push_back("K" + std::to_string(i) + "-####");
+    }
+    expect_error(with({{"id_formats", many}}), ConfigProblem::InvalidValue, "policy.id_formats");
+}

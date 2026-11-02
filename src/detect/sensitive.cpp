@@ -47,6 +47,7 @@ using core::EntityType;
         case EntityType::KoreanPassportNo:
         case EntityType::KoreanDriverLicenseNo:
         case EntityType::KoreanAlienRegistrationNo:
+        case EntityType::InstitutionId:
             return true;
         default:
             return false;

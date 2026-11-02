@@ -40,7 +40,7 @@ private:
     EntityType label_type_;
 };
 
-// 가명화 종류 7개의 라벨. 차단 종류는 token 을 만들지 않으므로 nullopt.
+// 가명화 종류 8개의 라벨. 차단 종류는 token 을 만들지 않으므로 nullopt.
 [[nodiscard]] constexpr std::optional<std::string_view> token_label(EntityType type) noexcept {
     if (default_action(type) != Action::Tokenize) {
         return std::nullopt;

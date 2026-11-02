@@ -143,9 +143,9 @@ int serve(const std::filesystem::path& config_path) {
         return fail(sentence.error());
     }
     std::vector<std::string_view> terms(config->internal_terms.begin(), config->internal_terms.end());
-    auto detectors = prompt_airlock::detect::Detectors::make(terms, *ner);
+    auto detectors = prompt_airlock::detect::Detectors::make(terms, *ner, config->policy);
     if (!detectors) {
-        return fail("institution protected terms rejected");
+        return fail("institution protected terms or policy labels rejected");
     }
     prompt_airlock::vault_client::ServiceOptions vault_options;
     vault_options.exe = PA_VAULT_EXE;

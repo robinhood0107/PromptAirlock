@@ -33,6 +33,7 @@ const std::vector<std::pair<EntityType, Action>>& expected_table() {
         {EntityType::KoreanPassportNo, Action::Block},
         {EntityType::KoreanDriverLicenseNo, Action::Block},
         {EntityType::KoreanAlienRegistrationNo, Action::Block},
+        {EntityType::InstitutionId, Action::Tokenize},
     };
     return table;
 }
@@ -49,7 +50,7 @@ TEST(CoreTypes, DefaultActionTableMatchesDecision) {
         tokenized += action == Action::Tokenize ? 1 : 0;
     }
     EXPECT_EQ(blocked, 10);
-    EXPECT_EQ(tokenized, 7);
+    EXPECT_EQ(tokenized, 8);
 }
 
 TEST(CoreTypes, OutOfRangeTypeIsBlocked) {
