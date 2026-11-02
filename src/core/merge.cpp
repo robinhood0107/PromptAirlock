@@ -31,6 +31,7 @@ namespace {
         case EntityType::KoreanPassportNo:
         case EntityType::KoreanDriverLicenseNo:
         case EntityType::KoreanAlienRegistrationNo:
+        case EntityType::ConfidentialMatter:
             return static_cast<std::uint8_t>(16 + std::to_underlying(type));
     }
     return std::numeric_limits<std::uint8_t>::max();
