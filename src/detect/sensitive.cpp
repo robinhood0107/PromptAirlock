@@ -56,6 +56,36 @@ using core::EntityType;
 
 }  // namespace
 
+std::vector<bool> block_sentence_pairs(std::span<const SentenceSpan> spans, std::u32string_view text,
+                                       const std::vector<bool>& a, const std::vector<bool>& b, EntityType type,
+                                       std::vector<Hit>& out) {
+    // 문장 [first_sentence, last_sentence] 를 차단한다. 앞뒤 공백은 뺀다.
+    std::vector<bool> covered(spans.size(), false);
+    const auto block = [&](std::size_t first_sentence, std::size_t last_sentence) {
+        std::uint32_t first = spans[first_sentence].first_unit;
+        std::uint32_t last = spans[last_sentence].end_unit - 1;
+        while (first < last && (text[first] == U' ' || text[first] == U'\n' || text[first] == U'\t')) {
+            ++first;
+        }
+        while (last > first && (text[last] == U' ' || text[last] == U'\n' || text[last] == U'\t')) {
+            --last;
+        }
+        out.push_back({first, last, type, DetectorKind::Context});
+        for (std::size_t i = first_sentence; i <= last_sentence; ++i) {
+            covered[i] = true;
+        }
+    };
+    for (std::size_t i = 0; i < spans.size(); ++i) {
+        if (a[i] && b[i]) {
+            block(i, i);
+        }
+        if (i > 0 && ((a[i] && b[i - 1]) || (b[i] && a[i - 1]))) {
+            block(i - 1, i);
+        }
+    }
+    return covered;
+}
+
 void find_sensitive(const DetectionView& view, std::u32string_view text, const SensitiveMatchers& matchers,
                     std::span<const Hit> identities, std::vector<Hit>& out, SensitiveTally& tally) {
     const auto spans = sentences(view);
@@ -86,30 +116,11 @@ void find_sensitive(const DetectionView& view, std::u32string_view text, const S
         }
     }
 
-    // 문장 [a, b] 를 차단한다. 앞뒤 공백은 뺀다.
-    std::vector<bool> covered(spans.size(), false);
-    const auto block = [&](std::size_t a, std::size_t b) {
-        std::uint32_t first = spans[a].first_unit;
-        std::uint32_t last = spans[b].end_unit - 1;
-        while (first < last && (text[first] == U' ' || text[first] == U'\n' || text[first] == U'\t')) {
-            ++first;
-        }
-        while (last > first && (text[last] == U' ' || text[last] == U'\n' || text[last] == U'\t')) {
-            --last;
-        }
-        out.push_back({first, last, EntityType::SensitivePersonalInfo, DetectorKind::Context});
-        for (std::size_t i = a; i <= b; ++i) {
-            covered[i] = true;
-        }
-    };
+    std::vector<bool> has_category(spans.size(), false);
     for (std::size_t i = 0; i < spans.size(); ++i) {
-        if (categories[i] != 0 && marked[i]) {
-            block(i, i);
-        }
-        if (i > 0 && ((categories[i] != 0 && marked[i - 1]) || (marked[i] && categories[i - 1] != 0))) {
-            block(i - 1, i);
-        }
+        has_category[i] = categories[i] != 0;
     }
+    const auto covered = block_sentence_pairs(spans, text, has_category, marked, EntityType::SensitivePersonalInfo, out);
     for (std::size_t i = 0; i < spans.size(); ++i) {
         if (covered[i]) {
             continue;
