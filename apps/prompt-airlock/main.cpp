@@ -13,6 +13,7 @@
 #include <cstdlib>
 #include <cstdio>
 #include <exception>
+#include <expected>
 #include <fstream>
 #include <iostream>
 #include <iterator>
@@ -58,6 +59,60 @@ int fail(const char* what) {
     return 1;
 }
 
+struct Tls {
+    asio::ssl::context server;  // 게이트웨이 입구
+    asio::ssl::context client;  // provider 연결
+    std::optional<int> cert_days;
+};
+
+// 입구 인증서·키와 provider 신뢰 저장소를 읽는다. 실패하면 기동 실패 문구.
+std::expected<Tls, const char*> load_tls(const gw::Config& config) {
+    const auto cert = read_file(config.listen.certificate_chain);
+    const auto key = read_file(config.listen.private_key);
+    if (!cert || !key) {
+        return std::unexpected("cannot read the listen certificate or key");
+    }
+    auto server = prompt_airlock::tls::make_server_context(*cert, *key);
+    if (!server) {
+        return std::unexpected("listen certificate or key rejected (weak key, bad PEM or mismatched pair)");
+    }
+    std::optional<std::string> trust;
+    if (!config.provider.trust_file.empty() && !(trust = read_file(config.provider.trust_file))) {
+        return std::unexpected("cannot read the provider trust file");
+    }
+    auto client =
+        prompt_airlock::tls::make_client_context(trust ? std::optional<std::string_view>(*trust) : std::nullopt);
+    if (!client) {
+        return std::unexpected("provider trust store rejected");
+    }
+    return Tls{std::move(*server), std::move(*client), prompt_airlock::tls::certificate_days_left(*cert)};
+}
+
+// 경고 모드(ADR 0023): 켰는데 판별기를 불러오지 못하면 기동하지 않는다(판별 없이 보내지 않는다). 끄면 빈 함수.
+std::expected<gw::SentenceCheck, const char*> make_sentence_check(bool enabled) {
+    if (!enabled) {
+        return gw::SentenceCheck{};
+    }
+    auto classifier = prompt_airlock::ner::SentenceClassifier::make(PA_SENTENCE_MODEL_DIR);
+    if (!classifier) {
+        return std::unexpected("sentence classifier files are missing or do not match the pinned hashes");
+    }
+    return [classifier = *classifier](std::string_view text, bool named_person, std::stop_token stop)
+               -> std::expected<std::optional<std::string>, core::DetectError> {
+        auto hit = classifier->classify(text, named_person, stop);
+        if (!hit) {
+            using prompt_airlock::ner::SentenceError;
+            return std::unexpected(hit.error() == SentenceError::Overloaded ? core::DetectError::Overloaded
+                                   : hit.error() == SentenceError::Timeout  ? core::DetectError::Timeout
+                                                                            : core::DetectError::Unavailable);
+        }
+        if (!*hit) {
+            return std::nullopt;
+        }
+        return (*hit)->category;
+    };
+}
+
 int serve(const std::filesystem::path& config_path) {
     const auto text = read_file(config_path);
     if (!text) {
@@ -69,24 +124,9 @@ int serve(const std::filesystem::path& config_path) {
                      std::string(gw::config_problem_name(config.error().problem)).c_str(), config.error().field.c_str());
         return 1;
     }
-    const auto cert = read_file(config->listen.certificate_chain);
-    const auto key = read_file(config->listen.private_key);
-    if (!cert || !key) {
-        return fail("cannot read the listen certificate or key");
-    }
-    auto server_tls = prompt_airlock::tls::make_server_context(*cert, *key);
-    if (!server_tls) {
-        return fail("listen certificate or key rejected (weak key, bad PEM or mismatched pair)");
-    }
-    const auto cert_days = prompt_airlock::tls::certificate_days_left(*cert);
-    std::optional<std::string> trust;
-    if (!config->provider.trust_file.empty() && !(trust = read_file(config->provider.trust_file))) {
-        return fail("cannot read the provider trust file");
-    }
-    auto client_tls = prompt_airlock::tls::make_client_context(trust ? std::optional<std::string_view>(*trust)
-                                                                     : std::nullopt);
-    if (!client_tls) {
-        return fail("provider trust store rejected");
+    auto tls = load_tls(*config);
+    if (!tls) {
+        return fail(tls.error());
     }
     // 기동 때 한 번 읽어 설정 실수를 바로 알린다. 실행 중에는 요청마다 다시 읽는다(ADR 0026).
     if (!prompt_airlock::provider::load_credential(config->provider.credential_file)) {
@@ -98,27 +138,9 @@ int serve(const std::filesystem::path& config_path) {
     if (!ner) {
         return fail("NER model files are missing or do not match the pinned hashes");
     }
-    // 경고 모드(ADR 0023): 켰는데 판별기를 불러오지 못하면 기동하지 않는다(판별 없이 보내지 않는다).
-    gw::SentenceCheck sentence;
-    if (config->sentence_warn) {
-        auto classifier = prompt_airlock::ner::SentenceClassifier::make(PA_SENTENCE_MODEL_DIR);
-        if (!classifier) {
-            return fail("sentence classifier files are missing or do not match the pinned hashes");
-        }
-        sentence = [classifier = *classifier](std::string_view text, bool named_person, std::stop_token stop)
-            -> std::expected<std::optional<std::string>, core::DetectError> {
-            auto hit = classifier->classify(text, named_person, stop);
-            if (!hit) {
-                using prompt_airlock::ner::SentenceError;
-                return std::unexpected(hit.error() == SentenceError::Overloaded ? core::DetectError::Overloaded
-                                       : hit.error() == SentenceError::Timeout  ? core::DetectError::Timeout
-                                                                                : core::DetectError::Unavailable);
-            }
-            if (!*hit) {
-                return std::nullopt;
-            }
-            return (*hit)->category;
-        };
+    auto sentence = make_sentence_check(config->sentence_warn);
+    if (!sentence) {
+        return fail(sentence.error());
     }
     std::vector<std::string_view> terms(config->internal_terms.begin(), config->internal_terms.end());
     auto detectors = prompt_airlock::detect::Detectors::make(terms, *ner);
@@ -140,7 +162,7 @@ int serve(const std::filesystem::path& config_path) {
         return fail("cannot write the audit log");
     }
     prompt_airlock::provider::HttpsClient provider(
-        *client_tls, {config->provider.host, config->provider.port, config->provider.target},
+        tls->client, {config->provider.host, config->provider.port, config->provider.target},
         config->provider.credential_file);
     asio::thread_pool work(gw::pipeline_work_threads);
     gw::Pipeline pipeline(
@@ -154,16 +176,16 @@ int serve(const std::filesystem::path& config_path) {
         },
         [&provider](std::string body) { return provider.send(std::move(body)); }, config->output_token_cap,
         config->provider.model, work.get_executor(), audit_log->get(), gw::pipeline_in_flight_limit, gw::request_time_limit,
-        std::move(sentence));
-    if (cert_days && *cert_days < 30) {
-        std::fprintf(stderr, "prompt-airlock: warning: listen certificate expires in %d days\n", *cert_days);
-        (void)(*audit_log)->append("cert_expiry", "warn", {{"days_left", *cert_days}});
+        std::move(*sentence));
+    if (tls->cert_days && *tls->cert_days < 30) {
+        std::fprintf(stderr, "prompt-airlock: warning: listen certificate expires in %d days\n", *tls->cert_days);
+        (void)(*audit_log)->append("cert_expiry", "warn", {{"days_left", *tls->cert_days}});
     }
     gw::Authenticator auth(config->origins);
 
     asio::io_context io(static_cast<int>(io_threads));
     const asio::ip::tcp::endpoint endpoint(asio::ip::make_address(config->listen.address), config->listen.port);
-    gw::Server server(io, *server_tls, endpoint, auth,
+    gw::Server server(io, tls->server, endpoint, auth,
                       [&pipeline](gw::AcceptedRequest request) { return pipeline.handle(std::move(request)); },
                       gw::ServerLimits{}, audit_log->get());
     server.start();
