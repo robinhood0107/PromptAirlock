@@ -1,0 +1,952 @@
+{"id":"dev-0001","industry":"public-admin","group":"conf","text":"배포 금지 인사 발령안 자료를 요약해 줘.","confidential":true,"ids":[]}
+{"id":"dev-0002","industry":"public-admin","group":"conf","text":"다음은 내부용인 예정가격 내용입니다. 핵심만 뽑아 주세요.","confidential":true,"ids":[]}
+{"id":"dev-0003","industry":"public-admin","group":"conf","text":"다음은 배포 금지인 인사 발령안 내용입니다. 핵심만 뽑아 주세요.","confidential":true,"ids":[]}
+{"id":"dev-0004","industry":"public-admin","group":"conf","text":"다음은 미공개인 감사 결과 내용입니다. 핵심만 뽑아 주세요.","confidential":true,"ids":[]}
+{"id":"dev-0005","industry":"public-admin","group":"conf","text":"비공개 인사 발령안 자료를 요약해 줘.","confidential":true,"ids":[]}
+{"id":"dev-0006","industry":"public-admin","group":"conf","text":"다음은 유출 금지인 예산 편성안 내용입니다. 핵심만 뽑아 주세요.","confidential":true,"ids":[]}
+{"id":"dev-0007","industry":"public-admin","group":"conf","text":"엠바고 징계 의결 자료를 요약해 줘.","confidential":true,"ids":[]}
+{"id":"dev-0008","industry":"public-admin","group":"conf","text":"다음은 비밀 문서인 예산 편성안 내용입니다. 핵심만 뽑아 주세요.","confidential":true,"ids":[]}
+{"id":"dev-0009","industry":"public-admin","group":"conf","text":"다음은 엠바고인 예산안 초안 내용입니다. 핵심만 뽑아 주세요.","confidential":true,"ids":[]}
+{"id":"dev-0010","industry":"public-admin","group":"conf","text":"감사 결과 관련 유출 금지 문서를 표로 정리해 주세요.","confidential":true,"ids":[]}
+{"id":"dev-0011","industry":"public-admin","group":"conf","text":"비밀 문서 징계 의결 자료를 요약해 줘.","confidential":true,"ids":[]}
+{"id":"dev-0012","industry":"public-admin","group":"conf","text":"다음은 보안 문서인 예산 편성안 내용입니다. 핵심만 뽑아 주세요.","confidential":true,"ids":[]}
+{"id":"dev-0013","industry":"public-admin","group":"conf","text":"감사 보고서 관련 미공개 문서를 표로 정리해 주세요.","confidential":true,"ids":[]}
+{"id":"dev-0014","industry":"public-admin","group":"conf","text":"열람 제한 보도자료 초안 자료를 요약해 줘.","confidential":true,"ids":[]}
+{"id":"dev-0015","industry":"public-admin","group":"conf","text":"다음은 비공개인 예산 편성안 내용입니다. 핵심만 뽑아 주세요.","confidential":true,"ids":[]}
+{"id":"dev-0016","industry":"public-admin","group":"conf","text":"비공개 보도자료 초안 자료를 요약해 줘.","confidential":true,"ids":[]}
+{"id":"dev-0017","industry":"public-admin","group":"conf","text":"다음은 대외비인 감사 결과 내용입니다. 핵심만 뽑아 주세요.","confidential":true,"ids":[]}
+{"id":"dev-0018","industry":"public-admin","group":"conf","text":"취급 주의 예정가격 자료를 요약해 줘.","confidential":true,"ids":[]}
+{"id":"dev-0019","industry":"public-admin","group":"conf","text":"다음은 내부용인 보도자료 초안 내용입니다. 핵심만 뽑아 주세요.","confidential":true,"ids":[]}
+{"id":"dev-0020","industry":"public-admin","group":"conf","text":"기밀 예산 편성안 자료를 요약해 줘.","confidential":true,"ids":[]}
+{"id":"dev-0021","industry":"public-admin","group":"conf","text":"예산 편성안 관련 극비 문서를 표로 정리해 주세요.","confidential":true,"ids":[]}
+{"id":"dev-0022","industry":"public-admin","group":"conf","text":"다음은 미공개인 감사 결과 내용입니다. 핵심만 뽑아 주세요.","confidential":true,"ids":[]}
+{"id":"dev-0023","industry":"public-admin","group":"conf","text":"다음은 내부용인 예산안 초안 내용입니다. 핵심만 뽑아 주세요.","confidential":true,"ids":[]}
+{"id":"dev-0024","industry":"public-admin","group":"conf","text":"도시계획안 관련 외부 유출 금지 문서를 표로 정리해 주세요.","confidential":true,"ids":[]}
+{"id":"dev-0025","industry":"public-admin","group":"conf_split","text":"사내 한정 표시가 된 자료예요. 보도자료 초안 일정만 알려 줘.","confidential":true,"ids":[]}
+{"id":"dev-0026","industry":"public-admin","group":"conf_split","text":"이 문서는 엠바고입니다. 예정가격을 세 줄로 정리해 주세요.","confidential":true,"ids":[]}
+{"id":"dev-0027","industry":"public-admin","group":"conf_split","text":"이 문서는 유출 금지입니다. 도시계획안을 세 줄로 정리해 주세요.","confidential":true,"ids":[]}
+{"id":"dev-0028","industry":"public-admin","group":"conf_split","text":"이 문서는 외부 유출 금지입니다. 보도자료 초안을 세 줄로 정리해 주세요.","confidential":true,"ids":[]}
+{"id":"dev-0029","industry":"public-admin","group":"conf_split","text":"외부 유출 금지 표시가 된 자료예요. 인사 발령안 일정만 알려 줘.","confidential":true,"ids":[]}
+{"id":"dev-0030","industry":"public-admin","group":"conf_split","text":"이 문서는 Confidential입니다. 감사 보고서를 세 줄로 정리해 주세요.","confidential":true,"ids":[]}
+{"id":"dev-0031","industry":"public-admin","group":"conf_split","text":"이 문서는 대외비입니다. 징계 의결을 세 줄로 정리해 주세요.","confidential":true,"ids":[]}
+{"id":"dev-0032","industry":"public-admin","group":"conf_split","text":"이 문서는 엠바고입니다. 예정가격을 세 줄로 정리해 주세요.","confidential":true,"ids":[]}
+{"id":"dev-0033","industry":"public-admin","group":"conf_split","text":"이 문서는 사내 한정입니다. 예산 편성안을 세 줄로 정리해 주세요.","confidential":true,"ids":[]}
+{"id":"dev-0034","industry":"public-admin","group":"conf_split","text":"이 문서는 Internal only입니다. 감사 결과를 세 줄로 정리해 주세요.","confidential":true,"ids":[]}
+{"id":"dev-0035","industry":"public-admin","group":"conf_split","text":"이 문서는 보안 문서입니다. 예정가격을 세 줄로 정리해 주세요.","confidential":true,"ids":[]}
+{"id":"dev-0036","industry":"public-admin","group":"conf_split","text":"이 문서는 배포 금지입니다. 보도자료 초안을 세 줄로 정리해 주세요.","confidential":true,"ids":[]}
+{"id":"dev-0037","industry":"public-admin","group":"conf_para","text":"다음은 비밀 문서인 내년도 살림 계획 초안 내용입니다. 핵심만 뽑아 주세요.","confidential":true,"ids":[]}
+{"id":"dev-0038","industry":"public-admin","group":"conf_para","text":"다음은 외부 유출 금지인 공사 낙찰 기준 금액 내용입니다. 핵심만 뽑아 주세요.","confidential":true,"ids":[]}
+{"id":"dev-0039","industry":"public-admin","group":"conf_para","text":"대외비 다음 달 자리 이동 명단 자료를 요약해 줘.","confidential":true,"ids":[]}
+{"id":"dev-0040","industry":"public-admin","group":"conf_para","text":"내년도 살림 계획 초안 관련 내부 검토용 문서를 표로 정리해 주세요.","confidential":true,"ids":[]}
+{"id":"dev-0041","industry":"public-admin","group":"conf_para","text":"다음 달 자리 이동 명단 관련 Internal only 문서를 표로 정리해 주세요.","confidential":true,"ids":[]}
+{"id":"dev-0042","industry":"public-admin","group":"conf_para","text":"열람 제한 공사 낙찰 기준 금액 자료를 요약해 줘.","confidential":true,"ids":[]}
+{"id":"dev-0043","industry":"public-admin","group":"far","text":"유출 금지 문서 관리 규정을 알려 줘. 오늘 회의는 3시입니다. 도시계획안 관련 기사 요약도 부탁해.","confidential":false,"ids":[]}
+{"id":"dev-0044","industry":"public-admin","group":"far","text":"극비 문서 관리 규정을 알려 줘. 오늘 회의는 3시입니다. 감사 보고서 관련 기사 요약도 부탁해.","confidential":false,"ids":[]}
+{"id":"dev-0045","industry":"public-admin","group":"far","text":"보안 문서 문서 관리 규정을 알려 줘. 오늘 회의는 3시입니다. 인사 발령안 관련 기사 요약도 부탁해.","confidential":false,"ids":[]}
+{"id":"dev-0046","industry":"public-admin","group":"far","text":"비밀 문서 문서 관리 규정을 알려 줘. 오늘 회의는 3시입니다. 입찰 예정가 관련 기사 요약도 부탁해.","confidential":false,"ids":[]}
+{"id":"dev-0047","industry":"public-admin","group":"far","text":"유출 금지 문서 관리 규정을 알려 줘. 오늘 회의는 3시입니다. 예정가격 관련 기사 요약도 부탁해.","confidential":false,"ids":[]}
+{"id":"dev-0048","industry":"public-admin","group":"far","text":"극비 문서 관리 규정을 알려 줘. 오늘 회의는 3시입니다. 도시계획안 관련 기사 요약도 부탁해.","confidential":false,"ids":[]}
+{"id":"dev-0049","industry":"public-admin","group":"marker_only","text":"Internal only 표시는 문서 첫 장 위쪽에 붙입니다.","confidential":false,"ids":[]}
+{"id":"dev-0050","industry":"public-admin","group":"marker_only","text":"엠바고 문서는 외부 서비스에 올리지 마세요.","confidential":false,"ids":[]}
+{"id":"dev-0051","industry":"public-admin","group":"marker_only","text":"비공개 표시는 문서 첫 장 위쪽에 붙입니다.","confidential":false,"ids":[]}
+{"id":"dev-0052","industry":"public-admin","group":"marker_only","text":"비공개 자료의 보관 기간을 알려 줘.","confidential":false,"ids":[]}
+{"id":"dev-0053","industry":"public-admin","group":"marker_only","text":"기밀 문서는 외부 서비스에 올리지 마세요.","confidential":false,"ids":[]}
+{"id":"dev-0054","industry":"public-admin","group":"marker_only","text":"유출 금지 자료의 보관 기간을 알려 줘.","confidential":false,"ids":[]}
+{"id":"dev-0055","industry":"public-admin","group":"marker_only","text":"비공개 표시는 문서 첫 장 위쪽에 붙입니다.","confidential":false,"ids":[]}
+{"id":"dev-0056","industry":"public-admin","group":"marker_only","text":"외부 유출 금지 문서는 외부 서비스에 올리지 마세요.","confidential":false,"ids":[]}
+{"id":"dev-0057","industry":"public-admin","group":"marker_only","text":"내부 검토용 문서는 외부 서비스에 올리지 마세요.","confidential":false,"ids":[]}
+{"id":"dev-0058","industry":"public-admin","group":"marker_only","text":"사내 한정 문서는 외부 서비스에 올리지 마세요.","confidential":false,"ids":[]}
+{"id":"dev-0059","industry":"public-admin","group":"marker_only","text":"유출 금지 문서는 외부 서비스에 올리지 마세요.","confidential":false,"ids":[]}
+{"id":"dev-0060","industry":"public-admin","group":"marker_only","text":"극비 자료의 보관 기간을 알려 줘.","confidential":false,"ids":[]}
+{"id":"dev-0061","industry":"public-admin","group":"marker_only","text":"배포 금지 문서는 외부 서비스에 올리지 마세요.","confidential":false,"ids":[]}
+{"id":"dev-0062","industry":"public-admin","group":"marker_only","text":"극비 표시는 문서 첫 장 위쪽에 붙입니다.","confidential":false,"ids":[]}
+{"id":"dev-0063","industry":"public-admin","group":"marker_only","text":"유출 금지 자료의 보관 기간을 알려 줘.","confidential":false,"ids":[]}
+{"id":"dev-0064","industry":"public-admin","group":"marker_only","text":"외부 유출 금지 자료의 보관 기간을 알려 줘.","confidential":false,"ids":[]}
+{"id":"dev-0065","industry":"public-admin","group":"marker_only","text":"배포 금지 문서는 외부 서비스에 올리지 마세요.","confidential":false,"ids":[]}
+{"id":"dev-0066","industry":"public-admin","group":"marker_only","text":"비공개 자료의 보관 기간을 알려 줘.","confidential":false,"ids":[]}
+{"id":"dev-0067","industry":"public-admin","group":"subject_only","text":"징계 의결 관련 법령을 찾아 줘.","confidential":false,"ids":[]}
+{"id":"dev-0068","industry":"public-admin","group":"subject_only","text":"예산 편성안의 일반적인 절차를 설명해 줘.","confidential":false,"ids":[]}
+{"id":"dev-0069","industry":"public-admin","group":"subject_only","text":"감사 보고서 기사들을 요약해 줘.","confidential":false,"ids":[]}
+{"id":"dev-0070","industry":"public-admin","group":"subject_only","text":"도시계획안 관련 법령을 찾아 줘.","confidential":false,"ids":[]}
+{"id":"dev-0071","industry":"public-admin","group":"subject_only","text":"징계 의결 관련 법령을 찾아 줘.","confidential":false,"ids":[]}
+{"id":"dev-0072","industry":"public-admin","group":"subject_only","text":"감사 결과 기사들을 요약해 줘.","confidential":false,"ids":[]}
+{"id":"dev-0073","industry":"public-admin","group":"subject_only","text":"입찰 예정가 관련 법령을 찾아 줘.","confidential":false,"ids":[]}
+{"id":"dev-0074","industry":"public-admin","group":"subject_only","text":"예산안 초안 관련 법령을 찾아 줘.","confidential":false,"ids":[]}
+{"id":"dev-0075","industry":"public-admin","group":"subject_only","text":"징계 의결의 일반적인 절차를 설명해 줘.","confidential":false,"ids":[]}
+{"id":"dev-0076","industry":"public-admin","group":"subject_only","text":"예산안 초안의 일반적인 절차를 설명해 줘.","confidential":false,"ids":[]}
+{"id":"dev-0077","industry":"public-admin","group":"subject_only","text":"감사 보고서 기사들을 요약해 줘.","confidential":false,"ids":[]}
+{"id":"dev-0078","industry":"public-admin","group":"subject_only","text":"감사 결과의 일반적인 절차를 설명해 줘.","confidential":false,"ids":[]}
+{"id":"dev-0079","industry":"public-admin","group":"subject_only","text":"감사 보고서 관련 법령을 찾아 줘.","confidential":false,"ids":[]}
+{"id":"dev-0080","industry":"public-admin","group":"subject_only","text":"보도자료 초안 관련 법령을 찾아 줘.","confidential":false,"ids":[]}
+{"id":"dev-0081","industry":"public-admin","group":"subject_only","text":"입찰 예정가 관련 법령을 찾아 줘.","confidential":false,"ids":[]}
+{"id":"dev-0082","industry":"public-admin","group":"subject_only","text":"보도자료 초안 관련 법령을 찾아 줘.","confidential":false,"ids":[]}
+{"id":"dev-0083","industry":"public-admin","group":"subject_only","text":"인사 발령안 관련 법령을 찾아 줘.","confidential":false,"ids":[]}
+{"id":"dev-0084","industry":"public-admin","group":"subject_only","text":"예정가격 관련 법령을 찾아 줘.","confidential":false,"ids":[]}
+{"id":"dev-0085","industry":"public-admin","group":"business","text":"회의록 초안을 세 문단으로 요약해 줘.","confidential":false,"ids":[]}
+{"id":"dev-0086","industry":"public-admin","group":"business","text":"회의록 초안을 세 문단으로 요약해 줘.","confidential":false,"ids":[]}
+{"id":"dev-0087","industry":"public-admin","group":"business","text":"이번 달 교육 일정은 10일과 17일입니다.","confidential":false,"ids":[]}
+{"id":"dev-0088","industry":"public-admin","group":"business","text":"회의록 초안을 세 문단으로 요약해 줘.","confidential":false,"ids":[]}
+{"id":"dev-0089","industry":"public-admin","group":"business","text":"출장비 정산 절차를 알려 주세요.","confidential":false,"ids":[]}
+{"id":"dev-0090","industry":"public-admin","group":"business","text":"다음 주 부서 회의 안건을 정리해 주세요.","confidential":false,"ids":[]}
+{"id":"dev-0091","industry":"public-admin","group":"business","text":"회의록 초안을 세 문단으로 요약해 줘.","confidential":false,"ids":[]}
+{"id":"dev-0092","industry":"public-admin","group":"business","text":"다음 주 부서 회의 안건을 정리해 주세요.","confidential":false,"ids":[]}
+{"id":"dev-0093","industry":"public-admin","group":"business","text":"이번 달 교육 일정은 10일과 17일입니다.","confidential":false,"ids":[]}
+{"id":"dev-0094","industry":"public-admin","group":"business","text":"회의록 초안을 세 문단으로 요약해 줘.","confidential":false,"ids":[]}
+{"id":"dev-0095","industry":"public-admin","group":"business","text":"연차 신청 방법을 알려 줘.","confidential":false,"ids":[]}
+{"id":"dev-0096","industry":"public-admin","group":"business","text":"민원 응대 매뉴얼을 쉬운 말로 바꿔 줘.","confidential":false,"ids":[]}
+{"id":"dev-0097","industry":"public-admin","group":"business","text":"다음 주 부서 회의 안건을 정리해 주세요.","confidential":false,"ids":[]}
+{"id":"dev-0098","industry":"public-admin","group":"business","text":"다음 주 부서 회의 안건을 정리해 주세요.","confidential":false,"ids":[]}
+{"id":"dev-0099","industry":"public-admin","group":"business","text":"보고서 문장을 공손하게 고쳐 줘.","confidential":false,"ids":[]}
+{"id":"dev-0100","industry":"public-admin","group":"business","text":"보고서 문장을 공손하게 고쳐 줘.","confidential":false,"ids":[]}
+{"id":"dev-0101","industry":"public-admin","group":"id","text":"고지번호: 1954172955 건을 처리해 줘.","confidential":false,"ids":["1954172955"]}
+{"id":"dev-0102","industry":"public-admin","group":"id","text":"전자납부번호 39737271 의 담당자를 찾아 줘.","confidential":false,"ids":["39737271"]}
+{"id":"dev-0103","industry":"public-admin","group":"id","text":"전자납부번호 2026-186523 의 담당자를 찾아 줘.","confidential":false,"ids":["2026-186523"]}
+{"id":"dev-0104","industry":"public-admin","group":"id","text":"전자납부번호 2593715999 의 담당자를 찾아 줘.","confidential":false,"ids":["2593715999"]}
+{"id":"dev-0105","industry":"public-admin","group":"id","text":"과세번호: LN-2026-51674 건을 처리해 줘.","confidential":false,"ids":["LN-2026-51674"]}
+{"id":"dev-0106","industry":"public-admin","group":"id","text":"접수번호 44071533 의 담당자를 찾아 줘.","confidential":false,"ids":["44071533"]}
+{"id":"dev-0107","industry":"public-admin","group":"id","text":"신청번호는 LN-2026-30495 입니다. 진행 상황을 알려 주세요.","confidential":false,"ids":["LN-2026-30495"]}
+{"id":"dev-0108","industry":"public-admin","group":"id","text":"접수번호는 4898846735 입니다. 진행 상황을 알려 주세요.","confidential":false,"ids":["4898846735"]}
+{"id":"dev-0109","industry":"public-admin","group":"id","text":"민원번호는 43618421 입니다. 진행 상황을 알려 주세요.","confidential":false,"ids":["43618421"]}
+{"id":"dev-0110","industry":"public-admin","group":"id","text":"관리번호: K439026 건을 처리해 줘.","confidential":false,"ids":["K439026"]}
+{"id":"dev-0111","industry":"public-admin","group":"id","text":"접수번호는 2026-943538 입니다. 진행 상황을 알려 주세요.","confidential":false,"ids":["2026-943538"]}
+{"id":"dev-0112","industry":"public-admin","group":"id","text":"고지번호 2026-968879 의 담당자를 찾아 줘.","confidential":false,"ids":["2026-968879"]}
+{"id":"dev-0113","industry":"public-admin","group":"id","text":"민원번호: 6913000475 건을 처리해 줘.","confidential":false,"ids":["6913000475"]}
+{"id":"dev-0114","industry":"public-admin","group":"id","text":"민원번호는 87822983 입니다. 진행 상황을 알려 주세요.","confidential":false,"ids":["87822983"]}
+{"id":"dev-0115","industry":"public-admin","group":"id","text":"고지번호 8918605727 의 담당자를 찾아 줘.","confidential":false,"ids":["8918605727"]}
+{"id":"dev-0116","industry":"public-admin","group":"id","text":"과세번호는 8892044208 입니다. 진행 상황을 알려 주세요.","confidential":false,"ids":["8892044208"]}
+{"id":"dev-0117","industry":"public-admin","group":"id","text":"민원번호 2026-709499 의 담당자를 찾아 줘.","confidential":false,"ids":["2026-709499"]}
+{"id":"dev-0118","industry":"public-admin","group":"id","text":"관리번호는 8758438672 입니다. 진행 상황을 알려 주세요.","confidential":false,"ids":["8758438672"]}
+{"id":"dev-0119","industry":"public-admin","group":"id","text":"전자납부번호는 36227179 입니다. 진행 상황을 알려 주세요.","confidential":false,"ids":["36227179"]}
+{"id":"dev-0120","industry":"public-admin","group":"id","text":"신청번호 CL-2026-83467 의 담당자를 찾아 줘.","confidential":false,"ids":["CL-2026-83467"]}
+{"id":"dev-0121","industry":"public-admin","group":"id","text":"민원접수번호는 47314918 입니다. 진행 상황을 알려 주세요.","confidential":false,"ids":["47314918"]}
+{"id":"dev-0122","industry":"public-admin","group":"id","text":"민원접수번호: CL-2026-79863 건을 처리해 줘.","confidential":false,"ids":["CL-2026-79863"]}
+{"id":"dev-0123","industry":"public-admin","group":"id","text":"과세번호 2026-127576 의 담당자를 찾아 줘.","confidential":false,"ids":["2026-127576"]}
+{"id":"dev-0124","industry":"public-admin","group":"id","text":"관리번호 40951625 의 담당자를 찾아 줘.","confidential":false,"ids":["40951625"]}
+{"id":"dev-0125","industry":"public-admin","group":"id_neg","text":"민원번호 발급 절차를 알려 줘.","confidential":false,"ids":[]}
+{"id":"dev-0126","industry":"public-admin","group":"id_neg","text":"관리번호를 어디서 확인하나요?","confidential":false,"ids":[]}
+{"id":"dev-0127","industry":"public-admin","group":"id_neg","text":"민원접수번호를 어디서 확인하나요?","confidential":false,"ids":[]}
+{"id":"dev-0128","industry":"public-admin","group":"id_neg","text":"주문 88164135 건의 배송을 확인해 줘.","confidential":false,"ids":[]}
+{"id":"dev-0129","industry":"public-admin","group":"id_neg","text":"민원번호를 어디서 확인하나요?","confidential":false,"ids":[]}
+{"id":"dev-0130","industry":"public-admin","group":"id_neg","text":"관리번호 발급 절차를 알려 줘.","confidential":false,"ids":[]}
+{"id":"dev-0131","industry":"public-admin","group":"id_neg","text":"관리번호 발급 절차를 알려 줘.","confidential":false,"ids":[]}
+{"id":"dev-0132","industry":"public-admin","group":"id_neg","text":"주문 CL-2026-12834 건의 배송을 확인해 줘.","confidential":false,"ids":[]}
+{"id":"dev-0133","industry":"public-admin","group":"id_neg","text":"전자납부번호 발급 절차를 알려 줘.","confidential":false,"ids":[]}
+{"id":"dev-0134","industry":"public-admin","group":"id_neg","text":"신청번호를 어디서 확인하나요?","confidential":false,"ids":[]}
+{"id":"dev-0135","industry":"public-admin","group":"id_neg","text":"접수번호 발급 절차를 알려 줘.","confidential":false,"ids":[]}
+{"id":"dev-0136","industry":"public-admin","group":"id_neg","text":"주문 HR-2026-25351 건의 배송을 확인해 줘.","confidential":false,"ids":[]}
+{"id":"dev-0137","industry":"public-enterprise","group":"conf","text":"사업 계획안 관련 비밀 문서 문서를 표로 정리해 주세요.","confidential":true,"ids":[]}
+{"id":"dev-0138","industry":"public-enterprise","group":"conf","text":"다음은 외부 유출 금지인 감사 결과 내용입니다. 핵심만 뽑아 주세요.","confidential":true,"ids":[]}
+{"id":"dev-0139","industry":"public-enterprise","group":"conf","text":"취급 주의 감사 결과 자료를 요약해 줘.","confidential":true,"ids":[]}
+{"id":"dev-0140","industry":"public-enterprise","group":"conf","text":"다음은 비밀 문서인 입찰 예정가 내용입니다. 핵심만 뽑아 주세요.","confidential":true,"ids":[]}
+{"id":"dev-0141","industry":"public-enterprise","group":"conf","text":"공개 금지 협상 전략 자료를 요약해 줘.","confidential":true,"ids":[]}
+{"id":"dev-0142","industry":"public-enterprise","group":"conf","text":"다음은 유출 금지인 감사 결과 내용입니다. 핵심만 뽑아 주세요.","confidential":true,"ids":[]}
+{"id":"dev-0143","industry":"public-enterprise","group":"conf","text":"유출 금지 요금 인상안 자료를 요약해 줘.","confidential":true,"ids":[]}
+{"id":"dev-0144","industry":"public-enterprise","group":"conf","text":"사업 계획안 관련 사내 한정 문서를 표로 정리해 주세요.","confidential":true,"ids":[]}
+{"id":"dev-0145","industry":"public-enterprise","group":"conf","text":"이 계약 단가 초안은 유출 금지니 문장을 다듬어 줘.","confidential":true,"ids":[]}
+{"id":"dev-0146","industry":"public-enterprise","group":"conf","text":"계약 단가 관련 배포 금지 문서를 표로 정리해 주세요.","confidential":true,"ids":[]}
+{"id":"dev-0147","industry":"public-enterprise","group":"conf","text":"다음은 대외비인 요금 인상안 내용입니다. 핵심만 뽑아 주세요.","confidential":true,"ids":[]}
+{"id":"dev-0148","industry":"public-enterprise","group":"conf","text":"기밀 예정가격 자료를 요약해 줘.","confidential":true,"ids":[]}
+{"id":"dev-0149","industry":"public-enterprise","group":"conf","text":"예정가격 관련 미공개 문서를 표로 정리해 주세요.","confidential":true,"ids":[]}
+{"id":"dev-0150","industry":"public-enterprise","group":"conf","text":"이 사업 계획안 초안은 비밀 문서니 문장을 다듬어 줘.","confidential":true,"ids":[]}
+{"id":"dev-0151","industry":"public-enterprise","group":"conf","text":"협상 전략 관련 극비 문서를 표로 정리해 주세요.","confidential":true,"ids":[]}
+{"id":"dev-0152","industry":"public-enterprise","group":"conf","text":"이 요금 인상안 초안은 Internal only니 문장을 다듬어 줘.","confidential":true,"ids":[]}
+{"id":"dev-0153","industry":"public-enterprise","group":"conf","text":"이 협상 전략 초안은 보안 문서니 문장을 다듬어 줘.","confidential":true,"ids":[]}
+{"id":"dev-0154","industry":"public-enterprise","group":"conf","text":"계약 단가 관련 외부 유출 금지 문서를 표로 정리해 주세요.","confidential":true,"ids":[]}
+{"id":"dev-0155","industry":"public-enterprise","group":"conf","text":"이 요금 인상안 초안은 외부 유출 금지니 문장을 다듬어 줘.","confidential":true,"ids":[]}
+{"id":"dev-0156","industry":"public-enterprise","group":"conf","text":"사내 한정 협상 전략 자료를 요약해 줘.","confidential":true,"ids":[]}
+{"id":"dev-0157","industry":"public-enterprise","group":"conf","text":"이 감사 결과 초안은 극비니 문장을 다듬어 줘.","confidential":true,"ids":[]}
+{"id":"dev-0158","industry":"public-enterprise","group":"conf","text":"보안 문서 계약 단가 자료를 요약해 줘.","confidential":true,"ids":[]}
+{"id":"dev-0159","industry":"public-enterprise","group":"conf","text":"다음은 Internal only인 입찰 예정가 내용입니다. 핵심만 뽑아 주세요.","confidential":true,"ids":[]}
+{"id":"dev-0160","industry":"public-enterprise","group":"conf","text":"다음은 Internal only인 계약 단가 내용입니다. 핵심만 뽑아 주세요.","confidential":true,"ids":[]}
+{"id":"dev-0161","industry":"public-enterprise","group":"conf_split","text":"Internal only 표시가 된 자료예요. 협상 전략 일정만 알려 줘.","confidential":true,"ids":[]}
+{"id":"dev-0162","industry":"public-enterprise","group":"conf_split","text":"유출 금지 표시가 된 자료예요. 사업 계획안 일정만 알려 줘.","confidential":true,"ids":[]}
+{"id":"dev-0163","industry":"public-enterprise","group":"conf_split","text":"열람 제한 표시가 된 자료예요. 예정가격 일정만 알려 줘.","confidential":true,"ids":[]}
+{"id":"dev-0164","industry":"public-enterprise","group":"conf_split","text":"취급 주의 표시가 된 자료예요. 사업 계획안 일정만 알려 줘.","confidential":true,"ids":[]}
+{"id":"dev-0165","industry":"public-enterprise","group":"conf_split","text":"이 문서는 비밀 문서입니다. 요금 인상안을 세 줄로 정리해 주세요.","confidential":true,"ids":[]}
+{"id":"dev-0166","industry":"public-enterprise","group":"conf_split","text":"이 문서는 공개 금지입니다. 감사 결과를 세 줄로 정리해 주세요.","confidential":true,"ids":[]}
+{"id":"dev-0167","industry":"public-enterprise","group":"conf_split","text":"비밀 문서 표시가 된 자료예요. 협상 전략 일정만 알려 줘.","confidential":true,"ids":[]}
+{"id":"dev-0168","industry":"public-enterprise","group":"conf_split","text":"외부 유출 금지 표시가 된 자료예요. 예정가격 일정만 알려 줘.","confidential":true,"ids":[]}
+{"id":"dev-0169","industry":"public-enterprise","group":"conf_split","text":"비밀 문서 표시가 된 자료예요. 사업 계획안 일정만 알려 줘.","confidential":true,"ids":[]}
+{"id":"dev-0170","industry":"public-enterprise","group":"conf_split","text":"비밀 문서 표시가 된 자료예요. 계약 단가 일정만 알려 줘.","confidential":true,"ids":[]}
+{"id":"dev-0171","industry":"public-enterprise","group":"conf_split","text":"이 문서는 보안 문서입니다. 요금 인상안을 세 줄로 정리해 주세요.","confidential":true,"ids":[]}
+{"id":"dev-0172","industry":"public-enterprise","group":"conf_split","text":"비공개 표시가 된 자료예요. 요금 인상안 일정만 알려 줘.","confidential":true,"ids":[]}
+{"id":"dev-0173","industry":"public-enterprise","group":"conf_para","text":"이 다음 분기 요금 조정 방향 초안은 Confidential니 문장을 다듬어 줘.","confidential":true,"ids":[]}
+{"id":"dev-0174","industry":"public-enterprise","group":"conf_para","text":"협력사 납품 가격표 관련 내부용 문서를 표로 정리해 주세요.","confidential":true,"ids":[]}
+{"id":"dev-0175","industry":"public-enterprise","group":"conf_para","text":"다음은 유출 금지인 협력사 납품 가격표 내용입니다. 핵심만 뽑아 주세요.","confidential":true,"ids":[]}
+{"id":"dev-0176","industry":"public-enterprise","group":"conf_para","text":"다음은 기밀인 협력사 납품 가격표 내용입니다. 핵심만 뽑아 주세요.","confidential":true,"ids":[]}
+{"id":"dev-0177","industry":"public-enterprise","group":"conf_para","text":"다음은 외부 유출 금지인 협상 때 물러설 선 내용입니다. 핵심만 뽑아 주세요.","confidential":true,"ids":[]}
+{"id":"dev-0178","industry":"public-enterprise","group":"conf_para","text":"이 다음 분기 요금 조정 방향 초안은 보안 문서니 문장을 다듬어 줘.","confidential":true,"ids":[]}
+{"id":"dev-0179","industry":"public-enterprise","group":"far","text":"엠바고 문서 관리 규정을 알려 줘. 오늘 회의는 3시입니다. 예정가격 관련 기사 요약도 부탁해.","confidential":false,"ids":[]}
+{"id":"dev-0180","industry":"public-enterprise","group":"far","text":"Confidential 문서 관리 규정을 알려 줘. 오늘 회의는 3시입니다. 계약 단가 관련 기사 요약도 부탁해.","confidential":false,"ids":[]}
+{"id":"dev-0181","industry":"public-enterprise","group":"far","text":"내부 검토용 문서 관리 규정을 알려 줘. 오늘 회의는 3시입니다. 협상 전략 관련 기사 요약도 부탁해.","confidential":false,"ids":[]}
+{"id":"dev-0182","industry":"public-enterprise","group":"far","text":"기밀 문서 관리 규정을 알려 줘. 오늘 회의는 3시입니다. 요금 인상안 관련 기사 요약도 부탁해.","confidential":false,"ids":[]}
+{"id":"dev-0183","industry":"public-enterprise","group":"far","text":"내부용 문서 관리 규정을 알려 줘. 오늘 회의는 3시입니다. 요금 인상안 관련 기사 요약도 부탁해.","confidential":false,"ids":[]}
+{"id":"dev-0184","industry":"public-enterprise","group":"far","text":"배포 금지 문서 관리 규정을 알려 줘. 오늘 회의는 3시입니다. 감사 결과 관련 기사 요약도 부탁해.","confidential":false,"ids":[]}
+{"id":"dev-0185","industry":"public-enterprise","group":"marker_only","text":"엠바고 문서는 외부 서비스에 올리지 마세요.","confidential":false,"ids":[]}
+{"id":"dev-0186","industry":"public-enterprise","group":"marker_only","text":"대외비 표시는 문서 첫 장 위쪽에 붙입니다.","confidential":false,"ids":[]}
+{"id":"dev-0187","industry":"public-enterprise","group":"marker_only","text":"미공개 자료의 보관 기간을 알려 줘.","confidential":false,"ids":[]}
+{"id":"dev-0188","industry":"public-enterprise","group":"marker_only","text":"공개 금지 자료의 보관 기간을 알려 줘.","confidential":false,"ids":[]}
+{"id":"dev-0189","industry":"public-enterprise","group":"marker_only","text":"공개 금지 표시는 문서 첫 장 위쪽에 붙입니다.","confidential":false,"ids":[]}
+{"id":"dev-0190","industry":"public-enterprise","group":"marker_only","text":"내부 검토용 자료의 보관 기간을 알려 줘.","confidential":false,"ids":[]}
+{"id":"dev-0191","industry":"public-enterprise","group":"marker_only","text":"공개 금지 문서는 외부 서비스에 올리지 마세요.","confidential":false,"ids":[]}
+{"id":"dev-0192","industry":"public-enterprise","group":"marker_only","text":"Confidential 자료의 보관 기간을 알려 줘.","confidential":false,"ids":[]}
+{"id":"dev-0193","industry":"public-enterprise","group":"marker_only","text":"외부 유출 금지 문서는 외부 서비스에 올리지 마세요.","confidential":false,"ids":[]}
+{"id":"dev-0194","industry":"public-enterprise","group":"marker_only","text":"유출 금지 문서는 외부 서비스에 올리지 마세요.","confidential":false,"ids":[]}
+{"id":"dev-0195","industry":"public-enterprise","group":"marker_only","text":"외부 유출 금지 문서는 외부 서비스에 올리지 마세요.","confidential":false,"ids":[]}
+{"id":"dev-0196","industry":"public-enterprise","group":"marker_only","text":"대외비 자료의 보관 기간을 알려 줘.","confidential":false,"ids":[]}
+{"id":"dev-0197","industry":"public-enterprise","group":"marker_only","text":"배포 금지 문서는 외부 서비스에 올리지 마세요.","confidential":false,"ids":[]}
+{"id":"dev-0198","industry":"public-enterprise","group":"marker_only","text":"배포 금지 자료의 보관 기간을 알려 줘.","confidential":false,"ids":[]}
+{"id":"dev-0199","industry":"public-enterprise","group":"marker_only","text":"사내 한정 자료의 보관 기간을 알려 줘.","confidential":false,"ids":[]}
+{"id":"dev-0200","industry":"public-enterprise","group":"marker_only","text":"극비 표시는 문서 첫 장 위쪽에 붙입니다.","confidential":false,"ids":[]}
+{"id":"dev-0201","industry":"public-enterprise","group":"marker_only","text":"엠바고 표시는 문서 첫 장 위쪽에 붙입니다.","confidential":false,"ids":[]}
+{"id":"dev-0202","industry":"public-enterprise","group":"marker_only","text":"대외비 자료의 보관 기간을 알려 줘.","confidential":false,"ids":[]}
+{"id":"dev-0203","industry":"public-enterprise","group":"subject_only","text":"입찰 예정가의 일반적인 절차를 설명해 줘.","confidential":false,"ids":[]}
+{"id":"dev-0204","industry":"public-enterprise","group":"subject_only","text":"요금 인상안의 일반적인 절차를 설명해 줘.","confidential":false,"ids":[]}
+{"id":"dev-0205","industry":"public-enterprise","group":"subject_only","text":"입찰 예정가 기사들을 요약해 줘.","confidential":false,"ids":[]}
+{"id":"dev-0206","industry":"public-enterprise","group":"subject_only","text":"감사 결과 기사들을 요약해 줘.","confidential":false,"ids":[]}
+{"id":"dev-0207","industry":"public-enterprise","group":"subject_only","text":"입찰 예정가 관련 법령을 찾아 줘.","confidential":false,"ids":[]}
+{"id":"dev-0208","industry":"public-enterprise","group":"subject_only","text":"예정가격 관련 법령을 찾아 줘.","confidential":false,"ids":[]}
+{"id":"dev-0209","industry":"public-enterprise","group":"subject_only","text":"감사 결과 기사들을 요약해 줘.","confidential":false,"ids":[]}
+{"id":"dev-0210","industry":"public-enterprise","group":"subject_only","text":"예정가격 관련 법령을 찾아 줘.","confidential":false,"ids":[]}
+{"id":"dev-0211","industry":"public-enterprise","group":"subject_only","text":"감사 결과 관련 법령을 찾아 줘.","confidential":false,"ids":[]}
+{"id":"dev-0212","industry":"public-enterprise","group":"subject_only","text":"계약 단가의 일반적인 절차를 설명해 줘.","confidential":false,"ids":[]}
+{"id":"dev-0213","industry":"public-enterprise","group":"subject_only","text":"협상 전략의 일반적인 절차를 설명해 줘.","confidential":false,"ids":[]}
+{"id":"dev-0214","industry":"public-enterprise","group":"subject_only","text":"사업 계획안 기사들을 요약해 줘.","confidential":false,"ids":[]}
+{"id":"dev-0215","industry":"public-enterprise","group":"subject_only","text":"요금 인상안 기사들을 요약해 줘.","confidential":false,"ids":[]}
+{"id":"dev-0216","industry":"public-enterprise","group":"subject_only","text":"계약 단가 기사들을 요약해 줘.","confidential":false,"ids":[]}
+{"id":"dev-0217","industry":"public-enterprise","group":"subject_only","text":"계약 단가의 일반적인 절차를 설명해 줘.","confidential":false,"ids":[]}
+{"id":"dev-0218","industry":"public-enterprise","group":"subject_only","text":"입찰 예정가 기사들을 요약해 줘.","confidential":false,"ids":[]}
+{"id":"dev-0219","industry":"public-enterprise","group":"subject_only","text":"협상 전략의 일반적인 절차를 설명해 줘.","confidential":false,"ids":[]}
+{"id":"dev-0220","industry":"public-enterprise","group":"subject_only","text":"협상 전략 관련 법령을 찾아 줘.","confidential":false,"ids":[]}
+{"id":"dev-0221","industry":"public-enterprise","group":"business","text":"민원 응대 매뉴얼을 쉬운 말로 바꿔 줘.","confidential":false,"ids":[]}
+{"id":"dev-0222","industry":"public-enterprise","group":"business","text":"엑셀에서 중복 행을 지우는 방법은?","confidential":false,"ids":[]}
+{"id":"dev-0223","industry":"public-enterprise","group":"business","text":"엑셀에서 중복 행을 지우는 방법은?","confidential":false,"ids":[]}
+{"id":"dev-0224","industry":"public-enterprise","group":"business","text":"다음 주 부서 회의 안건을 정리해 주세요.","confidential":false,"ids":[]}
+{"id":"dev-0225","industry":"public-enterprise","group":"business","text":"보고서 문장을 공손하게 고쳐 줘.","confidential":false,"ids":[]}
+{"id":"dev-0226","industry":"public-enterprise","group":"business","text":"보고서 문장을 공손하게 고쳐 줘.","confidential":false,"ids":[]}
+{"id":"dev-0227","industry":"public-enterprise","group":"business","text":"연차 신청 방법을 알려 줘.","confidential":false,"ids":[]}
+{"id":"dev-0228","industry":"public-enterprise","group":"business","text":"출장비 정산 절차를 알려 주세요.","confidential":false,"ids":[]}
+{"id":"dev-0229","industry":"public-enterprise","group":"business","text":"이번 달 교육 일정은 10일과 17일입니다.","confidential":false,"ids":[]}
+{"id":"dev-0230","industry":"public-enterprise","group":"business","text":"다음 주 부서 회의 안건을 정리해 주세요.","confidential":false,"ids":[]}
+{"id":"dev-0231","industry":"public-enterprise","group":"business","text":"보고서 문장을 공손하게 고쳐 줘.","confidential":false,"ids":[]}
+{"id":"dev-0232","industry":"public-enterprise","group":"business","text":"회의록 초안을 세 문단으로 요약해 줘.","confidential":false,"ids":[]}
+{"id":"dev-0233","industry":"public-enterprise","group":"business","text":"민원 응대 매뉴얼을 쉬운 말로 바꿔 줘.","confidential":false,"ids":[]}
+{"id":"dev-0234","industry":"public-enterprise","group":"business","text":"민원 응대 매뉴얼을 쉬운 말로 바꿔 줘.","confidential":false,"ids":[]}
+{"id":"dev-0235","industry":"public-enterprise","group":"business","text":"출장비 정산 절차를 알려 주세요.","confidential":false,"ids":[]}
+{"id":"dev-0236","industry":"public-enterprise","group":"business","text":"다음 주 부서 회의 안건을 정리해 주세요.","confidential":false,"ids":[]}
+{"id":"dev-0237","industry":"public-enterprise","group":"id","text":"관리번호 2026-916591 의 담당자를 찾아 줘.","confidential":false,"ids":["2026-916591"]}
+{"id":"dev-0238","industry":"public-enterprise","group":"id","text":"사업번호 2026-654558 의 담당자를 찾아 줘.","confidential":false,"ids":["2026-654558"]}
+{"id":"dev-0239","industry":"public-enterprise","group":"id","text":"고객번호 LN-2026-19056 의 담당자를 찾아 줘.","confidential":false,"ids":["LN-2026-19056"]}
+{"id":"dev-0240","industry":"public-enterprise","group":"id","text":"관리번호는 1598358824 입니다. 진행 상황을 알려 주세요.","confidential":false,"ids":["1598358824"]}
+{"id":"dev-0241","industry":"public-enterprise","group":"id","text":"계약번호는 42688705 입니다. 진행 상황을 알려 주세요.","confidential":false,"ids":["42688705"]}
+{"id":"dev-0242","industry":"public-enterprise","group":"id","text":"관리번호 P772132 의 담당자를 찾아 줘.","confidential":false,"ids":["P772132"]}
+{"id":"dev-0243","industry":"public-enterprise","group":"id","text":"계약번호 K971291 의 담당자를 찾아 줘.","confidential":false,"ids":["K971291"]}
+{"id":"dev-0244","industry":"public-enterprise","group":"id","text":"발주번호 CL-2026-44813 의 담당자를 찾아 줘.","confidential":false,"ids":["CL-2026-44813"]}
+{"id":"dev-0245","industry":"public-enterprise","group":"id","text":"사업번호: 35682512 건을 처리해 줘.","confidential":false,"ids":["35682512"]}
+{"id":"dev-0246","industry":"public-enterprise","group":"id","text":"사업번호는 6230226497 입니다. 진행 상황을 알려 주세요.","confidential":false,"ids":["6230226497"]}
+{"id":"dev-0247","industry":"public-enterprise","group":"id","text":"고객번호 A853696 의 담당자를 찾아 줘.","confidential":false,"ids":["A853696"]}
+{"id":"dev-0248","industry":"public-enterprise","group":"id","text":"관리번호 LN-2026-18937 의 담당자를 찾아 줘.","confidential":false,"ids":["LN-2026-18937"]}
+{"id":"dev-0249","industry":"public-enterprise","group":"id","text":"발주번호는 17799205 입니다. 진행 상황을 알려 주세요.","confidential":false,"ids":["17799205"]}
+{"id":"dev-0250","industry":"public-enterprise","group":"id","text":"검침번호: A254853 건을 처리해 줘.","confidential":false,"ids":["A254853"]}
+{"id":"dev-0251","industry":"public-enterprise","group":"id","text":"사업번호 5366740512 의 담당자를 찾아 줘.","confidential":false,"ids":["5366740512"]}
+{"id":"dev-0252","industry":"public-enterprise","group":"id","text":"발주번호는 7285868518 입니다. 진행 상황을 알려 주세요.","confidential":false,"ids":["7285868518"]}
+{"id":"dev-0253","industry":"public-enterprise","group":"id","text":"사업번호는 2026-352346 입니다. 진행 상황을 알려 주세요.","confidential":false,"ids":["2026-352346"]}
+{"id":"dev-0254","industry":"public-enterprise","group":"id","text":"검침번호: 79756011 건을 처리해 줘.","confidential":false,"ids":["79756011"]}
+{"id":"dev-0255","industry":"public-enterprise","group":"id","text":"고객번호: 6120782160 건을 처리해 줘.","confidential":false,"ids":["6120782160"]}
+{"id":"dev-0256","industry":"public-enterprise","group":"id","text":"관리번호: A987577 건을 처리해 줘.","confidential":false,"ids":["A987577"]}
+{"id":"dev-0257","industry":"public-enterprise","group":"id","text":"사업번호는 06086523 입니다. 진행 상황을 알려 주세요.","confidential":false,"ids":["06086523"]}
+{"id":"dev-0258","industry":"public-enterprise","group":"id","text":"고객번호는 P188347 입니다. 진행 상황을 알려 주세요.","confidential":false,"ids":["P188347"]}
+{"id":"dev-0259","industry":"public-enterprise","group":"id","text":"계약번호: 8590843504 건을 처리해 줘.","confidential":false,"ids":["8590843504"]}
+{"id":"dev-0260","industry":"public-enterprise","group":"id","text":"고객번호: 7553644666 건을 처리해 줘.","confidential":false,"ids":["7553644666"]}
+{"id":"dev-0261","industry":"public-enterprise","group":"id_neg","text":"고객번호를 어디서 확인하나요?","confidential":false,"ids":[]}
+{"id":"dev-0262","industry":"public-enterprise","group":"id_neg","text":"검침번호를 어디서 확인하나요?","confidential":false,"ids":[]}
+{"id":"dev-0263","industry":"public-enterprise","group":"id_neg","text":"발주번호를 어디서 확인하나요?","confidential":false,"ids":[]}
+{"id":"dev-0264","industry":"public-enterprise","group":"id_neg","text":"검침번호를 어디서 확인하나요?","confidential":false,"ids":[]}
+{"id":"dev-0265","industry":"public-enterprise","group":"id_neg","text":"계약번호 발급 절차를 알려 줘.","confidential":false,"ids":[]}
+{"id":"dev-0266","industry":"public-enterprise","group":"id_neg","text":"주문 00026397 건의 배송을 확인해 줘.","confidential":false,"ids":[]}
+{"id":"dev-0267","industry":"public-enterprise","group":"id_neg","text":"검침번호 발급 절차를 알려 줘.","confidential":false,"ids":[]}
+{"id":"dev-0268","industry":"public-enterprise","group":"id_neg","text":"검침번호 발급 절차를 알려 줘.","confidential":false,"ids":[]}
+{"id":"dev-0269","industry":"public-enterprise","group":"id_neg","text":"주문 A655251 건의 배송을 확인해 줘.","confidential":false,"ids":[]}
+{"id":"dev-0270","industry":"public-enterprise","group":"id_neg","text":"주문 45078786 건의 배송을 확인해 줘.","confidential":false,"ids":[]}
+{"id":"dev-0271","industry":"public-enterprise","group":"id_neg","text":"주문 PL-2026-05348 건의 배송을 확인해 줘.","confidential":false,"ids":[]}
+{"id":"dev-0272","industry":"public-enterprise","group":"id_neg","text":"관리번호 발급 절차를 알려 줘.","confidential":false,"ids":[]}
+{"id":"dev-0273","industry":"hospital","group":"conf","text":"의료분쟁 관련 대외비 문서를 표로 정리해 주세요.","confidential":true,"ids":[]}
+{"id":"dev-0274","industry":"hospital","group":"conf","text":"이 감염 발생 초안은 Internal only니 문장을 다듬어 줘.","confidential":true,"ids":[]}
+{"id":"dev-0275","industry":"hospital","group":"conf","text":"사내 한정 임상시험 결과 자료를 요약해 줘.","confidential":true,"ids":[]}
+{"id":"dev-0276","industry":"hospital","group":"conf","text":"이 의료분쟁 초안은 보안 문서니 문장을 다듬어 줘.","confidential":true,"ids":[]}
+{"id":"dev-0277","industry":"hospital","group":"conf","text":"이 의료분쟁 초안은 내부용이니 문장을 다듬어 줘.","confidential":true,"ids":[]}
+{"id":"dev-0278","industry":"hospital","group":"conf","text":"이 의료사고 초안은 Internal only니 문장을 다듬어 줘.","confidential":true,"ids":[]}
+{"id":"dev-0279","industry":"hospital","group":"conf","text":"내부 검토용 감염 발생 자료를 요약해 줘.","confidential":true,"ids":[]}
+{"id":"dev-0280","industry":"hospital","group":"conf","text":"이 수가 협상 초안은 엠바고니 문장을 다듬어 줘.","confidential":true,"ids":[]}
+{"id":"dev-0281","industry":"hospital","group":"conf","text":"의료사고 관련 Confidential 문서를 표로 정리해 주세요.","confidential":true,"ids":[]}
+{"id":"dev-0282","industry":"hospital","group":"conf","text":"수가 협상 관련 Internal only 문서를 표로 정리해 주세요.","confidential":true,"ids":[]}
+{"id":"dev-0283","industry":"hospital","group":"conf","text":"내부 검토용 수가 협상 자료를 요약해 줘.","confidential":true,"ids":[]}
+{"id":"dev-0284","industry":"hospital","group":"conf","text":"열람 제한 감염 발생 자료를 요약해 줘.","confidential":true,"ids":[]}
+{"id":"dev-0285","industry":"hospital","group":"conf","text":"극비 의료사고 자료를 요약해 줘.","confidential":true,"ids":[]}
+{"id":"dev-0286","industry":"hospital","group":"conf","text":"사내 한정 의료분쟁 자료를 요약해 줘.","confidential":true,"ids":[]}
+{"id":"dev-0287","industry":"hospital","group":"conf","text":"다음은 미공개인 의료사고 내용입니다. 핵심만 뽑아 주세요.","confidential":true,"ids":[]}
+{"id":"dev-0288","industry":"hospital","group":"conf","text":"의료사고 관련 미공개 문서를 표로 정리해 주세요.","confidential":true,"ids":[]}
+{"id":"dev-0289","industry":"hospital","group":"conf","text":"Internal only 수가 협상 자료를 요약해 줘.","confidential":true,"ids":[]}
+{"id":"dev-0290","industry":"hospital","group":"conf","text":"취급 주의 의료분쟁 자료를 요약해 줘.","confidential":true,"ids":[]}
+{"id":"dev-0291","industry":"hospital","group":"conf","text":"배포 금지 의료분쟁 자료를 요약해 줘.","confidential":true,"ids":[]}
+{"id":"dev-0292","industry":"hospital","group":"conf","text":"대외비 의료분쟁 자료를 요약해 줘.","confidential":true,"ids":[]}
+{"id":"dev-0293","industry":"hospital","group":"conf","text":"다음은 배포 금지인 임상시험 결과 내용입니다. 핵심만 뽑아 주세요.","confidential":true,"ids":[]}
+{"id":"dev-0294","industry":"hospital","group":"conf","text":"임상시험 결과 관련 취급 주의 문서를 표로 정리해 주세요.","confidential":true,"ids":[]}
+{"id":"dev-0295","industry":"hospital","group":"conf","text":"이 수가 협상 초안은 취급 주의니 문장을 다듬어 줘.","confidential":true,"ids":[]}
+{"id":"dev-0296","industry":"hospital","group":"conf","text":"다음은 미공개인 감염 발생 내용입니다. 핵심만 뽑아 주세요.","confidential":true,"ids":[]}
+{"id":"dev-0297","industry":"hospital","group":"conf_split","text":"이 문서는 배포 금지입니다. 임상시험 결과를 세 줄로 정리해 주세요.","confidential":true,"ids":[]}
+{"id":"dev-0298","industry":"hospital","group":"conf_split","text":"내부 검토용 표시가 된 자료예요. 의료분쟁 일정만 알려 줘.","confidential":true,"ids":[]}
+{"id":"dev-0299","industry":"hospital","group":"conf_split","text":"이 문서는 엠바고입니다. 감염 발생을 세 줄로 정리해 주세요.","confidential":true,"ids":[]}
+{"id":"dev-0300","industry":"hospital","group":"conf_split","text":"이 문서는 내부 검토용입니다. 수가 협상을 세 줄로 정리해 주세요.","confidential":true,"ids":[]}
+{"id":"dev-0301","industry":"hospital","group":"conf_split","text":"이 문서는 공개 금지입니다. 의료사고를 세 줄로 정리해 주세요.","confidential":true,"ids":[]}
+{"id":"dev-0302","industry":"hospital","group":"conf_split","text":"열람 제한 표시가 된 자료예요. 감염 발생 일정만 알려 줘.","confidential":true,"ids":[]}
+{"id":"dev-0303","industry":"hospital","group":"conf_split","text":"이 문서는 내부용입니다. 의료분쟁을 세 줄로 정리해 주세요.","confidential":true,"ids":[]}
+{"id":"dev-0304","industry":"hospital","group":"conf_split","text":"기밀 표시가 된 자료예요. 의료분쟁 일정만 알려 줘.","confidential":true,"ids":[]}
+{"id":"dev-0305","industry":"hospital","group":"conf_split","text":"내부용 표시가 된 자료예요. 의료사고 일정만 알려 줘.","confidential":true,"ids":[]}
+{"id":"dev-0306","industry":"hospital","group":"conf_split","text":"이 문서는 비공개입니다. 감염 발생을 세 줄로 정리해 주세요.","confidential":true,"ids":[]}
+{"id":"dev-0307","industry":"hospital","group":"conf_split","text":"기밀 표시가 된 자료예요. 감염 발생 일정만 알려 줘.","confidential":true,"ids":[]}
+{"id":"dev-0308","industry":"hospital","group":"conf_split","text":"이 문서는 열람 제한입니다. 의료분쟁을 세 줄로 정리해 주세요.","confidential":true,"ids":[]}
+{"id":"dev-0309","industry":"hospital","group":"conf_para","text":"수술 중 생긴 사고 경위 관련 공개 금지 문서를 표로 정리해 주세요.","confidential":true,"ids":[]}
+{"id":"dev-0310","industry":"hospital","group":"conf_para","text":"열람 제한 병동 집단 감염 보고 자료를 요약해 줘.","confidential":true,"ids":[]}
+{"id":"dev-0311","industry":"hospital","group":"conf_para","text":"다음은 극비인 수술 중 생긴 사고 경위 내용입니다. 핵심만 뽑아 주세요.","confidential":true,"ids":[]}
+{"id":"dev-0312","industry":"hospital","group":"conf_para","text":"이 수술 중 생긴 사고 경위 초안은 사내 한정이니 문장을 다듬어 줘.","confidential":true,"ids":[]}
+{"id":"dev-0313","industry":"hospital","group":"conf_para","text":"신약 시험 중간 성적 관련 극비 문서를 표로 정리해 주세요.","confidential":true,"ids":[]}
+{"id":"dev-0314","industry":"hospital","group":"conf_para","text":"병동 집단 감염 보고 관련 내부 검토용 문서를 표로 정리해 주세요.","confidential":true,"ids":[]}
+{"id":"dev-0315","industry":"hospital","group":"far","text":"내부 검토용 문서 관리 규정을 알려 줘. 오늘 회의는 3시입니다. 임상시험 결과 관련 기사 요약도 부탁해.","confidential":false,"ids":[]}
+{"id":"dev-0316","industry":"hospital","group":"far","text":"취급 주의 문서 관리 규정을 알려 줘. 오늘 회의는 3시입니다. 수가 협상 관련 기사 요약도 부탁해.","confidential":false,"ids":[]}
+{"id":"dev-0317","industry":"hospital","group":"far","text":"미공개 문서 관리 규정을 알려 줘. 오늘 회의는 3시입니다. 의료분쟁 관련 기사 요약도 부탁해.","confidential":false,"ids":[]}
+{"id":"dev-0318","industry":"hospital","group":"far","text":"Internal only 문서 관리 규정을 알려 줘. 오늘 회의는 3시입니다. 임상시험 결과 관련 기사 요약도 부탁해.","confidential":false,"ids":[]}
+{"id":"dev-0319","industry":"hospital","group":"far","text":"보안 문서 문서 관리 규정을 알려 줘. 오늘 회의는 3시입니다. 의료사고 관련 기사 요약도 부탁해.","confidential":false,"ids":[]}
+{"id":"dev-0320","industry":"hospital","group":"far","text":"비밀 문서 문서 관리 규정을 알려 줘. 오늘 회의는 3시입니다. 의료분쟁 관련 기사 요약도 부탁해.","confidential":false,"ids":[]}
+{"id":"dev-0321","industry":"hospital","group":"marker_only","text":"대외비 문서는 외부 서비스에 올리지 마세요.","confidential":false,"ids":[]}
+{"id":"dev-0322","industry":"hospital","group":"marker_only","text":"기밀 자료의 보관 기간을 알려 줘.","confidential":false,"ids":[]}
+{"id":"dev-0323","industry":"hospital","group":"marker_only","text":"Confidential 표시는 문서 첫 장 위쪽에 붙입니다.","confidential":false,"ids":[]}
+{"id":"dev-0324","industry":"hospital","group":"marker_only","text":"미공개 표시는 문서 첫 장 위쪽에 붙입니다.","confidential":false,"ids":[]}
+{"id":"dev-0325","industry":"hospital","group":"marker_only","text":"보안 문서 표시는 문서 첫 장 위쪽에 붙입니다.","confidential":false,"ids":[]}
+{"id":"dev-0326","industry":"hospital","group":"marker_only","text":"취급 주의 표시는 문서 첫 장 위쪽에 붙입니다.","confidential":false,"ids":[]}
+{"id":"dev-0327","industry":"hospital","group":"marker_only","text":"공개 금지 표시는 문서 첫 장 위쪽에 붙입니다.","confidential":false,"ids":[]}
+{"id":"dev-0328","industry":"hospital","group":"marker_only","text":"엠바고 표시는 문서 첫 장 위쪽에 붙입니다.","confidential":false,"ids":[]}
+{"id":"dev-0329","industry":"hospital","group":"marker_only","text":"엠바고 자료의 보관 기간을 알려 줘.","confidential":false,"ids":[]}
+{"id":"dev-0330","industry":"hospital","group":"marker_only","text":"배포 금지 자료의 보관 기간을 알려 줘.","confidential":false,"ids":[]}
+{"id":"dev-0331","industry":"hospital","group":"marker_only","text":"Confidential 자료의 보관 기간을 알려 줘.","confidential":false,"ids":[]}
+{"id":"dev-0332","industry":"hospital","group":"marker_only","text":"Confidential 자료의 보관 기간을 알려 줘.","confidential":false,"ids":[]}
+{"id":"dev-0333","industry":"hospital","group":"marker_only","text":"Internal only 자료의 보관 기간을 알려 줘.","confidential":false,"ids":[]}
+{"id":"dev-0334","industry":"hospital","group":"marker_only","text":"Internal only 자료의 보관 기간을 알려 줘.","confidential":false,"ids":[]}
+{"id":"dev-0335","industry":"hospital","group":"marker_only","text":"엠바고 표시는 문서 첫 장 위쪽에 붙입니다.","confidential":false,"ids":[]}
+{"id":"dev-0336","industry":"hospital","group":"marker_only","text":"내부 검토용 자료의 보관 기간을 알려 줘.","confidential":false,"ids":[]}
+{"id":"dev-0337","industry":"hospital","group":"marker_only","text":"Internal only 자료의 보관 기간을 알려 줘.","confidential":false,"ids":[]}
+{"id":"dev-0338","industry":"hospital","group":"marker_only","text":"비공개 표시는 문서 첫 장 위쪽에 붙입니다.","confidential":false,"ids":[]}
+{"id":"dev-0339","industry":"hospital","group":"subject_only","text":"의료분쟁 기사들을 요약해 줘.","confidential":false,"ids":[]}
+{"id":"dev-0340","industry":"hospital","group":"subject_only","text":"임상시험 결과 기사들을 요약해 줘.","confidential":false,"ids":[]}
+{"id":"dev-0341","industry":"hospital","group":"subject_only","text":"수가 협상 관련 법령을 찾아 줘.","confidential":false,"ids":[]}
+{"id":"dev-0342","industry":"hospital","group":"subject_only","text":"임상시험 결과 기사들을 요약해 줘.","confidential":false,"ids":[]}
+{"id":"dev-0343","industry":"hospital","group":"subject_only","text":"수가 협상의 일반적인 절차를 설명해 줘.","confidential":false,"ids":[]}
+{"id":"dev-0344","industry":"hospital","group":"subject_only","text":"의료분쟁 기사들을 요약해 줘.","confidential":false,"ids":[]}
+{"id":"dev-0345","industry":"hospital","group":"subject_only","text":"의료사고 관련 법령을 찾아 줘.","confidential":false,"ids":[]}
+{"id":"dev-0346","industry":"hospital","group":"subject_only","text":"의료분쟁 관련 법령을 찾아 줘.","confidential":false,"ids":[]}
+{"id":"dev-0347","industry":"hospital","group":"subject_only","text":"수가 협상 기사들을 요약해 줘.","confidential":false,"ids":[]}
+{"id":"dev-0348","industry":"hospital","group":"subject_only","text":"의료사고 기사들을 요약해 줘.","confidential":false,"ids":[]}
+{"id":"dev-0349","industry":"hospital","group":"subject_only","text":"임상시험 결과 기사들을 요약해 줘.","confidential":false,"ids":[]}
+{"id":"dev-0350","industry":"hospital","group":"subject_only","text":"임상시험 결과 기사들을 요약해 줘.","confidential":false,"ids":[]}
+{"id":"dev-0351","industry":"hospital","group":"subject_only","text":"의료사고 관련 법령을 찾아 줘.","confidential":false,"ids":[]}
+{"id":"dev-0352","industry":"hospital","group":"subject_only","text":"의료사고의 일반적인 절차를 설명해 줘.","confidential":false,"ids":[]}
+{"id":"dev-0353","industry":"hospital","group":"subject_only","text":"감염 발생 관련 법령을 찾아 줘.","confidential":false,"ids":[]}
+{"id":"dev-0354","industry":"hospital","group":"subject_only","text":"수가 협상 관련 법령을 찾아 줘.","confidential":false,"ids":[]}
+{"id":"dev-0355","industry":"hospital","group":"subject_only","text":"의료분쟁 관련 법령을 찾아 줘.","confidential":false,"ids":[]}
+{"id":"dev-0356","industry":"hospital","group":"subject_only","text":"의료분쟁의 일반적인 절차를 설명해 줘.","confidential":false,"ids":[]}
+{"id":"dev-0357","industry":"hospital","group":"business","text":"보고서 문장을 공손하게 고쳐 줘.","confidential":false,"ids":[]}
+{"id":"dev-0358","industry":"hospital","group":"business","text":"회의록 초안을 세 문단으로 요약해 줘.","confidential":false,"ids":[]}
+{"id":"dev-0359","industry":"hospital","group":"business","text":"민원 응대 매뉴얼을 쉬운 말로 바꿔 줘.","confidential":false,"ids":[]}
+{"id":"dev-0360","industry":"hospital","group":"business","text":"회의록 초안을 세 문단으로 요약해 줘.","confidential":false,"ids":[]}
+{"id":"dev-0361","industry":"hospital","group":"business","text":"연차 신청 방법을 알려 줘.","confidential":false,"ids":[]}
+{"id":"dev-0362","industry":"hospital","group":"business","text":"회의록 초안을 세 문단으로 요약해 줘.","confidential":false,"ids":[]}
+{"id":"dev-0363","industry":"hospital","group":"business","text":"회의록 초안을 세 문단으로 요약해 줘.","confidential":false,"ids":[]}
+{"id":"dev-0364","industry":"hospital","group":"business","text":"출장비 정산 절차를 알려 주세요.","confidential":false,"ids":[]}
+{"id":"dev-0365","industry":"hospital","group":"business","text":"회의록 초안을 세 문단으로 요약해 줘.","confidential":false,"ids":[]}
+{"id":"dev-0366","industry":"hospital","group":"business","text":"엑셀에서 중복 행을 지우는 방법은?","confidential":false,"ids":[]}
+{"id":"dev-0367","industry":"hospital","group":"business","text":"연차 신청 방법을 알려 줘.","confidential":false,"ids":[]}
+{"id":"dev-0368","industry":"hospital","group":"business","text":"다음 주 부서 회의 안건을 정리해 주세요.","confidential":false,"ids":[]}
+{"id":"dev-0369","industry":"hospital","group":"business","text":"다음 주 부서 회의 안건을 정리해 주세요.","confidential":false,"ids":[]}
+{"id":"dev-0370","industry":"hospital","group":"business","text":"출장비 정산 절차를 알려 주세요.","confidential":false,"ids":[]}
+{"id":"dev-0371","industry":"hospital","group":"business","text":"이번 달 교육 일정은 10일과 17일입니다.","confidential":false,"ids":[]}
+{"id":"dev-0372","industry":"hospital","group":"business","text":"민원 응대 매뉴얼을 쉬운 말로 바꿔 줘.","confidential":false,"ids":[]}
+{"id":"dev-0373","industry":"hospital","group":"id","text":"환자번호: 7042679283 건을 처리해 줘.","confidential":false,"ids":["7042679283"]}
+{"id":"dev-0374","industry":"hospital","group":"id","text":"처방번호 2026-051928 의 담당자를 찾아 줘.","confidential":false,"ids":["2026-051928"]}
+{"id":"dev-0375","industry":"hospital","group":"id","text":"의무기록번호는 33382651 입니다. 진행 상황을 알려 주세요.","confidential":false,"ids":["33382651"]}
+{"id":"dev-0376","industry":"hospital","group":"id","text":"진료번호: LN-2026-00604 건을 처리해 줘.","confidential":false,"ids":["LN-2026-00604"]}
+{"id":"dev-0377","industry":"hospital","group":"id","text":"병록번호: P151940 건을 처리해 줘.","confidential":false,"ids":["P151940"]}
+{"id":"dev-0378","industry":"hospital","group":"id","text":"처방번호 2026-356711 의 담당자를 찾아 줘.","confidential":false,"ids":["2026-356711"]}
+{"id":"dev-0379","industry":"hospital","group":"id","text":"차트번호 PL-2026-36884 의 담당자를 찾아 줘.","confidential":false,"ids":["PL-2026-36884"]}
+{"id":"dev-0380","industry":"hospital","group":"id","text":"진료번호는 1134246016 입니다. 진행 상황을 알려 주세요.","confidential":false,"ids":["1134246016"]}
+{"id":"dev-0381","industry":"hospital","group":"id","text":"의무기록번호 3907072626 의 담당자를 찾아 줘.","confidential":false,"ids":["3907072626"]}
+{"id":"dev-0382","industry":"hospital","group":"id","text":"처방번호는 AC-2026-71233 입니다. 진행 상황을 알려 주세요.","confidential":false,"ids":["AC-2026-71233"]}
+{"id":"dev-0383","industry":"hospital","group":"id","text":"의무기록번호 CL-2026-79414 의 담당자를 찾아 줘.","confidential":false,"ids":["CL-2026-79414"]}
+{"id":"dev-0384","industry":"hospital","group":"id","text":"검체번호: 9234319216 건을 처리해 줘.","confidential":false,"ids":["9234319216"]}
+{"id":"dev-0385","industry":"hospital","group":"id","text":"의무기록번호는 3368156882 입니다. 진행 상황을 알려 주세요.","confidential":false,"ids":["3368156882"]}
+{"id":"dev-0386","industry":"hospital","group":"id","text":"환자번호: 2026-193845 건을 처리해 줘.","confidential":false,"ids":["2026-193845"]}
+{"id":"dev-0387","industry":"hospital","group":"id","text":"의무기록번호 CL-2026-69729 의 담당자를 찾아 줘.","confidential":false,"ids":["CL-2026-69729"]}
+{"id":"dev-0388","industry":"hospital","group":"id","text":"환자번호 K858961 의 담당자를 찾아 줘.","confidential":false,"ids":["K858961"]}
+{"id":"dev-0389","industry":"hospital","group":"id","text":"검체번호: 41713982 건을 처리해 줘.","confidential":false,"ids":["41713982"]}
+{"id":"dev-0390","industry":"hospital","group":"id","text":"의무기록번호 AC-2026-18819 의 담당자를 찾아 줘.","confidential":false,"ids":["AC-2026-18819"]}
+{"id":"dev-0391","industry":"hospital","group":"id","text":"진료카드번호: A389664 건을 처리해 줘.","confidential":false,"ids":["A389664"]}
+{"id":"dev-0392","industry":"hospital","group":"id","text":"환자등록번호: 3891160340 건을 처리해 줘.","confidential":false,"ids":["3891160340"]}
+{"id":"dev-0393","industry":"hospital","group":"id","text":"병록번호 A875741 의 담당자를 찾아 줘.","confidential":false,"ids":["A875741"]}
+{"id":"dev-0394","industry":"hospital","group":"id","text":"처방번호 45185216 의 담당자를 찾아 줘.","confidential":false,"ids":["45185216"]}
+{"id":"dev-0395","industry":"hospital","group":"id","text":"처방번호 A211292 의 담당자를 찾아 줘.","confidential":false,"ids":["A211292"]}
+{"id":"dev-0396","industry":"hospital","group":"id","text":"병록번호는 LN-2026-71302 입니다. 진행 상황을 알려 주세요.","confidential":false,"ids":["LN-2026-71302"]}
+{"id":"dev-0397","industry":"hospital","group":"id_neg","text":"진료카드번호를 어디서 확인하나요?","confidential":false,"ids":[]}
+{"id":"dev-0398","industry":"hospital","group":"id_neg","text":"주문 71625113 건의 배송을 확인해 줘.","confidential":false,"ids":[]}
+{"id":"dev-0399","industry":"hospital","group":"id_neg","text":"주문 CL-2026-84058 건의 배송을 확인해 줘.","confidential":false,"ids":[]}
+{"id":"dev-0400","industry":"hospital","group":"id_neg","text":"처방번호 발급 절차를 알려 줘.","confidential":false,"ids":[]}
+{"id":"dev-0401","industry":"hospital","group":"id_neg","text":"검체번호 발급 절차를 알려 줘.","confidential":false,"ids":[]}
+{"id":"dev-0402","industry":"hospital","group":"id_neg","text":"주문 3544907412 건의 배송을 확인해 줘.","confidential":false,"ids":[]}
+{"id":"dev-0403","industry":"hospital","group":"id_neg","text":"주문 14058562 건의 배송을 확인해 줘.","confidential":false,"ids":[]}
+{"id":"dev-0404","industry":"hospital","group":"id_neg","text":"환자등록번호를 어디서 확인하나요?","confidential":false,"ids":[]}
+{"id":"dev-0405","industry":"hospital","group":"id_neg","text":"주문 15987150 건의 배송을 확인해 줘.","confidential":false,"ids":[]}
+{"id":"dev-0406","industry":"hospital","group":"id_neg","text":"차트번호 발급 절차를 알려 줘.","confidential":false,"ids":[]}
+{"id":"dev-0407","industry":"hospital","group":"id_neg","text":"주문 10524301 건의 배송을 확인해 줘.","confidential":false,"ids":[]}
+{"id":"dev-0408","industry":"hospital","group":"id_neg","text":"주문 P160064 건의 배송을 확인해 줘.","confidential":false,"ids":[]}
+{"id":"dev-0409","industry":"human-resources","group":"conf","text":"다음은 사내 한정인 징계 대상 내용입니다. 핵심만 뽑아 주세요.","confidential":true,"ids":[]}
+{"id":"dev-0410","industry":"human-resources","group":"conf","text":"연봉 협상 관련 극비 문서를 표로 정리해 주세요.","confidential":true,"ids":[]}
+{"id":"dev-0411","industry":"human-resources","group":"conf","text":"엠바고 인사 평가 결과 자료를 요약해 줘.","confidential":true,"ids":[]}
+{"id":"dev-0412","industry":"human-resources","group":"conf","text":"노조 교섭 관련 미공개 문서를 표로 정리해 주세요.","confidential":true,"ids":[]}
+{"id":"dev-0413","industry":"human-resources","group":"conf","text":"유출 금지 해고 대상 자료를 요약해 줘.","confidential":true,"ids":[]}
+{"id":"dev-0414","industry":"human-resources","group":"conf","text":"다음은 공개 금지인 인사 평가 결과 내용입니다. 핵심만 뽑아 주세요.","confidential":true,"ids":[]}
+{"id":"dev-0415","industry":"human-resources","group":"conf","text":"이 노조 교섭 초안은 외부 유출 금지니 문장을 다듬어 줘.","confidential":true,"ids":[]}
+{"id":"dev-0416","industry":"human-resources","group":"conf","text":"이 노조 교섭 초안은 내부 검토용이니 문장을 다듬어 줘.","confidential":true,"ids":[]}
+{"id":"dev-0417","industry":"human-resources","group":"conf","text":"이 임금 협상안 초안은 배포 금지니 문장을 다듬어 줘.","confidential":true,"ids":[]}
+{"id":"dev-0418","industry":"human-resources","group":"conf","text":"공개 금지 인사 평가 결과 자료를 요약해 줘.","confidential":true,"ids":[]}
+{"id":"dev-0419","industry":"human-resources","group":"conf","text":"다음은 외부 유출 금지인 징계 대상 내용입니다. 핵심만 뽑아 주세요.","confidential":true,"ids":[]}
+{"id":"dev-0420","industry":"human-resources","group":"conf","text":"이 구조조정 초안은 기밀이니 문장을 다듬어 줘.","confidential":true,"ids":[]}
+{"id":"dev-0421","industry":"human-resources","group":"conf","text":"이 인사 평가 결과 초안은 극비니 문장을 다듬어 줘.","confidential":true,"ids":[]}
+{"id":"dev-0422","industry":"human-resources","group":"conf","text":"이 해고 대상 초안은 내부 검토용이니 문장을 다듬어 줘.","confidential":true,"ids":[]}
+{"id":"dev-0423","industry":"human-resources","group":"conf","text":"열람 제한 해고 대상 자료를 요약해 줘.","confidential":true,"ids":[]}
+{"id":"dev-0424","industry":"human-resources","group":"conf","text":"징계 대상 관련 비밀 문서 문서를 표로 정리해 주세요.","confidential":true,"ids":[]}
+{"id":"dev-0425","industry":"human-resources","group":"conf","text":"다음은 유출 금지인 노조 교섭 내용입니다. 핵심만 뽑아 주세요.","confidential":true,"ids":[]}
+{"id":"dev-0426","industry":"human-resources","group":"conf","text":"인사 평가 결과 관련 유출 금지 문서를 표로 정리해 주세요.","confidential":true,"ids":[]}
+{"id":"dev-0427","industry":"human-resources","group":"conf","text":"다음은 극비인 연봉 협상 내용입니다. 핵심만 뽑아 주세요.","confidential":true,"ids":[]}
+{"id":"dev-0428","industry":"human-resources","group":"conf","text":"임금 협상안 관련 공개 금지 문서를 표로 정리해 주세요.","confidential":true,"ids":[]}
+{"id":"dev-0429","industry":"human-resources","group":"conf","text":"다음은 내부용인 해고 대상 내용입니다. 핵심만 뽑아 주세요.","confidential":true,"ids":[]}
+{"id":"dev-0430","industry":"human-resources","group":"conf","text":"기밀 임금 협상안 자료를 요약해 줘.","confidential":true,"ids":[]}
+{"id":"dev-0431","industry":"human-resources","group":"conf","text":"해고 대상 관련 배포 금지 문서를 표로 정리해 주세요.","confidential":true,"ids":[]}
+{"id":"dev-0432","industry":"human-resources","group":"conf","text":"다음은 유출 금지인 임금 협상안 내용입니다. 핵심만 뽑아 주세요.","confidential":true,"ids":[]}
+{"id":"dev-0433","industry":"human-resources","group":"conf_split","text":"비공개 표시가 된 자료예요. 연봉 협상 일정만 알려 줘.","confidential":true,"ids":[]}
+{"id":"dev-0434","industry":"human-resources","group":"conf_split","text":"엠바고 표시가 된 자료예요. 구조조정 일정만 알려 줘.","confidential":true,"ids":[]}
+{"id":"dev-0435","industry":"human-resources","group":"conf_split","text":"배포 금지 표시가 된 자료예요. 연봉 협상 일정만 알려 줘.","confidential":true,"ids":[]}
+{"id":"dev-0436","industry":"human-resources","group":"conf_split","text":"이 문서는 비공개입니다. 희망퇴직을 세 줄로 정리해 주세요.","confidential":true,"ids":[]}
+{"id":"dev-0437","industry":"human-resources","group":"conf_split","text":"이 문서는 비공개입니다. 노조 교섭을 세 줄로 정리해 주세요.","confidential":true,"ids":[]}
+{"id":"dev-0438","industry":"human-resources","group":"conf_split","text":"이 문서는 유출 금지입니다. 노조 교섭을 세 줄로 정리해 주세요.","confidential":true,"ids":[]}
+{"id":"dev-0439","industry":"human-resources","group":"conf_split","text":"이 문서는 Confidential입니다. 연봉 협상을 세 줄로 정리해 주세요.","confidential":true,"ids":[]}
+{"id":"dev-0440","industry":"human-resources","group":"conf_split","text":"이 문서는 미공개입니다. 인사 평가 결과를 세 줄로 정리해 주세요.","confidential":true,"ids":[]}
+{"id":"dev-0441","industry":"human-resources","group":"conf_split","text":"내부용 표시가 된 자료예요. 노조 교섭 일정만 알려 줘.","confidential":true,"ids":[]}
+{"id":"dev-0442","industry":"human-resources","group":"conf_split","text":"기밀 표시가 된 자료예요. 징계 대상 일정만 알려 줘.","confidential":true,"ids":[]}
+{"id":"dev-0443","industry":"human-resources","group":"conf_split","text":"Internal only 표시가 된 자료예요. 징계 대상 일정만 알려 줘.","confidential":true,"ids":[]}
+{"id":"dev-0444","industry":"human-resources","group":"conf_split","text":"이 문서는 비밀 문서입니다. 희망퇴직을 세 줄로 정리해 주세요.","confidential":true,"ids":[]}
+{"id":"dev-0445","industry":"human-resources","group":"conf_para","text":"다음은 대외비인 퇴직 권유 명단 내용입니다. 핵심만 뽑아 주세요.","confidential":true,"ids":[]}
+{"id":"dev-0446","industry":"human-resources","group":"conf_para","text":"대외비 퇴직 권유 명단 자료를 요약해 줘.","confidential":true,"ids":[]}
+{"id":"dev-0447","industry":"human-resources","group":"conf_para","text":"다음은 대외비인 퇴직 권유 명단 내용입니다. 핵심만 뽑아 주세요.","confidential":true,"ids":[]}
+{"id":"dev-0448","industry":"human-resources","group":"conf_para","text":"감원 대상 부서 명단 관련 사내 한정 문서를 표로 정리해 주세요.","confidential":true,"ids":[]}
+{"id":"dev-0449","industry":"human-resources","group":"conf_para","text":"다음은 보안 문서인 내년 급여 인상 폭 초안 내용입니다. 핵심만 뽑아 주세요.","confidential":true,"ids":[]}
+{"id":"dev-0450","industry":"human-resources","group":"conf_para","text":"퇴직 권유 명단 관련 공개 금지 문서를 표로 정리해 주세요.","confidential":true,"ids":[]}
+{"id":"dev-0451","industry":"human-resources","group":"far","text":"Confidential 문서 관리 규정을 알려 줘. 오늘 회의는 3시입니다. 구조조정 관련 기사 요약도 부탁해.","confidential":false,"ids":[]}
+{"id":"dev-0452","industry":"human-resources","group":"far","text":"외부 유출 금지 문서 관리 규정을 알려 줘. 오늘 회의는 3시입니다. 노조 교섭 관련 기사 요약도 부탁해.","confidential":false,"ids":[]}
+{"id":"dev-0453","industry":"human-resources","group":"far","text":"사내 한정 문서 관리 규정을 알려 줘. 오늘 회의는 3시입니다. 구조조정 관련 기사 요약도 부탁해.","confidential":false,"ids":[]}
+{"id":"dev-0454","industry":"human-resources","group":"far","text":"엠바고 문서 관리 규정을 알려 줘. 오늘 회의는 3시입니다. 희망퇴직 관련 기사 요약도 부탁해.","confidential":false,"ids":[]}
+{"id":"dev-0455","industry":"human-resources","group":"far","text":"사내 한정 문서 관리 규정을 알려 줘. 오늘 회의는 3시입니다. 인사 평가 결과 관련 기사 요약도 부탁해.","confidential":false,"ids":[]}
+{"id":"dev-0456","industry":"human-resources","group":"far","text":"외부 유출 금지 문서 관리 규정을 알려 줘. 오늘 회의는 3시입니다. 임금 협상안 관련 기사 요약도 부탁해.","confidential":false,"ids":[]}
+{"id":"dev-0457","industry":"human-resources","group":"marker_only","text":"열람 제한 문서는 외부 서비스에 올리지 마세요.","confidential":false,"ids":[]}
+{"id":"dev-0458","industry":"human-resources","group":"marker_only","text":"내부용 표시는 문서 첫 장 위쪽에 붙입니다.","confidential":false,"ids":[]}
+{"id":"dev-0459","industry":"human-resources","group":"marker_only","text":"공개 금지 표시는 문서 첫 장 위쪽에 붙입니다.","confidential":false,"ids":[]}
+{"id":"dev-0460","industry":"human-resources","group":"marker_only","text":"비공개 자료의 보관 기간을 알려 줘.","confidential":false,"ids":[]}
+{"id":"dev-0461","industry":"human-resources","group":"marker_only","text":"내부 검토용 문서는 외부 서비스에 올리지 마세요.","confidential":false,"ids":[]}
+{"id":"dev-0462","industry":"human-resources","group":"marker_only","text":"유출 금지 문서는 외부 서비스에 올리지 마세요.","confidential":false,"ids":[]}
+{"id":"dev-0463","industry":"human-resources","group":"marker_only","text":"내부 검토용 자료의 보관 기간을 알려 줘.","confidential":false,"ids":[]}
+{"id":"dev-0464","industry":"human-resources","group":"marker_only","text":"내부용 표시는 문서 첫 장 위쪽에 붙입니다.","confidential":false,"ids":[]}
+{"id":"dev-0465","industry":"human-resources","group":"marker_only","text":"엠바고 표시는 문서 첫 장 위쪽에 붙입니다.","confidential":false,"ids":[]}
+{"id":"dev-0466","industry":"human-resources","group":"marker_only","text":"사내 한정 표시는 문서 첫 장 위쪽에 붙입니다.","confidential":false,"ids":[]}
+{"id":"dev-0467","industry":"human-resources","group":"marker_only","text":"극비 표시는 문서 첫 장 위쪽에 붙입니다.","confidential":false,"ids":[]}
+{"id":"dev-0468","industry":"human-resources","group":"marker_only","text":"Internal only 표시는 문서 첫 장 위쪽에 붙입니다.","confidential":false,"ids":[]}
+{"id":"dev-0469","industry":"human-resources","group":"marker_only","text":"미공개 표시는 문서 첫 장 위쪽에 붙입니다.","confidential":false,"ids":[]}
+{"id":"dev-0470","industry":"human-resources","group":"marker_only","text":"기밀 문서는 외부 서비스에 올리지 마세요.","confidential":false,"ids":[]}
+{"id":"dev-0471","industry":"human-resources","group":"marker_only","text":"유출 금지 자료의 보관 기간을 알려 줘.","confidential":false,"ids":[]}
+{"id":"dev-0472","industry":"human-resources","group":"marker_only","text":"극비 문서는 외부 서비스에 올리지 마세요.","confidential":false,"ids":[]}
+{"id":"dev-0473","industry":"human-resources","group":"marker_only","text":"열람 제한 문서는 외부 서비스에 올리지 마세요.","confidential":false,"ids":[]}
+{"id":"dev-0474","industry":"human-resources","group":"marker_only","text":"대외비 문서는 외부 서비스에 올리지 마세요.","confidential":false,"ids":[]}
+{"id":"dev-0475","industry":"human-resources","group":"subject_only","text":"연봉 협상 관련 법령을 찾아 줘.","confidential":false,"ids":[]}
+{"id":"dev-0476","industry":"human-resources","group":"subject_only","text":"임금 협상안 기사들을 요약해 줘.","confidential":false,"ids":[]}
+{"id":"dev-0477","industry":"human-resources","group":"subject_only","text":"노조 교섭 관련 법령을 찾아 줘.","confidential":false,"ids":[]}
+{"id":"dev-0478","industry":"human-resources","group":"subject_only","text":"인사 평가 결과 관련 법령을 찾아 줘.","confidential":false,"ids":[]}
+{"id":"dev-0479","industry":"human-resources","group":"subject_only","text":"임금 협상안의 일반적인 절차를 설명해 줘.","confidential":false,"ids":[]}
+{"id":"dev-0480","industry":"human-resources","group":"subject_only","text":"구조조정의 일반적인 절차를 설명해 줘.","confidential":false,"ids":[]}
+{"id":"dev-0481","industry":"human-resources","group":"subject_only","text":"징계 대상의 일반적인 절차를 설명해 줘.","confidential":false,"ids":[]}
+{"id":"dev-0482","industry":"human-resources","group":"subject_only","text":"노조 교섭의 일반적인 절차를 설명해 줘.","confidential":false,"ids":[]}
+{"id":"dev-0483","industry":"human-resources","group":"subject_only","text":"구조조정 관련 법령을 찾아 줘.","confidential":false,"ids":[]}
+{"id":"dev-0484","industry":"human-resources","group":"subject_only","text":"인사 평가 결과 기사들을 요약해 줘.","confidential":false,"ids":[]}
+{"id":"dev-0485","industry":"human-resources","group":"subject_only","text":"연봉 협상 관련 법령을 찾아 줘.","confidential":false,"ids":[]}
+{"id":"dev-0486","industry":"human-resources","group":"subject_only","text":"해고 대상의 일반적인 절차를 설명해 줘.","confidential":false,"ids":[]}
+{"id":"dev-0487","industry":"human-resources","group":"subject_only","text":"임금 협상안 기사들을 요약해 줘.","confidential":false,"ids":[]}
+{"id":"dev-0488","industry":"human-resources","group":"subject_only","text":"구조조정 기사들을 요약해 줘.","confidential":false,"ids":[]}
+{"id":"dev-0489","industry":"human-resources","group":"subject_only","text":"해고 대상의 일반적인 절차를 설명해 줘.","confidential":false,"ids":[]}
+{"id":"dev-0490","industry":"human-resources","group":"subject_only","text":"희망퇴직의 일반적인 절차를 설명해 줘.","confidential":false,"ids":[]}
+{"id":"dev-0491","industry":"human-resources","group":"subject_only","text":"징계 대상 기사들을 요약해 줘.","confidential":false,"ids":[]}
+{"id":"dev-0492","industry":"human-resources","group":"subject_only","text":"연봉 협상 기사들을 요약해 줘.","confidential":false,"ids":[]}
+{"id":"dev-0493","industry":"human-resources","group":"business","text":"보고서 문장을 공손하게 고쳐 줘.","confidential":false,"ids":[]}
+{"id":"dev-0494","industry":"human-resources","group":"business","text":"회의록 초안을 세 문단으로 요약해 줘.","confidential":false,"ids":[]}
+{"id":"dev-0495","industry":"human-resources","group":"business","text":"연차 신청 방법을 알려 줘.","confidential":false,"ids":[]}
+{"id":"dev-0496","industry":"human-resources","group":"business","text":"민원 응대 매뉴얼을 쉬운 말로 바꿔 줘.","confidential":false,"ids":[]}
+{"id":"dev-0497","industry":"human-resources","group":"business","text":"보고서 문장을 공손하게 고쳐 줘.","confidential":false,"ids":[]}
+{"id":"dev-0498","industry":"human-resources","group":"business","text":"출장비 정산 절차를 알려 주세요.","confidential":false,"ids":[]}
+{"id":"dev-0499","industry":"human-resources","group":"business","text":"연차 신청 방법을 알려 줘.","confidential":false,"ids":[]}
+{"id":"dev-0500","industry":"human-resources","group":"business","text":"회의록 초안을 세 문단으로 요약해 줘.","confidential":false,"ids":[]}
+{"id":"dev-0501","industry":"human-resources","group":"business","text":"다음 주 부서 회의 안건을 정리해 주세요.","confidential":false,"ids":[]}
+{"id":"dev-0502","industry":"human-resources","group":"business","text":"민원 응대 매뉴얼을 쉬운 말로 바꿔 줘.","confidential":false,"ids":[]}
+{"id":"dev-0503","industry":"human-resources","group":"business","text":"민원 응대 매뉴얼을 쉬운 말로 바꿔 줘.","confidential":false,"ids":[]}
+{"id":"dev-0504","industry":"human-resources","group":"business","text":"출장비 정산 절차를 알려 주세요.","confidential":false,"ids":[]}
+{"id":"dev-0505","industry":"human-resources","group":"business","text":"다음 주 부서 회의 안건을 정리해 주세요.","confidential":false,"ids":[]}
+{"id":"dev-0506","industry":"human-resources","group":"business","text":"이번 달 교육 일정은 10일과 17일입니다.","confidential":false,"ids":[]}
+{"id":"dev-0507","industry":"human-resources","group":"business","text":"다음 주 부서 회의 안건을 정리해 주세요.","confidential":false,"ids":[]}
+{"id":"dev-0508","industry":"human-resources","group":"business","text":"엑셀에서 중복 행을 지우는 방법은?","confidential":false,"ids":[]}
+{"id":"dev-0509","industry":"human-resources","group":"id","text":"인사번호는 A943328 입니다. 진행 상황을 알려 주세요.","confidential":false,"ids":["A943328"]}
+{"id":"dev-0510","industry":"human-resources","group":"id","text":"공무원증번호: 0806385143 건을 처리해 줘.","confidential":false,"ids":["0806385143"]}
+{"id":"dev-0511","industry":"human-resources","group":"id","text":"직번은 AC-2026-81164 입니다. 진행 상황을 알려 주세요.","confidential":false,"ids":["AC-2026-81164"]}
+{"id":"dev-0512","industry":"human-resources","group":"id","text":"사번: PL-2026-04675 건을 처리해 줘.","confidential":false,"ids":["PL-2026-04675"]}
+{"id":"dev-0513","industry":"human-resources","group":"id","text":"직번: M777665 건을 처리해 줘.","confidential":false,"ids":["M777665"]}
+{"id":"dev-0514","industry":"human-resources","group":"id","text":"사원번호 9731405469 의 담당자를 찾아 줘.","confidential":false,"ids":["9731405469"]}
+{"id":"dev-0515","industry":"human-resources","group":"id","text":"임직원번호는 03653093 입니다. 진행 상황을 알려 주세요.","confidential":false,"ids":["03653093"]}
+{"id":"dev-0516","industry":"human-resources","group":"id","text":"사번 8455210133 의 담당자를 찾아 줘.","confidential":false,"ids":["8455210133"]}
+{"id":"dev-0517","industry":"human-resources","group":"id","text":"직번: 18131789 건을 처리해 줘.","confidential":false,"ids":["18131789"]}
+{"id":"dev-0518","industry":"human-resources","group":"id","text":"임직원번호: 60410805 건을 처리해 줘.","confidential":false,"ids":["60410805"]}
+{"id":"dev-0519","industry":"human-resources","group":"id","text":"직원번호는 2026-186526 입니다. 진행 상황을 알려 주세요.","confidential":false,"ids":["2026-186526"]}
+{"id":"dev-0520","industry":"human-resources","group":"id","text":"인사번호는 PL-2026-47597 입니다. 진행 상황을 알려 주세요.","confidential":false,"ids":["PL-2026-47597"]}
+{"id":"dev-0521","industry":"human-resources","group":"id","text":"직번은 AC-2026-71639 입니다. 진행 상황을 알려 주세요.","confidential":false,"ids":["AC-2026-71639"]}
+{"id":"dev-0522","industry":"human-resources","group":"id","text":"공무원증번호: 2026-076232 건을 처리해 줘.","confidential":false,"ids":["2026-076232"]}
+{"id":"dev-0523","industry":"human-resources","group":"id","text":"사번은 9115221412 입니다. 진행 상황을 알려 주세요.","confidential":false,"ids":["9115221412"]}
+{"id":"dev-0524","industry":"human-resources","group":"id","text":"공무원증번호는 2026-036314 입니다. 진행 상황을 알려 주세요.","confidential":false,"ids":["2026-036314"]}
+{"id":"dev-0525","industry":"human-resources","group":"id","text":"직번 2952365764 의 담당자를 찾아 줘.","confidential":false,"ids":["2952365764"]}
+{"id":"dev-0526","industry":"human-resources","group":"id","text":"공무원증번호는 PL-2026-23232 입니다. 진행 상황을 알려 주세요.","confidential":false,"ids":["PL-2026-23232"]}
+{"id":"dev-0527","industry":"human-resources","group":"id","text":"인사번호: PL-2026-17294 건을 처리해 줘.","confidential":false,"ids":["PL-2026-17294"]}
+{"id":"dev-0528","industry":"human-resources","group":"id","text":"직원번호는 PL-2026-65704 입니다. 진행 상황을 알려 주세요.","confidential":false,"ids":["PL-2026-65704"]}
+{"id":"dev-0529","industry":"human-resources","group":"id","text":"공무원증번호 AC-2026-54753 의 담당자를 찾아 줘.","confidential":false,"ids":["AC-2026-54753"]}
+{"id":"dev-0530","industry":"human-resources","group":"id","text":"사원번호 K231022 의 담당자를 찾아 줘.","confidential":false,"ids":["K231022"]}
+{"id":"dev-0531","industry":"human-resources","group":"id","text":"사번 CL-2026-79573 의 담당자를 찾아 줘.","confidential":false,"ids":["CL-2026-79573"]}
+{"id":"dev-0532","industry":"human-resources","group":"id","text":"공무원증번호 P786178 의 담당자를 찾아 줘.","confidential":false,"ids":["P786178"]}
+{"id":"dev-0533","industry":"human-resources","group":"id_neg","text":"직원번호 발급 절차를 알려 줘.","confidential":false,"ids":[]}
+{"id":"dev-0534","industry":"human-resources","group":"id_neg","text":"공무원증번호를 어디서 확인하나요?","confidential":false,"ids":[]}
+{"id":"dev-0535","industry":"human-resources","group":"id_neg","text":"주문 PL-2026-47072 건의 배송을 확인해 줘.","confidential":false,"ids":[]}
+{"id":"dev-0536","industry":"human-resources","group":"id_neg","text":"주문 HR-2026-91110 건의 배송을 확인해 줘.","confidential":false,"ids":[]}
+{"id":"dev-0537","industry":"human-resources","group":"id_neg","text":"주문 M987293 건의 배송을 확인해 줘.","confidential":false,"ids":[]}
+{"id":"dev-0538","industry":"human-resources","group":"id_neg","text":"직번을 어디서 확인하나요?","confidential":false,"ids":[]}
+{"id":"dev-0539","industry":"human-resources","group":"id_neg","text":"직원번호 발급 절차를 알려 줘.","confidential":false,"ids":[]}
+{"id":"dev-0540","industry":"human-resources","group":"id_neg","text":"사원번호 발급 절차를 알려 줘.","confidential":false,"ids":[]}
+{"id":"dev-0541","industry":"human-resources","group":"id_neg","text":"주문 PL-2026-95055 건의 배송을 확인해 줘.","confidential":false,"ids":[]}
+{"id":"dev-0542","industry":"human-resources","group":"id_neg","text":"주문 9512961041 건의 배송을 확인해 줘.","confidential":false,"ids":[]}
+{"id":"dev-0543","industry":"human-resources","group":"id_neg","text":"주문 K080998 건의 배송을 확인해 줘.","confidential":false,"ids":[]}
+{"id":"dev-0544","industry":"human-resources","group":"id_neg","text":"주문 93291417 건의 배송을 확인해 줘.","confidential":false,"ids":[]}
+{"id":"dev-0545","industry":"bank","group":"conf","text":"여신 심사 관련 미공개 문서를 표로 정리해 주세요.","confidential":true,"ids":[]}
+{"id":"dev-0546","industry":"bank","group":"conf","text":"여신 심사 관련 공개 금지 문서를 표로 정리해 주세요.","confidential":true,"ids":[]}
+{"id":"dev-0547","industry":"bank","group":"conf","text":"이 대출 심사 결과 초안은 취급 주의니 문장을 다듬어 줘.","confidential":true,"ids":[]}
+{"id":"dev-0548","industry":"bank","group":"conf","text":"내부 검토용 부실 채권 자료를 요약해 줘.","confidential":true,"ids":[]}
+{"id":"dev-0549","industry":"bank","group":"conf","text":"다음은 기밀인 신용등급 내용입니다. 핵심만 뽑아 주세요.","confidential":true,"ids":[]}
+{"id":"dev-0550","industry":"bank","group":"conf","text":"실적 발표 전 관련 취급 주의 문서를 표로 정리해 주세요.","confidential":true,"ids":[]}
+{"id":"dev-0551","industry":"bank","group":"conf","text":"대외비 실적 발표 전 자료를 요약해 줘.","confidential":true,"ids":[]}
+{"id":"dev-0552","industry":"bank","group":"conf","text":"다음은 유출 금지인 대출 심사 결과 내용입니다. 핵심만 뽑아 주세요.","confidential":true,"ids":[]}
+{"id":"dev-0553","industry":"bank","group":"conf","text":"여신 심사 관련 엠바고 문서를 표로 정리해 주세요.","confidential":true,"ids":[]}
+{"id":"dev-0554","industry":"bank","group":"conf","text":"여신 심사 관련 기밀 문서를 표로 정리해 주세요.","confidential":true,"ids":[]}
+{"id":"dev-0555","industry":"bank","group":"conf","text":"상장 계획 관련 사내 한정 문서를 표로 정리해 주세요.","confidential":true,"ids":[]}
+{"id":"dev-0556","industry":"bank","group":"conf","text":"이 대출 심사 결과 초안은 비밀 문서니 문장을 다듬어 줘.","confidential":true,"ids":[]}
+{"id":"dev-0557","industry":"bank","group":"conf","text":"다음은 엠바고인 인수합병 내용입니다. 핵심만 뽑아 주세요.","confidential":true,"ids":[]}
+{"id":"dev-0558","industry":"bank","group":"conf","text":"엠바고 실적 발표 전 자료를 요약해 줘.","confidential":true,"ids":[]}
+{"id":"dev-0559","industry":"bank","group":"conf","text":"이 유상증자 초안은 사내 한정이니 문장을 다듬어 줘.","confidential":true,"ids":[]}
+{"id":"dev-0560","industry":"bank","group":"conf","text":"다음은 공개 금지인 신용등급 내용입니다. 핵심만 뽑아 주세요.","confidential":true,"ids":[]}
+{"id":"dev-0561","industry":"bank","group":"conf","text":"이 인수합병 초안은 미공개니 문장을 다듬어 줘.","confidential":true,"ids":[]}
+{"id":"dev-0562","industry":"bank","group":"conf","text":"다음은 대외비인 실적 발표 전 내용입니다. 핵심만 뽑아 주세요.","confidential":true,"ids":[]}
+{"id":"dev-0563","industry":"bank","group":"conf","text":"인수합병 관련 내부 검토용 문서를 표로 정리해 주세요.","confidential":true,"ids":[]}
+{"id":"dev-0564","industry":"bank","group":"conf","text":"내부용 상장 계획 자료를 요약해 줘.","confidential":true,"ids":[]}
+{"id":"dev-0565","industry":"bank","group":"conf","text":"부실 채권 관련 기밀 문서를 표로 정리해 주세요.","confidential":true,"ids":[]}
+{"id":"dev-0566","industry":"bank","group":"conf","text":"유상증자 관련 열람 제한 문서를 표로 정리해 주세요.","confidential":true,"ids":[]}
+{"id":"dev-0567","industry":"bank","group":"conf","text":"다음은 열람 제한인 실적 발표 전 내용입니다. 핵심만 뽑아 주세요.","confidential":true,"ids":[]}
+{"id":"dev-0568","industry":"bank","group":"conf","text":"이 유상증자 초안은 배포 금지니 문장을 다듬어 줘.","confidential":true,"ids":[]}
+{"id":"dev-0569","industry":"bank","group":"conf_split","text":"엠바고 표시가 된 자료예요. 대출 심사 결과 일정만 알려 줘.","confidential":true,"ids":[]}
+{"id":"dev-0570","industry":"bank","group":"conf_split","text":"기밀 표시가 된 자료예요. 부실 채권 일정만 알려 줘.","confidential":true,"ids":[]}
+{"id":"dev-0571","industry":"bank","group":"conf_split","text":"이 문서는 취급 주의입니다. 상장 계획을 세 줄로 정리해 주세요.","confidential":true,"ids":[]}
+{"id":"dev-0572","industry":"bank","group":"conf_split","text":"유출 금지 표시가 된 자료예요. 인수합병 일정만 알려 줘.","confidential":true,"ids":[]}
+{"id":"dev-0573","industry":"bank","group":"conf_split","text":"이 문서는 엠바고입니다. 인수합병을 세 줄로 정리해 주세요.","confidential":true,"ids":[]}
+{"id":"dev-0574","industry":"bank","group":"conf_split","text":"대외비 표시가 된 자료예요. 상장 계획 일정만 알려 줘.","confidential":true,"ids":[]}
+{"id":"dev-0575","industry":"bank","group":"conf_split","text":"이 문서는 극비입니다. 여신 심사를 세 줄로 정리해 주세요.","confidential":true,"ids":[]}
+{"id":"dev-0576","industry":"bank","group":"conf_split","text":"이 문서는 사내 한정입니다. 여신 심사를 세 줄로 정리해 주세요.","confidential":true,"ids":[]}
+{"id":"dev-0577","industry":"bank","group":"conf_split","text":"이 문서는 사내 한정입니다. 대출 심사 결과를 세 줄로 정리해 주세요.","confidential":true,"ids":[]}
+{"id":"dev-0578","industry":"bank","group":"conf_split","text":"공개 금지 표시가 된 자료예요. 대출 심사 결과 일정만 알려 줘.","confidential":true,"ids":[]}
+{"id":"dev-0579","industry":"bank","group":"conf_split","text":"이 문서는 비밀 문서입니다. 여신 심사를 세 줄로 정리해 주세요.","confidential":true,"ids":[]}
+{"id":"dev-0580","industry":"bank","group":"conf_split","text":"이 문서는 Confidential입니다. 대출 심사 결과를 세 줄로 정리해 주세요.","confidential":true,"ids":[]}
+{"id":"dev-0581","industry":"bank","group":"conf_para","text":"다음은 외부 유출 금지인 이번 분기 순이익 예상치 내용입니다. 핵심만 뽑아 주세요.","confidential":true,"ids":[]}
+{"id":"dev-0582","industry":"bank","group":"conf_para","text":"다음은 유출 금지인 이번 분기 순이익 예상치 내용입니다. 핵심만 뽑아 주세요.","confidential":true,"ids":[]}
+{"id":"dev-0583","industry":"bank","group":"conf_para","text":"이 이번 분기 순이익 예상치 초안은 공개 금지니 문장을 다듬어 줘.","confidential":true,"ids":[]}
+{"id":"dev-0584","industry":"bank","group":"conf_para","text":"이 이번 분기 순이익 예상치 초안은 극비니 문장을 다듬어 줘.","confidential":true,"ids":[]}
+{"id":"dev-0585","industry":"bank","group":"conf_para","text":"이 이번 분기 순이익 예상치 초안은 유출 금지니 문장을 다듬어 줘.","confidential":true,"ids":[]}
+{"id":"dev-0586","industry":"bank","group":"conf_para","text":"이 거래처 부도 위험 등급 초안은 유출 금지니 문장을 다듬어 줘.","confidential":true,"ids":[]}
+{"id":"dev-0587","industry":"bank","group":"far","text":"엠바고 문서 관리 규정을 알려 줘. 오늘 회의는 3시입니다. 여신 심사 관련 기사 요약도 부탁해.","confidential":false,"ids":[]}
+{"id":"dev-0588","industry":"bank","group":"far","text":"기밀 문서 관리 규정을 알려 줘. 오늘 회의는 3시입니다. 인수합병 관련 기사 요약도 부탁해.","confidential":false,"ids":[]}
+{"id":"dev-0589","industry":"bank","group":"far","text":"내부 검토용 문서 관리 규정을 알려 줘. 오늘 회의는 3시입니다. 상장 계획 관련 기사 요약도 부탁해.","confidential":false,"ids":[]}
+{"id":"dev-0590","industry":"bank","group":"far","text":"비밀 문서 문서 관리 규정을 알려 줘. 오늘 회의는 3시입니다. 상장 계획 관련 기사 요약도 부탁해.","confidential":false,"ids":[]}
+{"id":"dev-0591","industry":"bank","group":"far","text":"유출 금지 문서 관리 규정을 알려 줘. 오늘 회의는 3시입니다. 유상증자 관련 기사 요약도 부탁해.","confidential":false,"ids":[]}
+{"id":"dev-0592","industry":"bank","group":"far","text":"극비 문서 관리 규정을 알려 줘. 오늘 회의는 3시입니다. 인수합병 관련 기사 요약도 부탁해.","confidential":false,"ids":[]}
+{"id":"dev-0593","industry":"bank","group":"marker_only","text":"비공개 문서는 외부 서비스에 올리지 마세요.","confidential":false,"ids":[]}
+{"id":"dev-0594","industry":"bank","group":"marker_only","text":"엠바고 표시는 문서 첫 장 위쪽에 붙입니다.","confidential":false,"ids":[]}
+{"id":"dev-0595","industry":"bank","group":"marker_only","text":"열람 제한 자료의 보관 기간을 알려 줘.","confidential":false,"ids":[]}
+{"id":"dev-0596","industry":"bank","group":"marker_only","text":"Internal only 자료의 보관 기간을 알려 줘.","confidential":false,"ids":[]}
+{"id":"dev-0597","industry":"bank","group":"marker_only","text":"취급 주의 표시는 문서 첫 장 위쪽에 붙입니다.","confidential":false,"ids":[]}
+{"id":"dev-0598","industry":"bank","group":"marker_only","text":"배포 금지 자료의 보관 기간을 알려 줘.","confidential":false,"ids":[]}
+{"id":"dev-0599","industry":"bank","group":"marker_only","text":"엠바고 문서는 외부 서비스에 올리지 마세요.","confidential":false,"ids":[]}
+{"id":"dev-0600","industry":"bank","group":"marker_only","text":"비밀 문서 자료의 보관 기간을 알려 줘.","confidential":false,"ids":[]}
+{"id":"dev-0601","industry":"bank","group":"marker_only","text":"열람 제한 문서는 외부 서비스에 올리지 마세요.","confidential":false,"ids":[]}
+{"id":"dev-0602","industry":"bank","group":"marker_only","text":"미공개 표시는 문서 첫 장 위쪽에 붙입니다.","confidential":false,"ids":[]}
+{"id":"dev-0603","industry":"bank","group":"marker_only","text":"열람 제한 자료의 보관 기간을 알려 줘.","confidential":false,"ids":[]}
+{"id":"dev-0604","industry":"bank","group":"marker_only","text":"엠바고 문서는 외부 서비스에 올리지 마세요.","confidential":false,"ids":[]}
+{"id":"dev-0605","industry":"bank","group":"marker_only","text":"극비 표시는 문서 첫 장 위쪽에 붙입니다.","confidential":false,"ids":[]}
+{"id":"dev-0606","industry":"bank","group":"marker_only","text":"보안 문서 문서는 외부 서비스에 올리지 마세요.","confidential":false,"ids":[]}
+{"id":"dev-0607","industry":"bank","group":"marker_only","text":"극비 자료의 보관 기간을 알려 줘.","confidential":false,"ids":[]}
+{"id":"dev-0608","industry":"bank","group":"marker_only","text":"열람 제한 자료의 보관 기간을 알려 줘.","confidential":false,"ids":[]}
+{"id":"dev-0609","industry":"bank","group":"marker_only","text":"공개 금지 문서는 외부 서비스에 올리지 마세요.","confidential":false,"ids":[]}
+{"id":"dev-0610","industry":"bank","group":"marker_only","text":"Internal only 문서는 외부 서비스에 올리지 마세요.","confidential":false,"ids":[]}
+{"id":"dev-0611","industry":"bank","group":"subject_only","text":"여신 심사 기사들을 요약해 줘.","confidential":false,"ids":[]}
+{"id":"dev-0612","industry":"bank","group":"subject_only","text":"상장 계획 관련 법령을 찾아 줘.","confidential":false,"ids":[]}
+{"id":"dev-0613","industry":"bank","group":"subject_only","text":"신용등급의 일반적인 절차를 설명해 줘.","confidential":false,"ids":[]}
+{"id":"dev-0614","industry":"bank","group":"subject_only","text":"상장 계획 관련 법령을 찾아 줘.","confidential":false,"ids":[]}
+{"id":"dev-0615","industry":"bank","group":"subject_only","text":"인수합병의 일반적인 절차를 설명해 줘.","confidential":false,"ids":[]}
+{"id":"dev-0616","industry":"bank","group":"subject_only","text":"잠정 실적 관련 법령을 찾아 줘.","confidential":false,"ids":[]}
+{"id":"dev-0617","industry":"bank","group":"subject_only","text":"상장 계획 기사들을 요약해 줘.","confidential":false,"ids":[]}
+{"id":"dev-0618","industry":"bank","group":"subject_only","text":"신용등급 기사들을 요약해 줘.","confidential":false,"ids":[]}
+{"id":"dev-0619","industry":"bank","group":"subject_only","text":"인수합병 기사들을 요약해 줘.","confidential":false,"ids":[]}
+{"id":"dev-0620","industry":"bank","group":"subject_only","text":"상장 계획 관련 법령을 찾아 줘.","confidential":false,"ids":[]}
+{"id":"dev-0621","industry":"bank","group":"subject_only","text":"부실 채권의 일반적인 절차를 설명해 줘.","confidential":false,"ids":[]}
+{"id":"dev-0622","industry":"bank","group":"subject_only","text":"유상증자 관련 법령을 찾아 줘.","confidential":false,"ids":[]}
+{"id":"dev-0623","industry":"bank","group":"subject_only","text":"실적 발표 전의 일반적인 절차를 설명해 줘.","confidential":false,"ids":[]}
+{"id":"dev-0624","industry":"bank","group":"subject_only","text":"여신 심사 관련 법령을 찾아 줘.","confidential":false,"ids":[]}
+{"id":"dev-0625","industry":"bank","group":"subject_only","text":"유상증자의 일반적인 절차를 설명해 줘.","confidential":false,"ids":[]}
+{"id":"dev-0626","industry":"bank","group":"subject_only","text":"인수합병 기사들을 요약해 줘.","confidential":false,"ids":[]}
+{"id":"dev-0627","industry":"bank","group":"subject_only","text":"여신 심사의 일반적인 절차를 설명해 줘.","confidential":false,"ids":[]}
+{"id":"dev-0628","industry":"bank","group":"subject_only","text":"여신 심사 기사들을 요약해 줘.","confidential":false,"ids":[]}
+{"id":"dev-0629","industry":"bank","group":"business","text":"엑셀에서 중복 행을 지우는 방법은?","confidential":false,"ids":[]}
+{"id":"dev-0630","industry":"bank","group":"business","text":"회의록 초안을 세 문단으로 요약해 줘.","confidential":false,"ids":[]}
+{"id":"dev-0631","industry":"bank","group":"business","text":"다음 주 부서 회의 안건을 정리해 주세요.","confidential":false,"ids":[]}
+{"id":"dev-0632","industry":"bank","group":"business","text":"회의록 초안을 세 문단으로 요약해 줘.","confidential":false,"ids":[]}
+{"id":"dev-0633","industry":"bank","group":"business","text":"연차 신청 방법을 알려 줘.","confidential":false,"ids":[]}
+{"id":"dev-0634","industry":"bank","group":"business","text":"연차 신청 방법을 알려 줘.","confidential":false,"ids":[]}
+{"id":"dev-0635","industry":"bank","group":"business","text":"민원 응대 매뉴얼을 쉬운 말로 바꿔 줘.","confidential":false,"ids":[]}
+{"id":"dev-0636","industry":"bank","group":"business","text":"보고서 문장을 공손하게 고쳐 줘.","confidential":false,"ids":[]}
+{"id":"dev-0637","industry":"bank","group":"business","text":"출장비 정산 절차를 알려 주세요.","confidential":false,"ids":[]}
+{"id":"dev-0638","industry":"bank","group":"business","text":"회의록 초안을 세 문단으로 요약해 줘.","confidential":false,"ids":[]}
+{"id":"dev-0639","industry":"bank","group":"business","text":"엑셀에서 중복 행을 지우는 방법은?","confidential":false,"ids":[]}
+{"id":"dev-0640","industry":"bank","group":"business","text":"출장비 정산 절차를 알려 주세요.","confidential":false,"ids":[]}
+{"id":"dev-0641","industry":"bank","group":"business","text":"다음 주 부서 회의 안건을 정리해 주세요.","confidential":false,"ids":[]}
+{"id":"dev-0642","industry":"bank","group":"business","text":"민원 응대 매뉴얼을 쉬운 말로 바꿔 줘.","confidential":false,"ids":[]}
+{"id":"dev-0643","industry":"bank","group":"business","text":"연차 신청 방법을 알려 줘.","confidential":false,"ids":[]}
+{"id":"dev-0644","industry":"bank","group":"business","text":"회의록 초안을 세 문단으로 요약해 줘.","confidential":false,"ids":[]}
+{"id":"dev-0645","industry":"bank","group":"id","text":"거래번호는 LN-2026-54216 입니다. 진행 상황을 알려 주세요.","confidential":false,"ids":["LN-2026-54216"]}
+{"id":"dev-0646","industry":"bank","group":"id","text":"CIF는 2176141930 입니다. 진행 상황을 알려 주세요.","confidential":false,"ids":["2176141930"]}
+{"id":"dev-0647","industry":"bank","group":"id","text":"고객관리번호는 18574931 입니다. 진행 상황을 알려 주세요.","confidential":false,"ids":["18574931"]}
+{"id":"dev-0648","industry":"bank","group":"id","text":"거래번호는 2026-926382 입니다. 진행 상황을 알려 주세요.","confidential":false,"ids":["2026-926382"]}
+{"id":"dev-0649","industry":"bank","group":"id","text":"대출번호: 73695116 건을 처리해 줘.","confidential":false,"ids":["73695116"]}
+{"id":"dev-0650","industry":"bank","group":"id","text":"고객관리번호는 2026-256391 입니다. 진행 상황을 알려 주세요.","confidential":false,"ids":["2026-256391"]}
+{"id":"dev-0651","industry":"bank","group":"id","text":"계약번호 AC-2026-48057 의 담당자를 찾아 줘.","confidential":false,"ids":["AC-2026-48057"]}
+{"id":"dev-0652","industry":"bank","group":"id","text":"고객관리번호: 64589590 건을 처리해 줘.","confidential":false,"ids":["64589590"]}
+{"id":"dev-0653","industry":"bank","group":"id","text":"여신번호 2026-350692 의 담당자를 찾아 줘.","confidential":false,"ids":["2026-350692"]}
+{"id":"dev-0654","industry":"bank","group":"id","text":"대출번호 22058148 의 담당자를 찾아 줘.","confidential":false,"ids":["22058148"]}
+{"id":"dev-0655","industry":"bank","group":"id","text":"고객번호: 9035153976 건을 처리해 줘.","confidential":false,"ids":["9035153976"]}
+{"id":"dev-0656","industry":"bank","group":"id","text":"고객관리번호 5067989627 의 담당자를 찾아 줘.","confidential":false,"ids":["5067989627"]}
+{"id":"dev-0657","industry":"bank","group":"id","text":"고객번호 2026-386426 의 담당자를 찾아 줘.","confidential":false,"ids":["2026-386426"]}
+{"id":"dev-0658","industry":"bank","group":"id","text":"심사번호는 HR-2026-39910 입니다. 진행 상황을 알려 주세요.","confidential":false,"ids":["HR-2026-39910"]}
+{"id":"dev-0659","industry":"bank","group":"id","text":"계약번호: 45257440 건을 처리해 줘.","confidential":false,"ids":["45257440"]}
+{"id":"dev-0660","industry":"bank","group":"id","text":"대출번호: AC-2026-87245 건을 처리해 줘.","confidential":false,"ids":["AC-2026-87245"]}
+{"id":"dev-0661","industry":"bank","group":"id","text":"고객관리번호: 08354868 건을 처리해 줘.","confidential":false,"ids":["08354868"]}
+{"id":"dev-0662","industry":"bank","group":"id","text":"여신번호는 6833168717 입니다. 진행 상황을 알려 주세요.","confidential":false,"ids":["6833168717"]}
+{"id":"dev-0663","industry":"bank","group":"id","text":"대출번호 PL-2026-67319 의 담당자를 찾아 줘.","confidential":false,"ids":["PL-2026-67319"]}
+{"id":"dev-0664","industry":"bank","group":"id","text":"고객관리번호: P917401 건을 처리해 줘.","confidential":false,"ids":["P917401"]}
+{"id":"dev-0665","industry":"bank","group":"id","text":"여신번호: 2026-630783 건을 처리해 줘.","confidential":false,"ids":["2026-630783"]}
+{"id":"dev-0666","industry":"bank","group":"id","text":"거래번호 06454501 의 담당자를 찾아 줘.","confidential":false,"ids":["06454501"]}
+{"id":"dev-0667","industry":"bank","group":"id","text":"계약번호는 CL-2026-40072 입니다. 진행 상황을 알려 주세요.","confidential":false,"ids":["CL-2026-40072"]}
+{"id":"dev-0668","industry":"bank","group":"id","text":"고객관리번호 70520299 의 담당자를 찾아 줘.","confidential":false,"ids":["70520299"]}
+{"id":"dev-0669","industry":"bank","group":"id_neg","text":"고객번호를 어디서 확인하나요?","confidential":false,"ids":[]}
+{"id":"dev-0670","industry":"bank","group":"id_neg","text":"CIF를 어디서 확인하나요?","confidential":false,"ids":[]}
+{"id":"dev-0671","industry":"bank","group":"id_neg","text":"주문 7199772524 건의 배송을 확인해 줘.","confidential":false,"ids":[]}
+{"id":"dev-0672","industry":"bank","group":"id_neg","text":"주문 K237893 건의 배송을 확인해 줘.","confidential":false,"ids":[]}
+{"id":"dev-0673","industry":"bank","group":"id_neg","text":"거래번호 발급 절차를 알려 줘.","confidential":false,"ids":[]}
+{"id":"dev-0674","industry":"bank","group":"id_neg","text":"심사번호 발급 절차를 알려 줘.","confidential":false,"ids":[]}
+{"id":"dev-0675","industry":"bank","group":"id_neg","text":"주문 AC-2026-19537 건의 배송을 확인해 줘.","confidential":false,"ids":[]}
+{"id":"dev-0676","industry":"bank","group":"id_neg","text":"고객번호 발급 절차를 알려 줘.","confidential":false,"ids":[]}
+{"id":"dev-0677","industry":"bank","group":"id_neg","text":"계약번호 발급 절차를 알려 줘.","confidential":false,"ids":[]}
+{"id":"dev-0678","industry":"bank","group":"id_neg","text":"대출번호를 어디서 확인하나요?","confidential":false,"ids":[]}
+{"id":"dev-0679","industry":"bank","group":"id_neg","text":"CIF를 어디서 확인하나요?","confidential":false,"ids":[]}
+{"id":"dev-0680","industry":"bank","group":"id_neg","text":"신청번호 발급 절차를 알려 줘.","confidential":false,"ids":[]}
+{"id":"dev-0681","industry":"card","group":"conf","text":"극비 잠정 실적 자료를 요약해 줘.","confidential":true,"ids":[]}
+{"id":"dev-0682","industry":"card","group":"conf","text":"수수료 인상안 관련 내부 검토용 문서를 표로 정리해 주세요.","confidential":true,"ids":[]}
+{"id":"dev-0683","industry":"card","group":"conf","text":"제휴 협상 관련 엠바고 문서를 표로 정리해 주세요.","confidential":true,"ids":[]}
+{"id":"dev-0684","industry":"card","group":"conf","text":"이 잠정 실적 초안은 미공개니 문장을 다듬어 줘.","confidential":true,"ids":[]}
+{"id":"dev-0685","industry":"card","group":"conf","text":"이 가맹점 수수료율 초안은 취급 주의니 문장을 다듬어 줘.","confidential":true,"ids":[]}
+{"id":"dev-0686","industry":"card","group":"conf","text":"인수합병 관련 엠바고 문서를 표로 정리해 주세요.","confidential":true,"ids":[]}
+{"id":"dev-0687","industry":"card","group":"conf","text":"다음은 엠바고인 가맹점 수수료율 내용입니다. 핵심만 뽑아 주세요.","confidential":true,"ids":[]}
+{"id":"dev-0688","industry":"card","group":"conf","text":"다음은 기밀인 잠정 실적 내용입니다. 핵심만 뽑아 주세요.","confidential":true,"ids":[]}
+{"id":"dev-0689","industry":"card","group":"conf","text":"이 잠정 실적 초안은 열람 제한이니 문장을 다듬어 줘.","confidential":true,"ids":[]}
+{"id":"dev-0690","industry":"card","group":"conf","text":"수수료 인상안 관련 Internal only 문서를 표로 정리해 주세요.","confidential":true,"ids":[]}
+{"id":"dev-0691","industry":"card","group":"conf","text":"내부용 가맹점 수수료율 자료를 요약해 줘.","confidential":true,"ids":[]}
+{"id":"dev-0692","industry":"card","group":"conf","text":"다음은 비밀 문서인 수수료 인상안 내용입니다. 핵심만 뽑아 주세요.","confidential":true,"ids":[]}
+{"id":"dev-0693","industry":"card","group":"conf","text":"이 인수합병 초안은 Internal only니 문장을 다듬어 줘.","confidential":true,"ids":[]}
+{"id":"dev-0694","industry":"card","group":"conf","text":"다음은 유출 금지인 가맹점 수수료율 내용입니다. 핵심만 뽑아 주세요.","confidential":true,"ids":[]}
+{"id":"dev-0695","industry":"card","group":"conf","text":"잠정 실적 관련 비공개 문서를 표로 정리해 주세요.","confidential":true,"ids":[]}
+{"id":"dev-0696","industry":"card","group":"conf","text":"다음은 유출 금지인 가맹점 수수료율 내용입니다. 핵심만 뽑아 주세요.","confidential":true,"ids":[]}
+{"id":"dev-0697","industry":"card","group":"conf","text":"가맹점 수수료율 관련 미공개 문서를 표로 정리해 주세요.","confidential":true,"ids":[]}
+{"id":"dev-0698","industry":"card","group":"conf","text":"제휴 협상 관련 내부 검토용 문서를 표로 정리해 주세요.","confidential":true,"ids":[]}
+{"id":"dev-0699","industry":"card","group":"conf","text":"다음은 기밀인 가맹점 수수료율 내용입니다. 핵심만 뽑아 주세요.","confidential":true,"ids":[]}
+{"id":"dev-0700","industry":"card","group":"conf","text":"인수합병 관련 미공개 문서를 표로 정리해 주세요.","confidential":true,"ids":[]}
+{"id":"dev-0701","industry":"card","group":"conf","text":"제휴 협상 관련 외부 유출 금지 문서를 표로 정리해 주세요.","confidential":true,"ids":[]}
+{"id":"dev-0702","industry":"card","group":"conf","text":"기밀 인수합병 자료를 요약해 줘.","confidential":true,"ids":[]}
+{"id":"dev-0703","industry":"card","group":"conf","text":"다음은 내부용인 제휴 협상 내용입니다. 핵심만 뽑아 주세요.","confidential":true,"ids":[]}
+{"id":"dev-0704","industry":"card","group":"conf","text":"제휴 협상 관련 대외비 문서를 표로 정리해 주세요.","confidential":true,"ids":[]}
+{"id":"dev-0705","industry":"card","group":"conf_split","text":"Confidential 표시가 된 자료예요. 잠정 실적 일정만 알려 줘.","confidential":true,"ids":[]}
+{"id":"dev-0706","industry":"card","group":"conf_split","text":"엠바고 표시가 된 자료예요. 제휴 협상 일정만 알려 줘.","confidential":true,"ids":[]}
+{"id":"dev-0707","industry":"card","group":"conf_split","text":"이 문서는 Internal only입니다. 가맹점 수수료율을 세 줄로 정리해 주세요.","confidential":true,"ids":[]}
+{"id":"dev-0708","industry":"card","group":"conf_split","text":"극비 표시가 된 자료예요. 잠정 실적 일정만 알려 줘.","confidential":true,"ids":[]}
+{"id":"dev-0709","industry":"card","group":"conf_split","text":"이 문서는 공개 금지입니다. 잠정 실적을 세 줄로 정리해 주세요.","confidential":true,"ids":[]}
+{"id":"dev-0710","industry":"card","group":"conf_split","text":"이 문서는 내부용입니다. 잠정 실적을 세 줄로 정리해 주세요.","confidential":true,"ids":[]}
+{"id":"dev-0711","industry":"card","group":"conf_split","text":"미공개 표시가 된 자료예요. 수수료 인상안 일정만 알려 줘.","confidential":true,"ids":[]}
+{"id":"dev-0712","industry":"card","group":"conf_split","text":"비공개 표시가 된 자료예요. 수수료 인상안 일정만 알려 줘.","confidential":true,"ids":[]}
+{"id":"dev-0713","industry":"card","group":"conf_split","text":"이 문서는 Internal only입니다. 가맹점 수수료율을 세 줄로 정리해 주세요.","confidential":true,"ids":[]}
+{"id":"dev-0714","industry":"card","group":"conf_split","text":"외부 유출 금지 표시가 된 자료예요. 수수료 인상안 일정만 알려 줘.","confidential":true,"ids":[]}
+{"id":"dev-0715","industry":"card","group":"conf_split","text":"유출 금지 표시가 된 자료예요. 수수료 인상안 일정만 알려 줘.","confidential":true,"ids":[]}
+{"id":"dev-0716","industry":"card","group":"conf_split","text":"이 문서는 비밀 문서입니다. 수수료 인상안을 세 줄로 정리해 주세요.","confidential":true,"ids":[]}
+{"id":"dev-0717","industry":"card","group":"conf_para","text":"다음 달 가맹점 요율 조정 관련 배포 금지 문서를 표로 정리해 주세요.","confidential":true,"ids":[]}
+{"id":"dev-0718","industry":"card","group":"conf_para","text":"대외비 다음 달 가맹점 요율 조정 자료를 요약해 줘.","confidential":true,"ids":[]}
+{"id":"dev-0719","industry":"card","group":"conf_para","text":"다음은 보안 문서인 다음 달 가맹점 요율 조정 내용입니다. 핵심만 뽑아 주세요.","confidential":true,"ids":[]}
+{"id":"dev-0720","industry":"card","group":"conf_para","text":"다음은 대외비인 다음 달 가맹점 요율 조정 내용입니다. 핵심만 뽑아 주세요.","confidential":true,"ids":[]}
+{"id":"dev-0721","industry":"card","group":"conf_para","text":"항공사와 묶음 상품 협의 관련 열람 제한 문서를 표로 정리해 주세요.","confidential":true,"ids":[]}
+{"id":"dev-0722","industry":"card","group":"conf_para","text":"다음은 대외비인 항공사와 묶음 상품 협의 내용입니다. 핵심만 뽑아 주세요.","confidential":true,"ids":[]}
+{"id":"dev-0723","industry":"card","group":"far","text":"Confidential 문서 관리 규정을 알려 줘. 오늘 회의는 3시입니다. 인수합병 관련 기사 요약도 부탁해.","confidential":false,"ids":[]}
+{"id":"dev-0724","industry":"card","group":"far","text":"Confidential 문서 관리 규정을 알려 줘. 오늘 회의는 3시입니다. 가맹점 수수료율 관련 기사 요약도 부탁해.","confidential":false,"ids":[]}
+{"id":"dev-0725","industry":"card","group":"far","text":"미공개 문서 관리 규정을 알려 줘. 오늘 회의는 3시입니다. 잠정 실적 관련 기사 요약도 부탁해.","confidential":false,"ids":[]}
+{"id":"dev-0726","industry":"card","group":"far","text":"보안 문서 문서 관리 규정을 알려 줘. 오늘 회의는 3시입니다. 제휴 협상 관련 기사 요약도 부탁해.","confidential":false,"ids":[]}
+{"id":"dev-0727","industry":"card","group":"far","text":"기밀 문서 관리 규정을 알려 줘. 오늘 회의는 3시입니다. 수수료 인상안 관련 기사 요약도 부탁해.","confidential":false,"ids":[]}
+{"id":"dev-0728","industry":"card","group":"far","text":"배포 금지 문서 관리 규정을 알려 줘. 오늘 회의는 3시입니다. 제휴 협상 관련 기사 요약도 부탁해.","confidential":false,"ids":[]}
+{"id":"dev-0729","industry":"card","group":"marker_only","text":"열람 제한 표시는 문서 첫 장 위쪽에 붙입니다.","confidential":false,"ids":[]}
+{"id":"dev-0730","industry":"card","group":"marker_only","text":"Internal only 표시는 문서 첫 장 위쪽에 붙입니다.","confidential":false,"ids":[]}
+{"id":"dev-0731","industry":"card","group":"marker_only","text":"열람 제한 표시는 문서 첫 장 위쪽에 붙입니다.","confidential":false,"ids":[]}
+{"id":"dev-0732","industry":"card","group":"marker_only","text":"비밀 문서 표시는 문서 첫 장 위쪽에 붙입니다.","confidential":false,"ids":[]}
+{"id":"dev-0733","industry":"card","group":"marker_only","text":"엠바고 표시는 문서 첫 장 위쪽에 붙입니다.","confidential":false,"ids":[]}
+{"id":"dev-0734","industry":"card","group":"marker_only","text":"대외비 문서는 외부 서비스에 올리지 마세요.","confidential":false,"ids":[]}
+{"id":"dev-0735","industry":"card","group":"marker_only","text":"내부용 문서는 외부 서비스에 올리지 마세요.","confidential":false,"ids":[]}
+{"id":"dev-0736","industry":"card","group":"marker_only","text":"열람 제한 표시는 문서 첫 장 위쪽에 붙입니다.","confidential":false,"ids":[]}
+{"id":"dev-0737","industry":"card","group":"marker_only","text":"보안 문서 표시는 문서 첫 장 위쪽에 붙입니다.","confidential":false,"ids":[]}
+{"id":"dev-0738","industry":"card","group":"marker_only","text":"Confidential 자료의 보관 기간을 알려 줘.","confidential":false,"ids":[]}
+{"id":"dev-0739","industry":"card","group":"marker_only","text":"사내 한정 표시는 문서 첫 장 위쪽에 붙입니다.","confidential":false,"ids":[]}
+{"id":"dev-0740","industry":"card","group":"marker_only","text":"내부용 문서는 외부 서비스에 올리지 마세요.","confidential":false,"ids":[]}
+{"id":"dev-0741","industry":"card","group":"marker_only","text":"비공개 자료의 보관 기간을 알려 줘.","confidential":false,"ids":[]}
+{"id":"dev-0742","industry":"card","group":"marker_only","text":"대외비 문서는 외부 서비스에 올리지 마세요.","confidential":false,"ids":[]}
+{"id":"dev-0743","industry":"card","group":"marker_only","text":"배포 금지 표시는 문서 첫 장 위쪽에 붙입니다.","confidential":false,"ids":[]}
+{"id":"dev-0744","industry":"card","group":"marker_only","text":"내부 검토용 자료의 보관 기간을 알려 줘.","confidential":false,"ids":[]}
+{"id":"dev-0745","industry":"card","group":"marker_only","text":"취급 주의 자료의 보관 기간을 알려 줘.","confidential":false,"ids":[]}
+{"id":"dev-0746","industry":"card","group":"marker_only","text":"대외비 문서는 외부 서비스에 올리지 마세요.","confidential":false,"ids":[]}
+{"id":"dev-0747","industry":"card","group":"subject_only","text":"수수료 인상안의 일반적인 절차를 설명해 줘.","confidential":false,"ids":[]}
+{"id":"dev-0748","industry":"card","group":"subject_only","text":"수수료 인상안 기사들을 요약해 줘.","confidential":false,"ids":[]}
+{"id":"dev-0749","industry":"card","group":"subject_only","text":"가맹점 수수료율의 일반적인 절차를 설명해 줘.","confidential":false,"ids":[]}
+{"id":"dev-0750","industry":"card","group":"subject_only","text":"인수합병 기사들을 요약해 줘.","confidential":false,"ids":[]}
+{"id":"dev-0751","industry":"card","group":"subject_only","text":"인수합병의 일반적인 절차를 설명해 줘.","confidential":false,"ids":[]}
+{"id":"dev-0752","industry":"card","group":"subject_only","text":"인수합병의 일반적인 절차를 설명해 줘.","confidential":false,"ids":[]}
+{"id":"dev-0753","industry":"card","group":"subject_only","text":"가맹점 수수료율 관련 법령을 찾아 줘.","confidential":false,"ids":[]}
+{"id":"dev-0754","industry":"card","group":"subject_only","text":"제휴 협상 기사들을 요약해 줘.","confidential":false,"ids":[]}
+{"id":"dev-0755","industry":"card","group":"subject_only","text":"수수료 인상안 관련 법령을 찾아 줘.","confidential":false,"ids":[]}
+{"id":"dev-0756","industry":"card","group":"subject_only","text":"제휴 협상의 일반적인 절차를 설명해 줘.","confidential":false,"ids":[]}
+{"id":"dev-0757","industry":"card","group":"subject_only","text":"수수료 인상안의 일반적인 절차를 설명해 줘.","confidential":false,"ids":[]}
+{"id":"dev-0758","industry":"card","group":"subject_only","text":"수수료 인상안 기사들을 요약해 줘.","confidential":false,"ids":[]}
+{"id":"dev-0759","industry":"card","group":"subject_only","text":"잠정 실적의 일반적인 절차를 설명해 줘.","confidential":false,"ids":[]}
+{"id":"dev-0760","industry":"card","group":"subject_only","text":"수수료 인상안 관련 법령을 찾아 줘.","confidential":false,"ids":[]}
+{"id":"dev-0761","industry":"card","group":"subject_only","text":"잠정 실적 관련 법령을 찾아 줘.","confidential":false,"ids":[]}
+{"id":"dev-0762","industry":"card","group":"subject_only","text":"잠정 실적 기사들을 요약해 줘.","confidential":false,"ids":[]}
+{"id":"dev-0763","industry":"card","group":"subject_only","text":"수수료 인상안의 일반적인 절차를 설명해 줘.","confidential":false,"ids":[]}
+{"id":"dev-0764","industry":"card","group":"subject_only","text":"인수합병 기사들을 요약해 줘.","confidential":false,"ids":[]}
+{"id":"dev-0765","industry":"card","group":"business","text":"회의록 초안을 세 문단으로 요약해 줘.","confidential":false,"ids":[]}
+{"id":"dev-0766","industry":"card","group":"business","text":"연차 신청 방법을 알려 줘.","confidential":false,"ids":[]}
+{"id":"dev-0767","industry":"card","group":"business","text":"엑셀에서 중복 행을 지우는 방법은?","confidential":false,"ids":[]}
+{"id":"dev-0768","industry":"card","group":"business","text":"민원 응대 매뉴얼을 쉬운 말로 바꿔 줘.","confidential":false,"ids":[]}
+{"id":"dev-0769","industry":"card","group":"business","text":"출장비 정산 절차를 알려 주세요.","confidential":false,"ids":[]}
+{"id":"dev-0770","industry":"card","group":"business","text":"엑셀에서 중복 행을 지우는 방법은?","confidential":false,"ids":[]}
+{"id":"dev-0771","industry":"card","group":"business","text":"출장비 정산 절차를 알려 주세요.","confidential":false,"ids":[]}
+{"id":"dev-0772","industry":"card","group":"business","text":"이번 달 교육 일정은 10일과 17일입니다.","confidential":false,"ids":[]}
+{"id":"dev-0773","industry":"card","group":"business","text":"이번 달 교육 일정은 10일과 17일입니다.","confidential":false,"ids":[]}
+{"id":"dev-0774","industry":"card","group":"business","text":"엑셀에서 중복 행을 지우는 방법은?","confidential":false,"ids":[]}
+{"id":"dev-0775","industry":"card","group":"business","text":"보고서 문장을 공손하게 고쳐 줘.","confidential":false,"ids":[]}
+{"id":"dev-0776","industry":"card","group":"business","text":"이번 달 교육 일정은 10일과 17일입니다.","confidential":false,"ids":[]}
+{"id":"dev-0777","industry":"card","group":"business","text":"보고서 문장을 공손하게 고쳐 줘.","confidential":false,"ids":[]}
+{"id":"dev-0778","industry":"card","group":"business","text":"보고서 문장을 공손하게 고쳐 줘.","confidential":false,"ids":[]}
+{"id":"dev-0779","industry":"card","group":"business","text":"회의록 초안을 세 문단으로 요약해 줘.","confidential":false,"ids":[]}
+{"id":"dev-0780","industry":"card","group":"business","text":"민원 응대 매뉴얼을 쉬운 말로 바꿔 줘.","confidential":false,"ids":[]}
+{"id":"dev-0781","industry":"card","group":"id","text":"회원번호 2026-928025 의 담당자를 찾아 줘.","confidential":false,"ids":["2026-928025"]}
+{"id":"dev-0782","industry":"card","group":"id","text":"고객번호는 64655087 입니다. 진행 상황을 알려 주세요.","confidential":false,"ids":["64655087"]}
+{"id":"dev-0783","industry":"card","group":"id","text":"고객번호: 3444382761 건을 처리해 줘.","confidential":false,"ids":["3444382761"]}
+{"id":"dev-0784","industry":"card","group":"id","text":"회원번호: 20205049 건을 처리해 줘.","confidential":false,"ids":["20205049"]}
+{"id":"dev-0785","industry":"card","group":"id","text":"승인번호는 95811958 입니다. 진행 상황을 알려 주세요.","confidential":false,"ids":["95811958"]}
+{"id":"dev-0786","industry":"card","group":"id","text":"승인번호는 K148070 입니다. 진행 상황을 알려 주세요.","confidential":false,"ids":["K148070"]}
+{"id":"dev-0787","industry":"card","group":"id","text":"신청번호: P364043 건을 처리해 줘.","confidential":false,"ids":["P364043"]}
+{"id":"dev-0788","industry":"card","group":"id","text":"승인번호 57659238 의 담당자를 찾아 줘.","confidential":false,"ids":["57659238"]}
+{"id":"dev-0789","industry":"card","group":"id","text":"승인번호: 89745270 건을 처리해 줘.","confidential":false,"ids":["89745270"]}
+{"id":"dev-0790","industry":"card","group":"id","text":"신청번호: CL-2026-31856 건을 처리해 줘.","confidential":false,"ids":["CL-2026-31856"]}
+{"id":"dev-0791","industry":"card","group":"id","text":"가맹점번호: PL-2026-26099 건을 처리해 줘.","confidential":false,"ids":["PL-2026-26099"]}
+{"id":"dev-0792","industry":"card","group":"id","text":"회원번호: 08404634 건을 처리해 줘.","confidential":false,"ids":["08404634"]}
+{"id":"dev-0793","industry":"card","group":"id","text":"고객번호: 0161668115 건을 처리해 줘.","confidential":false,"ids":["0161668115"]}
+{"id":"dev-0794","industry":"card","group":"id","text":"회원번호 73560421 의 담당자를 찾아 줘.","confidential":false,"ids":["73560421"]}
+{"id":"dev-0795","industry":"card","group":"id","text":"가맹점번호는 A969566 입니다. 진행 상황을 알려 주세요.","confidential":false,"ids":["A969566"]}
+{"id":"dev-0796","industry":"card","group":"id","text":"신청번호는 PL-2026-87190 입니다. 진행 상황을 알려 주세요.","confidential":false,"ids":["PL-2026-87190"]}
+{"id":"dev-0797","industry":"card","group":"id","text":"회원번호 LN-2026-58307 의 담당자를 찾아 줘.","confidential":false,"ids":["LN-2026-58307"]}
+{"id":"dev-0798","industry":"card","group":"id","text":"고객번호: K606796 건을 처리해 줘.","confidential":false,"ids":["K606796"]}
+{"id":"dev-0799","industry":"card","group":"id","text":"신청번호 74772379 의 담당자를 찾아 줘.","confidential":false,"ids":["74772379"]}
+{"id":"dev-0800","industry":"card","group":"id","text":"가맹점번호는 2026-919741 입니다. 진행 상황을 알려 주세요.","confidential":false,"ids":["2026-919741"]}
+{"id":"dev-0801","industry":"card","group":"id","text":"회원번호: 2026-965741 건을 처리해 줘.","confidential":false,"ids":["2026-965741"]}
+{"id":"dev-0802","industry":"card","group":"id","text":"신청번호는 38888058 입니다. 진행 상황을 알려 주세요.","confidential":false,"ids":["38888058"]}
+{"id":"dev-0803","industry":"card","group":"id","text":"회원번호는 40124480 입니다. 진행 상황을 알려 주세요.","confidential":false,"ids":["40124480"]}
+{"id":"dev-0804","industry":"card","group":"id","text":"가맹점번호는 PL-2026-49583 입니다. 진행 상황을 알려 주세요.","confidential":false,"ids":["PL-2026-49583"]}
+{"id":"dev-0805","industry":"card","group":"id_neg","text":"고객번호를 어디서 확인하나요?","confidential":false,"ids":[]}
+{"id":"dev-0806","industry":"card","group":"id_neg","text":"주문 LN-2026-37989 건의 배송을 확인해 줘.","confidential":false,"ids":[]}
+{"id":"dev-0807","industry":"card","group":"id_neg","text":"주문 2352824649 건의 배송을 확인해 줘.","confidential":false,"ids":[]}
+{"id":"dev-0808","industry":"card","group":"id_neg","text":"주문 76726612 건의 배송을 확인해 줘.","confidential":false,"ids":[]}
+{"id":"dev-0809","industry":"card","group":"id_neg","text":"신청번호를 어디서 확인하나요?","confidential":false,"ids":[]}
+{"id":"dev-0810","industry":"card","group":"id_neg","text":"주문 AC-2026-19966 건의 배송을 확인해 줘.","confidential":false,"ids":[]}
+{"id":"dev-0811","industry":"card","group":"id_neg","text":"고객번호 발급 절차를 알려 줘.","confidential":false,"ids":[]}
+{"id":"dev-0812","industry":"card","group":"id_neg","text":"가맹점번호를 어디서 확인하나요?","confidential":false,"ids":[]}
+{"id":"dev-0813","industry":"card","group":"id_neg","text":"고객번호 발급 절차를 알려 줘.","confidential":false,"ids":[]}
+{"id":"dev-0814","industry":"card","group":"id_neg","text":"주문 LN-2026-24590 건의 배송을 확인해 줘.","confidential":false,"ids":[]}
+{"id":"dev-0815","industry":"card","group":"id_neg","text":"승인번호 발급 절차를 알려 줘.","confidential":false,"ids":[]}
+{"id":"dev-0816","industry":"card","group":"id_neg","text":"주문 83751305 건의 배송을 확인해 줘.","confidential":false,"ids":[]}
+{"id":"dev-0817","industry":"insurance","group":"conf","text":"Internal only 잠정 실적 자료를 요약해 줘.","confidential":true,"ids":[]}
+{"id":"dev-0818","industry":"insurance","group":"conf","text":"요율 인상안 관련 비밀 문서 문서를 표로 정리해 주세요.","confidential":true,"ids":[]}
+{"id":"dev-0819","industry":"insurance","group":"conf","text":"이 인수합병 초안은 비밀 문서니 문장을 다듬어 줘.","confidential":true,"ids":[]}
+{"id":"dev-0820","industry":"insurance","group":"conf","text":"열람 제한 인수합병 자료를 요약해 줘.","confidential":true,"ids":[]}
+{"id":"dev-0821","industry":"insurance","group":"conf","text":"이 인수합병 초안은 사내 한정이니 문장을 다듬어 줘.","confidential":true,"ids":[]}
+{"id":"dev-0822","industry":"insurance","group":"conf","text":"이 보험금 지급 심사 초안은 극비니 문장을 다듬어 줘.","confidential":true,"ids":[]}
+{"id":"dev-0823","industry":"insurance","group":"conf","text":"이 잠정 실적 초안은 엠바고니 문장을 다듬어 줘.","confidential":true,"ids":[]}
+{"id":"dev-0824","industry":"insurance","group":"conf","text":"다음은 내부용인 인수합병 내용입니다. 핵심만 뽑아 주세요.","confidential":true,"ids":[]}
+{"id":"dev-0825","industry":"insurance","group":"conf","text":"보안 문서 인수합병 자료를 요약해 줘.","confidential":true,"ids":[]}
+{"id":"dev-0826","industry":"insurance","group":"conf","text":"잠정 실적 관련 내부용 문서를 표로 정리해 주세요.","confidential":true,"ids":[]}
+{"id":"dev-0827","industry":"insurance","group":"conf","text":"이 인수 심사 초안은 Confidential니 문장을 다듬어 줘.","confidential":true,"ids":[]}
+{"id":"dev-0828","industry":"insurance","group":"conf","text":"내부용 잠정 실적 자료를 요약해 줘.","confidential":true,"ids":[]}
+{"id":"dev-0829","industry":"insurance","group":"conf","text":"인수합병 관련 기밀 문서를 표로 정리해 주세요.","confidential":true,"ids":[]}
+{"id":"dev-0830","industry":"insurance","group":"conf","text":"이 잠정 실적 초안은 보안 문서니 문장을 다듬어 줘.","confidential":true,"ids":[]}
+{"id":"dev-0831","industry":"insurance","group":"conf","text":"이 요율 인상안 초안은 비공개니 문장을 다듬어 줘.","confidential":true,"ids":[]}
+{"id":"dev-0832","industry":"insurance","group":"conf","text":"내부 검토용 손해율 자료를 요약해 줘.","confidential":true,"ids":[]}
+{"id":"dev-0833","industry":"insurance","group":"conf","text":"다음은 유출 금지인 인수 심사 내용입니다. 핵심만 뽑아 주세요.","confidential":true,"ids":[]}
+{"id":"dev-0834","industry":"insurance","group":"conf","text":"미공개 손해율 자료를 요약해 줘.","confidential":true,"ids":[]}
+{"id":"dev-0835","industry":"insurance","group":"conf","text":"이 인수 심사 초안은 비밀 문서니 문장을 다듬어 줘.","confidential":true,"ids":[]}
+{"id":"dev-0836","industry":"insurance","group":"conf","text":"취급 주의 보험금 지급 심사 자료를 요약해 줘.","confidential":true,"ids":[]}
+{"id":"dev-0837","industry":"insurance","group":"conf","text":"유출 금지 요율 인상안 자료를 요약해 줘.","confidential":true,"ids":[]}
+{"id":"dev-0838","industry":"insurance","group":"conf","text":"요율 인상안 관련 보안 문서 문서를 표로 정리해 주세요.","confidential":true,"ids":[]}
+{"id":"dev-0839","industry":"insurance","group":"conf","text":"이 잠정 실적 초안은 극비니 문장을 다듬어 줘.","confidential":true,"ids":[]}
+{"id":"dev-0840","industry":"insurance","group":"conf","text":"이 인수합병 초안은 기밀이니 문장을 다듬어 줘.","confidential":true,"ids":[]}
+{"id":"dev-0841","industry":"insurance","group":"conf_split","text":"취급 주의 표시가 된 자료예요. 요율 인상안 일정만 알려 줘.","confidential":true,"ids":[]}
+{"id":"dev-0842","industry":"insurance","group":"conf_split","text":"이 문서는 공개 금지입니다. 요율 인상안을 세 줄로 정리해 주세요.","confidential":true,"ids":[]}
+{"id":"dev-0843","industry":"insurance","group":"conf_split","text":"이 문서는 엠바고입니다. 손해율을 세 줄로 정리해 주세요.","confidential":true,"ids":[]}
+{"id":"dev-0844","industry":"insurance","group":"conf_split","text":"이 문서는 배포 금지입니다. 보험금 지급 심사를 세 줄로 정리해 주세요.","confidential":true,"ids":[]}
+{"id":"dev-0845","industry":"insurance","group":"conf_split","text":"Internal only 표시가 된 자료예요. 인수합병 일정만 알려 줘.","confidential":true,"ids":[]}
+{"id":"dev-0846","industry":"insurance","group":"conf_split","text":"Internal only 표시가 된 자료예요. 잠정 실적 일정만 알려 줘.","confidential":true,"ids":[]}
+{"id":"dev-0847","industry":"insurance","group":"conf_split","text":"이 문서는 비공개입니다. 인수합병을 세 줄로 정리해 주세요.","confidential":true,"ids":[]}
+{"id":"dev-0848","industry":"insurance","group":"conf_split","text":"이 문서는 대외비입니다. 인수합병을 세 줄로 정리해 주세요.","confidential":true,"ids":[]}
+{"id":"dev-0849","industry":"insurance","group":"conf_split","text":"이 문서는 보안 문서입니다. 인수합병을 세 줄로 정리해 주세요.","confidential":true,"ids":[]}
+{"id":"dev-0850","industry":"insurance","group":"conf_split","text":"극비 표시가 된 자료예요. 인수합병 일정만 알려 줘.","confidential":true,"ids":[]}
+{"id":"dev-0851","industry":"insurance","group":"conf_split","text":"이 문서는 기밀입니다. 인수합병을 세 줄로 정리해 주세요.","confidential":true,"ids":[]}
+{"id":"dev-0852","industry":"insurance","group":"conf_split","text":"이 문서는 Internal only입니다. 요율 인상안을 세 줄로 정리해 주세요.","confidential":true,"ids":[]}
+{"id":"dev-0853","industry":"insurance","group":"conf_para","text":"유출 금지 자동차 보험료 조정 계획 자료를 요약해 줘.","confidential":true,"ids":[]}
+{"id":"dev-0854","industry":"insurance","group":"conf_para","text":"다음은 유출 금지인 청구 건 지급 거절 기준 내용입니다. 핵심만 뽑아 주세요.","confidential":true,"ids":[]}
+{"id":"dev-0855","industry":"insurance","group":"conf_para","text":"자동차 보험료 조정 계획 관련 열람 제한 문서를 표로 정리해 주세요.","confidential":true,"ids":[]}
+{"id":"dev-0856","industry":"insurance","group":"conf_para","text":"다음은 배포 금지인 청구 건 지급 거절 기준 내용입니다. 핵심만 뽑아 주세요.","confidential":true,"ids":[]}
+{"id":"dev-0857","industry":"insurance","group":"conf_para","text":"내부용 자동차 보험료 조정 계획 자료를 요약해 줘.","confidential":true,"ids":[]}
+{"id":"dev-0858","industry":"insurance","group":"conf_para","text":"자동차 보험료 조정 계획 관련 대외비 문서를 표로 정리해 주세요.","confidential":true,"ids":[]}
+{"id":"dev-0859","industry":"insurance","group":"far","text":"기밀 문서 관리 규정을 알려 줘. 오늘 회의는 3시입니다. 보험금 지급 심사 관련 기사 요약도 부탁해.","confidential":false,"ids":[]}
+{"id":"dev-0860","industry":"insurance","group":"far","text":"취급 주의 문서 관리 규정을 알려 줘. 오늘 회의는 3시입니다. 보험금 지급 심사 관련 기사 요약도 부탁해.","confidential":false,"ids":[]}
+{"id":"dev-0861","industry":"insurance","group":"far","text":"공개 금지 문서 관리 규정을 알려 줘. 오늘 회의는 3시입니다. 보험금 지급 심사 관련 기사 요약도 부탁해.","confidential":false,"ids":[]}
+{"id":"dev-0862","industry":"insurance","group":"far","text":"극비 문서 관리 규정을 알려 줘. 오늘 회의는 3시입니다. 요율 인상안 관련 기사 요약도 부탁해.","confidential":false,"ids":[]}
+{"id":"dev-0863","industry":"insurance","group":"far","text":"열람 제한 문서 관리 규정을 알려 줘. 오늘 회의는 3시입니다. 인수합병 관련 기사 요약도 부탁해.","confidential":false,"ids":[]}
+{"id":"dev-0864","industry":"insurance","group":"far","text":"보안 문서 문서 관리 규정을 알려 줘. 오늘 회의는 3시입니다. 보험금 지급 심사 관련 기사 요약도 부탁해.","confidential":false,"ids":[]}
+{"id":"dev-0865","industry":"insurance","group":"marker_only","text":"보안 문서 자료의 보관 기간을 알려 줘.","confidential":false,"ids":[]}
+{"id":"dev-0866","industry":"insurance","group":"marker_only","text":"비밀 문서 문서는 외부 서비스에 올리지 마세요.","confidential":false,"ids":[]}
+{"id":"dev-0867","industry":"insurance","group":"marker_only","text":"Confidential 표시는 문서 첫 장 위쪽에 붙입니다.","confidential":false,"ids":[]}
+{"id":"dev-0868","industry":"insurance","group":"marker_only","text":"비공개 문서는 외부 서비스에 올리지 마세요.","confidential":false,"ids":[]}
+{"id":"dev-0869","industry":"insurance","group":"marker_only","text":"Confidential 자료의 보관 기간을 알려 줘.","confidential":false,"ids":[]}
+{"id":"dev-0870","industry":"insurance","group":"marker_only","text":"내부 검토용 자료의 보관 기간을 알려 줘.","confidential":false,"ids":[]}
+{"id":"dev-0871","industry":"insurance","group":"marker_only","text":"극비 문서는 외부 서비스에 올리지 마세요.","confidential":false,"ids":[]}
+{"id":"dev-0872","industry":"insurance","group":"marker_only","text":"극비 문서는 외부 서비스에 올리지 마세요.","confidential":false,"ids":[]}
+{"id":"dev-0873","industry":"insurance","group":"marker_only","text":"대외비 문서는 외부 서비스에 올리지 마세요.","confidential":false,"ids":[]}
+{"id":"dev-0874","industry":"insurance","group":"marker_only","text":"열람 제한 문서는 외부 서비스에 올리지 마세요.","confidential":false,"ids":[]}
+{"id":"dev-0875","industry":"insurance","group":"marker_only","text":"사내 한정 문서는 외부 서비스에 올리지 마세요.","confidential":false,"ids":[]}
+{"id":"dev-0876","industry":"insurance","group":"marker_only","text":"대외비 자료의 보관 기간을 알려 줘.","confidential":false,"ids":[]}
+{"id":"dev-0877","industry":"insurance","group":"marker_only","text":"사내 한정 자료의 보관 기간을 알려 줘.","confidential":false,"ids":[]}
+{"id":"dev-0878","industry":"insurance","group":"marker_only","text":"비밀 문서 문서는 외부 서비스에 올리지 마세요.","confidential":false,"ids":[]}
+{"id":"dev-0879","industry":"insurance","group":"marker_only","text":"열람 제한 자료의 보관 기간을 알려 줘.","confidential":false,"ids":[]}
+{"id":"dev-0880","industry":"insurance","group":"marker_only","text":"미공개 표시는 문서 첫 장 위쪽에 붙입니다.","confidential":false,"ids":[]}
+{"id":"dev-0881","industry":"insurance","group":"marker_only","text":"미공개 문서는 외부 서비스에 올리지 마세요.","confidential":false,"ids":[]}
+{"id":"dev-0882","industry":"insurance","group":"marker_only","text":"비밀 문서 문서는 외부 서비스에 올리지 마세요.","confidential":false,"ids":[]}
+{"id":"dev-0883","industry":"insurance","group":"subject_only","text":"손해율 관련 법령을 찾아 줘.","confidential":false,"ids":[]}
+{"id":"dev-0884","industry":"insurance","group":"subject_only","text":"보험금 지급 심사 관련 법령을 찾아 줘.","confidential":false,"ids":[]}
+{"id":"dev-0885","industry":"insurance","group":"subject_only","text":"잠정 실적의 일반적인 절차를 설명해 줘.","confidential":false,"ids":[]}
+{"id":"dev-0886","industry":"insurance","group":"subject_only","text":"손해율의 일반적인 절차를 설명해 줘.","confidential":false,"ids":[]}
+{"id":"dev-0887","industry":"insurance","group":"subject_only","text":"잠정 실적 관련 법령을 찾아 줘.","confidential":false,"ids":[]}
+{"id":"dev-0888","industry":"insurance","group":"subject_only","text":"보험금 지급 심사 관련 법령을 찾아 줘.","confidential":false,"ids":[]}
+{"id":"dev-0889","industry":"insurance","group":"subject_only","text":"인수 심사 관련 법령을 찾아 줘.","confidential":false,"ids":[]}
+{"id":"dev-0890","industry":"insurance","group":"subject_only","text":"요율 인상안 기사들을 요약해 줘.","confidential":false,"ids":[]}
+{"id":"dev-0891","industry":"insurance","group":"subject_only","text":"인수 심사 관련 법령을 찾아 줘.","confidential":false,"ids":[]}
+{"id":"dev-0892","industry":"insurance","group":"subject_only","text":"손해율 관련 법령을 찾아 줘.","confidential":false,"ids":[]}
+{"id":"dev-0893","industry":"insurance","group":"subject_only","text":"인수 심사의 일반적인 절차를 설명해 줘.","confidential":false,"ids":[]}
+{"id":"dev-0894","industry":"insurance","group":"subject_only","text":"보험금 지급 심사 관련 법령을 찾아 줘.","confidential":false,"ids":[]}
+{"id":"dev-0895","industry":"insurance","group":"subject_only","text":"손해율 관련 법령을 찾아 줘.","confidential":false,"ids":[]}
+{"id":"dev-0896","industry":"insurance","group":"subject_only","text":"요율 인상안의 일반적인 절차를 설명해 줘.","confidential":false,"ids":[]}
+{"id":"dev-0897","industry":"insurance","group":"subject_only","text":"인수 심사 관련 법령을 찾아 줘.","confidential":false,"ids":[]}
+{"id":"dev-0898","industry":"insurance","group":"subject_only","text":"잠정 실적 관련 법령을 찾아 줘.","confidential":false,"ids":[]}
+{"id":"dev-0899","industry":"insurance","group":"subject_only","text":"보험금 지급 심사 관련 법령을 찾아 줘.","confidential":false,"ids":[]}
+{"id":"dev-0900","industry":"insurance","group":"subject_only","text":"인수 심사 관련 법령을 찾아 줘.","confidential":false,"ids":[]}
+{"id":"dev-0901","industry":"insurance","group":"business","text":"출장비 정산 절차를 알려 주세요.","confidential":false,"ids":[]}
+{"id":"dev-0902","industry":"insurance","group":"business","text":"이번 달 교육 일정은 10일과 17일입니다.","confidential":false,"ids":[]}
+{"id":"dev-0903","industry":"insurance","group":"business","text":"출장비 정산 절차를 알려 주세요.","confidential":false,"ids":[]}
+{"id":"dev-0904","industry":"insurance","group":"business","text":"엑셀에서 중복 행을 지우는 방법은?","confidential":false,"ids":[]}
+{"id":"dev-0905","industry":"insurance","group":"business","text":"이번 달 교육 일정은 10일과 17일입니다.","confidential":false,"ids":[]}
+{"id":"dev-0906","industry":"insurance","group":"business","text":"이번 달 교육 일정은 10일과 17일입니다.","confidential":false,"ids":[]}
+{"id":"dev-0907","industry":"insurance","group":"business","text":"민원 응대 매뉴얼을 쉬운 말로 바꿔 줘.","confidential":false,"ids":[]}
+{"id":"dev-0908","industry":"insurance","group":"business","text":"출장비 정산 절차를 알려 주세요.","confidential":false,"ids":[]}
+{"id":"dev-0909","industry":"insurance","group":"business","text":"이번 달 교육 일정은 10일과 17일입니다.","confidential":false,"ids":[]}
+{"id":"dev-0910","industry":"insurance","group":"business","text":"보고서 문장을 공손하게 고쳐 줘.","confidential":false,"ids":[]}
+{"id":"dev-0911","industry":"insurance","group":"business","text":"보고서 문장을 공손하게 고쳐 줘.","confidential":false,"ids":[]}
+{"id":"dev-0912","industry":"insurance","group":"business","text":"다음 주 부서 회의 안건을 정리해 주세요.","confidential":false,"ids":[]}
+{"id":"dev-0913","industry":"insurance","group":"business","text":"회의록 초안을 세 문단으로 요약해 줘.","confidential":false,"ids":[]}
+{"id":"dev-0914","industry":"insurance","group":"business","text":"이번 달 교육 일정은 10일과 17일입니다.","confidential":false,"ids":[]}
+{"id":"dev-0915","industry":"insurance","group":"business","text":"이번 달 교육 일정은 10일과 17일입니다.","confidential":false,"ids":[]}
+{"id":"dev-0916","industry":"insurance","group":"business","text":"출장비 정산 절차를 알려 주세요.","confidential":false,"ids":[]}
+{"id":"dev-0917","industry":"insurance","group":"id","text":"계약번호는 37882306 입니다. 진행 상황을 알려 주세요.","confidential":false,"ids":["37882306"]}
+{"id":"dev-0918","industry":"insurance","group":"id","text":"증권번호는 9118657226 입니다. 진행 상황을 알려 주세요.","confidential":false,"ids":["9118657226"]}
+{"id":"dev-0919","industry":"insurance","group":"id","text":"사고접수번호 K271908 의 담당자를 찾아 줘.","confidential":false,"ids":["K271908"]}
+{"id":"dev-0920","industry":"insurance","group":"id","text":"보험증권번호는 99574289 입니다. 진행 상황을 알려 주세요.","confidential":false,"ids":["99574289"]}
+{"id":"dev-0921","industry":"insurance","group":"id","text":"보험증권번호 LN-2026-70513 의 담당자를 찾아 줘.","confidential":false,"ids":["LN-2026-70513"]}
+{"id":"dev-0922","industry":"insurance","group":"id","text":"사고접수번호: 2026-291716 건을 처리해 줘.","confidential":false,"ids":["2026-291716"]}
+{"id":"dev-0923","industry":"insurance","group":"id","text":"접수번호: 82599576 건을 처리해 줘.","confidential":false,"ids":["82599576"]}
+{"id":"dev-0924","industry":"insurance","group":"id","text":"사고접수번호: 29435894 건을 처리해 줘.","confidential":false,"ids":["29435894"]}
+{"id":"dev-0925","industry":"insurance","group":"id","text":"계약번호 LN-2026-56050 의 담당자를 찾아 줘.","confidential":false,"ids":["LN-2026-56050"]}
+{"id":"dev-0926","industry":"insurance","group":"id","text":"증권번호는 9253013478 입니다. 진행 상황을 알려 주세요.","confidential":false,"ids":["9253013478"]}
+{"id":"dev-0927","industry":"insurance","group":"id","text":"계약번호: 76142719 건을 처리해 줘.","confidential":false,"ids":["76142719"]}
+{"id":"dev-0928","industry":"insurance","group":"id","text":"접수번호: 69224664 건을 처리해 줘.","confidential":false,"ids":["69224664"]}
+{"id":"dev-0929","industry":"insurance","group":"id","text":"사고번호: 21666902 건을 처리해 줘.","confidential":false,"ids":["21666902"]}
+{"id":"dev-0930","industry":"insurance","group":"id","text":"사고접수번호 6429165579 의 담당자를 찾아 줘.","confidential":false,"ids":["6429165579"]}
+{"id":"dev-0931","industry":"insurance","group":"id","text":"청구번호: 2026-385760 건을 처리해 줘.","confidential":false,"ids":["2026-385760"]}
+{"id":"dev-0932","industry":"insurance","group":"id","text":"사고접수번호: 2026-359719 건을 처리해 줘.","confidential":false,"ids":["2026-359719"]}
+{"id":"dev-0933","industry":"insurance","group":"id","text":"청구번호 M254964 의 담당자를 찾아 줘.","confidential":false,"ids":["M254964"]}
+{"id":"dev-0934","industry":"insurance","group":"id","text":"증권번호: 2026-516509 건을 처리해 줘.","confidential":false,"ids":["2026-516509"]}
+{"id":"dev-0935","industry":"insurance","group":"id","text":"사고번호 A803500 의 담당자를 찾아 줘.","confidential":false,"ids":["A803500"]}
+{"id":"dev-0936","industry":"insurance","group":"id","text":"계약번호는 04760458 입니다. 진행 상황을 알려 주세요.","confidential":false,"ids":["04760458"]}
+{"id":"dev-0937","industry":"insurance","group":"id","text":"청구번호 89785615 의 담당자를 찾아 줘.","confidential":false,"ids":["89785615"]}
+{"id":"dev-0938","industry":"insurance","group":"id","text":"계약번호 2026-273423 의 담당자를 찾아 줘.","confidential":false,"ids":["2026-273423"]}
+{"id":"dev-0939","industry":"insurance","group":"id","text":"사고번호: LN-2026-02303 건을 처리해 줘.","confidential":false,"ids":["LN-2026-02303"]}
+{"id":"dev-0940","industry":"insurance","group":"id","text":"사고접수번호는 2026-725070 입니다. 진행 상황을 알려 주세요.","confidential":false,"ids":["2026-725070"]}
+{"id":"dev-0941","industry":"insurance","group":"id_neg","text":"보험증권번호를 어디서 확인하나요?","confidential":false,"ids":[]}
+{"id":"dev-0942","industry":"insurance","group":"id_neg","text":"사고번호를 어디서 확인하나요?","confidential":false,"ids":[]}
+{"id":"dev-0943","industry":"insurance","group":"id_neg","text":"주문 M406951 건의 배송을 확인해 줘.","confidential":false,"ids":[]}
+{"id":"dev-0944","industry":"insurance","group":"id_neg","text":"주문 1198995088 건의 배송을 확인해 줘.","confidential":false,"ids":[]}
+{"id":"dev-0945","industry":"insurance","group":"id_neg","text":"주문 67770763 건의 배송을 확인해 줘.","confidential":false,"ids":[]}
+{"id":"dev-0946","industry":"insurance","group":"id_neg","text":"주문 24326981 건의 배송을 확인해 줘.","confidential":false,"ids":[]}
+{"id":"dev-0947","industry":"insurance","group":"id_neg","text":"보험증권번호를 어디서 확인하나요?","confidential":false,"ids":[]}
+{"id":"dev-0948","industry":"insurance","group":"id_neg","text":"증권번호를 어디서 확인하나요?","confidential":false,"ids":[]}
+{"id":"dev-0949","industry":"insurance","group":"id_neg","text":"청구번호를 어디서 확인하나요?","confidential":false,"ids":[]}
+{"id":"dev-0950","industry":"insurance","group":"id_neg","text":"주문 44153488 건의 배송을 확인해 줘.","confidential":false,"ids":[]}
+{"id":"dev-0951","industry":"insurance","group":"id_neg","text":"보험증권번호를 어디서 확인하나요?","confidential":false,"ids":[]}
+{"id":"dev-0952","industry":"insurance","group":"id_neg","text":"증권번호 발급 절차를 알려 줘.","confidential":false,"ids":[]}

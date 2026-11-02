@@ -6,6 +6,7 @@
 #include <string>
 
 #include "data/account_context_terms.hpp"
+#include "data/confidential_terms.hpp"
 #include "data/credential_markers.hpp"
 #include "data/institution_labels.hpp"
 #include "data/personal_markers.hpp"
@@ -58,13 +59,37 @@ namespace {
     return normalized;
 }
 
+// 기관이 더한 말(UTF-8) + 늘 켜는 말 + 고른 업종의 말(모두 이미 NFKC)을 한 일치기로. 겹치는 말은 하나만 둔다.
+[[nodiscard]] std::expected<TermMatcher, core::InputError> policy_matcher(
+    const std::vector<std::string>& added, std::span<const std::u32string_view> always,
+    std::span<const Industry> industries, std::span<const std::u32string_view> (*per_industry)(Industry) noexcept) {
+    const std::vector<std::string_view> raw(added.begin(), added.end());
+    const auto normalized = normalize_terms(raw);
+    if (!normalized) {
+        return std::unexpected(normalized.error());
+    }
+    std::vector<std::u32string_view> views(normalized->begin(), normalized->end());
+    views.insert(views.end(), always.begin(), always.end());
+    for (const auto industry : industries) {
+        const auto built_in = per_industry(industry);
+        views.insert(views.end(), built_in.begin(), built_in.end());
+    }
+    std::ranges::sort(views);
+    const auto [first, last] = std::ranges::unique(views);
+    views.erase(first, last);
+    return TermMatcher::make(views);
+}
+
 }  // namespace
 
 Detectors::Detectors(TermMatcher internal_terms, TermMatcher institution_labels, std::vector<IdFormat> id_formats,
+                     TermMatcher confidential_markers, TermMatcher confidential_subjects,
                      std::shared_ptr<const NerScanner> ner)
     : internal_terms_(std::move(internal_terms)),
       institution_labels_(std::move(institution_labels)),
       id_formats_(std::move(id_formats)),
+      confidential_markers_(std::move(confidential_markers)),
+      confidential_subjects_(std::move(confidential_subjects)),
       ner_(std::move(ner)),
       account_context_(TermMatcher::make(data::account_context_terms)),
       secret_markers_(TermMatcher::make(data::secret_markers)),
@@ -87,22 +112,15 @@ std::expected<Detectors, core::InputError> Detectors::make(std::span<const std::
     if (!terms) {
         return std::unexpected(terms.error());
     }
-    // 업종 표지어(이미 NFKC) 뒤에 기관 표지어를 붙인다. 같은 말이 겹쳐도 일치기는 한 번만 낸다.
-    std::vector<std::string_view> added(policy.id_labels.begin(), policy.id_labels.end());
-    auto labels = normalize_terms(added);
-    if (!labels) {
-        return std::unexpected(labels.error());
+    auto labels = policy_matcher(policy.id_labels, {}, policy.industries, data::institution_labels);
+    auto markers = policy_matcher(policy.confidential_markers, data::confidential_markers, {}, nullptr);
+    auto subjects = policy_matcher(policy.confidential_subjects, {}, policy.industries, data::confidential_subjects);
+    if (!labels || !markers || !subjects) {
+        return std::unexpected(!labels ? labels.error() : !markers ? markers.error() : subjects.error());
     }
-    std::vector<std::u32string_view> label_views(labels->begin(), labels->end());
-    for (const auto industry : policy.industries) {
-        const auto built_in = data::institution_labels(industry);
-        label_views.insert(label_views.end(), built_in.begin(), built_in.end());
-    }
-    std::ranges::sort(label_views);
-    const auto [first, last] = std::ranges::unique(label_views);
-    label_views.erase(first, last);
     const std::vector<std::u32string_view> term_views(terms->begin(), terms->end());
-    return Detectors(TermMatcher::make(term_views), TermMatcher::make(label_views), policy.id_formats, std::move(ner));
+    return Detectors(TermMatcher::make(term_views), std::move(*labels), policy.id_formats, std::move(*markers),
+                     std::move(*subjects), std::move(ner));
 }
 
 std::expected<std::vector<core::EntitySpan>, core::DetectError> Detectors::detect_segment(
@@ -137,6 +155,7 @@ std::expected<std::vector<core::EntitySpan>, core::DetectError> Detectors::scan(
     }
     rules::find_organizations(*view, chars, hits);
     rules::find_institution_ids(*view, chars, institution_labels_, id_formats_, hits);
+    rules::find_confidential(*view, chars, confidential_markers_, confidential_subjects_, hits);
     if (ner_) {
         const auto names = ner_->scan(text, segment, *view, stop);
         if (!names) {

@@ -480,3 +480,16 @@ TEST_F(GatewayPipeline, InstitutionIdsLeaveAsTokensAndComeBackRestored) {
     EXPECT_NE(restored.find("20231234"), std::string::npos);
     EXPECT_NE(restored.find("HR-2024-117"), std::string::npos);
 }
+
+TEST_F(GatewayPipeline, ConfidentialSentenceIsBlockedWithoutProviderCall) {
+    // 기밀 문장(ADR 0027): 차단 종류라 provider 를 부르지 않고 종류 이름만 알린다.
+    detect::InstitutionPolicy policy;
+    policy.industries = {detect::Industry::Bank};
+    const auto detectors = *detect::Detectors::make({}, {}, policy);
+    const auto pipeline = make(detectors);
+    const auto reply = run(pipeline, ask("대외비인 3분기 잠정 실적 자료를 요약해 줘"));
+    EXPECT_EQ(code_of(reply), core::reason_code_name(core::ReasonCode::EntityBlocked));
+    EXPECT_NE(reply.body.find("CONFIDENTIAL_MATTER"), std::string::npos);
+    EXPECT_EQ(reply.body.find("잠정"), std::string::npos);
+    EXPECT_EQ(provider_calls_, 0);
+}

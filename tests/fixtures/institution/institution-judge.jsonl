@@ -1,0 +1,952 @@
+{"id":"judge-0001","industry":"public-admin","group":"conf","text":"예산안 초안 문서인데 엠바고라 조심해야 해요. 요점만 써 줘.","confidential":true,"ids":[]}
+{"id":"judge-0002","industry":"public-admin","group":"conf","text":"[비밀 문서] 도시계획안 검토 메모를 간단히 줄여 주세요.","confidential":true,"ids":[]}
+{"id":"judge-0003","industry":"public-admin","group":"conf","text":"예정가격 문서인데 열람 제한이라 조심해야 해요. 요점만 써 줘.","confidential":true,"ids":[]}
+{"id":"judge-0004","industry":"public-admin","group":"conf","text":"엠바고로 분류된 도시계획안 파일 내용을 영어로 옮겨 줘.","confidential":true,"ids":[]}
+{"id":"judge-0005","industry":"public-admin","group":"conf","text":"예산 편성안 문서인데 공개 금지라 조심해야 해요. 요점만 써 줘.","confidential":true,"ids":[]}
+{"id":"judge-0006","industry":"public-admin","group":"conf","text":"예정가격 문서인데 사내 한정이라 조심해야 해요. 요점만 써 줘.","confidential":true,"ids":[]}
+{"id":"judge-0007","industry":"public-admin","group":"conf","text":"[사내 한정] 징계 의결 검토 메모를 간단히 줄여 주세요.","confidential":true,"ids":[]}
+{"id":"judge-0008","industry":"public-admin","group":"conf","text":"감사 보고서 문서인데 비공개라 조심해야 해요. 요점만 써 줘.","confidential":true,"ids":[]}
+{"id":"judge-0009","industry":"public-admin","group":"conf","text":"[보안 문서] 도시계획안 검토 메모를 간단히 줄여 주세요.","confidential":true,"ids":[]}
+{"id":"judge-0010","industry":"public-admin","group":"conf","text":"[비공개] 도시계획안 검토 메모를 간단히 줄여 주세요.","confidential":true,"ids":[]}
+{"id":"judge-0011","industry":"public-admin","group":"conf","text":"감사 보고서 문서인데 배포 금지라 조심해야 해요. 요점만 써 줘.","confidential":true,"ids":[]}
+{"id":"judge-0012","industry":"public-admin","group":"conf","text":"내부 검토용로 분류된 인사 발령안 파일 내용을 영어로 옮겨 줘.","confidential":true,"ids":[]}
+{"id":"judge-0013","industry":"public-admin","group":"conf","text":"감사 보고서 문서인데 보안 문서라 조심해야 해요. 요점만 써 줘.","confidential":true,"ids":[]}
+{"id":"judge-0014","industry":"public-admin","group":"conf","text":"비공개로 분류된 감사 보고서 파일 내용을 영어로 옮겨 줘.","confidential":true,"ids":[]}
+{"id":"judge-0015","industry":"public-admin","group":"conf","text":"배포 금지로 분류된 예산안 초안 파일 내용을 영어로 옮겨 줘.","confidential":true,"ids":[]}
+{"id":"judge-0016","industry":"public-admin","group":"conf","text":"비밀 문서로 분류된 보도자료 초안 파일 내용을 영어로 옮겨 줘.","confidential":true,"ids":[]}
+{"id":"judge-0017","industry":"public-admin","group":"conf","text":"Confidential로 분류된 입찰 예정가 파일 내용을 영어로 옮겨 줘.","confidential":true,"ids":[]}
+{"id":"judge-0018","industry":"public-admin","group":"conf","text":"공개 금지로 분류된 감사 보고서 파일 내용을 영어로 옮겨 줘.","confidential":true,"ids":[]}
+{"id":"judge-0019","industry":"public-admin","group":"conf","text":"극비로 분류된 도시계획안 파일 내용을 영어로 옮겨 줘.","confidential":true,"ids":[]}
+{"id":"judge-0020","industry":"public-admin","group":"conf","text":"[배포 금지] 예산안 초안 검토 메모를 간단히 줄여 주세요.","confidential":true,"ids":[]}
+{"id":"judge-0021","industry":"public-admin","group":"conf","text":"[Confidential] 입찰 예정가 검토 메모를 간단히 줄여 주세요.","confidential":true,"ids":[]}
+{"id":"judge-0022","industry":"public-admin","group":"conf","text":"대외비로 분류된 예산안 초안 파일 내용을 영어로 옮겨 줘.","confidential":true,"ids":[]}
+{"id":"judge-0023","industry":"public-admin","group":"conf","text":"대외비로 분류된 감사 결과 파일 내용을 영어로 옮겨 줘.","confidential":true,"ids":[]}
+{"id":"judge-0024","industry":"public-admin","group":"conf","text":"감사 결과 문서인데 취급 주의라 조심해야 해요. 요점만 써 줘.","confidential":true,"ids":[]}
+{"id":"judge-0025","industry":"public-admin","group":"conf_split","text":"취급 주의 등급 보고서예요. 보도자료 초안 부분을 표로 바꿔 주세요.","confidential":true,"ids":[]}
+{"id":"judge-0026","industry":"public-admin","group":"conf_split","text":"첨부는 취급 주의 자료입니다. 그 안의 인사 발령안 숫자를 확인해 줘.","confidential":true,"ids":[]}
+{"id":"judge-0027","industry":"public-admin","group":"conf_split","text":"첨부는 극비 자료입니다. 그 안의 입찰 예정가 숫자를 확인해 줘.","confidential":true,"ids":[]}
+{"id":"judge-0028","industry":"public-admin","group":"conf_split","text":"첨부는 대외비 자료입니다. 그 안의 징계 의결 숫자를 확인해 줘.","confidential":true,"ids":[]}
+{"id":"judge-0029","industry":"public-admin","group":"conf_split","text":"첨부는 대외비 자료입니다. 그 안의 징계 의결 숫자를 확인해 줘.","confidential":true,"ids":[]}
+{"id":"judge-0030","industry":"public-admin","group":"conf_split","text":"첨부는 유출 금지 자료입니다. 그 안의 예산안 초안 숫자를 확인해 줘.","confidential":true,"ids":[]}
+{"id":"judge-0031","industry":"public-admin","group":"conf_split","text":"열람 제한 등급 보고서예요. 보도자료 초안 부분을 표로 바꿔 주세요.","confidential":true,"ids":[]}
+{"id":"judge-0032","industry":"public-admin","group":"conf_split","text":"첨부는 배포 금지 자료입니다. 그 안의 감사 결과 숫자를 확인해 줘.","confidential":true,"ids":[]}
+{"id":"judge-0033","industry":"public-admin","group":"conf_split","text":"외부 유출 금지 등급 보고서예요. 보도자료 초안 부분을 표로 바꿔 주세요.","confidential":true,"ids":[]}
+{"id":"judge-0034","industry":"public-admin","group":"conf_split","text":"첨부는 공개 금지 자료입니다. 그 안의 예산안 초안 숫자를 확인해 줘.","confidential":true,"ids":[]}
+{"id":"judge-0035","industry":"public-admin","group":"conf_split","text":"첨부는 비밀 문서 자료입니다. 그 안의 징계 의결 숫자를 확인해 줘.","confidential":true,"ids":[]}
+{"id":"judge-0036","industry":"public-admin","group":"conf_split","text":"사내 한정 등급 보고서예요. 인사 발령안 부분을 표로 바꿔 주세요.","confidential":true,"ids":[]}
+{"id":"judge-0037","industry":"public-admin","group":"conf_para","text":"[유출 금지] 다음 달 자리 이동 명단 검토 메모를 간단히 줄여 주세요.","confidential":true,"ids":[]}
+{"id":"judge-0038","industry":"public-admin","group":"conf_para","text":"[공개 금지] 다음 달 자리 이동 명단 검토 메모를 간단히 줄여 주세요.","confidential":true,"ids":[]}
+{"id":"judge-0039","industry":"public-admin","group":"conf_para","text":"내년도 살림 계획 초안 문서인데 사내 한정이라 조심해야 해요. 요점만 써 줘.","confidential":true,"ids":[]}
+{"id":"judge-0040","industry":"public-admin","group":"conf_para","text":"[대외비] 공사 낙찰 기준 금액 검토 메모를 간단히 줄여 주세요.","confidential":true,"ids":[]}
+{"id":"judge-0041","industry":"public-admin","group":"conf_para","text":"공사 낙찰 기준 금액 문서인데 대외비라 조심해야 해요. 요점만 써 줘.","confidential":true,"ids":[]}
+{"id":"judge-0042","industry":"public-admin","group":"conf_para","text":"대외비로 분류된 다음 달 자리 이동 명단 파일 내용을 영어로 옮겨 줘.","confidential":true,"ids":[]}
+{"id":"judge-0043","industry":"public-admin","group":"far","text":"내부용 등급 분류 기준이 궁금해요. 점심은 뭐 먹을까요? 입찰 예정가 뉴스도 찾아 줘.","confidential":false,"ids":[]}
+{"id":"judge-0044","industry":"public-admin","group":"far","text":"외부 유출 금지 등급 분류 기준이 궁금해요. 점심은 뭐 먹을까요? 인사 발령안 뉴스도 찾아 줘.","confidential":false,"ids":[]}
+{"id":"judge-0045","industry":"public-admin","group":"far","text":"기밀 등급 분류 기준이 궁금해요. 점심은 뭐 먹을까요? 감사 보고서 뉴스도 찾아 줘.","confidential":false,"ids":[]}
+{"id":"judge-0046","industry":"public-admin","group":"far","text":"Confidential 등급 분류 기준이 궁금해요. 점심은 뭐 먹을까요? 예정가격 뉴스도 찾아 줘.","confidential":false,"ids":[]}
+{"id":"judge-0047","industry":"public-admin","group":"far","text":"내부용 등급 분류 기준이 궁금해요. 점심은 뭐 먹을까요? 보도자료 초안 뉴스도 찾아 줘.","confidential":false,"ids":[]}
+{"id":"judge-0048","industry":"public-admin","group":"far","text":"미공개 등급 분류 기준이 궁금해요. 점심은 뭐 먹을까요? 감사 보고서 뉴스도 찾아 줘.","confidential":false,"ids":[]}
+{"id":"judge-0049","industry":"public-admin","group":"marker_only","text":"직원 교육 자료에 비공개 표시 예시를 넣어 줘.","confidential":false,"ids":[]}
+{"id":"judge-0050","industry":"public-admin","group":"marker_only","text":"외부 유출 금지 등급 분류 기준이 궁금해요.","confidential":false,"ids":[]}
+{"id":"judge-0051","industry":"public-admin","group":"marker_only","text":"내부 검토용 등급 분류 기준이 궁금해요.","confidential":false,"ids":[]}
+{"id":"judge-0052","industry":"public-admin","group":"marker_only","text":"내부 검토용 자료를 출력할 때 주의할 점은?","confidential":false,"ids":[]}
+{"id":"judge-0053","industry":"public-admin","group":"marker_only","text":"Internal only 자료를 출력할 때 주의할 점은?","confidential":false,"ids":[]}
+{"id":"judge-0054","industry":"public-admin","group":"marker_only","text":"엠바고 자료를 출력할 때 주의할 점은?","confidential":false,"ids":[]}
+{"id":"judge-0055","industry":"public-admin","group":"marker_only","text":"대외비 자료를 출력할 때 주의할 점은?","confidential":false,"ids":[]}
+{"id":"judge-0056","industry":"public-admin","group":"marker_only","text":"기밀 자료를 출력할 때 주의할 점은?","confidential":false,"ids":[]}
+{"id":"judge-0057","industry":"public-admin","group":"marker_only","text":"외부 유출 금지 등급 분류 기준이 궁금해요.","confidential":false,"ids":[]}
+{"id":"judge-0058","industry":"public-admin","group":"marker_only","text":"보안 문서 자료를 출력할 때 주의할 점은?","confidential":false,"ids":[]}
+{"id":"judge-0059","industry":"public-admin","group":"marker_only","text":"엠바고 자료를 출력할 때 주의할 점은?","confidential":false,"ids":[]}
+{"id":"judge-0060","industry":"public-admin","group":"marker_only","text":"직원 교육 자료에 사내 한정 표시 예시를 넣어 줘.","confidential":false,"ids":[]}
+{"id":"judge-0061","industry":"public-admin","group":"marker_only","text":"직원 교육 자료에 공개 금지 표시 예시를 넣어 줘.","confidential":false,"ids":[]}
+{"id":"judge-0062","industry":"public-admin","group":"marker_only","text":"보안 문서 자료를 출력할 때 주의할 점은?","confidential":false,"ids":[]}
+{"id":"judge-0063","industry":"public-admin","group":"marker_only","text":"직원 교육 자료에 배포 금지 표시 예시를 넣어 줘.","confidential":false,"ids":[]}
+{"id":"judge-0064","industry":"public-admin","group":"marker_only","text":"극비 자료를 출력할 때 주의할 점은?","confidential":false,"ids":[]}
+{"id":"judge-0065","industry":"public-admin","group":"marker_only","text":"엠바고 등급 분류 기준이 궁금해요.","confidential":false,"ids":[]}
+{"id":"judge-0066","industry":"public-admin","group":"marker_only","text":"사내 한정 등급 분류 기준이 궁금해요.","confidential":false,"ids":[]}
+{"id":"judge-0067","industry":"public-admin","group":"subject_only","text":"예산 편성안 용어 뜻을 쉽게 풀어 줘.","confidential":false,"ids":[]}
+{"id":"judge-0068","industry":"public-admin","group":"subject_only","text":"다른 나라의 감사 보고서 사례를 알려 줘.","confidential":false,"ids":[]}
+{"id":"judge-0069","industry":"public-admin","group":"subject_only","text":"다른 나라의 감사 결과 사례를 알려 줘.","confidential":false,"ids":[]}
+{"id":"judge-0070","industry":"public-admin","group":"subject_only","text":"입찰 예정가에 대해 신문 기사에 나온 내용을 정리해 줘.","confidential":false,"ids":[]}
+{"id":"judge-0071","industry":"public-admin","group":"subject_only","text":"감사 결과에 대해 신문 기사에 나온 내용을 정리해 줘.","confidential":false,"ids":[]}
+{"id":"judge-0072","industry":"public-admin","group":"subject_only","text":"감사 보고서에 대해 신문 기사에 나온 내용을 정리해 줘.","confidential":false,"ids":[]}
+{"id":"judge-0073","industry":"public-admin","group":"subject_only","text":"감사 보고서 용어 뜻을 쉽게 풀어 줘.","confidential":false,"ids":[]}
+{"id":"judge-0074","industry":"public-admin","group":"subject_only","text":"도시계획안에 대해 신문 기사에 나온 내용을 정리해 줘.","confidential":false,"ids":[]}
+{"id":"judge-0075","industry":"public-admin","group":"subject_only","text":"다른 나라의 도시계획안 사례를 알려 줘.","confidential":false,"ids":[]}
+{"id":"judge-0076","industry":"public-admin","group":"subject_only","text":"다른 나라의 예산안 초안 사례를 알려 줘.","confidential":false,"ids":[]}
+{"id":"judge-0077","industry":"public-admin","group":"subject_only","text":"예정가격에 대해 신문 기사에 나온 내용을 정리해 줘.","confidential":false,"ids":[]}
+{"id":"judge-0078","industry":"public-admin","group":"subject_only","text":"다른 나라의 도시계획안 사례를 알려 줘.","confidential":false,"ids":[]}
+{"id":"judge-0079","industry":"public-admin","group":"subject_only","text":"인사 발령안에 대해 신문 기사에 나온 내용을 정리해 줘.","confidential":false,"ids":[]}
+{"id":"judge-0080","industry":"public-admin","group":"subject_only","text":"예산 편성안에 대해 신문 기사에 나온 내용을 정리해 줘.","confidential":false,"ids":[]}
+{"id":"judge-0081","industry":"public-admin","group":"subject_only","text":"예산안 초안 용어 뜻을 쉽게 풀어 줘.","confidential":false,"ids":[]}
+{"id":"judge-0082","industry":"public-admin","group":"subject_only","text":"인사 발령안 용어 뜻을 쉽게 풀어 줘.","confidential":false,"ids":[]}
+{"id":"judge-0083","industry":"public-admin","group":"subject_only","text":"보도자료 초안 용어 뜻을 쉽게 풀어 줘.","confidential":false,"ids":[]}
+{"id":"judge-0084","industry":"public-admin","group":"subject_only","text":"징계 의결 용어 뜻을 쉽게 풀어 줘.","confidential":false,"ids":[]}
+{"id":"judge-0085","industry":"public-admin","group":"business","text":"사내 체육대회 공지문을 써 줘.","confidential":false,"ids":[]}
+{"id":"judge-0086","industry":"public-admin","group":"business","text":"홍보 문구 세 가지를 만들어 줘.","confidential":false,"ids":[]}
+{"id":"judge-0087","industry":"public-admin","group":"business","text":"문서 양식의 맞춤법을 확인해 줘.","confidential":false,"ids":[]}
+{"id":"judge-0088","industry":"public-admin","group":"business","text":"업무 인수인계서 목차를 제안해 줘.","confidential":false,"ids":[]}
+{"id":"judge-0089","industry":"public-admin","group":"business","text":"문서 양식의 맞춤법을 확인해 줘.","confidential":false,"ids":[]}
+{"id":"judge-0090","industry":"public-admin","group":"business","text":"휴가 일정 표를 달력 형식으로 바꿔 줘.","confidential":false,"ids":[]}
+{"id":"judge-0091","industry":"public-admin","group":"business","text":"휴가 일정 표를 달력 형식으로 바꿔 줘.","confidential":false,"ids":[]}
+{"id":"judge-0092","industry":"public-admin","group":"business","text":"사내 체육대회 공지문을 써 줘.","confidential":false,"ids":[]}
+{"id":"judge-0093","industry":"public-admin","group":"business","text":"보안 교육 퀴즈 다섯 문제를 만들어 줘.","confidential":false,"ids":[]}
+{"id":"judge-0094","industry":"public-admin","group":"business","text":"보안 교육 퀴즈 다섯 문제를 만들어 줘.","confidential":false,"ids":[]}
+{"id":"judge-0095","industry":"public-admin","group":"business","text":"홍보 문구 세 가지를 만들어 줘.","confidential":false,"ids":[]}
+{"id":"judge-0096","industry":"public-admin","group":"business","text":"문서 양식의 맞춤법을 확인해 줘.","confidential":false,"ids":[]}
+{"id":"judge-0097","industry":"public-admin","group":"business","text":"문서 양식의 맞춤법을 확인해 줘.","confidential":false,"ids":[]}
+{"id":"judge-0098","industry":"public-admin","group":"business","text":"업무 인수인계서 목차를 제안해 줘.","confidential":false,"ids":[]}
+{"id":"judge-0099","industry":"public-admin","group":"business","text":"이 표의 합계와 평균을 구해 줘.","confidential":false,"ids":[]}
+{"id":"judge-0100","industry":"public-admin","group":"business","text":"업무 인수인계서 목차를 제안해 줘.","confidential":false,"ids":[]}
+{"id":"judge-0101","industry":"public-admin","group":"id","text":"과세번호(P431601) 고객 응대 기록을 정리해 줘.","confidential":false,"ids":["P431601"]}
+{"id":"judge-0102","industry":"public-admin","group":"id","text":"확인 요청: 민원번호=5000708036","confidential":false,"ids":["5000708036"]}
+{"id":"judge-0103","industry":"public-admin","group":"id","text":"고지번호가 2269567206 인 건 서류를 찾아 줘.","confidential":false,"ids":["2269567206"]}
+{"id":"judge-0104","industry":"public-admin","group":"id","text":"고지번호가 A550491 인 건 서류를 찾아 줘.","confidential":false,"ids":["A550491"]}
+{"id":"judge-0105","industry":"public-admin","group":"id","text":"민원번호가 AC-2026-93289 인 건 서류를 찾아 줘.","confidential":false,"ids":["AC-2026-93289"]}
+{"id":"judge-0106","industry":"public-admin","group":"id","text":"접수번호(8630810035) 고객 응대 기록을 정리해 줘.","confidential":false,"ids":["8630810035"]}
+{"id":"judge-0107","industry":"public-admin","group":"id","text":"과세번호(CL-2026-81047) 고객 응대 기록을 정리해 줘.","confidential":false,"ids":["CL-2026-81047"]}
+{"id":"judge-0108","industry":"public-admin","group":"id","text":"고지번호가 44020218 인 건 서류를 찾아 줘.","confidential":false,"ids":["44020218"]}
+{"id":"judge-0109","industry":"public-admin","group":"id","text":"고지번호가 2026-807934 인 건 서류를 찾아 줘.","confidential":false,"ids":["2026-807934"]}
+{"id":"judge-0110","industry":"public-admin","group":"id","text":"접수번호(2026-649957) 고객 응대 기록을 정리해 줘.","confidential":false,"ids":["2026-649957"]}
+{"id":"judge-0111","industry":"public-admin","group":"id","text":"확인 요청: 접수번호=A525828","confidential":false,"ids":["A525828"]}
+{"id":"judge-0112","industry":"public-admin","group":"id","text":"확인 요청: 고지번호=91115863","confidential":false,"ids":["91115863"]}
+{"id":"judge-0113","industry":"public-admin","group":"id","text":"확인 요청: 관리번호=2026-114734","confidential":false,"ids":["2026-114734"]}
+{"id":"judge-0114","industry":"public-admin","group":"id","text":"확인 요청: 신청번호=30258516","confidential":false,"ids":["30258516"]}
+{"id":"judge-0115","industry":"public-admin","group":"id","text":"민원번호(5852734971) 고객 응대 기록을 정리해 줘.","confidential":false,"ids":["5852734971"]}
+{"id":"judge-0116","industry":"public-admin","group":"id","text":"고지번호가 CL-2026-99676 인 건 서류를 찾아 줘.","confidential":false,"ids":["CL-2026-99676"]}
+{"id":"judge-0117","industry":"public-admin","group":"id","text":"민원접수번호가 2026-660263 인 건 서류를 찾아 줘.","confidential":false,"ids":["2026-660263"]}
+{"id":"judge-0118","industry":"public-admin","group":"id","text":"고지번호가 2026-515716 인 건 서류를 찾아 줘.","confidential":false,"ids":["2026-515716"]}
+{"id":"judge-0119","industry":"public-admin","group":"id","text":"관리번호가 8819892852 인 건 서류를 찾아 줘.","confidential":false,"ids":["8819892852"]}
+{"id":"judge-0120","industry":"public-admin","group":"id","text":"전자납부번호가 3493686911 인 건 서류를 찾아 줘.","confidential":false,"ids":["3493686911"]}
+{"id":"judge-0121","industry":"public-admin","group":"id","text":"확인 요청: 민원접수번호=81824387","confidential":false,"ids":["81824387"]}
+{"id":"judge-0122","industry":"public-admin","group":"id","text":"전자납부번호(PL-2026-85278) 고객 응대 기록을 정리해 줘.","confidential":false,"ids":["PL-2026-85278"]}
+{"id":"judge-0123","industry":"public-admin","group":"id","text":"신청번호가 K332891 인 건 서류를 찾아 줘.","confidential":false,"ids":["K332891"]}
+{"id":"judge-0124","industry":"public-admin","group":"id","text":"접수번호(99117951) 고객 응대 기록을 정리해 줘.","confidential":false,"ids":["99117951"]}
+{"id":"judge-0125","industry":"public-admin","group":"id_neg","text":"민원접수번호 체계는 어떻게 바뀌었나요?","confidential":false,"ids":[]}
+{"id":"judge-0126","industry":"public-admin","group":"id_neg","text":"회의실 예약 K145726 건을 취소해 주세요.","confidential":false,"ids":[]}
+{"id":"judge-0127","industry":"public-admin","group":"id_neg","text":"신청번호가 몇 자리인지 알려 줘.","confidential":false,"ids":[]}
+{"id":"judge-0128","industry":"public-admin","group":"id_neg","text":"회의실 예약 9167477555 건을 취소해 주세요.","confidential":false,"ids":[]}
+{"id":"judge-0129","industry":"public-admin","group":"id_neg","text":"고지번호가 몇 자리인지 알려 줘.","confidential":false,"ids":[]}
+{"id":"judge-0130","industry":"public-admin","group":"id_neg","text":"회의실 예약 2026-553103 건을 취소해 주세요.","confidential":false,"ids":[]}
+{"id":"judge-0131","industry":"public-admin","group":"id_neg","text":"회의실 예약 98233324 건을 취소해 주세요.","confidential":false,"ids":[]}
+{"id":"judge-0132","industry":"public-admin","group":"id_neg","text":"민원번호 체계는 어떻게 바뀌었나요?","confidential":false,"ids":[]}
+{"id":"judge-0133","industry":"public-admin","group":"id_neg","text":"고지번호가 몇 자리인지 알려 줘.","confidential":false,"ids":[]}
+{"id":"judge-0134","industry":"public-admin","group":"id_neg","text":"접수번호 체계는 어떻게 바뀌었나요?","confidential":false,"ids":[]}
+{"id":"judge-0135","industry":"public-admin","group":"id_neg","text":"민원번호가 몇 자리인지 알려 줘.","confidential":false,"ids":[]}
+{"id":"judge-0136","industry":"public-admin","group":"id_neg","text":"과세번호 체계는 어떻게 바뀌었나요?","confidential":false,"ids":[]}
+{"id":"judge-0137","industry":"public-enterprise","group":"conf","text":"예정가격 문서인데 보안 문서라 조심해야 해요. 요점만 써 줘.","confidential":true,"ids":[]}
+{"id":"judge-0138","industry":"public-enterprise","group":"conf","text":"미공개로 분류된 감사 결과 파일 내용을 영어로 옮겨 줘.","confidential":true,"ids":[]}
+{"id":"judge-0139","industry":"public-enterprise","group":"conf","text":"[엠바고] 요금 인상안 검토 메모를 간단히 줄여 주세요.","confidential":true,"ids":[]}
+{"id":"judge-0140","industry":"public-enterprise","group":"conf","text":"예정가격 문서인데 열람 제한이라 조심해야 해요. 요점만 써 줘.","confidential":true,"ids":[]}
+{"id":"judge-0141","industry":"public-enterprise","group":"conf","text":"사업 계획안 문서인데 비밀 문서라 조심해야 해요. 요점만 써 줘.","confidential":true,"ids":[]}
+{"id":"judge-0142","industry":"public-enterprise","group":"conf","text":"[대외비] 협상 전략 검토 메모를 간단히 줄여 주세요.","confidential":true,"ids":[]}
+{"id":"judge-0143","industry":"public-enterprise","group":"conf","text":"취급 주의로 분류된 예정가격 파일 내용을 영어로 옮겨 줘.","confidential":true,"ids":[]}
+{"id":"judge-0144","industry":"public-enterprise","group":"conf","text":"입찰 예정가 문서인데 비밀 문서라 조심해야 해요. 요점만 써 줘.","confidential":true,"ids":[]}
+{"id":"judge-0145","industry":"public-enterprise","group":"conf","text":"내부 검토용로 분류된 입찰 예정가 파일 내용을 영어로 옮겨 줘.","confidential":true,"ids":[]}
+{"id":"judge-0146","industry":"public-enterprise","group":"conf","text":"예정가격 문서인데 비공개라 조심해야 해요. 요점만 써 줘.","confidential":true,"ids":[]}
+{"id":"judge-0147","industry":"public-enterprise","group":"conf","text":"사업 계획안 문서인데 내부 검토용이라 조심해야 해요. 요점만 써 줘.","confidential":true,"ids":[]}
+{"id":"judge-0148","industry":"public-enterprise","group":"conf","text":"[유출 금지] 사업 계획안 검토 메모를 간단히 줄여 주세요.","confidential":true,"ids":[]}
+{"id":"judge-0149","industry":"public-enterprise","group":"conf","text":"협상 전략 문서인데 공개 금지라 조심해야 해요. 요점만 써 줘.","confidential":true,"ids":[]}
+{"id":"judge-0150","industry":"public-enterprise","group":"conf","text":"공개 금지로 분류된 요금 인상안 파일 내용을 영어로 옮겨 줘.","confidential":true,"ids":[]}
+{"id":"judge-0151","industry":"public-enterprise","group":"conf","text":"[비공개] 감사 결과 검토 메모를 간단히 줄여 주세요.","confidential":true,"ids":[]}
+{"id":"judge-0152","industry":"public-enterprise","group":"conf","text":"계약 단가 문서인데 사내 한정이라 조심해야 해요. 요점만 써 줘.","confidential":true,"ids":[]}
+{"id":"judge-0153","industry":"public-enterprise","group":"conf","text":"협상 전략 문서인데 취급 주의라 조심해야 해요. 요점만 써 줘.","confidential":true,"ids":[]}
+{"id":"judge-0154","industry":"public-enterprise","group":"conf","text":"협상 전략 문서인데 보안 문서라 조심해야 해요. 요점만 써 줘.","confidential":true,"ids":[]}
+{"id":"judge-0155","industry":"public-enterprise","group":"conf","text":"사내 한정로 분류된 예정가격 파일 내용을 영어로 옮겨 줘.","confidential":true,"ids":[]}
+{"id":"judge-0156","industry":"public-enterprise","group":"conf","text":"계약 단가 문서인데 Confidential라 조심해야 해요. 요점만 써 줘.","confidential":true,"ids":[]}
+{"id":"judge-0157","industry":"public-enterprise","group":"conf","text":"내부 검토용로 분류된 계약 단가 파일 내용을 영어로 옮겨 줘.","confidential":true,"ids":[]}
+{"id":"judge-0158","industry":"public-enterprise","group":"conf","text":"사업 계획안 문서인데 대외비라 조심해야 해요. 요점만 써 줘.","confidential":true,"ids":[]}
+{"id":"judge-0159","industry":"public-enterprise","group":"conf","text":"배포 금지로 분류된 요금 인상안 파일 내용을 영어로 옮겨 줘.","confidential":true,"ids":[]}
+{"id":"judge-0160","industry":"public-enterprise","group":"conf","text":"[내부용] 계약 단가 검토 메모를 간단히 줄여 주세요.","confidential":true,"ids":[]}
+{"id":"judge-0161","industry":"public-enterprise","group":"conf_split","text":"첨부는 보안 문서 자료입니다. 그 안의 입찰 예정가 숫자를 확인해 줘.","confidential":true,"ids":[]}
+{"id":"judge-0162","industry":"public-enterprise","group":"conf_split","text":"첨부는 엠바고 자료입니다. 그 안의 계약 단가 숫자를 확인해 줘.","confidential":true,"ids":[]}
+{"id":"judge-0163","industry":"public-enterprise","group":"conf_split","text":"극비 등급 보고서예요. 감사 결과 부분을 표로 바꿔 주세요.","confidential":true,"ids":[]}
+{"id":"judge-0164","industry":"public-enterprise","group":"conf_split","text":"보안 문서 등급 보고서예요. 예정가격 부분을 표로 바꿔 주세요.","confidential":true,"ids":[]}
+{"id":"judge-0165","industry":"public-enterprise","group":"conf_split","text":"첨부는 배포 금지 자료입니다. 그 안의 사업 계획안 숫자를 확인해 줘.","confidential":true,"ids":[]}
+{"id":"judge-0166","industry":"public-enterprise","group":"conf_split","text":"미공개 등급 보고서예요. 감사 결과 부분을 표로 바꿔 주세요.","confidential":true,"ids":[]}
+{"id":"judge-0167","industry":"public-enterprise","group":"conf_split","text":"첨부는 내부용 자료입니다. 그 안의 협상 전략 숫자를 확인해 줘.","confidential":true,"ids":[]}
+{"id":"judge-0168","industry":"public-enterprise","group":"conf_split","text":"미공개 등급 보고서예요. 요금 인상안 부분을 표로 바꿔 주세요.","confidential":true,"ids":[]}
+{"id":"judge-0169","industry":"public-enterprise","group":"conf_split","text":"첨부는 비밀 문서 자료입니다. 그 안의 사업 계획안 숫자를 확인해 줘.","confidential":true,"ids":[]}
+{"id":"judge-0170","industry":"public-enterprise","group":"conf_split","text":"첨부는 대외비 자료입니다. 그 안의 요금 인상안 숫자를 확인해 줘.","confidential":true,"ids":[]}
+{"id":"judge-0171","industry":"public-enterprise","group":"conf_split","text":"사내 한정 등급 보고서예요. 입찰 예정가 부분을 표로 바꿔 주세요.","confidential":true,"ids":[]}
+{"id":"judge-0172","industry":"public-enterprise","group":"conf_split","text":"첨부는 열람 제한 자료입니다. 그 안의 예정가격 숫자를 확인해 줘.","confidential":true,"ids":[]}
+{"id":"judge-0173","industry":"public-enterprise","group":"conf_para","text":"협상 때 물러설 선 문서인데 기밀이라 조심해야 해요. 요점만 써 줘.","confidential":true,"ids":[]}
+{"id":"judge-0174","industry":"public-enterprise","group":"conf_para","text":"극비로 분류된 다음 분기 요금 조정 방향 파일 내용을 영어로 옮겨 줘.","confidential":true,"ids":[]}
+{"id":"judge-0175","industry":"public-enterprise","group":"conf_para","text":"협상 때 물러설 선 문서인데 엠바고라 조심해야 해요. 요점만 써 줘.","confidential":true,"ids":[]}
+{"id":"judge-0176","industry":"public-enterprise","group":"conf_para","text":"다음 분기 요금 조정 방향 문서인데 Internal only라 조심해야 해요. 요점만 써 줘.","confidential":true,"ids":[]}
+{"id":"judge-0177","industry":"public-enterprise","group":"conf_para","text":"비밀 문서로 분류된 협력사 납품 가격표 파일 내용을 영어로 옮겨 줘.","confidential":true,"ids":[]}
+{"id":"judge-0178","industry":"public-enterprise","group":"conf_para","text":"협력사 납품 가격표 문서인데 취급 주의라 조심해야 해요. 요점만 써 줘.","confidential":true,"ids":[]}
+{"id":"judge-0179","industry":"public-enterprise","group":"far","text":"내부용 등급 분류 기준이 궁금해요. 점심은 뭐 먹을까요? 사업 계획안 뉴스도 찾아 줘.","confidential":false,"ids":[]}
+{"id":"judge-0180","industry":"public-enterprise","group":"far","text":"유출 금지 등급 분류 기준이 궁금해요. 점심은 뭐 먹을까요? 협상 전략 뉴스도 찾아 줘.","confidential":false,"ids":[]}
+{"id":"judge-0181","industry":"public-enterprise","group":"far","text":"취급 주의 등급 분류 기준이 궁금해요. 점심은 뭐 먹을까요? 감사 결과 뉴스도 찾아 줘.","confidential":false,"ids":[]}
+{"id":"judge-0182","industry":"public-enterprise","group":"far","text":"배포 금지 등급 분류 기준이 궁금해요. 점심은 뭐 먹을까요? 요금 인상안 뉴스도 찾아 줘.","confidential":false,"ids":[]}
+{"id":"judge-0183","industry":"public-enterprise","group":"far","text":"사내 한정 등급 분류 기준이 궁금해요. 점심은 뭐 먹을까요? 요금 인상안 뉴스도 찾아 줘.","confidential":false,"ids":[]}
+{"id":"judge-0184","industry":"public-enterprise","group":"far","text":"Confidential 등급 분류 기준이 궁금해요. 점심은 뭐 먹을까요? 계약 단가 뉴스도 찾아 줘.","confidential":false,"ids":[]}
+{"id":"judge-0185","industry":"public-enterprise","group":"marker_only","text":"직원 교육 자료에 외부 유출 금지 표시 예시를 넣어 줘.","confidential":false,"ids":[]}
+{"id":"judge-0186","industry":"public-enterprise","group":"marker_only","text":"열람 제한 등급 분류 기준이 궁금해요.","confidential":false,"ids":[]}
+{"id":"judge-0187","industry":"public-enterprise","group":"marker_only","text":"비밀 문서 등급 분류 기준이 궁금해요.","confidential":false,"ids":[]}
+{"id":"judge-0188","industry":"public-enterprise","group":"marker_only","text":"내부용 자료를 출력할 때 주의할 점은?","confidential":false,"ids":[]}
+{"id":"judge-0189","industry":"public-enterprise","group":"marker_only","text":"미공개 등급 분류 기준이 궁금해요.","confidential":false,"ids":[]}
+{"id":"judge-0190","industry":"public-enterprise","group":"marker_only","text":"유출 금지 등급 분류 기준이 궁금해요.","confidential":false,"ids":[]}
+{"id":"judge-0191","industry":"public-enterprise","group":"marker_only","text":"직원 교육 자료에 사내 한정 표시 예시를 넣어 줘.","confidential":false,"ids":[]}
+{"id":"judge-0192","industry":"public-enterprise","group":"marker_only","text":"직원 교육 자료에 내부 검토용 표시 예시를 넣어 줘.","confidential":false,"ids":[]}
+{"id":"judge-0193","industry":"public-enterprise","group":"marker_only","text":"보안 문서 등급 분류 기준이 궁금해요.","confidential":false,"ids":[]}
+{"id":"judge-0194","industry":"public-enterprise","group":"marker_only","text":"직원 교육 자료에 배포 금지 표시 예시를 넣어 줘.","confidential":false,"ids":[]}
+{"id":"judge-0195","industry":"public-enterprise","group":"marker_only","text":"엠바고 자료를 출력할 때 주의할 점은?","confidential":false,"ids":[]}
+{"id":"judge-0196","industry":"public-enterprise","group":"marker_only","text":"직원 교육 자료에 엠바고 표시 예시를 넣어 줘.","confidential":false,"ids":[]}
+{"id":"judge-0197","industry":"public-enterprise","group":"marker_only","text":"대외비 등급 분류 기준이 궁금해요.","confidential":false,"ids":[]}
+{"id":"judge-0198","industry":"public-enterprise","group":"marker_only","text":"비밀 문서 등급 분류 기준이 궁금해요.","confidential":false,"ids":[]}
+{"id":"judge-0199","industry":"public-enterprise","group":"marker_only","text":"공개 금지 자료를 출력할 때 주의할 점은?","confidential":false,"ids":[]}
+{"id":"judge-0200","industry":"public-enterprise","group":"marker_only","text":"Internal only 자료를 출력할 때 주의할 점은?","confidential":false,"ids":[]}
+{"id":"judge-0201","industry":"public-enterprise","group":"marker_only","text":"직원 교육 자료에 배포 금지 표시 예시를 넣어 줘.","confidential":false,"ids":[]}
+{"id":"judge-0202","industry":"public-enterprise","group":"marker_only","text":"Confidential 등급 분류 기준이 궁금해요.","confidential":false,"ids":[]}
+{"id":"judge-0203","industry":"public-enterprise","group":"subject_only","text":"사업 계획안에 대해 신문 기사에 나온 내용을 정리해 줘.","confidential":false,"ids":[]}
+{"id":"judge-0204","industry":"public-enterprise","group":"subject_only","text":"감사 결과에 대해 신문 기사에 나온 내용을 정리해 줘.","confidential":false,"ids":[]}
+{"id":"judge-0205","industry":"public-enterprise","group":"subject_only","text":"다른 나라의 입찰 예정가 사례를 알려 줘.","confidential":false,"ids":[]}
+{"id":"judge-0206","industry":"public-enterprise","group":"subject_only","text":"감사 결과 용어 뜻을 쉽게 풀어 줘.","confidential":false,"ids":[]}
+{"id":"judge-0207","industry":"public-enterprise","group":"subject_only","text":"입찰 예정가 용어 뜻을 쉽게 풀어 줘.","confidential":false,"ids":[]}
+{"id":"judge-0208","industry":"public-enterprise","group":"subject_only","text":"사업 계획안 용어 뜻을 쉽게 풀어 줘.","confidential":false,"ids":[]}
+{"id":"judge-0209","industry":"public-enterprise","group":"subject_only","text":"다른 나라의 협상 전략 사례를 알려 줘.","confidential":false,"ids":[]}
+{"id":"judge-0210","industry":"public-enterprise","group":"subject_only","text":"입찰 예정가 용어 뜻을 쉽게 풀어 줘.","confidential":false,"ids":[]}
+{"id":"judge-0211","industry":"public-enterprise","group":"subject_only","text":"요금 인상안에 대해 신문 기사에 나온 내용을 정리해 줘.","confidential":false,"ids":[]}
+{"id":"judge-0212","industry":"public-enterprise","group":"subject_only","text":"입찰 예정가에 대해 신문 기사에 나온 내용을 정리해 줘.","confidential":false,"ids":[]}
+{"id":"judge-0213","industry":"public-enterprise","group":"subject_only","text":"계약 단가 용어 뜻을 쉽게 풀어 줘.","confidential":false,"ids":[]}
+{"id":"judge-0214","industry":"public-enterprise","group":"subject_only","text":"예정가격에 대해 신문 기사에 나온 내용을 정리해 줘.","confidential":false,"ids":[]}
+{"id":"judge-0215","industry":"public-enterprise","group":"subject_only","text":"감사 결과에 대해 신문 기사에 나온 내용을 정리해 줘.","confidential":false,"ids":[]}
+{"id":"judge-0216","industry":"public-enterprise","group":"subject_only","text":"협상 전략 용어 뜻을 쉽게 풀어 줘.","confidential":false,"ids":[]}
+{"id":"judge-0217","industry":"public-enterprise","group":"subject_only","text":"다른 나라의 입찰 예정가 사례를 알려 줘.","confidential":false,"ids":[]}
+{"id":"judge-0218","industry":"public-enterprise","group":"subject_only","text":"요금 인상안에 대해 신문 기사에 나온 내용을 정리해 줘.","confidential":false,"ids":[]}
+{"id":"judge-0219","industry":"public-enterprise","group":"subject_only","text":"입찰 예정가 용어 뜻을 쉽게 풀어 줘.","confidential":false,"ids":[]}
+{"id":"judge-0220","industry":"public-enterprise","group":"subject_only","text":"다른 나라의 예정가격 사례를 알려 줘.","confidential":false,"ids":[]}
+{"id":"judge-0221","industry":"public-enterprise","group":"business","text":"업무 인수인계서 목차를 제안해 줘.","confidential":false,"ids":[]}
+{"id":"judge-0222","industry":"public-enterprise","group":"business","text":"고객 설문 결과를 그래프로 그리는 방법은?","confidential":false,"ids":[]}
+{"id":"judge-0223","industry":"public-enterprise","group":"business","text":"문서 양식의 맞춤법을 확인해 줘.","confidential":false,"ids":[]}
+{"id":"judge-0224","industry":"public-enterprise","group":"business","text":"사내 체육대회 공지문을 써 줘.","confidential":false,"ids":[]}
+{"id":"judge-0225","industry":"public-enterprise","group":"business","text":"고객 설문 결과를 그래프로 그리는 방법은?","confidential":false,"ids":[]}
+{"id":"judge-0226","industry":"public-enterprise","group":"business","text":"홍보 문구 세 가지를 만들어 줘.","confidential":false,"ids":[]}
+{"id":"judge-0227","industry":"public-enterprise","group":"business","text":"업무 인수인계서 목차를 제안해 줘.","confidential":false,"ids":[]}
+{"id":"judge-0228","industry":"public-enterprise","group":"business","text":"휴가 일정 표를 달력 형식으로 바꿔 줘.","confidential":false,"ids":[]}
+{"id":"judge-0229","industry":"public-enterprise","group":"business","text":"이 표의 합계와 평균을 구해 줘.","confidential":false,"ids":[]}
+{"id":"judge-0230","industry":"public-enterprise","group":"business","text":"보안 교육 퀴즈 다섯 문제를 만들어 줘.","confidential":false,"ids":[]}
+{"id":"judge-0231","industry":"public-enterprise","group":"business","text":"고객 설문 결과를 그래프로 그리는 방법은?","confidential":false,"ids":[]}
+{"id":"judge-0232","industry":"public-enterprise","group":"business","text":"고객 설문 결과를 그래프로 그리는 방법은?","confidential":false,"ids":[]}
+{"id":"judge-0233","industry":"public-enterprise","group":"business","text":"고객 설문 결과를 그래프로 그리는 방법은?","confidential":false,"ids":[]}
+{"id":"judge-0234","industry":"public-enterprise","group":"business","text":"업무 인수인계서 목차를 제안해 줘.","confidential":false,"ids":[]}
+{"id":"judge-0235","industry":"public-enterprise","group":"business","text":"업무 인수인계서 목차를 제안해 줘.","confidential":false,"ids":[]}
+{"id":"judge-0236","industry":"public-enterprise","group":"business","text":"문서 양식의 맞춤법을 확인해 줘.","confidential":false,"ids":[]}
+{"id":"judge-0237","industry":"public-enterprise","group":"id","text":"고객번호(2026-868393) 고객 응대 기록을 정리해 줘.","confidential":false,"ids":["2026-868393"]}
+{"id":"judge-0238","industry":"public-enterprise","group":"id","text":"사업번호가 K847240 인 건 서류를 찾아 줘.","confidential":false,"ids":["K847240"]}
+{"id":"judge-0239","industry":"public-enterprise","group":"id","text":"검침번호(P578368) 고객 응대 기록을 정리해 줘.","confidential":false,"ids":["P578368"]}
+{"id":"judge-0240","industry":"public-enterprise","group":"id","text":"확인 요청: 발주번호=LN-2026-27409","confidential":false,"ids":["LN-2026-27409"]}
+{"id":"judge-0241","industry":"public-enterprise","group":"id","text":"확인 요청: 발주번호=2026-302177","confidential":false,"ids":["2026-302177"]}
+{"id":"judge-0242","industry":"public-enterprise","group":"id","text":"확인 요청: 발주번호=3668845686","confidential":false,"ids":["3668845686"]}
+{"id":"judge-0243","industry":"public-enterprise","group":"id","text":"확인 요청: 사업번호=9025046938","confidential":false,"ids":["9025046938"]}
+{"id":"judge-0244","industry":"public-enterprise","group":"id","text":"사업번호(A443086) 고객 응대 기록을 정리해 줘.","confidential":false,"ids":["A443086"]}
+{"id":"judge-0245","industry":"public-enterprise","group":"id","text":"확인 요청: 검침번호=2026-739269","confidential":false,"ids":["2026-739269"]}
+{"id":"judge-0246","industry":"public-enterprise","group":"id","text":"관리번호가 61888324 인 건 서류를 찾아 줘.","confidential":false,"ids":["61888324"]}
+{"id":"judge-0247","industry":"public-enterprise","group":"id","text":"확인 요청: 계약번호=35745073","confidential":false,"ids":["35745073"]}
+{"id":"judge-0248","industry":"public-enterprise","group":"id","text":"검침번호가 2026-940879 인 건 서류를 찾아 줘.","confidential":false,"ids":["2026-940879"]}
+{"id":"judge-0249","industry":"public-enterprise","group":"id","text":"발주번호가 PL-2026-67096 인 건 서류를 찾아 줘.","confidential":false,"ids":["PL-2026-67096"]}
+{"id":"judge-0250","industry":"public-enterprise","group":"id","text":"관리번호(2026-377752) 고객 응대 기록을 정리해 줘.","confidential":false,"ids":["2026-377752"]}
+{"id":"judge-0251","industry":"public-enterprise","group":"id","text":"확인 요청: 관리번호=2026-680294","confidential":false,"ids":["2026-680294"]}
+{"id":"judge-0252","industry":"public-enterprise","group":"id","text":"확인 요청: 고객번호=PL-2026-63971","confidential":false,"ids":["PL-2026-63971"]}
+{"id":"judge-0253","industry":"public-enterprise","group":"id","text":"확인 요청: 계약번호=LN-2026-63494","confidential":false,"ids":["LN-2026-63494"]}
+{"id":"judge-0254","industry":"public-enterprise","group":"id","text":"사업번호가 48007794 인 건 서류를 찾아 줘.","confidential":false,"ids":["48007794"]}
+{"id":"judge-0255","industry":"public-enterprise","group":"id","text":"고객번호(2026-402455) 고객 응대 기록을 정리해 줘.","confidential":false,"ids":["2026-402455"]}
+{"id":"judge-0256","industry":"public-enterprise","group":"id","text":"발주번호(9998311764) 고객 응대 기록을 정리해 줘.","confidential":false,"ids":["9998311764"]}
+{"id":"judge-0257","industry":"public-enterprise","group":"id","text":"사업번호(K986436) 고객 응대 기록을 정리해 줘.","confidential":false,"ids":["K986436"]}
+{"id":"judge-0258","industry":"public-enterprise","group":"id","text":"검침번호가 2026-529785 인 건 서류를 찾아 줘.","confidential":false,"ids":["2026-529785"]}
+{"id":"judge-0259","industry":"public-enterprise","group":"id","text":"고객번호가 42101663 인 건 서류를 찾아 줘.","confidential":false,"ids":["42101663"]}
+{"id":"judge-0260","industry":"public-enterprise","group":"id","text":"확인 요청: 검침번호=4904587531","confidential":false,"ids":["4904587531"]}
+{"id":"judge-0261","industry":"public-enterprise","group":"id_neg","text":"사업번호가 몇 자리인지 알려 줘.","confidential":false,"ids":[]}
+{"id":"judge-0262","industry":"public-enterprise","group":"id_neg","text":"회의실 예약 8070140644 건을 취소해 주세요.","confidential":false,"ids":[]}
+{"id":"judge-0263","industry":"public-enterprise","group":"id_neg","text":"회의실 예약 2026-956259 건을 취소해 주세요.","confidential":false,"ids":[]}
+{"id":"judge-0264","industry":"public-enterprise","group":"id_neg","text":"사업번호가 몇 자리인지 알려 줘.","confidential":false,"ids":[]}
+{"id":"judge-0265","industry":"public-enterprise","group":"id_neg","text":"검침번호 체계는 어떻게 바뀌었나요?","confidential":false,"ids":[]}
+{"id":"judge-0266","industry":"public-enterprise","group":"id_neg","text":"계약번호 체계는 어떻게 바뀌었나요?","confidential":false,"ids":[]}
+{"id":"judge-0267","industry":"public-enterprise","group":"id_neg","text":"회의실 예약 P631808 건을 취소해 주세요.","confidential":false,"ids":[]}
+{"id":"judge-0268","industry":"public-enterprise","group":"id_neg","text":"계약번호가 몇 자리인지 알려 줘.","confidential":false,"ids":[]}
+{"id":"judge-0269","industry":"public-enterprise","group":"id_neg","text":"고객번호가 몇 자리인지 알려 줘.","confidential":false,"ids":[]}
+{"id":"judge-0270","industry":"public-enterprise","group":"id_neg","text":"검침번호가 몇 자리인지 알려 줘.","confidential":false,"ids":[]}
+{"id":"judge-0271","industry":"public-enterprise","group":"id_neg","text":"고객번호가 몇 자리인지 알려 줘.","confidential":false,"ids":[]}
+{"id":"judge-0272","industry":"public-enterprise","group":"id_neg","text":"발주번호가 몇 자리인지 알려 줘.","confidential":false,"ids":[]}
+{"id":"judge-0273","industry":"hospital","group":"conf","text":"극비로 분류된 의료분쟁 파일 내용을 영어로 옮겨 줘.","confidential":true,"ids":[]}
+{"id":"judge-0274","industry":"hospital","group":"conf","text":"의료분쟁 문서인데 비공개라 조심해야 해요. 요점만 써 줘.","confidential":true,"ids":[]}
+{"id":"judge-0275","industry":"hospital","group":"conf","text":"[보안 문서] 감염 발생 검토 메모를 간단히 줄여 주세요.","confidential":true,"ids":[]}
+{"id":"judge-0276","industry":"hospital","group":"conf","text":"내부 검토용로 분류된 의료분쟁 파일 내용을 영어로 옮겨 줘.","confidential":true,"ids":[]}
+{"id":"judge-0277","industry":"hospital","group":"conf","text":"[외부 유출 금지] 수가 협상 검토 메모를 간단히 줄여 주세요.","confidential":true,"ids":[]}
+{"id":"judge-0278","industry":"hospital","group":"conf","text":"엠바고로 분류된 감염 발생 파일 내용을 영어로 옮겨 줘.","confidential":true,"ids":[]}
+{"id":"judge-0279","industry":"hospital","group":"conf","text":"보안 문서로 분류된 임상시험 결과 파일 내용을 영어로 옮겨 줘.","confidential":true,"ids":[]}
+{"id":"judge-0280","industry":"hospital","group":"conf","text":"[극비] 의료분쟁 검토 메모를 간단히 줄여 주세요.","confidential":true,"ids":[]}
+{"id":"judge-0281","industry":"hospital","group":"conf","text":"외부 유출 금지로 분류된 의료분쟁 파일 내용을 영어로 옮겨 줘.","confidential":true,"ids":[]}
+{"id":"judge-0282","industry":"hospital","group":"conf","text":"[보안 문서] 의료분쟁 검토 메모를 간단히 줄여 주세요.","confidential":true,"ids":[]}
+{"id":"judge-0283","industry":"hospital","group":"conf","text":"의료분쟁 문서인데 유출 금지라 조심해야 해요. 요점만 써 줘.","confidential":true,"ids":[]}
+{"id":"judge-0284","industry":"hospital","group":"conf","text":"외부 유출 금지로 분류된 의료사고 파일 내용을 영어로 옮겨 줘.","confidential":true,"ids":[]}
+{"id":"judge-0285","industry":"hospital","group":"conf","text":"의료사고 문서인데 엠바고라 조심해야 해요. 요점만 써 줘.","confidential":true,"ids":[]}
+{"id":"judge-0286","industry":"hospital","group":"conf","text":"배포 금지로 분류된 감염 발생 파일 내용을 영어로 옮겨 줘.","confidential":true,"ids":[]}
+{"id":"judge-0287","industry":"hospital","group":"conf","text":"[엠바고] 감염 발생 검토 메모를 간단히 줄여 주세요.","confidential":true,"ids":[]}
+{"id":"judge-0288","industry":"hospital","group":"conf","text":"외부 유출 금지로 분류된 감염 발생 파일 내용을 영어로 옮겨 줘.","confidential":true,"ids":[]}
+{"id":"judge-0289","industry":"hospital","group":"conf","text":"[취급 주의] 임상시험 결과 검토 메모를 간단히 줄여 주세요.","confidential":true,"ids":[]}
+{"id":"judge-0290","industry":"hospital","group":"conf","text":"보안 문서로 분류된 수가 협상 파일 내용을 영어로 옮겨 줘.","confidential":true,"ids":[]}
+{"id":"judge-0291","industry":"hospital","group":"conf","text":"[극비] 의료사고 검토 메모를 간단히 줄여 주세요.","confidential":true,"ids":[]}
+{"id":"judge-0292","industry":"hospital","group":"conf","text":"의료분쟁 문서인데 내부 검토용이라 조심해야 해요. 요점만 써 줘.","confidential":true,"ids":[]}
+{"id":"judge-0293","industry":"hospital","group":"conf","text":"[내부용] 의료사고 검토 메모를 간단히 줄여 주세요.","confidential":true,"ids":[]}
+{"id":"judge-0294","industry":"hospital","group":"conf","text":"보안 문서로 분류된 의료분쟁 파일 내용을 영어로 옮겨 줘.","confidential":true,"ids":[]}
+{"id":"judge-0295","industry":"hospital","group":"conf","text":"극비로 분류된 의료사고 파일 내용을 영어로 옮겨 줘.","confidential":true,"ids":[]}
+{"id":"judge-0296","industry":"hospital","group":"conf","text":"Confidential로 분류된 의료분쟁 파일 내용을 영어로 옮겨 줘.","confidential":true,"ids":[]}
+{"id":"judge-0297","industry":"hospital","group":"conf_split","text":"첨부는 유출 금지 자료입니다. 그 안의 감염 발생 숫자를 확인해 줘.","confidential":true,"ids":[]}
+{"id":"judge-0298","industry":"hospital","group":"conf_split","text":"배포 금지 등급 보고서예요. 의료분쟁 부분을 표로 바꿔 주세요.","confidential":true,"ids":[]}
+{"id":"judge-0299","industry":"hospital","group":"conf_split","text":"첨부는 유출 금지 자료입니다. 그 안의 의료분쟁 숫자를 확인해 줘.","confidential":true,"ids":[]}
+{"id":"judge-0300","industry":"hospital","group":"conf_split","text":"첨부는 배포 금지 자료입니다. 그 안의 의료분쟁 숫자를 확인해 줘.","confidential":true,"ids":[]}
+{"id":"judge-0301","industry":"hospital","group":"conf_split","text":"극비 등급 보고서예요. 감염 발생 부분을 표로 바꿔 주세요.","confidential":true,"ids":[]}
+{"id":"judge-0302","industry":"hospital","group":"conf_split","text":"내부용 등급 보고서예요. 의료사고 부분을 표로 바꿔 주세요.","confidential":true,"ids":[]}
+{"id":"judge-0303","industry":"hospital","group":"conf_split","text":"취급 주의 등급 보고서예요. 수가 협상 부분을 표로 바꿔 주세요.","confidential":true,"ids":[]}
+{"id":"judge-0304","industry":"hospital","group":"conf_split","text":"엠바고 등급 보고서예요. 수가 협상 부분을 표로 바꿔 주세요.","confidential":true,"ids":[]}
+{"id":"judge-0305","industry":"hospital","group":"conf_split","text":"첨부는 배포 금지 자료입니다. 그 안의 의료사고 숫자를 확인해 줘.","confidential":true,"ids":[]}
+{"id":"judge-0306","industry":"hospital","group":"conf_split","text":"첨부는 Internal only 자료입니다. 그 안의 수가 협상 숫자를 확인해 줘.","confidential":true,"ids":[]}
+{"id":"judge-0307","industry":"hospital","group":"conf_split","text":"기밀 등급 보고서예요. 수가 협상 부분을 표로 바꿔 주세요.","confidential":true,"ids":[]}
+{"id":"judge-0308","industry":"hospital","group":"conf_split","text":"첨부는 대외비 자료입니다. 그 안의 임상시험 결과 숫자를 확인해 줘.","confidential":true,"ids":[]}
+{"id":"judge-0309","industry":"hospital","group":"conf_para","text":"공개 금지로 분류된 병동 집단 감염 보고 파일 내용을 영어로 옮겨 줘.","confidential":true,"ids":[]}
+{"id":"judge-0310","industry":"hospital","group":"conf_para","text":"Internal only로 분류된 수술 중 생긴 사고 경위 파일 내용을 영어로 옮겨 줘.","confidential":true,"ids":[]}
+{"id":"judge-0311","industry":"hospital","group":"conf_para","text":"신약 시험 중간 성적 문서인데 내부용이라 조심해야 해요. 요점만 써 줘.","confidential":true,"ids":[]}
+{"id":"judge-0312","industry":"hospital","group":"conf_para","text":"신약 시험 중간 성적 문서인데 공개 금지라 조심해야 해요. 요점만 써 줘.","confidential":true,"ids":[]}
+{"id":"judge-0313","industry":"hospital","group":"conf_para","text":"열람 제한로 분류된 신약 시험 중간 성적 파일 내용을 영어로 옮겨 줘.","confidential":true,"ids":[]}
+{"id":"judge-0314","industry":"hospital","group":"conf_para","text":"[엠바고] 병동 집단 감염 보고 검토 메모를 간단히 줄여 주세요.","confidential":true,"ids":[]}
+{"id":"judge-0315","industry":"hospital","group":"far","text":"보안 문서 등급 분류 기준이 궁금해요. 점심은 뭐 먹을까요? 의료사고 뉴스도 찾아 줘.","confidential":false,"ids":[]}
+{"id":"judge-0316","industry":"hospital","group":"far","text":"Internal only 등급 분류 기준이 궁금해요. 점심은 뭐 먹을까요? 수가 협상 뉴스도 찾아 줘.","confidential":false,"ids":[]}
+{"id":"judge-0317","industry":"hospital","group":"far","text":"내부 검토용 등급 분류 기준이 궁금해요. 점심은 뭐 먹을까요? 의료분쟁 뉴스도 찾아 줘.","confidential":false,"ids":[]}
+{"id":"judge-0318","industry":"hospital","group":"far","text":"극비 등급 분류 기준이 궁금해요. 점심은 뭐 먹을까요? 감염 발생 뉴스도 찾아 줘.","confidential":false,"ids":[]}
+{"id":"judge-0319","industry":"hospital","group":"far","text":"비밀 문서 등급 분류 기준이 궁금해요. 점심은 뭐 먹을까요? 임상시험 결과 뉴스도 찾아 줘.","confidential":false,"ids":[]}
+{"id":"judge-0320","industry":"hospital","group":"far","text":"극비 등급 분류 기준이 궁금해요. 점심은 뭐 먹을까요? 의료분쟁 뉴스도 찾아 줘.","confidential":false,"ids":[]}
+{"id":"judge-0321","industry":"hospital","group":"marker_only","text":"대외비 등급 분류 기준이 궁금해요.","confidential":false,"ids":[]}
+{"id":"judge-0322","industry":"hospital","group":"marker_only","text":"배포 금지 자료를 출력할 때 주의할 점은?","confidential":false,"ids":[]}
+{"id":"judge-0323","industry":"hospital","group":"marker_only","text":"직원 교육 자료에 배포 금지 표시 예시를 넣어 줘.","confidential":false,"ids":[]}
+{"id":"judge-0324","industry":"hospital","group":"marker_only","text":"직원 교육 자료에 비공개 표시 예시를 넣어 줘.","confidential":false,"ids":[]}
+{"id":"judge-0325","industry":"hospital","group":"marker_only","text":"직원 교육 자료에 Confidential 표시 예시를 넣어 줘.","confidential":false,"ids":[]}
+{"id":"judge-0326","industry":"hospital","group":"marker_only","text":"비밀 문서 등급 분류 기준이 궁금해요.","confidential":false,"ids":[]}
+{"id":"judge-0327","industry":"hospital","group":"marker_only","text":"유출 금지 등급 분류 기준이 궁금해요.","confidential":false,"ids":[]}
+{"id":"judge-0328","industry":"hospital","group":"marker_only","text":"직원 교육 자료에 취급 주의 표시 예시를 넣어 줘.","confidential":false,"ids":[]}
+{"id":"judge-0329","industry":"hospital","group":"marker_only","text":"직원 교육 자료에 비밀 문서 표시 예시를 넣어 줘.","confidential":false,"ids":[]}
+{"id":"judge-0330","industry":"hospital","group":"marker_only","text":"직원 교육 자료에 보안 문서 표시 예시를 넣어 줘.","confidential":false,"ids":[]}
+{"id":"judge-0331","industry":"hospital","group":"marker_only","text":"Confidential 자료를 출력할 때 주의할 점은?","confidential":false,"ids":[]}
+{"id":"judge-0332","industry":"hospital","group":"marker_only","text":"비밀 문서 자료를 출력할 때 주의할 점은?","confidential":false,"ids":[]}
+{"id":"judge-0333","industry":"hospital","group":"marker_only","text":"직원 교육 자료에 내부 검토용 표시 예시를 넣어 줘.","confidential":false,"ids":[]}
+{"id":"judge-0334","industry":"hospital","group":"marker_only","text":"Confidential 자료를 출력할 때 주의할 점은?","confidential":false,"ids":[]}
+{"id":"judge-0335","industry":"hospital","group":"marker_only","text":"극비 등급 분류 기준이 궁금해요.","confidential":false,"ids":[]}
+{"id":"judge-0336","industry":"hospital","group":"marker_only","text":"배포 금지 자료를 출력할 때 주의할 점은?","confidential":false,"ids":[]}
+{"id":"judge-0337","industry":"hospital","group":"marker_only","text":"기밀 등급 분류 기준이 궁금해요.","confidential":false,"ids":[]}
+{"id":"judge-0338","industry":"hospital","group":"marker_only","text":"직원 교육 자료에 배포 금지 표시 예시를 넣어 줘.","confidential":false,"ids":[]}
+{"id":"judge-0339","industry":"hospital","group":"subject_only","text":"수가 협상에 대해 신문 기사에 나온 내용을 정리해 줘.","confidential":false,"ids":[]}
+{"id":"judge-0340","industry":"hospital","group":"subject_only","text":"임상시험 결과에 대해 신문 기사에 나온 내용을 정리해 줘.","confidential":false,"ids":[]}
+{"id":"judge-0341","industry":"hospital","group":"subject_only","text":"감염 발생에 대해 신문 기사에 나온 내용을 정리해 줘.","confidential":false,"ids":[]}
+{"id":"judge-0342","industry":"hospital","group":"subject_only","text":"의료분쟁에 대해 신문 기사에 나온 내용을 정리해 줘.","confidential":false,"ids":[]}
+{"id":"judge-0343","industry":"hospital","group":"subject_only","text":"수가 협상에 대해 신문 기사에 나온 내용을 정리해 줘.","confidential":false,"ids":[]}
+{"id":"judge-0344","industry":"hospital","group":"subject_only","text":"의료사고 용어 뜻을 쉽게 풀어 줘.","confidential":false,"ids":[]}
+{"id":"judge-0345","industry":"hospital","group":"subject_only","text":"수가 협상에 대해 신문 기사에 나온 내용을 정리해 줘.","confidential":false,"ids":[]}
+{"id":"judge-0346","industry":"hospital","group":"subject_only","text":"다른 나라의 감염 발생 사례를 알려 줘.","confidential":false,"ids":[]}
+{"id":"judge-0347","industry":"hospital","group":"subject_only","text":"임상시험 결과에 대해 신문 기사에 나온 내용을 정리해 줘.","confidential":false,"ids":[]}
+{"id":"judge-0348","industry":"hospital","group":"subject_only","text":"임상시험 결과에 대해 신문 기사에 나온 내용을 정리해 줘.","confidential":false,"ids":[]}
+{"id":"judge-0349","industry":"hospital","group":"subject_only","text":"다른 나라의 수가 협상 사례를 알려 줘.","confidential":false,"ids":[]}
+{"id":"judge-0350","industry":"hospital","group":"subject_only","text":"다른 나라의 감염 발생 사례를 알려 줘.","confidential":false,"ids":[]}
+{"id":"judge-0351","industry":"hospital","group":"subject_only","text":"임상시험 결과에 대해 신문 기사에 나온 내용을 정리해 줘.","confidential":false,"ids":[]}
+{"id":"judge-0352","industry":"hospital","group":"subject_only","text":"다른 나라의 의료사고 사례를 알려 줘.","confidential":false,"ids":[]}
+{"id":"judge-0353","industry":"hospital","group":"subject_only","text":"의료사고 용어 뜻을 쉽게 풀어 줘.","confidential":false,"ids":[]}
+{"id":"judge-0354","industry":"hospital","group":"subject_only","text":"임상시험 결과에 대해 신문 기사에 나온 내용을 정리해 줘.","confidential":false,"ids":[]}
+{"id":"judge-0355","industry":"hospital","group":"subject_only","text":"다른 나라의 수가 협상 사례를 알려 줘.","confidential":false,"ids":[]}
+{"id":"judge-0356","industry":"hospital","group":"subject_only","text":"의료사고 용어 뜻을 쉽게 풀어 줘.","confidential":false,"ids":[]}
+{"id":"judge-0357","industry":"hospital","group":"business","text":"휴가 일정 표를 달력 형식으로 바꿔 줘.","confidential":false,"ids":[]}
+{"id":"judge-0358","industry":"hospital","group":"business","text":"휴가 일정 표를 달력 형식으로 바꿔 줘.","confidential":false,"ids":[]}
+{"id":"judge-0359","industry":"hospital","group":"business","text":"보안 교육 퀴즈 다섯 문제를 만들어 줘.","confidential":false,"ids":[]}
+{"id":"judge-0360","industry":"hospital","group":"business","text":"고객 설문 결과를 그래프로 그리는 방법은?","confidential":false,"ids":[]}
+{"id":"judge-0361","industry":"hospital","group":"business","text":"문서 양식의 맞춤법을 확인해 줘.","confidential":false,"ids":[]}
+{"id":"judge-0362","industry":"hospital","group":"business","text":"문서 양식의 맞춤법을 확인해 줘.","confidential":false,"ids":[]}
+{"id":"judge-0363","industry":"hospital","group":"business","text":"보안 교육 퀴즈 다섯 문제를 만들어 줘.","confidential":false,"ids":[]}
+{"id":"judge-0364","industry":"hospital","group":"business","text":"사내 체육대회 공지문을 써 줘.","confidential":false,"ids":[]}
+{"id":"judge-0365","industry":"hospital","group":"business","text":"고객 설문 결과를 그래프로 그리는 방법은?","confidential":false,"ids":[]}
+{"id":"judge-0366","industry":"hospital","group":"business","text":"홍보 문구 세 가지를 만들어 줘.","confidential":false,"ids":[]}
+{"id":"judge-0367","industry":"hospital","group":"business","text":"홍보 문구 세 가지를 만들어 줘.","confidential":false,"ids":[]}
+{"id":"judge-0368","industry":"hospital","group":"business","text":"보안 교육 퀴즈 다섯 문제를 만들어 줘.","confidential":false,"ids":[]}
+{"id":"judge-0369","industry":"hospital","group":"business","text":"사내 체육대회 공지문을 써 줘.","confidential":false,"ids":[]}
+{"id":"judge-0370","industry":"hospital","group":"business","text":"이 표의 합계와 평균을 구해 줘.","confidential":false,"ids":[]}
+{"id":"judge-0371","industry":"hospital","group":"business","text":"이 표의 합계와 평균을 구해 줘.","confidential":false,"ids":[]}
+{"id":"judge-0372","industry":"hospital","group":"business","text":"업무 인수인계서 목차를 제안해 줘.","confidential":false,"ids":[]}
+{"id":"judge-0373","industry":"hospital","group":"id","text":"환자등록번호(A253895) 고객 응대 기록을 정리해 줘.","confidential":false,"ids":["A253895"]}
+{"id":"judge-0374","industry":"hospital","group":"id","text":"진료카드번호가 P680288 인 건 서류를 찾아 줘.","confidential":false,"ids":["P680288"]}
+{"id":"judge-0375","industry":"hospital","group":"id","text":"병록번호가 A514632 인 건 서류를 찾아 줘.","confidential":false,"ids":["A514632"]}
+{"id":"judge-0376","industry":"hospital","group":"id","text":"의무기록번호가 2026-467501 인 건 서류를 찾아 줘.","confidential":false,"ids":["2026-467501"]}
+{"id":"judge-0377","industry":"hospital","group":"id","text":"진료번호가 M708480 인 건 서류를 찾아 줘.","confidential":false,"ids":["M708480"]}
+{"id":"judge-0378","industry":"hospital","group":"id","text":"환자등록번호가 44264673 인 건 서류를 찾아 줘.","confidential":false,"ids":["44264673"]}
+{"id":"judge-0379","industry":"hospital","group":"id","text":"차트번호가 2026-748794 인 건 서류를 찾아 줘.","confidential":false,"ids":["2026-748794"]}
+{"id":"judge-0380","industry":"hospital","group":"id","text":"환자번호(K715060) 고객 응대 기록을 정리해 줘.","confidential":false,"ids":["K715060"]}
+{"id":"judge-0381","industry":"hospital","group":"id","text":"의무기록번호(K438919) 고객 응대 기록을 정리해 줘.","confidential":false,"ids":["K438919"]}
+{"id":"judge-0382","industry":"hospital","group":"id","text":"병록번호가 2026-651439 인 건 서류를 찾아 줘.","confidential":false,"ids":["2026-651439"]}
+{"id":"judge-0383","industry":"hospital","group":"id","text":"확인 요청: 차트번호=2026-780327","confidential":false,"ids":["2026-780327"]}
+{"id":"judge-0384","industry":"hospital","group":"id","text":"확인 요청: 병록번호=2026-798256","confidential":false,"ids":["2026-798256"]}
+{"id":"judge-0385","industry":"hospital","group":"id","text":"확인 요청: 의무기록번호=16292578","confidential":false,"ids":["16292578"]}
+{"id":"judge-0386","industry":"hospital","group":"id","text":"병록번호(73321461) 고객 응대 기록을 정리해 줘.","confidential":false,"ids":["73321461"]}
+{"id":"judge-0387","industry":"hospital","group":"id","text":"환자번호가 2026-078356 인 건 서류를 찾아 줘.","confidential":false,"ids":["2026-078356"]}
+{"id":"judge-0388","industry":"hospital","group":"id","text":"확인 요청: 진료번호=14759875","confidential":false,"ids":["14759875"]}
+{"id":"judge-0389","industry":"hospital","group":"id","text":"병록번호(3041941853) 고객 응대 기록을 정리해 줘.","confidential":false,"ids":["3041941853"]}
+{"id":"judge-0390","industry":"hospital","group":"id","text":"확인 요청: 검체번호=1533863135","confidential":false,"ids":["1533863135"]}
+{"id":"judge-0391","industry":"hospital","group":"id","text":"확인 요청: 진료번호=98022583","confidential":false,"ids":["98022583"]}
+{"id":"judge-0392","industry":"hospital","group":"id","text":"확인 요청: 환자번호=CL-2026-90875","confidential":false,"ids":["CL-2026-90875"]}
+{"id":"judge-0393","industry":"hospital","group":"id","text":"확인 요청: 환자번호=9021821441","confidential":false,"ids":["9021821441"]}
+{"id":"judge-0394","industry":"hospital","group":"id","text":"확인 요청: 환자번호=K018124","confidential":false,"ids":["K018124"]}
+{"id":"judge-0395","industry":"hospital","group":"id","text":"진료번호가 2026-918568 인 건 서류를 찾아 줘.","confidential":false,"ids":["2026-918568"]}
+{"id":"judge-0396","industry":"hospital","group":"id","text":"의무기록번호가 HR-2026-18211 인 건 서류를 찾아 줘.","confidential":false,"ids":["HR-2026-18211"]}
+{"id":"judge-0397","industry":"hospital","group":"id_neg","text":"검체번호 체계는 어떻게 바뀌었나요?","confidential":false,"ids":[]}
+{"id":"judge-0398","industry":"hospital","group":"id_neg","text":"처방번호가 몇 자리인지 알려 줘.","confidential":false,"ids":[]}
+{"id":"judge-0399","industry":"hospital","group":"id_neg","text":"회의실 예약 95667464 건을 취소해 주세요.","confidential":false,"ids":[]}
+{"id":"judge-0400","industry":"hospital","group":"id_neg","text":"회의실 예약 6689755614 건을 취소해 주세요.","confidential":false,"ids":[]}
+{"id":"judge-0401","industry":"hospital","group":"id_neg","text":"진료카드번호가 몇 자리인지 알려 줘.","confidential":false,"ids":[]}
+{"id":"judge-0402","industry":"hospital","group":"id_neg","text":"의무기록번호 체계는 어떻게 바뀌었나요?","confidential":false,"ids":[]}
+{"id":"judge-0403","industry":"hospital","group":"id_neg","text":"회의실 예약 96262850 건을 취소해 주세요.","confidential":false,"ids":[]}
+{"id":"judge-0404","industry":"hospital","group":"id_neg","text":"진료카드번호가 몇 자리인지 알려 줘.","confidential":false,"ids":[]}
+{"id":"judge-0405","industry":"hospital","group":"id_neg","text":"환자번호가 몇 자리인지 알려 줘.","confidential":false,"ids":[]}
+{"id":"judge-0406","industry":"hospital","group":"id_neg","text":"진료카드번호 체계는 어떻게 바뀌었나요?","confidential":false,"ids":[]}
+{"id":"judge-0407","industry":"hospital","group":"id_neg","text":"회의실 예약 A252598 건을 취소해 주세요.","confidential":false,"ids":[]}
+{"id":"judge-0408","industry":"hospital","group":"id_neg","text":"회의실 예약 2026-915424 건을 취소해 주세요.","confidential":false,"ids":[]}
+{"id":"judge-0409","industry":"human-resources","group":"conf","text":"임금 협상안 문서인데 내부용이라 조심해야 해요. 요점만 써 줘.","confidential":true,"ids":[]}
+{"id":"judge-0410","industry":"human-resources","group":"conf","text":"외부 유출 금지로 분류된 연봉 협상 파일 내용을 영어로 옮겨 줘.","confidential":true,"ids":[]}
+{"id":"judge-0411","industry":"human-resources","group":"conf","text":"열람 제한로 분류된 희망퇴직 파일 내용을 영어로 옮겨 줘.","confidential":true,"ids":[]}
+{"id":"judge-0412","industry":"human-resources","group":"conf","text":"징계 대상 문서인데 내부용이라 조심해야 해요. 요점만 써 줘.","confidential":true,"ids":[]}
+{"id":"judge-0413","industry":"human-resources","group":"conf","text":"희망퇴직 문서인데 기밀이라 조심해야 해요. 요점만 써 줘.","confidential":true,"ids":[]}
+{"id":"judge-0414","industry":"human-resources","group":"conf","text":"인사 평가 결과 문서인데 배포 금지라 조심해야 해요. 요점만 써 줘.","confidential":true,"ids":[]}
+{"id":"judge-0415","industry":"human-resources","group":"conf","text":"[보안 문서] 임금 협상안 검토 메모를 간단히 줄여 주세요.","confidential":true,"ids":[]}
+{"id":"judge-0416","industry":"human-resources","group":"conf","text":"[엠바고] 희망퇴직 검토 메모를 간단히 줄여 주세요.","confidential":true,"ids":[]}
+{"id":"judge-0417","industry":"human-resources","group":"conf","text":"연봉 협상 문서인데 취급 주의라 조심해야 해요. 요점만 써 줘.","confidential":true,"ids":[]}
+{"id":"judge-0418","industry":"human-resources","group":"conf","text":"외부 유출 금지로 분류된 해고 대상 파일 내용을 영어로 옮겨 줘.","confidential":true,"ids":[]}
+{"id":"judge-0419","industry":"human-resources","group":"conf","text":"대외비로 분류된 노조 교섭 파일 내용을 영어로 옮겨 줘.","confidential":true,"ids":[]}
+{"id":"judge-0420","industry":"human-resources","group":"conf","text":"기밀로 분류된 징계 대상 파일 내용을 영어로 옮겨 줘.","confidential":true,"ids":[]}
+{"id":"judge-0421","industry":"human-resources","group":"conf","text":"[비밀 문서] 노조 교섭 검토 메모를 간단히 줄여 주세요.","confidential":true,"ids":[]}
+{"id":"judge-0422","industry":"human-resources","group":"conf","text":"열람 제한로 분류된 인사 평가 결과 파일 내용을 영어로 옮겨 줘.","confidential":true,"ids":[]}
+{"id":"judge-0423","industry":"human-resources","group":"conf","text":"해고 대상 문서인데 Confidential라 조심해야 해요. 요점만 써 줘.","confidential":true,"ids":[]}
+{"id":"judge-0424","industry":"human-resources","group":"conf","text":"[대외비] 연봉 협상 검토 메모를 간단히 줄여 주세요.","confidential":true,"ids":[]}
+{"id":"judge-0425","industry":"human-resources","group":"conf","text":"사내 한정로 분류된 인사 평가 결과 파일 내용을 영어로 옮겨 줘.","confidential":true,"ids":[]}
+{"id":"judge-0426","industry":"human-resources","group":"conf","text":"연봉 협상 문서인데 내부용이라 조심해야 해요. 요점만 써 줘.","confidential":true,"ids":[]}
+{"id":"judge-0427","industry":"human-resources","group":"conf","text":"[Internal only] 징계 대상 검토 메모를 간단히 줄여 주세요.","confidential":true,"ids":[]}
+{"id":"judge-0428","industry":"human-resources","group":"conf","text":"[배포 금지] 인사 평가 결과 검토 메모를 간단히 줄여 주세요.","confidential":true,"ids":[]}
+{"id":"judge-0429","industry":"human-resources","group":"conf","text":"사내 한정로 분류된 구조조정 파일 내용을 영어로 옮겨 줘.","confidential":true,"ids":[]}
+{"id":"judge-0430","industry":"human-resources","group":"conf","text":"인사 평가 결과 문서인데 사내 한정이라 조심해야 해요. 요점만 써 줘.","confidential":true,"ids":[]}
+{"id":"judge-0431","industry":"human-resources","group":"conf","text":"[엠바고] 희망퇴직 검토 메모를 간단히 줄여 주세요.","confidential":true,"ids":[]}
+{"id":"judge-0432","industry":"human-resources","group":"conf","text":"징계 대상 문서인데 배포 금지라 조심해야 해요. 요점만 써 줘.","confidential":true,"ids":[]}
+{"id":"judge-0433","industry":"human-resources","group":"conf_split","text":"첨부는 기밀 자료입니다. 그 안의 임금 협상안 숫자를 확인해 줘.","confidential":true,"ids":[]}
+{"id":"judge-0434","industry":"human-resources","group":"conf_split","text":"공개 금지 등급 보고서예요. 인사 평가 결과 부분을 표로 바꿔 주세요.","confidential":true,"ids":[]}
+{"id":"judge-0435","industry":"human-resources","group":"conf_split","text":"첨부는 유출 금지 자료입니다. 그 안의 임금 협상안 숫자를 확인해 줘.","confidential":true,"ids":[]}
+{"id":"judge-0436","industry":"human-resources","group":"conf_split","text":"취급 주의 등급 보고서예요. 임금 협상안 부분을 표로 바꿔 주세요.","confidential":true,"ids":[]}
+{"id":"judge-0437","industry":"human-resources","group":"conf_split","text":"비공개 등급 보고서예요. 구조조정 부분을 표로 바꿔 주세요.","confidential":true,"ids":[]}
+{"id":"judge-0438","industry":"human-resources","group":"conf_split","text":"첨부는 대외비 자료입니다. 그 안의 징계 대상 숫자를 확인해 줘.","confidential":true,"ids":[]}
+{"id":"judge-0439","industry":"human-resources","group":"conf_split","text":"첨부는 유출 금지 자료입니다. 그 안의 인사 평가 결과 숫자를 확인해 줘.","confidential":true,"ids":[]}
+{"id":"judge-0440","industry":"human-resources","group":"conf_split","text":"비공개 등급 보고서예요. 희망퇴직 부분을 표로 바꿔 주세요.","confidential":true,"ids":[]}
+{"id":"judge-0441","industry":"human-resources","group":"conf_split","text":"사내 한정 등급 보고서예요. 인사 평가 결과 부분을 표로 바꿔 주세요.","confidential":true,"ids":[]}
+{"id":"judge-0442","industry":"human-resources","group":"conf_split","text":"첨부는 비공개 자료입니다. 그 안의 해고 대상 숫자를 확인해 줘.","confidential":true,"ids":[]}
+{"id":"judge-0443","industry":"human-resources","group":"conf_split","text":"첨부는 Internal only 자료입니다. 그 안의 연봉 협상 숫자를 확인해 줘.","confidential":true,"ids":[]}
+{"id":"judge-0444","industry":"human-resources","group":"conf_split","text":"사내 한정 등급 보고서예요. 노조 교섭 부분을 표로 바꿔 주세요.","confidential":true,"ids":[]}
+{"id":"judge-0445","industry":"human-resources","group":"conf_para","text":"Confidential로 분류된 내년 급여 인상 폭 초안 파일 내용을 영어로 옮겨 줘.","confidential":true,"ids":[]}
+{"id":"judge-0446","industry":"human-resources","group":"conf_para","text":"내년 급여 인상 폭 초안 문서인데 Internal only라 조심해야 해요. 요점만 써 줘.","confidential":true,"ids":[]}
+{"id":"judge-0447","industry":"human-resources","group":"conf_para","text":"내부용로 분류된 내년 급여 인상 폭 초안 파일 내용을 영어로 옮겨 줘.","confidential":true,"ids":[]}
+{"id":"judge-0448","industry":"human-resources","group":"conf_para","text":"공개 금지로 분류된 내년 급여 인상 폭 초안 파일 내용을 영어로 옮겨 줘.","confidential":true,"ids":[]}
+{"id":"judge-0449","industry":"human-resources","group":"conf_para","text":"내년 급여 인상 폭 초안 문서인데 엠바고라 조심해야 해요. 요점만 써 줘.","confidential":true,"ids":[]}
+{"id":"judge-0450","industry":"human-resources","group":"conf_para","text":"[기밀] 감원 대상 부서 명단 검토 메모를 간단히 줄여 주세요.","confidential":true,"ids":[]}
+{"id":"judge-0451","industry":"human-resources","group":"far","text":"외부 유출 금지 등급 분류 기준이 궁금해요. 점심은 뭐 먹을까요? 연봉 협상 뉴스도 찾아 줘.","confidential":false,"ids":[]}
+{"id":"judge-0452","industry":"human-resources","group":"far","text":"사내 한정 등급 분류 기준이 궁금해요. 점심은 뭐 먹을까요? 징계 대상 뉴스도 찾아 줘.","confidential":false,"ids":[]}
+{"id":"judge-0453","industry":"human-resources","group":"far","text":"보안 문서 등급 분류 기준이 궁금해요. 점심은 뭐 먹을까요? 구조조정 뉴스도 찾아 줘.","confidential":false,"ids":[]}
+{"id":"judge-0454","industry":"human-resources","group":"far","text":"기밀 등급 분류 기준이 궁금해요. 점심은 뭐 먹을까요? 해고 대상 뉴스도 찾아 줘.","confidential":false,"ids":[]}
+{"id":"judge-0455","industry":"human-resources","group":"far","text":"대외비 등급 분류 기준이 궁금해요. 점심은 뭐 먹을까요? 노조 교섭 뉴스도 찾아 줘.","confidential":false,"ids":[]}
+{"id":"judge-0456","industry":"human-resources","group":"far","text":"대외비 등급 분류 기준이 궁금해요. 점심은 뭐 먹을까요? 연봉 협상 뉴스도 찾아 줘.","confidential":false,"ids":[]}
+{"id":"judge-0457","industry":"human-resources","group":"marker_only","text":"공개 금지 자료를 출력할 때 주의할 점은?","confidential":false,"ids":[]}
+{"id":"judge-0458","industry":"human-resources","group":"marker_only","text":"보안 문서 등급 분류 기준이 궁금해요.","confidential":false,"ids":[]}
+{"id":"judge-0459","industry":"human-resources","group":"marker_only","text":"Confidential 등급 분류 기준이 궁금해요.","confidential":false,"ids":[]}
+{"id":"judge-0460","industry":"human-resources","group":"marker_only","text":"미공개 등급 분류 기준이 궁금해요.","confidential":false,"ids":[]}
+{"id":"judge-0461","industry":"human-resources","group":"marker_only","text":"직원 교육 자료에 공개 금지 표시 예시를 넣어 줘.","confidential":false,"ids":[]}
+{"id":"judge-0462","industry":"human-resources","group":"marker_only","text":"직원 교육 자료에 배포 금지 표시 예시를 넣어 줘.","confidential":false,"ids":[]}
+{"id":"judge-0463","industry":"human-resources","group":"marker_only","text":"배포 금지 등급 분류 기준이 궁금해요.","confidential":false,"ids":[]}
+{"id":"judge-0464","industry":"human-resources","group":"marker_only","text":"비공개 자료를 출력할 때 주의할 점은?","confidential":false,"ids":[]}
+{"id":"judge-0465","industry":"human-resources","group":"marker_only","text":"비밀 문서 등급 분류 기준이 궁금해요.","confidential":false,"ids":[]}
+{"id":"judge-0466","industry":"human-resources","group":"marker_only","text":"공개 금지 등급 분류 기준이 궁금해요.","confidential":false,"ids":[]}
+{"id":"judge-0467","industry":"human-resources","group":"marker_only","text":"공개 금지 자료를 출력할 때 주의할 점은?","confidential":false,"ids":[]}
+{"id":"judge-0468","industry":"human-resources","group":"marker_only","text":"Internal only 자료를 출력할 때 주의할 점은?","confidential":false,"ids":[]}
+{"id":"judge-0469","industry":"human-resources","group":"marker_only","text":"내부 검토용 등급 분류 기준이 궁금해요.","confidential":false,"ids":[]}
+{"id":"judge-0470","industry":"human-resources","group":"marker_only","text":"엠바고 자료를 출력할 때 주의할 점은?","confidential":false,"ids":[]}
+{"id":"judge-0471","industry":"human-resources","group":"marker_only","text":"열람 제한 등급 분류 기준이 궁금해요.","confidential":false,"ids":[]}
+{"id":"judge-0472","industry":"human-resources","group":"marker_only","text":"유출 금지 자료를 출력할 때 주의할 점은?","confidential":false,"ids":[]}
+{"id":"judge-0473","industry":"human-resources","group":"marker_only","text":"대외비 등급 분류 기준이 궁금해요.","confidential":false,"ids":[]}
+{"id":"judge-0474","industry":"human-resources","group":"marker_only","text":"열람 제한 자료를 출력할 때 주의할 점은?","confidential":false,"ids":[]}
+{"id":"judge-0475","industry":"human-resources","group":"subject_only","text":"인사 평가 결과 용어 뜻을 쉽게 풀어 줘.","confidential":false,"ids":[]}
+{"id":"judge-0476","industry":"human-resources","group":"subject_only","text":"다른 나라의 희망퇴직 사례를 알려 줘.","confidential":false,"ids":[]}
+{"id":"judge-0477","industry":"human-resources","group":"subject_only","text":"희망퇴직에 대해 신문 기사에 나온 내용을 정리해 줘.","confidential":false,"ids":[]}
+{"id":"judge-0478","industry":"human-resources","group":"subject_only","text":"다른 나라의 해고 대상 사례를 알려 줘.","confidential":false,"ids":[]}
+{"id":"judge-0479","industry":"human-resources","group":"subject_only","text":"임금 협상안에 대해 신문 기사에 나온 내용을 정리해 줘.","confidential":false,"ids":[]}
+{"id":"judge-0480","industry":"human-resources","group":"subject_only","text":"다른 나라의 해고 대상 사례를 알려 줘.","confidential":false,"ids":[]}
+{"id":"judge-0481","industry":"human-resources","group":"subject_only","text":"다른 나라의 구조조정 사례를 알려 줘.","confidential":false,"ids":[]}
+{"id":"judge-0482","industry":"human-resources","group":"subject_only","text":"해고 대상 용어 뜻을 쉽게 풀어 줘.","confidential":false,"ids":[]}
+{"id":"judge-0483","industry":"human-resources","group":"subject_only","text":"징계 대상에 대해 신문 기사에 나온 내용을 정리해 줘.","confidential":false,"ids":[]}
+{"id":"judge-0484","industry":"human-resources","group":"subject_only","text":"노조 교섭 용어 뜻을 쉽게 풀어 줘.","confidential":false,"ids":[]}
+{"id":"judge-0485","industry":"human-resources","group":"subject_only","text":"다른 나라의 노조 교섭 사례를 알려 줘.","confidential":false,"ids":[]}
+{"id":"judge-0486","industry":"human-resources","group":"subject_only","text":"임금 협상안 용어 뜻을 쉽게 풀어 줘.","confidential":false,"ids":[]}
+{"id":"judge-0487","industry":"human-resources","group":"subject_only","text":"다른 나라의 노조 교섭 사례를 알려 줘.","confidential":false,"ids":[]}
+{"id":"judge-0488","industry":"human-resources","group":"subject_only","text":"해고 대상에 대해 신문 기사에 나온 내용을 정리해 줘.","confidential":false,"ids":[]}
+{"id":"judge-0489","industry":"human-resources","group":"subject_only","text":"인사 평가 결과에 대해 신문 기사에 나온 내용을 정리해 줘.","confidential":false,"ids":[]}
+{"id":"judge-0490","industry":"human-resources","group":"subject_only","text":"징계 대상 용어 뜻을 쉽게 풀어 줘.","confidential":false,"ids":[]}
+{"id":"judge-0491","industry":"human-resources","group":"subject_only","text":"해고 대상에 대해 신문 기사에 나온 내용을 정리해 줘.","confidential":false,"ids":[]}
+{"id":"judge-0492","industry":"human-resources","group":"subject_only","text":"다른 나라의 해고 대상 사례를 알려 줘.","confidential":false,"ids":[]}
+{"id":"judge-0493","industry":"human-resources","group":"business","text":"이 표의 합계와 평균을 구해 줘.","confidential":false,"ids":[]}
+{"id":"judge-0494","industry":"human-resources","group":"business","text":"사내 체육대회 공지문을 써 줘.","confidential":false,"ids":[]}
+{"id":"judge-0495","industry":"human-resources","group":"business","text":"사내 체육대회 공지문을 써 줘.","confidential":false,"ids":[]}
+{"id":"judge-0496","industry":"human-resources","group":"business","text":"업무 인수인계서 목차를 제안해 줘.","confidential":false,"ids":[]}
+{"id":"judge-0497","industry":"human-resources","group":"business","text":"업무 인수인계서 목차를 제안해 줘.","confidential":false,"ids":[]}
+{"id":"judge-0498","industry":"human-resources","group":"business","text":"홍보 문구 세 가지를 만들어 줘.","confidential":false,"ids":[]}
+{"id":"judge-0499","industry":"human-resources","group":"business","text":"홍보 문구 세 가지를 만들어 줘.","confidential":false,"ids":[]}
+{"id":"judge-0500","industry":"human-resources","group":"business","text":"휴가 일정 표를 달력 형식으로 바꿔 줘.","confidential":false,"ids":[]}
+{"id":"judge-0501","industry":"human-resources","group":"business","text":"업무 인수인계서 목차를 제안해 줘.","confidential":false,"ids":[]}
+{"id":"judge-0502","industry":"human-resources","group":"business","text":"휴가 일정 표를 달력 형식으로 바꿔 줘.","confidential":false,"ids":[]}
+{"id":"judge-0503","industry":"human-resources","group":"business","text":"이 표의 합계와 평균을 구해 줘.","confidential":false,"ids":[]}
+{"id":"judge-0504","industry":"human-resources","group":"business","text":"업무 인수인계서 목차를 제안해 줘.","confidential":false,"ids":[]}
+{"id":"judge-0505","industry":"human-resources","group":"business","text":"사내 체육대회 공지문을 써 줘.","confidential":false,"ids":[]}
+{"id":"judge-0506","industry":"human-resources","group":"business","text":"휴가 일정 표를 달력 형식으로 바꿔 줘.","confidential":false,"ids":[]}
+{"id":"judge-0507","industry":"human-resources","group":"business","text":"휴가 일정 표를 달력 형식으로 바꿔 줘.","confidential":false,"ids":[]}
+{"id":"judge-0508","industry":"human-resources","group":"business","text":"홍보 문구 세 가지를 만들어 줘.","confidential":false,"ids":[]}
+{"id":"judge-0509","industry":"human-resources","group":"id","text":"확인 요청: 직원번호=7963926218","confidential":false,"ids":["7963926218"]}
+{"id":"judge-0510","industry":"human-resources","group":"id","text":"확인 요청: 사원번호=PL-2026-90362","confidential":false,"ids":["PL-2026-90362"]}
+{"id":"judge-0511","industry":"human-resources","group":"id","text":"사번(31445180) 고객 응대 기록을 정리해 줘.","confidential":false,"ids":["31445180"]}
+{"id":"judge-0512","industry":"human-resources","group":"id","text":"공무원증번호(59815832) 고객 응대 기록을 정리해 줘.","confidential":false,"ids":["59815832"]}
+{"id":"judge-0513","industry":"human-resources","group":"id","text":"공무원증번호가 M173372 인 건 서류를 찾아 줘.","confidential":false,"ids":["M173372"]}
+{"id":"judge-0514","industry":"human-resources","group":"id","text":"직원번호(2026-169744) 고객 응대 기록을 정리해 줘.","confidential":false,"ids":["2026-169744"]}
+{"id":"judge-0515","industry":"human-resources","group":"id","text":"임직원번호(2026-574605) 고객 응대 기록을 정리해 줘.","confidential":false,"ids":["2026-574605"]}
+{"id":"judge-0516","industry":"human-resources","group":"id","text":"직번이 P166618 인 건 서류를 찾아 줘.","confidential":false,"ids":["P166618"]}
+{"id":"judge-0517","industry":"human-resources","group":"id","text":"사번이 35601281 인 건 서류를 찾아 줘.","confidential":false,"ids":["35601281"]}
+{"id":"judge-0518","industry":"human-resources","group":"id","text":"확인 요청: 임직원번호=4650799483","confidential":false,"ids":["4650799483"]}
+{"id":"judge-0519","industry":"human-resources","group":"id","text":"사번(LN-2026-69757) 고객 응대 기록을 정리해 줘.","confidential":false,"ids":["LN-2026-69757"]}
+{"id":"judge-0520","industry":"human-resources","group":"id","text":"임직원번호가 AC-2026-05229 인 건 서류를 찾아 줘.","confidential":false,"ids":["AC-2026-05229"]}
+{"id":"judge-0521","industry":"human-resources","group":"id","text":"확인 요청: 사원번호=2026-683935","confidential":false,"ids":["2026-683935"]}
+{"id":"judge-0522","industry":"human-resources","group":"id","text":"확인 요청: 사원번호=A995484","confidential":false,"ids":["A995484"]}
+{"id":"judge-0523","industry":"human-resources","group":"id","text":"확인 요청: 사원번호=A841465","confidential":false,"ids":["A841465"]}
+{"id":"judge-0524","industry":"human-resources","group":"id","text":"직원번호(P088165) 고객 응대 기록을 정리해 줘.","confidential":false,"ids":["P088165"]}
+{"id":"judge-0525","industry":"human-resources","group":"id","text":"직번(PL-2026-45811) 고객 응대 기록을 정리해 줘.","confidential":false,"ids":["PL-2026-45811"]}
+{"id":"judge-0526","industry":"human-resources","group":"id","text":"공무원증번호가 K025740 인 건 서류를 찾아 줘.","confidential":false,"ids":["K025740"]}
+{"id":"judge-0527","industry":"human-resources","group":"id","text":"확인 요청: 인사번호=HR-2026-05116","confidential":false,"ids":["HR-2026-05116"]}
+{"id":"judge-0528","industry":"human-resources","group":"id","text":"직번이 49427885 인 건 서류를 찾아 줘.","confidential":false,"ids":["49427885"]}
+{"id":"judge-0529","industry":"human-resources","group":"id","text":"공무원증번호(HR-2026-14004) 고객 응대 기록을 정리해 줘.","confidential":false,"ids":["HR-2026-14004"]}
+{"id":"judge-0530","industry":"human-resources","group":"id","text":"사원번호(2026-952192) 고객 응대 기록을 정리해 줘.","confidential":false,"ids":["2026-952192"]}
+{"id":"judge-0531","industry":"human-resources","group":"id","text":"인사번호가 LN-2026-98896 인 건 서류를 찾아 줘.","confidential":false,"ids":["LN-2026-98896"]}
+{"id":"judge-0532","industry":"human-resources","group":"id","text":"직번이 33133109 인 건 서류를 찾아 줘.","confidential":false,"ids":["33133109"]}
+{"id":"judge-0533","industry":"human-resources","group":"id_neg","text":"직번이 몇 자리인지 알려 줘.","confidential":false,"ids":[]}
+{"id":"judge-0534","industry":"human-resources","group":"id_neg","text":"회의실 예약 2026-802885 건을 취소해 주세요.","confidential":false,"ids":[]}
+{"id":"judge-0535","industry":"human-resources","group":"id_neg","text":"인사번호가 몇 자리인지 알려 줘.","confidential":false,"ids":[]}
+{"id":"judge-0536","industry":"human-resources","group":"id_neg","text":"직원번호 체계는 어떻게 바뀌었나요?","confidential":false,"ids":[]}
+{"id":"judge-0537","industry":"human-resources","group":"id_neg","text":"사원번호가 몇 자리인지 알려 줘.","confidential":false,"ids":[]}
+{"id":"judge-0538","industry":"human-resources","group":"id_neg","text":"회의실 예약 49177742 건을 취소해 주세요.","confidential":false,"ids":[]}
+{"id":"judge-0539","industry":"human-resources","group":"id_neg","text":"직번 체계는 어떻게 바뀌었나요?","confidential":false,"ids":[]}
+{"id":"judge-0540","industry":"human-resources","group":"id_neg","text":"회의실 예약 M341617 건을 취소해 주세요.","confidential":false,"ids":[]}
+{"id":"judge-0541","industry":"human-resources","group":"id_neg","text":"인사번호 체계는 어떻게 바뀌었나요?","confidential":false,"ids":[]}
+{"id":"judge-0542","industry":"human-resources","group":"id_neg","text":"공무원증번호 체계는 어떻게 바뀌었나요?","confidential":false,"ids":[]}
+{"id":"judge-0543","industry":"human-resources","group":"id_neg","text":"인사번호가 몇 자리인지 알려 줘.","confidential":false,"ids":[]}
+{"id":"judge-0544","industry":"human-resources","group":"id_neg","text":"회의실 예약 HR-2026-11615 건을 취소해 주세요.","confidential":false,"ids":[]}
+{"id":"judge-0545","industry":"bank","group":"conf","text":"배포 금지로 분류된 유상증자 파일 내용을 영어로 옮겨 줘.","confidential":true,"ids":[]}
+{"id":"judge-0546","industry":"bank","group":"conf","text":"[내부 검토용] 상장 계획 검토 메모를 간단히 줄여 주세요.","confidential":true,"ids":[]}
+{"id":"judge-0547","industry":"bank","group":"conf","text":"부실 채권 문서인데 외부 유출 금지라 조심해야 해요. 요점만 써 줘.","confidential":true,"ids":[]}
+{"id":"judge-0548","industry":"bank","group":"conf","text":"여신 심사 문서인데 공개 금지라 조심해야 해요. 요점만 써 줘.","confidential":true,"ids":[]}
+{"id":"judge-0549","industry":"bank","group":"conf","text":"열람 제한로 분류된 잠정 실적 파일 내용을 영어로 옮겨 줘.","confidential":true,"ids":[]}
+{"id":"judge-0550","industry":"bank","group":"conf","text":"극비로 분류된 인수합병 파일 내용을 영어로 옮겨 줘.","confidential":true,"ids":[]}
+{"id":"judge-0551","industry":"bank","group":"conf","text":"[미공개] 신용등급 검토 메모를 간단히 줄여 주세요.","confidential":true,"ids":[]}
+{"id":"judge-0552","industry":"bank","group":"conf","text":"여신 심사 문서인데 Confidential라 조심해야 해요. 요점만 써 줘.","confidential":true,"ids":[]}
+{"id":"judge-0553","industry":"bank","group":"conf","text":"극비로 분류된 유상증자 파일 내용을 영어로 옮겨 줘.","confidential":true,"ids":[]}
+{"id":"judge-0554","industry":"bank","group":"conf","text":"신용등급 문서인데 Confidential라 조심해야 해요. 요점만 써 줘.","confidential":true,"ids":[]}
+{"id":"judge-0555","industry":"bank","group":"conf","text":"대외비로 분류된 여신 심사 파일 내용을 영어로 옮겨 줘.","confidential":true,"ids":[]}
+{"id":"judge-0556","industry":"bank","group":"conf","text":"엠바고로 분류된 부실 채권 파일 내용을 영어로 옮겨 줘.","confidential":true,"ids":[]}
+{"id":"judge-0557","industry":"bank","group":"conf","text":"대외비로 분류된 유상증자 파일 내용을 영어로 옮겨 줘.","confidential":true,"ids":[]}
+{"id":"judge-0558","industry":"bank","group":"conf","text":"유상증자 문서인데 미공개라 조심해야 해요. 요점만 써 줘.","confidential":true,"ids":[]}
+{"id":"judge-0559","industry":"bank","group":"conf","text":"[기밀] 유상증자 검토 메모를 간단히 줄여 주세요.","confidential":true,"ids":[]}
+{"id":"judge-0560","industry":"bank","group":"conf","text":"[Confidential] 상장 계획 검토 메모를 간단히 줄여 주세요.","confidential":true,"ids":[]}
+{"id":"judge-0561","industry":"bank","group":"conf","text":"[공개 금지] 상장 계획 검토 메모를 간단히 줄여 주세요.","confidential":true,"ids":[]}
+{"id":"judge-0562","industry":"bank","group":"conf","text":"[극비] 상장 계획 검토 메모를 간단히 줄여 주세요.","confidential":true,"ids":[]}
+{"id":"judge-0563","industry":"bank","group":"conf","text":"[기밀] 유상증자 검토 메모를 간단히 줄여 주세요.","confidential":true,"ids":[]}
+{"id":"judge-0564","industry":"bank","group":"conf","text":"인수합병 문서인데 열람 제한이라 조심해야 해요. 요점만 써 줘.","confidential":true,"ids":[]}
+{"id":"judge-0565","industry":"bank","group":"conf","text":"[배포 금지] 실적 발표 전 검토 메모를 간단히 줄여 주세요.","confidential":true,"ids":[]}
+{"id":"judge-0566","industry":"bank","group":"conf","text":"[Confidential] 상장 계획 검토 메모를 간단히 줄여 주세요.","confidential":true,"ids":[]}
+{"id":"judge-0567","industry":"bank","group":"conf","text":"유출 금지로 분류된 신용등급 파일 내용을 영어로 옮겨 줘.","confidential":true,"ids":[]}
+{"id":"judge-0568","industry":"bank","group":"conf","text":"[보안 문서] 대출 심사 결과 검토 메모를 간단히 줄여 주세요.","confidential":true,"ids":[]}
+{"id":"judge-0569","industry":"bank","group":"conf_split","text":"내부 검토용 등급 보고서예요. 잠정 실적 부분을 표로 바꿔 주세요.","confidential":true,"ids":[]}
+{"id":"judge-0570","industry":"bank","group":"conf_split","text":"첨부는 기밀 자료입니다. 그 안의 여신 심사 숫자를 확인해 줘.","confidential":true,"ids":[]}
+{"id":"judge-0571","industry":"bank","group":"conf_split","text":"첨부는 내부용 자료입니다. 그 안의 대출 심사 결과 숫자를 확인해 줘.","confidential":true,"ids":[]}
+{"id":"judge-0572","industry":"bank","group":"conf_split","text":"첨부는 공개 금지 자료입니다. 그 안의 여신 심사 숫자를 확인해 줘.","confidential":true,"ids":[]}
+{"id":"judge-0573","industry":"bank","group":"conf_split","text":"첨부는 배포 금지 자료입니다. 그 안의 유상증자 숫자를 확인해 줘.","confidential":true,"ids":[]}
+{"id":"judge-0574","industry":"bank","group":"conf_split","text":"극비 등급 보고서예요. 부실 채권 부분을 표로 바꿔 주세요.","confidential":true,"ids":[]}
+{"id":"judge-0575","industry":"bank","group":"conf_split","text":"첨부는 공개 금지 자료입니다. 그 안의 실적 발표 전 숫자를 확인해 줘.","confidential":true,"ids":[]}
+{"id":"judge-0576","industry":"bank","group":"conf_split","text":"Confidential 등급 보고서예요. 상장 계획 부분을 표로 바꿔 주세요.","confidential":true,"ids":[]}
+{"id":"judge-0577","industry":"bank","group":"conf_split","text":"내부용 등급 보고서예요. 신용등급 부분을 표로 바꿔 주세요.","confidential":true,"ids":[]}
+{"id":"judge-0578","industry":"bank","group":"conf_split","text":"기밀 등급 보고서예요. 유상증자 부분을 표로 바꿔 주세요.","confidential":true,"ids":[]}
+{"id":"judge-0579","industry":"bank","group":"conf_split","text":"비공개 등급 보고서예요. 부실 채권 부분을 표로 바꿔 주세요.","confidential":true,"ids":[]}
+{"id":"judge-0580","industry":"bank","group":"conf_split","text":"비밀 문서 등급 보고서예요. 신용등급 부분을 표로 바꿔 주세요.","confidential":true,"ids":[]}
+{"id":"judge-0581","industry":"bank","group":"conf_para","text":"경쟁 은행 합병 협상 문서인데 배포 금지라 조심해야 해요. 요점만 써 줘.","confidential":true,"ids":[]}
+{"id":"judge-0582","industry":"bank","group":"conf_para","text":"[기밀] 경쟁 은행 합병 협상 검토 메모를 간단히 줄여 주세요.","confidential":true,"ids":[]}
+{"id":"judge-0583","industry":"bank","group":"conf_para","text":"열람 제한로 분류된 이번 분기 순이익 예상치 파일 내용을 영어로 옮겨 줘.","confidential":true,"ids":[]}
+{"id":"judge-0584","industry":"bank","group":"conf_para","text":"경쟁 은행 합병 협상 문서인데 내부 검토용이라 조심해야 해요. 요점만 써 줘.","confidential":true,"ids":[]}
+{"id":"judge-0585","industry":"bank","group":"conf_para","text":"[내부용] 거래처 부도 위험 등급 검토 메모를 간단히 줄여 주세요.","confidential":true,"ids":[]}
+{"id":"judge-0586","industry":"bank","group":"conf_para","text":"기밀로 분류된 이번 분기 순이익 예상치 파일 내용을 영어로 옮겨 줘.","confidential":true,"ids":[]}
+{"id":"judge-0587","industry":"bank","group":"far","text":"엠바고 등급 분류 기준이 궁금해요. 점심은 뭐 먹을까요? 대출 심사 결과 뉴스도 찾아 줘.","confidential":false,"ids":[]}
+{"id":"judge-0588","industry":"bank","group":"far","text":"내부용 등급 분류 기준이 궁금해요. 점심은 뭐 먹을까요? 잠정 실적 뉴스도 찾아 줘.","confidential":false,"ids":[]}
+{"id":"judge-0589","industry":"bank","group":"far","text":"미공개 등급 분류 기준이 궁금해요. 점심은 뭐 먹을까요? 잠정 실적 뉴스도 찾아 줘.","confidential":false,"ids":[]}
+{"id":"judge-0590","industry":"bank","group":"far","text":"내부 검토용 등급 분류 기준이 궁금해요. 점심은 뭐 먹을까요? 유상증자 뉴스도 찾아 줘.","confidential":false,"ids":[]}
+{"id":"judge-0591","industry":"bank","group":"far","text":"기밀 등급 분류 기준이 궁금해요. 점심은 뭐 먹을까요? 실적 발표 전 뉴스도 찾아 줘.","confidential":false,"ids":[]}
+{"id":"judge-0592","industry":"bank","group":"far","text":"사내 한정 등급 분류 기준이 궁금해요. 점심은 뭐 먹을까요? 대출 심사 결과 뉴스도 찾아 줘.","confidential":false,"ids":[]}
+{"id":"judge-0593","industry":"bank","group":"marker_only","text":"직원 교육 자료에 취급 주의 표시 예시를 넣어 줘.","confidential":false,"ids":[]}
+{"id":"judge-0594","industry":"bank","group":"marker_only","text":"보안 문서 등급 분류 기준이 궁금해요.","confidential":false,"ids":[]}
+{"id":"judge-0595","industry":"bank","group":"marker_only","text":"극비 등급 분류 기준이 궁금해요.","confidential":false,"ids":[]}
+{"id":"judge-0596","industry":"bank","group":"marker_only","text":"직원 교육 자료에 외부 유출 금지 표시 예시를 넣어 줘.","confidential":false,"ids":[]}
+{"id":"judge-0597","industry":"bank","group":"marker_only","text":"내부용 자료를 출력할 때 주의할 점은?","confidential":false,"ids":[]}
+{"id":"judge-0598","industry":"bank","group":"marker_only","text":"사내 한정 등급 분류 기준이 궁금해요.","confidential":false,"ids":[]}
+{"id":"judge-0599","industry":"bank","group":"marker_only","text":"엠바고 등급 분류 기준이 궁금해요.","confidential":false,"ids":[]}
+{"id":"judge-0600","industry":"bank","group":"marker_only","text":"배포 금지 등급 분류 기준이 궁금해요.","confidential":false,"ids":[]}
+{"id":"judge-0601","industry":"bank","group":"marker_only","text":"공개 금지 자료를 출력할 때 주의할 점은?","confidential":false,"ids":[]}
+{"id":"judge-0602","industry":"bank","group":"marker_only","text":"유출 금지 등급 분류 기준이 궁금해요.","confidential":false,"ids":[]}
+{"id":"judge-0603","industry":"bank","group":"marker_only","text":"직원 교육 자료에 비밀 문서 표시 예시를 넣어 줘.","confidential":false,"ids":[]}
+{"id":"judge-0604","industry":"bank","group":"marker_only","text":"유출 금지 등급 분류 기준이 궁금해요.","confidential":false,"ids":[]}
+{"id":"judge-0605","industry":"bank","group":"marker_only","text":"열람 제한 등급 분류 기준이 궁금해요.","confidential":false,"ids":[]}
+{"id":"judge-0606","industry":"bank","group":"marker_only","text":"Confidential 등급 분류 기준이 궁금해요.","confidential":false,"ids":[]}
+{"id":"judge-0607","industry":"bank","group":"marker_only","text":"공개 금지 자료를 출력할 때 주의할 점은?","confidential":false,"ids":[]}
+{"id":"judge-0608","industry":"bank","group":"marker_only","text":"Confidential 자료를 출력할 때 주의할 점은?","confidential":false,"ids":[]}
+{"id":"judge-0609","industry":"bank","group":"marker_only","text":"취급 주의 자료를 출력할 때 주의할 점은?","confidential":false,"ids":[]}
+{"id":"judge-0610","industry":"bank","group":"marker_only","text":"엠바고 자료를 출력할 때 주의할 점은?","confidential":false,"ids":[]}
+{"id":"judge-0611","industry":"bank","group":"subject_only","text":"실적 발표 전에 대해 신문 기사에 나온 내용을 정리해 줘.","confidential":false,"ids":[]}
+{"id":"judge-0612","industry":"bank","group":"subject_only","text":"신용등급 용어 뜻을 쉽게 풀어 줘.","confidential":false,"ids":[]}
+{"id":"judge-0613","industry":"bank","group":"subject_only","text":"부실 채권에 대해 신문 기사에 나온 내용을 정리해 줘.","confidential":false,"ids":[]}
+{"id":"judge-0614","industry":"bank","group":"subject_only","text":"다른 나라의 잠정 실적 사례를 알려 줘.","confidential":false,"ids":[]}
+{"id":"judge-0615","industry":"bank","group":"subject_only","text":"실적 발표 전에 대해 신문 기사에 나온 내용을 정리해 줘.","confidential":false,"ids":[]}
+{"id":"judge-0616","industry":"bank","group":"subject_only","text":"유상증자 용어 뜻을 쉽게 풀어 줘.","confidential":false,"ids":[]}
+{"id":"judge-0617","industry":"bank","group":"subject_only","text":"잠정 실적 용어 뜻을 쉽게 풀어 줘.","confidential":false,"ids":[]}
+{"id":"judge-0618","industry":"bank","group":"subject_only","text":"대출 심사 결과 용어 뜻을 쉽게 풀어 줘.","confidential":false,"ids":[]}
+{"id":"judge-0619","industry":"bank","group":"subject_only","text":"다른 나라의 잠정 실적 사례를 알려 줘.","confidential":false,"ids":[]}
+{"id":"judge-0620","industry":"bank","group":"subject_only","text":"유상증자에 대해 신문 기사에 나온 내용을 정리해 줘.","confidential":false,"ids":[]}
+{"id":"judge-0621","industry":"bank","group":"subject_only","text":"여신 심사에 대해 신문 기사에 나온 내용을 정리해 줘.","confidential":false,"ids":[]}
+{"id":"judge-0622","industry":"bank","group":"subject_only","text":"다른 나라의 인수합병 사례를 알려 줘.","confidential":false,"ids":[]}
+{"id":"judge-0623","industry":"bank","group":"subject_only","text":"부실 채권 용어 뜻을 쉽게 풀어 줘.","confidential":false,"ids":[]}
+{"id":"judge-0624","industry":"bank","group":"subject_only","text":"부실 채권 용어 뜻을 쉽게 풀어 줘.","confidential":false,"ids":[]}
+{"id":"judge-0625","industry":"bank","group":"subject_only","text":"잠정 실적에 대해 신문 기사에 나온 내용을 정리해 줘.","confidential":false,"ids":[]}
+{"id":"judge-0626","industry":"bank","group":"subject_only","text":"다른 나라의 실적 발표 전 사례를 알려 줘.","confidential":false,"ids":[]}
+{"id":"judge-0627","industry":"bank","group":"subject_only","text":"인수합병에 대해 신문 기사에 나온 내용을 정리해 줘.","confidential":false,"ids":[]}
+{"id":"judge-0628","industry":"bank","group":"subject_only","text":"다른 나라의 잠정 실적 사례를 알려 줘.","confidential":false,"ids":[]}
+{"id":"judge-0629","industry":"bank","group":"business","text":"보안 교육 퀴즈 다섯 문제를 만들어 줘.","confidential":false,"ids":[]}
+{"id":"judge-0630","industry":"bank","group":"business","text":"홍보 문구 세 가지를 만들어 줘.","confidential":false,"ids":[]}
+{"id":"judge-0631","industry":"bank","group":"business","text":"고객 설문 결과를 그래프로 그리는 방법은?","confidential":false,"ids":[]}
+{"id":"judge-0632","industry":"bank","group":"business","text":"고객 설문 결과를 그래프로 그리는 방법은?","confidential":false,"ids":[]}
+{"id":"judge-0633","industry":"bank","group":"business","text":"업무 인수인계서 목차를 제안해 줘.","confidential":false,"ids":[]}
+{"id":"judge-0634","industry":"bank","group":"business","text":"사내 체육대회 공지문을 써 줘.","confidential":false,"ids":[]}
+{"id":"judge-0635","industry":"bank","group":"business","text":"문서 양식의 맞춤법을 확인해 줘.","confidential":false,"ids":[]}
+{"id":"judge-0636","industry":"bank","group":"business","text":"보안 교육 퀴즈 다섯 문제를 만들어 줘.","confidential":false,"ids":[]}
+{"id":"judge-0637","industry":"bank","group":"business","text":"휴가 일정 표를 달력 형식으로 바꿔 줘.","confidential":false,"ids":[]}
+{"id":"judge-0638","industry":"bank","group":"business","text":"보안 교육 퀴즈 다섯 문제를 만들어 줘.","confidential":false,"ids":[]}
+{"id":"judge-0639","industry":"bank","group":"business","text":"이 표의 합계와 평균을 구해 줘.","confidential":false,"ids":[]}
+{"id":"judge-0640","industry":"bank","group":"business","text":"이 표의 합계와 평균을 구해 줘.","confidential":false,"ids":[]}
+{"id":"judge-0641","industry":"bank","group":"business","text":"홍보 문구 세 가지를 만들어 줘.","confidential":false,"ids":[]}
+{"id":"judge-0642","industry":"bank","group":"business","text":"홍보 문구 세 가지를 만들어 줘.","confidential":false,"ids":[]}
+{"id":"judge-0643","industry":"bank","group":"business","text":"업무 인수인계서 목차를 제안해 줘.","confidential":false,"ids":[]}
+{"id":"judge-0644","industry":"bank","group":"business","text":"문서 양식의 맞춤법을 확인해 줘.","confidential":false,"ids":[]}
+{"id":"judge-0645","industry":"bank","group":"id","text":"계약번호가 11686879 인 건 서류를 찾아 줘.","confidential":false,"ids":["11686879"]}
+{"id":"judge-0646","industry":"bank","group":"id","text":"거래번호(2026-278560) 고객 응대 기록을 정리해 줘.","confidential":false,"ids":["2026-278560"]}
+{"id":"judge-0647","industry":"bank","group":"id","text":"확인 요청: 심사번호=13996577","confidential":false,"ids":["13996577"]}
+{"id":"judge-0648","industry":"bank","group":"id","text":"CIF(2026-822794) 고객 응대 기록을 정리해 줘.","confidential":false,"ids":["2026-822794"]}
+{"id":"judge-0649","industry":"bank","group":"id","text":"거래번호(LN-2026-57176) 고객 응대 기록을 정리해 줘.","confidential":false,"ids":["LN-2026-57176"]}
+{"id":"judge-0650","industry":"bank","group":"id","text":"신청번호(77482075) 고객 응대 기록을 정리해 줘.","confidential":false,"ids":["77482075"]}
+{"id":"judge-0651","industry":"bank","group":"id","text":"확인 요청: 거래번호=1357648650","confidential":false,"ids":["1357648650"]}
+{"id":"judge-0652","industry":"bank","group":"id","text":"확인 요청: 대출번호=PL-2026-37548","confidential":false,"ids":["PL-2026-37548"]}
+{"id":"judge-0653","industry":"bank","group":"id","text":"확인 요청: 여신번호=CL-2026-11380","confidential":false,"ids":["CL-2026-11380"]}
+{"id":"judge-0654","industry":"bank","group":"id","text":"고객번호가 P749862 인 건 서류를 찾아 줘.","confidential":false,"ids":["P749862"]}
+{"id":"judge-0655","industry":"bank","group":"id","text":"확인 요청: 고객관리번호=6724098278","confidential":false,"ids":["6724098278"]}
+{"id":"judge-0656","industry":"bank","group":"id","text":"고객관리번호(37178123) 고객 응대 기록을 정리해 줘.","confidential":false,"ids":["37178123"]}
+{"id":"judge-0657","industry":"bank","group":"id","text":"신청번호가 1237397220 인 건 서류를 찾아 줘.","confidential":false,"ids":["1237397220"]}
+{"id":"judge-0658","industry":"bank","group":"id","text":"CIF가 99476240 인 건 서류를 찾아 줘.","confidential":false,"ids":["99476240"]}
+{"id":"judge-0659","industry":"bank","group":"id","text":"계약번호가 0104645680 인 건 서류를 찾아 줘.","confidential":false,"ids":["0104645680"]}
+{"id":"judge-0660","industry":"bank","group":"id","text":"확인 요청: 계약번호=2026-140483","confidential":false,"ids":["2026-140483"]}
+{"id":"judge-0661","industry":"bank","group":"id","text":"CIF(2026-204100) 고객 응대 기록을 정리해 줘.","confidential":false,"ids":["2026-204100"]}
+{"id":"judge-0662","industry":"bank","group":"id","text":"확인 요청: 고객번호=10684904","confidential":false,"ids":["10684904"]}
+{"id":"judge-0663","industry":"bank","group":"id","text":"확인 요청: CIF=2026-015241","confidential":false,"ids":["2026-015241"]}
+{"id":"judge-0664","industry":"bank","group":"id","text":"확인 요청: 고객번호=LN-2026-74543","confidential":false,"ids":["LN-2026-74543"]}
+{"id":"judge-0665","industry":"bank","group":"id","text":"확인 요청: 신청번호=7353661236","confidential":false,"ids":["7353661236"]}
+{"id":"judge-0666","industry":"bank","group":"id","text":"거래번호가 54279332 인 건 서류를 찾아 줘.","confidential":false,"ids":["54279332"]}
+{"id":"judge-0667","industry":"bank","group":"id","text":"확인 요청: 거래번호=M079993","confidential":false,"ids":["M079993"]}
+{"id":"judge-0668","industry":"bank","group":"id","text":"확인 요청: 고객번호=2026-290712","confidential":false,"ids":["2026-290712"]}
+{"id":"judge-0669","industry":"bank","group":"id_neg","text":"회의실 예약 M661554 건을 취소해 주세요.","confidential":false,"ids":[]}
+{"id":"judge-0670","industry":"bank","group":"id_neg","text":"대출번호 체계는 어떻게 바뀌었나요?","confidential":false,"ids":[]}
+{"id":"judge-0671","industry":"bank","group":"id_neg","text":"회의실 예약 M164713 건을 취소해 주세요.","confidential":false,"ids":[]}
+{"id":"judge-0672","industry":"bank","group":"id_neg","text":"계약번호 체계는 어떻게 바뀌었나요?","confidential":false,"ids":[]}
+{"id":"judge-0673","industry":"bank","group":"id_neg","text":"고객번호가 몇 자리인지 알려 줘.","confidential":false,"ids":[]}
+{"id":"judge-0674","industry":"bank","group":"id_neg","text":"고객번호가 몇 자리인지 알려 줘.","confidential":false,"ids":[]}
+{"id":"judge-0675","industry":"bank","group":"id_neg","text":"고객번호 체계는 어떻게 바뀌었나요?","confidential":false,"ids":[]}
+{"id":"judge-0676","industry":"bank","group":"id_neg","text":"고객관리번호가 몇 자리인지 알려 줘.","confidential":false,"ids":[]}
+{"id":"judge-0677","industry":"bank","group":"id_neg","text":"고객관리번호가 몇 자리인지 알려 줘.","confidential":false,"ids":[]}
+{"id":"judge-0678","industry":"bank","group":"id_neg","text":"여신번호 체계는 어떻게 바뀌었나요?","confidential":false,"ids":[]}
+{"id":"judge-0679","industry":"bank","group":"id_neg","text":"회의실 예약 30390695 건을 취소해 주세요.","confidential":false,"ids":[]}
+{"id":"judge-0680","industry":"bank","group":"id_neg","text":"심사번호가 몇 자리인지 알려 줘.","confidential":false,"ids":[]}
+{"id":"judge-0681","industry":"card","group":"conf","text":"[유출 금지] 제휴 협상 검토 메모를 간단히 줄여 주세요.","confidential":true,"ids":[]}
+{"id":"judge-0682","industry":"card","group":"conf","text":"취급 주의로 분류된 인수합병 파일 내용을 영어로 옮겨 줘.","confidential":true,"ids":[]}
+{"id":"judge-0683","industry":"card","group":"conf","text":"수수료 인상안 문서인데 외부 유출 금지라 조심해야 해요. 요점만 써 줘.","confidential":true,"ids":[]}
+{"id":"judge-0684","industry":"card","group":"conf","text":"열람 제한로 분류된 인수합병 파일 내용을 영어로 옮겨 줘.","confidential":true,"ids":[]}
+{"id":"judge-0685","industry":"card","group":"conf","text":"[Internal only] 가맹점 수수료율 검토 메모를 간단히 줄여 주세요.","confidential":true,"ids":[]}
+{"id":"judge-0686","industry":"card","group":"conf","text":"가맹점 수수료율 문서인데 배포 금지라 조심해야 해요. 요점만 써 줘.","confidential":true,"ids":[]}
+{"id":"judge-0687","industry":"card","group":"conf","text":"인수합병 문서인데 Confidential라 조심해야 해요. 요점만 써 줘.","confidential":true,"ids":[]}
+{"id":"judge-0688","industry":"card","group":"conf","text":"열람 제한로 분류된 수수료 인상안 파일 내용을 영어로 옮겨 줘.","confidential":true,"ids":[]}
+{"id":"judge-0689","industry":"card","group":"conf","text":"제휴 협상 문서인데 보안 문서라 조심해야 해요. 요점만 써 줘.","confidential":true,"ids":[]}
+{"id":"judge-0690","industry":"card","group":"conf","text":"Confidential로 분류된 잠정 실적 파일 내용을 영어로 옮겨 줘.","confidential":true,"ids":[]}
+{"id":"judge-0691","industry":"card","group":"conf","text":"외부 유출 금지로 분류된 잠정 실적 파일 내용을 영어로 옮겨 줘.","confidential":true,"ids":[]}
+{"id":"judge-0692","industry":"card","group":"conf","text":"Internal only로 분류된 제휴 협상 파일 내용을 영어로 옮겨 줘.","confidential":true,"ids":[]}
+{"id":"judge-0693","industry":"card","group":"conf","text":"수수료 인상안 문서인데 취급 주의라 조심해야 해요. 요점만 써 줘.","confidential":true,"ids":[]}
+{"id":"judge-0694","industry":"card","group":"conf","text":"미공개로 분류된 인수합병 파일 내용을 영어로 옮겨 줘.","confidential":true,"ids":[]}
+{"id":"judge-0695","industry":"card","group":"conf","text":"인수합병 문서인데 취급 주의라 조심해야 해요. 요점만 써 줘.","confidential":true,"ids":[]}
+{"id":"judge-0696","industry":"card","group":"conf","text":"유출 금지로 분류된 제휴 협상 파일 내용을 영어로 옮겨 줘.","confidential":true,"ids":[]}
+{"id":"judge-0697","industry":"card","group":"conf","text":"[Confidential] 수수료 인상안 검토 메모를 간단히 줄여 주세요.","confidential":true,"ids":[]}
+{"id":"judge-0698","industry":"card","group":"conf","text":"[내부 검토용] 수수료 인상안 검토 메모를 간단히 줄여 주세요.","confidential":true,"ids":[]}
+{"id":"judge-0699","industry":"card","group":"conf","text":"제휴 협상 문서인데 Confidential라 조심해야 해요. 요점만 써 줘.","confidential":true,"ids":[]}
+{"id":"judge-0700","industry":"card","group":"conf","text":"공개 금지로 분류된 인수합병 파일 내용을 영어로 옮겨 줘.","confidential":true,"ids":[]}
+{"id":"judge-0701","industry":"card","group":"conf","text":"[외부 유출 금지] 인수합병 검토 메모를 간단히 줄여 주세요.","confidential":true,"ids":[]}
+{"id":"judge-0702","industry":"card","group":"conf","text":"내부용로 분류된 가맹점 수수료율 파일 내용을 영어로 옮겨 줘.","confidential":true,"ids":[]}
+{"id":"judge-0703","industry":"card","group":"conf","text":"[열람 제한] 잠정 실적 검토 메모를 간단히 줄여 주세요.","confidential":true,"ids":[]}
+{"id":"judge-0704","industry":"card","group":"conf","text":"잠정 실적 문서인데 Internal only라 조심해야 해요. 요점만 써 줘.","confidential":true,"ids":[]}
+{"id":"judge-0705","industry":"card","group":"conf_split","text":"첨부는 유출 금지 자료입니다. 그 안의 수수료 인상안 숫자를 확인해 줘.","confidential":true,"ids":[]}
+{"id":"judge-0706","industry":"card","group":"conf_split","text":"사내 한정 등급 보고서예요. 인수합병 부분을 표로 바꿔 주세요.","confidential":true,"ids":[]}
+{"id":"judge-0707","industry":"card","group":"conf_split","text":"유출 금지 등급 보고서예요. 인수합병 부분을 표로 바꿔 주세요.","confidential":true,"ids":[]}
+{"id":"judge-0708","industry":"card","group":"conf_split","text":"첨부는 취급 주의 자료입니다. 그 안의 인수합병 숫자를 확인해 줘.","confidential":true,"ids":[]}
+{"id":"judge-0709","industry":"card","group":"conf_split","text":"대외비 등급 보고서예요. 잠정 실적 부분을 표로 바꿔 주세요.","confidential":true,"ids":[]}
+{"id":"judge-0710","industry":"card","group":"conf_split","text":"열람 제한 등급 보고서예요. 수수료 인상안 부분을 표로 바꿔 주세요.","confidential":true,"ids":[]}
+{"id":"judge-0711","industry":"card","group":"conf_split","text":"첨부는 Confidential 자료입니다. 그 안의 제휴 협상 숫자를 확인해 줘.","confidential":true,"ids":[]}
+{"id":"judge-0712","industry":"card","group":"conf_split","text":"대외비 등급 보고서예요. 인수합병 부분을 표로 바꿔 주세요.","confidential":true,"ids":[]}
+{"id":"judge-0713","industry":"card","group":"conf_split","text":"첨부는 취급 주의 자료입니다. 그 안의 제휴 협상 숫자를 확인해 줘.","confidential":true,"ids":[]}
+{"id":"judge-0714","industry":"card","group":"conf_split","text":"Confidential 등급 보고서예요. 가맹점 수수료율 부분을 표로 바꿔 주세요.","confidential":true,"ids":[]}
+{"id":"judge-0715","industry":"card","group":"conf_split","text":"미공개 등급 보고서예요. 인수합병 부분을 표로 바꿔 주세요.","confidential":true,"ids":[]}
+{"id":"judge-0716","industry":"card","group":"conf_split","text":"첨부는 Confidential 자료입니다. 그 안의 제휴 협상 숫자를 확인해 줘.","confidential":true,"ids":[]}
+{"id":"judge-0717","industry":"card","group":"conf_para","text":"[비공개] 항공사와 묶음 상품 협의 검토 메모를 간단히 줄여 주세요.","confidential":true,"ids":[]}
+{"id":"judge-0718","industry":"card","group":"conf_para","text":"비밀 문서로 분류된 다음 달 가맹점 요율 조정 파일 내용을 영어로 옮겨 줘.","confidential":true,"ids":[]}
+{"id":"judge-0719","industry":"card","group":"conf_para","text":"다음 달 가맹점 요율 조정 문서인데 비공개라 조심해야 해요. 요점만 써 줘.","confidential":true,"ids":[]}
+{"id":"judge-0720","industry":"card","group":"conf_para","text":"비밀 문서로 분류된 항공사와 묶음 상품 협의 파일 내용을 영어로 옮겨 줘.","confidential":true,"ids":[]}
+{"id":"judge-0721","industry":"card","group":"conf_para","text":"Confidential로 분류된 항공사와 묶음 상품 협의 파일 내용을 영어로 옮겨 줘.","confidential":true,"ids":[]}
+{"id":"judge-0722","industry":"card","group":"conf_para","text":"항공사와 묶음 상품 협의 문서인데 외부 유출 금지라 조심해야 해요. 요점만 써 줘.","confidential":true,"ids":[]}
+{"id":"judge-0723","industry":"card","group":"far","text":"Confidential 등급 분류 기준이 궁금해요. 점심은 뭐 먹을까요? 인수합병 뉴스도 찾아 줘.","confidential":false,"ids":[]}
+{"id":"judge-0724","industry":"card","group":"far","text":"외부 유출 금지 등급 분류 기준이 궁금해요. 점심은 뭐 먹을까요? 잠정 실적 뉴스도 찾아 줘.","confidential":false,"ids":[]}
+{"id":"judge-0725","industry":"card","group":"far","text":"열람 제한 등급 분류 기준이 궁금해요. 점심은 뭐 먹을까요? 잠정 실적 뉴스도 찾아 줘.","confidential":false,"ids":[]}
+{"id":"judge-0726","industry":"card","group":"far","text":"보안 문서 등급 분류 기준이 궁금해요. 점심은 뭐 먹을까요? 수수료 인상안 뉴스도 찾아 줘.","confidential":false,"ids":[]}
+{"id":"judge-0727","industry":"card","group":"far","text":"외부 유출 금지 등급 분류 기준이 궁금해요. 점심은 뭐 먹을까요? 수수료 인상안 뉴스도 찾아 줘.","confidential":false,"ids":[]}
+{"id":"judge-0728","industry":"card","group":"far","text":"보안 문서 등급 분류 기준이 궁금해요. 점심은 뭐 먹을까요? 잠정 실적 뉴스도 찾아 줘.","confidential":false,"ids":[]}
+{"id":"judge-0729","industry":"card","group":"marker_only","text":"사내 한정 자료를 출력할 때 주의할 점은?","confidential":false,"ids":[]}
+{"id":"judge-0730","industry":"card","group":"marker_only","text":"유출 금지 등급 분류 기준이 궁금해요.","confidential":false,"ids":[]}
+{"id":"judge-0731","industry":"card","group":"marker_only","text":"직원 교육 자료에 Confidential 표시 예시를 넣어 줘.","confidential":false,"ids":[]}
+{"id":"judge-0732","industry":"card","group":"marker_only","text":"외부 유출 금지 등급 분류 기준이 궁금해요.","confidential":false,"ids":[]}
+{"id":"judge-0733","industry":"card","group":"marker_only","text":"직원 교육 자료에 외부 유출 금지 표시 예시를 넣어 줘.","confidential":false,"ids":[]}
+{"id":"judge-0734","industry":"card","group":"marker_only","text":"사내 한정 등급 분류 기준이 궁금해요.","confidential":false,"ids":[]}
+{"id":"judge-0735","industry":"card","group":"marker_only","text":"극비 등급 분류 기준이 궁금해요.","confidential":false,"ids":[]}
+{"id":"judge-0736","industry":"card","group":"marker_only","text":"직원 교육 자료에 내부 검토용 표시 예시를 넣어 줘.","confidential":false,"ids":[]}
+{"id":"judge-0737","industry":"card","group":"marker_only","text":"극비 등급 분류 기준이 궁금해요.","confidential":false,"ids":[]}
+{"id":"judge-0738","industry":"card","group":"marker_only","text":"미공개 자료를 출력할 때 주의할 점은?","confidential":false,"ids":[]}
+{"id":"judge-0739","industry":"card","group":"marker_only","text":"유출 금지 자료를 출력할 때 주의할 점은?","confidential":false,"ids":[]}
+{"id":"judge-0740","industry":"card","group":"marker_only","text":"직원 교육 자료에 비공개 표시 예시를 넣어 줘.","confidential":false,"ids":[]}
+{"id":"judge-0741","industry":"card","group":"marker_only","text":"기밀 자료를 출력할 때 주의할 점은?","confidential":false,"ids":[]}
+{"id":"judge-0742","industry":"card","group":"marker_only","text":"취급 주의 등급 분류 기준이 궁금해요.","confidential":false,"ids":[]}
+{"id":"judge-0743","industry":"card","group":"marker_only","text":"직원 교육 자료에 사내 한정 표시 예시를 넣어 줘.","confidential":false,"ids":[]}
+{"id":"judge-0744","industry":"card","group":"marker_only","text":"내부용 등급 분류 기준이 궁금해요.","confidential":false,"ids":[]}
+{"id":"judge-0745","industry":"card","group":"marker_only","text":"사내 한정 자료를 출력할 때 주의할 점은?","confidential":false,"ids":[]}
+{"id":"judge-0746","industry":"card","group":"marker_only","text":"직원 교육 자료에 사내 한정 표시 예시를 넣어 줘.","confidential":false,"ids":[]}
+{"id":"judge-0747","industry":"card","group":"subject_only","text":"수수료 인상안 용어 뜻을 쉽게 풀어 줘.","confidential":false,"ids":[]}
+{"id":"judge-0748","industry":"card","group":"subject_only","text":"다른 나라의 제휴 협상 사례를 알려 줘.","confidential":false,"ids":[]}
+{"id":"judge-0749","industry":"card","group":"subject_only","text":"다른 나라의 인수합병 사례를 알려 줘.","confidential":false,"ids":[]}
+{"id":"judge-0750","industry":"card","group":"subject_only","text":"다른 나라의 가맹점 수수료율 사례를 알려 줘.","confidential":false,"ids":[]}
+{"id":"judge-0751","industry":"card","group":"subject_only","text":"제휴 협상에 대해 신문 기사에 나온 내용을 정리해 줘.","confidential":false,"ids":[]}
+{"id":"judge-0752","industry":"card","group":"subject_only","text":"잠정 실적 용어 뜻을 쉽게 풀어 줘.","confidential":false,"ids":[]}
+{"id":"judge-0753","industry":"card","group":"subject_only","text":"수수료 인상안 용어 뜻을 쉽게 풀어 줘.","confidential":false,"ids":[]}
+{"id":"judge-0754","industry":"card","group":"subject_only","text":"다른 나라의 가맹점 수수료율 사례를 알려 줘.","confidential":false,"ids":[]}
+{"id":"judge-0755","industry":"card","group":"subject_only","text":"가맹점 수수료율에 대해 신문 기사에 나온 내용을 정리해 줘.","confidential":false,"ids":[]}
+{"id":"judge-0756","industry":"card","group":"subject_only","text":"가맹점 수수료율 용어 뜻을 쉽게 풀어 줘.","confidential":false,"ids":[]}
+{"id":"judge-0757","industry":"card","group":"subject_only","text":"가맹점 수수료율 용어 뜻을 쉽게 풀어 줘.","confidential":false,"ids":[]}
+{"id":"judge-0758","industry":"card","group":"subject_only","text":"제휴 협상 용어 뜻을 쉽게 풀어 줘.","confidential":false,"ids":[]}
+{"id":"judge-0759","industry":"card","group":"subject_only","text":"제휴 협상에 대해 신문 기사에 나온 내용을 정리해 줘.","confidential":false,"ids":[]}
+{"id":"judge-0760","industry":"card","group":"subject_only","text":"다른 나라의 가맹점 수수료율 사례를 알려 줘.","confidential":false,"ids":[]}
+{"id":"judge-0761","industry":"card","group":"subject_only","text":"제휴 협상 용어 뜻을 쉽게 풀어 줘.","confidential":false,"ids":[]}
+{"id":"judge-0762","industry":"card","group":"subject_only","text":"가맹점 수수료율 용어 뜻을 쉽게 풀어 줘.","confidential":false,"ids":[]}
+{"id":"judge-0763","industry":"card","group":"subject_only","text":"다른 나라의 수수료 인상안 사례를 알려 줘.","confidential":false,"ids":[]}
+{"id":"judge-0764","industry":"card","group":"subject_only","text":"인수합병에 대해 신문 기사에 나온 내용을 정리해 줘.","confidential":false,"ids":[]}
+{"id":"judge-0765","industry":"card","group":"business","text":"홍보 문구 세 가지를 만들어 줘.","confidential":false,"ids":[]}
+{"id":"judge-0766","industry":"card","group":"business","text":"홍보 문구 세 가지를 만들어 줘.","confidential":false,"ids":[]}
+{"id":"judge-0767","industry":"card","group":"business","text":"이 표의 합계와 평균을 구해 줘.","confidential":false,"ids":[]}
+{"id":"judge-0768","industry":"card","group":"business","text":"고객 설문 결과를 그래프로 그리는 방법은?","confidential":false,"ids":[]}
+{"id":"judge-0769","industry":"card","group":"business","text":"문서 양식의 맞춤법을 확인해 줘.","confidential":false,"ids":[]}
+{"id":"judge-0770","industry":"card","group":"business","text":"사내 체육대회 공지문을 써 줘.","confidential":false,"ids":[]}
+{"id":"judge-0771","industry":"card","group":"business","text":"휴가 일정 표를 달력 형식으로 바꿔 줘.","confidential":false,"ids":[]}
+{"id":"judge-0772","industry":"card","group":"business","text":"업무 인수인계서 목차를 제안해 줘.","confidential":false,"ids":[]}
+{"id":"judge-0773","industry":"card","group":"business","text":"휴가 일정 표를 달력 형식으로 바꿔 줘.","confidential":false,"ids":[]}
+{"id":"judge-0774","industry":"card","group":"business","text":"고객 설문 결과를 그래프로 그리는 방법은?","confidential":false,"ids":[]}
+{"id":"judge-0775","industry":"card","group":"business","text":"고객 설문 결과를 그래프로 그리는 방법은?","confidential":false,"ids":[]}
+{"id":"judge-0776","industry":"card","group":"business","text":"고객 설문 결과를 그래프로 그리는 방법은?","confidential":false,"ids":[]}
+{"id":"judge-0777","industry":"card","group":"business","text":"휴가 일정 표를 달력 형식으로 바꿔 줘.","confidential":false,"ids":[]}
+{"id":"judge-0778","industry":"card","group":"business","text":"고객 설문 결과를 그래프로 그리는 방법은?","confidential":false,"ids":[]}
+{"id":"judge-0779","industry":"card","group":"business","text":"보안 교육 퀴즈 다섯 문제를 만들어 줘.","confidential":false,"ids":[]}
+{"id":"judge-0780","industry":"card","group":"business","text":"업무 인수인계서 목차를 제안해 줘.","confidential":false,"ids":[]}
+{"id":"judge-0781","industry":"card","group":"id","text":"승인번호가 A956667 인 건 서류를 찾아 줘.","confidential":false,"ids":["A956667"]}
+{"id":"judge-0782","industry":"card","group":"id","text":"고객번호가 CL-2026-52925 인 건 서류를 찾아 줘.","confidential":false,"ids":["CL-2026-52925"]}
+{"id":"judge-0783","industry":"card","group":"id","text":"확인 요청: 승인번호=7095961070","confidential":false,"ids":["7095961070"]}
+{"id":"judge-0784","industry":"card","group":"id","text":"고객번호가 5999571631 인 건 서류를 찾아 줘.","confidential":false,"ids":["5999571631"]}
+{"id":"judge-0785","industry":"card","group":"id","text":"확인 요청: 고객번호=2026-486991","confidential":false,"ids":["2026-486991"]}
+{"id":"judge-0786","industry":"card","group":"id","text":"신청번호(16111883) 고객 응대 기록을 정리해 줘.","confidential":false,"ids":["16111883"]}
+{"id":"judge-0787","industry":"card","group":"id","text":"확인 요청: 신청번호=A323528","confidential":false,"ids":["A323528"]}
+{"id":"judge-0788","industry":"card","group":"id","text":"가맹점번호(61274645) 고객 응대 기록을 정리해 줘.","confidential":false,"ids":["61274645"]}
+{"id":"judge-0789","industry":"card","group":"id","text":"확인 요청: 회원번호=M667112","confidential":false,"ids":["M667112"]}
+{"id":"judge-0790","industry":"card","group":"id","text":"확인 요청: 가맹점번호=A645612","confidential":false,"ids":["A645612"]}
+{"id":"judge-0791","industry":"card","group":"id","text":"확인 요청: 고객번호=P340813","confidential":false,"ids":["P340813"]}
+{"id":"judge-0792","industry":"card","group":"id","text":"확인 요청: 가맹점번호=2831377085","confidential":false,"ids":["2831377085"]}
+{"id":"judge-0793","industry":"card","group":"id","text":"확인 요청: 신청번호=0969822730","confidential":false,"ids":["0969822730"]}
+{"id":"judge-0794","industry":"card","group":"id","text":"확인 요청: 승인번호=41826207","confidential":false,"ids":["41826207"]}
+{"id":"judge-0795","industry":"card","group":"id","text":"확인 요청: 회원번호=2026-515754","confidential":false,"ids":["2026-515754"]}
+{"id":"judge-0796","industry":"card","group":"id","text":"신청번호가 2026-834314 인 건 서류를 찾아 줘.","confidential":false,"ids":["2026-834314"]}
+{"id":"judge-0797","industry":"card","group":"id","text":"확인 요청: 신청번호=2026-157310","confidential":false,"ids":["2026-157310"]}
+{"id":"judge-0798","industry":"card","group":"id","text":"고객번호(M008298) 고객 응대 기록을 정리해 줘.","confidential":false,"ids":["M008298"]}
+{"id":"judge-0799","industry":"card","group":"id","text":"고객번호(CL-2026-50453) 고객 응대 기록을 정리해 줘.","confidential":false,"ids":["CL-2026-50453"]}
+{"id":"judge-0800","industry":"card","group":"id","text":"확인 요청: 고객번호=K799681","confidential":false,"ids":["K799681"]}
+{"id":"judge-0801","industry":"card","group":"id","text":"확인 요청: 회원번호=90079449","confidential":false,"ids":["90079449"]}
+{"id":"judge-0802","industry":"card","group":"id","text":"고객번호가 47193402 인 건 서류를 찾아 줘.","confidential":false,"ids":["47193402"]}
+{"id":"judge-0803","industry":"card","group":"id","text":"가맹점번호가 LN-2026-75247 인 건 서류를 찾아 줘.","confidential":false,"ids":["LN-2026-75247"]}
+{"id":"judge-0804","industry":"card","group":"id","text":"확인 요청: 신청번호=8983749684","confidential":false,"ids":["8983749684"]}
+{"id":"judge-0805","industry":"card","group":"id_neg","text":"회의실 예약 2026-926521 건을 취소해 주세요.","confidential":false,"ids":[]}
+{"id":"judge-0806","industry":"card","group":"id_neg","text":"가맹점번호가 몇 자리인지 알려 줘.","confidential":false,"ids":[]}
+{"id":"judge-0807","industry":"card","group":"id_neg","text":"신청번호가 몇 자리인지 알려 줘.","confidential":false,"ids":[]}
+{"id":"judge-0808","industry":"card","group":"id_neg","text":"고객번호 체계는 어떻게 바뀌었나요?","confidential":false,"ids":[]}
+{"id":"judge-0809","industry":"card","group":"id_neg","text":"고객번호가 몇 자리인지 알려 줘.","confidential":false,"ids":[]}
+{"id":"judge-0810","industry":"card","group":"id_neg","text":"가맹점번호 체계는 어떻게 바뀌었나요?","confidential":false,"ids":[]}
+{"id":"judge-0811","industry":"card","group":"id_neg","text":"가맹점번호가 몇 자리인지 알려 줘.","confidential":false,"ids":[]}
+{"id":"judge-0812","industry":"card","group":"id_neg","text":"회의실 예약 2026-511456 건을 취소해 주세요.","confidential":false,"ids":[]}
+{"id":"judge-0813","industry":"card","group":"id_neg","text":"회의실 예약 63022913 건을 취소해 주세요.","confidential":false,"ids":[]}
+{"id":"judge-0814","industry":"card","group":"id_neg","text":"회원번호 체계는 어떻게 바뀌었나요?","confidential":false,"ids":[]}
+{"id":"judge-0815","industry":"card","group":"id_neg","text":"고객번호가 몇 자리인지 알려 줘.","confidential":false,"ids":[]}
+{"id":"judge-0816","industry":"card","group":"id_neg","text":"가맹점번호가 몇 자리인지 알려 줘.","confidential":false,"ids":[]}
+{"id":"judge-0817","industry":"insurance","group":"conf","text":"인수합병 문서인데 열람 제한이라 조심해야 해요. 요점만 써 줘.","confidential":true,"ids":[]}
+{"id":"judge-0818","industry":"insurance","group":"conf","text":"보험금 지급 심사 문서인데 보안 문서라 조심해야 해요. 요점만 써 줘.","confidential":true,"ids":[]}
+{"id":"judge-0819","industry":"insurance","group":"conf","text":"엠바고로 분류된 보험금 지급 심사 파일 내용을 영어로 옮겨 줘.","confidential":true,"ids":[]}
+{"id":"judge-0820","industry":"insurance","group":"conf","text":"[외부 유출 금지] 인수합병 검토 메모를 간단히 줄여 주세요.","confidential":true,"ids":[]}
+{"id":"judge-0821","industry":"insurance","group":"conf","text":"미공개로 분류된 손해율 파일 내용을 영어로 옮겨 줘.","confidential":true,"ids":[]}
+{"id":"judge-0822","industry":"insurance","group":"conf","text":"잠정 실적 문서인데 극비라 조심해야 해요. 요점만 써 줘.","confidential":true,"ids":[]}
+{"id":"judge-0823","industry":"insurance","group":"conf","text":"인수 심사 문서인데 대외비라 조심해야 해요. 요점만 써 줘.","confidential":true,"ids":[]}
+{"id":"judge-0824","industry":"insurance","group":"conf","text":"요율 인상안 문서인데 미공개라 조심해야 해요. 요점만 써 줘.","confidential":true,"ids":[]}
+{"id":"judge-0825","industry":"insurance","group":"conf","text":"[외부 유출 금지] 잠정 실적 검토 메모를 간단히 줄여 주세요.","confidential":true,"ids":[]}
+{"id":"judge-0826","industry":"insurance","group":"conf","text":"[배포 금지] 잠정 실적 검토 메모를 간단히 줄여 주세요.","confidential":true,"ids":[]}
+{"id":"judge-0827","industry":"insurance","group":"conf","text":"요율 인상안 문서인데 기밀이라 조심해야 해요. 요점만 써 줘.","confidential":true,"ids":[]}
+{"id":"judge-0828","industry":"insurance","group":"conf","text":"엠바고로 분류된 요율 인상안 파일 내용을 영어로 옮겨 줘.","confidential":true,"ids":[]}
+{"id":"judge-0829","industry":"insurance","group":"conf","text":"[취급 주의] 인수 심사 검토 메모를 간단히 줄여 주세요.","confidential":true,"ids":[]}
+{"id":"judge-0830","industry":"insurance","group":"conf","text":"외부 유출 금지로 분류된 손해율 파일 내용을 영어로 옮겨 줘.","confidential":true,"ids":[]}
+{"id":"judge-0831","industry":"insurance","group":"conf","text":"손해율 문서인데 내부용이라 조심해야 해요. 요점만 써 줘.","confidential":true,"ids":[]}
+{"id":"judge-0832","industry":"insurance","group":"conf","text":"[대외비] 잠정 실적 검토 메모를 간단히 줄여 주세요.","confidential":true,"ids":[]}
+{"id":"judge-0833","industry":"insurance","group":"conf","text":"인수 심사 문서인데 대외비라 조심해야 해요. 요점만 써 줘.","confidential":true,"ids":[]}
+{"id":"judge-0834","industry":"insurance","group":"conf","text":"인수 심사 문서인데 Internal only라 조심해야 해요. 요점만 써 줘.","confidential":true,"ids":[]}
+{"id":"judge-0835","industry":"insurance","group":"conf","text":"보험금 지급 심사 문서인데 유출 금지라 조심해야 해요. 요점만 써 줘.","confidential":true,"ids":[]}
+{"id":"judge-0836","industry":"insurance","group":"conf","text":"비밀 문서로 분류된 손해율 파일 내용을 영어로 옮겨 줘.","confidential":true,"ids":[]}
+{"id":"judge-0837","industry":"insurance","group":"conf","text":"[열람 제한] 잠정 실적 검토 메모를 간단히 줄여 주세요.","confidential":true,"ids":[]}
+{"id":"judge-0838","industry":"insurance","group":"conf","text":"[내부 검토용] 요율 인상안 검토 메모를 간단히 줄여 주세요.","confidential":true,"ids":[]}
+{"id":"judge-0839","industry":"insurance","group":"conf","text":"[엠바고] 손해율 검토 메모를 간단히 줄여 주세요.","confidential":true,"ids":[]}
+{"id":"judge-0840","industry":"insurance","group":"conf","text":"인수합병 문서인데 Internal only라 조심해야 해요. 요점만 써 줘.","confidential":true,"ids":[]}
+{"id":"judge-0841","industry":"insurance","group":"conf_split","text":"엠바고 등급 보고서예요. 요율 인상안 부분을 표로 바꿔 주세요.","confidential":true,"ids":[]}
+{"id":"judge-0842","industry":"insurance","group":"conf_split","text":"첨부는 공개 금지 자료입니다. 그 안의 인수 심사 숫자를 확인해 줘.","confidential":true,"ids":[]}
+{"id":"judge-0843","industry":"insurance","group":"conf_split","text":"첨부는 사내 한정 자료입니다. 그 안의 손해율 숫자를 확인해 줘.","confidential":true,"ids":[]}
+{"id":"judge-0844","industry":"insurance","group":"conf_split","text":"첨부는 사내 한정 자료입니다. 그 안의 인수합병 숫자를 확인해 줘.","confidential":true,"ids":[]}
+{"id":"judge-0845","industry":"insurance","group":"conf_split","text":"첨부는 내부용 자료입니다. 그 안의 요율 인상안 숫자를 확인해 줘.","confidential":true,"ids":[]}
+{"id":"judge-0846","industry":"insurance","group":"conf_split","text":"첨부는 내부용 자료입니다. 그 안의 인수합병 숫자를 확인해 줘.","confidential":true,"ids":[]}
+{"id":"judge-0847","industry":"insurance","group":"conf_split","text":"첨부는 비공개 자료입니다. 그 안의 인수합병 숫자를 확인해 줘.","confidential":true,"ids":[]}
+{"id":"judge-0848","industry":"insurance","group":"conf_split","text":"첨부는 Confidential 자료입니다. 그 안의 잠정 실적 숫자를 확인해 줘.","confidential":true,"ids":[]}
+{"id":"judge-0849","industry":"insurance","group":"conf_split","text":"미공개 등급 보고서예요. 손해율 부분을 표로 바꿔 주세요.","confidential":true,"ids":[]}
+{"id":"judge-0850","industry":"insurance","group":"conf_split","text":"내부용 등급 보고서예요. 요율 인상안 부분을 표로 바꿔 주세요.","confidential":true,"ids":[]}
+{"id":"judge-0851","industry":"insurance","group":"conf_split","text":"첨부는 보안 문서 자료입니다. 그 안의 보험금 지급 심사 숫자를 확인해 줘.","confidential":true,"ids":[]}
+{"id":"judge-0852","industry":"insurance","group":"conf_split","text":"첨부는 Confidential 자료입니다. 그 안의 손해율 숫자를 확인해 줘.","confidential":true,"ids":[]}
+{"id":"judge-0853","industry":"insurance","group":"conf_para","text":"자동차 보험료 조정 계획 문서인데 기밀이라 조심해야 해요. 요점만 써 줘.","confidential":true,"ids":[]}
+{"id":"judge-0854","industry":"insurance","group":"conf_para","text":"[비밀 문서] 청구 건 지급 거절 기준 검토 메모를 간단히 줄여 주세요.","confidential":true,"ids":[]}
+{"id":"judge-0855","industry":"insurance","group":"conf_para","text":"[비공개] 자동차 보험료 조정 계획 검토 메모를 간단히 줄여 주세요.","confidential":true,"ids":[]}
+{"id":"judge-0856","industry":"insurance","group":"conf_para","text":"자동차 보험료 조정 계획 문서인데 기밀이라 조심해야 해요. 요점만 써 줘.","confidential":true,"ids":[]}
+{"id":"judge-0857","industry":"insurance","group":"conf_para","text":"외부 유출 금지로 분류된 자동차 보험료 조정 계획 파일 내용을 영어로 옮겨 줘.","confidential":true,"ids":[]}
+{"id":"judge-0858","industry":"insurance","group":"conf_para","text":"자동차 보험료 조정 계획 문서인데 극비라 조심해야 해요. 요점만 써 줘.","confidential":true,"ids":[]}
+{"id":"judge-0859","industry":"insurance","group":"far","text":"보안 문서 등급 분류 기준이 궁금해요. 점심은 뭐 먹을까요? 보험금 지급 심사 뉴스도 찾아 줘.","confidential":false,"ids":[]}
+{"id":"judge-0860","industry":"insurance","group":"far","text":"극비 등급 분류 기준이 궁금해요. 점심은 뭐 먹을까요? 인수 심사 뉴스도 찾아 줘.","confidential":false,"ids":[]}
+{"id":"judge-0861","industry":"insurance","group":"far","text":"Confidential 등급 분류 기준이 궁금해요. 점심은 뭐 먹을까요? 요율 인상안 뉴스도 찾아 줘.","confidential":false,"ids":[]}
+{"id":"judge-0862","industry":"insurance","group":"far","text":"비공개 등급 분류 기준이 궁금해요. 점심은 뭐 먹을까요? 인수 심사 뉴스도 찾아 줘.","confidential":false,"ids":[]}
+{"id":"judge-0863","industry":"insurance","group":"far","text":"내부용 등급 분류 기준이 궁금해요. 점심은 뭐 먹을까요? 손해율 뉴스도 찾아 줘.","confidential":false,"ids":[]}
+{"id":"judge-0864","industry":"insurance","group":"far","text":"기밀 등급 분류 기준이 궁금해요. 점심은 뭐 먹을까요? 보험금 지급 심사 뉴스도 찾아 줘.","confidential":false,"ids":[]}
+{"id":"judge-0865","industry":"insurance","group":"marker_only","text":"취급 주의 자료를 출력할 때 주의할 점은?","confidential":false,"ids":[]}
+{"id":"judge-0866","industry":"insurance","group":"marker_only","text":"직원 교육 자료에 비밀 문서 표시 예시를 넣어 줘.","confidential":false,"ids":[]}
+{"id":"judge-0867","industry":"insurance","group":"marker_only","text":"취급 주의 등급 분류 기준이 궁금해요.","confidential":false,"ids":[]}
+{"id":"judge-0868","industry":"insurance","group":"marker_only","text":"공개 금지 자료를 출력할 때 주의할 점은?","confidential":false,"ids":[]}
+{"id":"judge-0869","industry":"insurance","group":"marker_only","text":"직원 교육 자료에 내부용 표시 예시를 넣어 줘.","confidential":false,"ids":[]}
+{"id":"judge-0870","industry":"insurance","group":"marker_only","text":"직원 교육 자료에 Confidential 표시 예시를 넣어 줘.","confidential":false,"ids":[]}
+{"id":"judge-0871","industry":"insurance","group":"marker_only","text":"Internal only 등급 분류 기준이 궁금해요.","confidential":false,"ids":[]}
+{"id":"judge-0872","industry":"insurance","group":"marker_only","text":"Internal only 등급 분류 기준이 궁금해요.","confidential":false,"ids":[]}
+{"id":"judge-0873","industry":"insurance","group":"marker_only","text":"취급 주의 자료를 출력할 때 주의할 점은?","confidential":false,"ids":[]}
+{"id":"judge-0874","industry":"insurance","group":"marker_only","text":"직원 교육 자료에 미공개 표시 예시를 넣어 줘.","confidential":false,"ids":[]}
+{"id":"judge-0875","industry":"insurance","group":"marker_only","text":"직원 교육 자료에 외부 유출 금지 표시 예시를 넣어 줘.","confidential":false,"ids":[]}
+{"id":"judge-0876","industry":"insurance","group":"marker_only","text":"직원 교육 자료에 비공개 표시 예시를 넣어 줘.","confidential":false,"ids":[]}
+{"id":"judge-0877","industry":"insurance","group":"marker_only","text":"극비 자료를 출력할 때 주의할 점은?","confidential":false,"ids":[]}
+{"id":"judge-0878","industry":"insurance","group":"marker_only","text":"직원 교육 자료에 취급 주의 표시 예시를 넣어 줘.","confidential":false,"ids":[]}
+{"id":"judge-0879","industry":"insurance","group":"marker_only","text":"직원 교육 자료에 대외비 표시 예시를 넣어 줘.","confidential":false,"ids":[]}
+{"id":"judge-0880","industry":"insurance","group":"marker_only","text":"열람 제한 자료를 출력할 때 주의할 점은?","confidential":false,"ids":[]}
+{"id":"judge-0881","industry":"insurance","group":"marker_only","text":"Confidential 등급 분류 기준이 궁금해요.","confidential":false,"ids":[]}
+{"id":"judge-0882","industry":"insurance","group":"marker_only","text":"외부 유출 금지 등급 분류 기준이 궁금해요.","confidential":false,"ids":[]}
+{"id":"judge-0883","industry":"insurance","group":"subject_only","text":"잠정 실적에 대해 신문 기사에 나온 내용을 정리해 줘.","confidential":false,"ids":[]}
+{"id":"judge-0884","industry":"insurance","group":"subject_only","text":"보험금 지급 심사에 대해 신문 기사에 나온 내용을 정리해 줘.","confidential":false,"ids":[]}
+{"id":"judge-0885","industry":"insurance","group":"subject_only","text":"인수합병에 대해 신문 기사에 나온 내용을 정리해 줘.","confidential":false,"ids":[]}
+{"id":"judge-0886","industry":"insurance","group":"subject_only","text":"다른 나라의 잠정 실적 사례를 알려 줘.","confidential":false,"ids":[]}
+{"id":"judge-0887","industry":"insurance","group":"subject_only","text":"손해율에 대해 신문 기사에 나온 내용을 정리해 줘.","confidential":false,"ids":[]}
+{"id":"judge-0888","industry":"insurance","group":"subject_only","text":"인수 심사에 대해 신문 기사에 나온 내용을 정리해 줘.","confidential":false,"ids":[]}
+{"id":"judge-0889","industry":"insurance","group":"subject_only","text":"다른 나라의 인수합병 사례를 알려 줘.","confidential":false,"ids":[]}
+{"id":"judge-0890","industry":"insurance","group":"subject_only","text":"인수 심사 용어 뜻을 쉽게 풀어 줘.","confidential":false,"ids":[]}
+{"id":"judge-0891","industry":"insurance","group":"subject_only","text":"다른 나라의 요율 인상안 사례를 알려 줘.","confidential":false,"ids":[]}
+{"id":"judge-0892","industry":"insurance","group":"subject_only","text":"인수합병 용어 뜻을 쉽게 풀어 줘.","confidential":false,"ids":[]}
+{"id":"judge-0893","industry":"insurance","group":"subject_only","text":"다른 나라의 인수 심사 사례를 알려 줘.","confidential":false,"ids":[]}
+{"id":"judge-0894","industry":"insurance","group":"subject_only","text":"인수 심사에 대해 신문 기사에 나온 내용을 정리해 줘.","confidential":false,"ids":[]}
+{"id":"judge-0895","industry":"insurance","group":"subject_only","text":"잠정 실적에 대해 신문 기사에 나온 내용을 정리해 줘.","confidential":false,"ids":[]}
+{"id":"judge-0896","industry":"insurance","group":"subject_only","text":"손해율 용어 뜻을 쉽게 풀어 줘.","confidential":false,"ids":[]}
+{"id":"judge-0897","industry":"insurance","group":"subject_only","text":"요율 인상안 용어 뜻을 쉽게 풀어 줘.","confidential":false,"ids":[]}
+{"id":"judge-0898","industry":"insurance","group":"subject_only","text":"다른 나라의 손해율 사례를 알려 줘.","confidential":false,"ids":[]}
+{"id":"judge-0899","industry":"insurance","group":"subject_only","text":"인수 심사에 대해 신문 기사에 나온 내용을 정리해 줘.","confidential":false,"ids":[]}
+{"id":"judge-0900","industry":"insurance","group":"subject_only","text":"다른 나라의 보험금 지급 심사 사례를 알려 줘.","confidential":false,"ids":[]}
+{"id":"judge-0901","industry":"insurance","group":"business","text":"휴가 일정 표를 달력 형식으로 바꿔 줘.","confidential":false,"ids":[]}
+{"id":"judge-0902","industry":"insurance","group":"business","text":"사내 체육대회 공지문을 써 줘.","confidential":false,"ids":[]}
+{"id":"judge-0903","industry":"insurance","group":"business","text":"홍보 문구 세 가지를 만들어 줘.","confidential":false,"ids":[]}
+{"id":"judge-0904","industry":"insurance","group":"business","text":"고객 설문 결과를 그래프로 그리는 방법은?","confidential":false,"ids":[]}
+{"id":"judge-0905","industry":"insurance","group":"business","text":"업무 인수인계서 목차를 제안해 줘.","confidential":false,"ids":[]}
+{"id":"judge-0906","industry":"insurance","group":"business","text":"문서 양식의 맞춤법을 확인해 줘.","confidential":false,"ids":[]}
+{"id":"judge-0907","industry":"insurance","group":"business","text":"업무 인수인계서 목차를 제안해 줘.","confidential":false,"ids":[]}
+{"id":"judge-0908","industry":"insurance","group":"business","text":"문서 양식의 맞춤법을 확인해 줘.","confidential":false,"ids":[]}
+{"id":"judge-0909","industry":"insurance","group":"business","text":"사내 체육대회 공지문을 써 줘.","confidential":false,"ids":[]}
+{"id":"judge-0910","industry":"insurance","group":"business","text":"홍보 문구 세 가지를 만들어 줘.","confidential":false,"ids":[]}
+{"id":"judge-0911","industry":"insurance","group":"business","text":"업무 인수인계서 목차를 제안해 줘.","confidential":false,"ids":[]}
+{"id":"judge-0912","industry":"insurance","group":"business","text":"고객 설문 결과를 그래프로 그리는 방법은?","confidential":false,"ids":[]}
+{"id":"judge-0913","industry":"insurance","group":"business","text":"홍보 문구 세 가지를 만들어 줘.","confidential":false,"ids":[]}
+{"id":"judge-0914","industry":"insurance","group":"business","text":"홍보 문구 세 가지를 만들어 줘.","confidential":false,"ids":[]}
+{"id":"judge-0915","industry":"insurance","group":"business","text":"고객 설문 결과를 그래프로 그리는 방법은?","confidential":false,"ids":[]}
+{"id":"judge-0916","industry":"insurance","group":"business","text":"문서 양식의 맞춤법을 확인해 줘.","confidential":false,"ids":[]}
+{"id":"judge-0917","industry":"insurance","group":"id","text":"사고접수번호가 M669471 인 건 서류를 찾아 줘.","confidential":false,"ids":["M669471"]}
+{"id":"judge-0918","industry":"insurance","group":"id","text":"확인 요청: 보험증권번호=4695047583","confidential":false,"ids":["4695047583"]}
+{"id":"judge-0919","industry":"insurance","group":"id","text":"확인 요청: 사고번호=5111860940","confidential":false,"ids":["5111860940"]}
+{"id":"judge-0920","industry":"insurance","group":"id","text":"접수번호(2026-844135) 고객 응대 기록을 정리해 줘.","confidential":false,"ids":["2026-844135"]}
+{"id":"judge-0921","industry":"insurance","group":"id","text":"확인 요청: 접수번호=2026-964949","confidential":false,"ids":["2026-964949"]}
+{"id":"judge-0922","industry":"insurance","group":"id","text":"사고번호가 A364871 인 건 서류를 찾아 줘.","confidential":false,"ids":["A364871"]}
+{"id":"judge-0923","industry":"insurance","group":"id","text":"증권번호가 A177095 인 건 서류를 찾아 줘.","confidential":false,"ids":["A177095"]}
+{"id":"judge-0924","industry":"insurance","group":"id","text":"접수번호(2026-417436) 고객 응대 기록을 정리해 줘.","confidential":false,"ids":["2026-417436"]}
+{"id":"judge-0925","industry":"insurance","group":"id","text":"확인 요청: 접수번호=2026-783544","confidential":false,"ids":["2026-783544"]}
+{"id":"judge-0926","industry":"insurance","group":"id","text":"청구번호(6235653451) 고객 응대 기록을 정리해 줘.","confidential":false,"ids":["6235653451"]}
+{"id":"judge-0927","industry":"insurance","group":"id","text":"확인 요청: 증권번호=2026-183056","confidential":false,"ids":["2026-183056"]}
+{"id":"judge-0928","industry":"insurance","group":"id","text":"접수번호가 23999332 인 건 서류를 찾아 줘.","confidential":false,"ids":["23999332"]}
+{"id":"judge-0929","industry":"insurance","group":"id","text":"확인 요청: 청구번호=41157709","confidential":false,"ids":["41157709"]}
+{"id":"judge-0930","industry":"insurance","group":"id","text":"청구번호가 05970572 인 건 서류를 찾아 줘.","confidential":false,"ids":["05970572"]}
+{"id":"judge-0931","industry":"insurance","group":"id","text":"확인 요청: 계약번호=PL-2026-26022","confidential":false,"ids":["PL-2026-26022"]}
+{"id":"judge-0932","industry":"insurance","group":"id","text":"사고번호(LN-2026-41151) 고객 응대 기록을 정리해 줘.","confidential":false,"ids":["LN-2026-41151"]}
+{"id":"judge-0933","industry":"insurance","group":"id","text":"청구번호가 AC-2026-05636 인 건 서류를 찾아 줘.","confidential":false,"ids":["AC-2026-05636"]}
+{"id":"judge-0934","industry":"insurance","group":"id","text":"확인 요청: 청구번호=2026-549753","confidential":false,"ids":["2026-549753"]}
+{"id":"judge-0935","industry":"insurance","group":"id","text":"사고번호가 LN-2026-94392 인 건 서류를 찾아 줘.","confidential":false,"ids":["LN-2026-94392"]}
+{"id":"judge-0936","industry":"insurance","group":"id","text":"확인 요청: 사고접수번호=0823132392","confidential":false,"ids":["0823132392"]}
+{"id":"judge-0937","industry":"insurance","group":"id","text":"확인 요청: 보험증권번호=10757426","confidential":false,"ids":["10757426"]}
+{"id":"judge-0938","industry":"insurance","group":"id","text":"확인 요청: 보험증권번호=57594110","confidential":false,"ids":["57594110"]}
+{"id":"judge-0939","industry":"insurance","group":"id","text":"증권번호가 52143025 인 건 서류를 찾아 줘.","confidential":false,"ids":["52143025"]}
+{"id":"judge-0940","industry":"insurance","group":"id","text":"사고번호가 47621915 인 건 서류를 찾아 줘.","confidential":false,"ids":["47621915"]}
+{"id":"judge-0941","industry":"insurance","group":"id_neg","text":"회의실 예약 4303112317 건을 취소해 주세요.","confidential":false,"ids":[]}
+{"id":"judge-0942","industry":"insurance","group":"id_neg","text":"사고번호 체계는 어떻게 바뀌었나요?","confidential":false,"ids":[]}
+{"id":"judge-0943","industry":"insurance","group":"id_neg","text":"사고접수번호 체계는 어떻게 바뀌었나요?","confidential":false,"ids":[]}
+{"id":"judge-0944","industry":"insurance","group":"id_neg","text":"접수번호 체계는 어떻게 바뀌었나요?","confidential":false,"ids":[]}
+{"id":"judge-0945","industry":"insurance","group":"id_neg","text":"청구번호 체계는 어떻게 바뀌었나요?","confidential":false,"ids":[]}
+{"id":"judge-0946","industry":"insurance","group":"id_neg","text":"회의실 예약 AC-2026-27149 건을 취소해 주세요.","confidential":false,"ids":[]}
+{"id":"judge-0947","industry":"insurance","group":"id_neg","text":"계약번호 체계는 어떻게 바뀌었나요?","confidential":false,"ids":[]}
+{"id":"judge-0948","industry":"insurance","group":"id_neg","text":"회의실 예약 CL-2026-74531 건을 취소해 주세요.","confidential":false,"ids":[]}
+{"id":"judge-0949","industry":"insurance","group":"id_neg","text":"회의실 예약 8645165463 건을 취소해 주세요.","confidential":false,"ids":[]}
+{"id":"judge-0950","industry":"insurance","group":"id_neg","text":"접수번호 체계는 어떻게 바뀌었나요?","confidential":false,"ids":[]}
+{"id":"judge-0951","industry":"insurance","group":"id_neg","text":"접수번호가 몇 자리인지 알려 줘.","confidential":false,"ids":[]}
+{"id":"judge-0952","industry":"insurance","group":"id_neg","text":"회의실 예약 A650708 건을 취소해 주세요.","confidential":false,"ids":[]}

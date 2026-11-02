@@ -75,3 +75,8 @@ if(PA_WITH_VAULT)
   add_dependencies(gateway_measure prompt_airlock_vault)
   pa_copy_runtime_dlls(gateway_measure)
 endif()
+
+# 기관 정책 묶음(Phase 11-2, 11-3): 합성 셋으로 기밀 문장 재현율·오차단과 기관 번호 재현율을 잰다.
+add_executable(institution_measure EXCLUDE_FROM_ALL institution_measure.cpp)
+target_link_libraries(institution_measure PRIVATE prompt_airlock_detect pa_options nlohmann_json::nlohmann_json)
+pa_copy_runtime_dlls(institution_measure)

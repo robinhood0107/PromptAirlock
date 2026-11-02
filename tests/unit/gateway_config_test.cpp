@@ -142,13 +142,17 @@ TEST(GatewayConfig, ReadsInstitutionPolicy) {
     auto j = valid();
     j["policy"] = {{"industries", json::array({"hospital", "bank"})},
                    {"id_labels", json::array({"학번"})},
-                   {"id_formats", json::array({"HR-####-###"})}};
+                   {"id_formats", json::array({"HR-####-###"})},
+                   {"confidential_markers", json::array({"사내비"})},
+                   {"confidential_subjects", json::array({"한빛 프로젝트"})}};
     const auto config = parse(j);
     ASSERT_TRUE(config.has_value());
     namespace pd = prompt_airlock::detect;
     EXPECT_EQ(config->policy.industries, (std::vector<pd::Industry>{pd::Industry::Hospital, pd::Industry::Bank}));
     EXPECT_EQ(config->policy.id_labels, std::vector<std::string>{"학번"});
     EXPECT_EQ(config->policy.id_formats.size(), 1U);
+    EXPECT_EQ(config->policy.confidential_markers, std::vector<std::string>{"사내비"});
+    EXPECT_EQ(config->policy.confidential_subjects, std::vector<std::string>{"한빛 프로젝트"});
     // 없으면 빈 정책이다(업종 표지어도 기관 번호 규칙도 없음).
     const auto plain = parse(valid());
     ASSERT_TRUE(plain.has_value());
@@ -171,6 +175,10 @@ TEST(GatewayConfig, RejectsBadInstitutionPolicy) {
     expect_error(with({{"id_labels", json::array({std::string(33, 'a')})}}), ConfigProblem::InvalidValue,
                  "policy.id_labels[0]");
     expect_error(with({{"id_formats", json::array({"####"})}}), ConfigProblem::InvalidValue, "policy.id_formats[0]");
+    expect_error(with({{"confidential_subjects", json::array({""})}}), ConfigProblem::InvalidValue,
+                 "policy.confidential_subjects[0]");
+    expect_error(with({{"confidential_markers", json::array({"a", "a"})}}), ConfigProblem::Duplicate,
+                 "policy.confidential_markers[1]");
     json many = json::array();
     for (int i = 0; i < 17; ++i) {
         many.push_back("K" + std::to_string(i) + "-####");

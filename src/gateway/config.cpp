@@ -290,7 +290,9 @@ Result parse_policy(const json& root, detect::InstitutionPolicy& out) {
         return std::unexpected(node.error());
     }
     const json& policy = **node;
-    if (auto r = only_keys(policy, {"industries", "id_labels", "id_formats"}, "policy"); !r) {
+    if (auto r = only_keys(
+            policy, {"industries", "id_labels", "id_formats", "confidential_markers", "confidential_subjects"}, "policy");
+        !r) {
         return r;
     }
     if (auto r = string_list(policy, "industries", detect::industry_count, out.industries,
@@ -298,14 +300,21 @@ Result parse_policy(const json& root, detect::InstitutionPolicy& out) {
         !r) {
         return r;
     }
-    if (auto r = string_list(policy, "id_labels", detect::max_id_labels, out.id_labels,
-                             [](const std::string& s) -> std::optional<std::string> {
-                                 // 글자 수(UTF-8 이어지는 byte 를 뺀 수). UTF-8 검증은 탐지기 조립이 한다.
-                                 const auto chars = std::ranges::count_if(s, [](char c) { return (c & 0xC0) != 0x80; });
-                                 return static_cast<std::size_t>(chars) <= detect::max_id_label_length
-                                            ? std::optional(s)
-                                            : std::nullopt;
-                             });
+    // 글자 수(UTF-8 이어지는 byte 를 뺀 수). UTF-8 검증은 탐지기 조립이 한다.
+    const auto short_term = [](const std::string& s) -> std::optional<std::string> {
+        const auto chars = std::ranges::count_if(s, [](char c) { return (c & 0xC0) != 0x80; });
+        return static_cast<std::size_t>(chars) <= detect::max_id_label_length ? std::optional(s) : std::nullopt;
+    };
+    if (auto r = string_list(policy, "id_labels", detect::max_id_labels, out.id_labels, short_term); !r) {
+        return r;
+    }
+    if (auto r = string_list(policy, "confidential_markers", detect::max_confidential_terms, out.confidential_markers,
+                             short_term);
+        !r) {
+        return r;
+    }
+    if (auto r = string_list(policy, "confidential_subjects", detect::max_confidential_terms,
+                             out.confidential_subjects, short_term);
         !r) {
         return r;
     }

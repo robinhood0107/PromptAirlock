@@ -98,6 +98,12 @@ struct SensitiveMatchers {
     const TermMatcher& honorifics;
     const TermMatcher& self_statements;
 };
+// 같은 문장에 조건 a 와 b 가 함께 있거나 이웃 두 문장이 하나씩 가지면 그 문장(들)을 type 으로 낸다(ADR 0016 의 창).
+// 돌려주는 값은 막힌 문장 표시다. a, b 는 spans 와 길이가 같다.
+std::vector<bool> block_sentence_pairs(std::span<const SentenceSpan> spans, std::u32string_view text,
+                                       const std::vector<bool>& a, const std::vector<bool>& b, core::EntityType type,
+                                       std::vector<Hit>& out);
+
 // identities 는 이 segment 에서 먼저 찾은 결과다(식별 정보를 개인 표지로 쓴다).
 void find_sensitive(const DetectionView& view, std::u32string_view text, const SensitiveMatchers& matchers,
                     std::span<const Hit> identities, std::vector<Hit>& out, SensitiveTally& tally);
@@ -111,5 +117,9 @@ void find_organizations(const DetectionView& view, std::u32string_view text, std
 // 기관 번호(ADR 0027): labels 표지어 뒤 번호와 formats 형식 마스크. 둘 다 INSTITUTION_ID.
 void find_institution_ids(const DetectionView& view, std::u32string_view text, const TermMatcher& labels,
                           std::span<const IdFormat> formats, std::vector<Hit>& out);
+
+// 기밀 문장(ADR 0027): markers 와 subjects 가 같은 창에 있으면 CONFIDENTIAL_MATTER. subjects 가 비면 아무것도 안 한다.
+void find_confidential(const DetectionView& view, std::u32string_view text, const TermMatcher& markers,
+                       const TermMatcher& subjects, std::vector<Hit>& out);
 
 }  // namespace prompt_airlock::detect::rules

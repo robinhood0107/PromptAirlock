@@ -63,7 +63,7 @@ LLM의 답이 오면 token을 원래 값으로 되돌려 직원에게 준다.
 
 | 파일 | 하는 일 | 주요 타입·함수 |
 |---|---|---|
-| `core/types.hpp` | 공용 열거형과 고정 처리표 | `DataGrade`, `GradePolicy`, `Action`, `EntityType`(18종), `MessageRole`, `DetectorKind`, `EncodingKind`, `default_action`, `stricter`, `EntityTypeSet`, `SegmentIndex`, `max_prompt_bytes`, `max_entities` |
+| `core/types.hpp` | 공용 열거형과 고정 처리표 | `DataGrade`, `GradePolicy`, `Action`, `EntityType`(19종), `MessageRole`, `DetectorKind`, `EncodingKind`, `default_action`, `stricter`, `EntityTypeSet`, `SegmentIndex`, `max_prompt_bytes`, `max_entities` |
 | `core/error.hpp` | 단계별 오류 종류 | `InputError`, `DetectError`, `ProtectionError`, `VaultError`, `ResidualError`, `RestoreError`, `CoreError` |
 | `core/offset.hpp` | 위치 종류별로 다른 타입. 섞어 쓰면 빌드되지 않는다 | `Offset<Tag>`, `Utf8ByteOffset`, `CodepointOffset`, `TokenOffset`, `ByteSpan` |
 | `core/utf8.hpp`, `utf8.cpp` | 엄격한 UTF-8 검증과 위치 변환 | `validate_utf8`, `decode_utf8`, `DecodedCodepoint`, `check_span`, `is_codepoint_boundary`, `to_codepoint_offset`, `to_byte_offset` |
@@ -114,9 +114,11 @@ LLM의 답이 오면 token을 원래 값으로 되돌려 직원에게 준다.
 | `src/detect/network.cpp` | 이메일, IPv4, IPv6 | `find_network` |
 | `src/detect/secrets.cpp` | 접두가 있는 키, JWT, Bearer 값, PEM 개인 키 | `find_secrets` |
 | `src/detect/credentials.cpp` | 비밀번호 표지어 뒤 값, URL 사용자 정보, HTTP Basic, 계정 문맥 근처 무작위 문자열 | `find_credentials` |
-| `src/detect/sensitive.cpp` | 범주어와 특정 개인 표지가 같은 창에 있으면 민감정보로 차단, 범주어만 있으면 집계 | `find_sensitive` |
+| `src/detect/sensitive.cpp` | 범주어와 특정 개인 표지가 같은 창에 있으면 민감정보로 차단, 범주어만 있으면 집계 | `find_sensitive`, `block_sentence_pairs` |
 | `detect/institution.hpp`, `src/detect/institution.cpp` | 기관 정책 묶음(ADR 0027): 업종 이름, 형식 마스크, 업종·기관 표지어 뒤 번호와 마스크로 기관 번호 찾기 | `Industry`, `InstitutionPolicy`, `IdFormat`, `find_institution_ids` |
 | `src/detect/data/institution_labels.hpp` | 업종별 기관 번호 표지어(공공·금융) | `institution_labels` |
+| `src/detect/confidential.cpp` | 기밀 표지어와 대상어가 같은 문장 창에 있으면 기밀 문장으로 차단(ADR 0027) | `find_confidential` |
+| `src/detect/data/confidential_terms.hpp` | 기밀 표지어와 업종별 대상어 | `confidential_markers`, `confidential_subjects` |
 | `src/detect/data/kr_identifier_formats.hpp` | 전화 대역, 여권 종류 문자, 운전면허 지역 | `area_codes`, `passport_type_letters`, `license_region_names` |
 | `src/detect/data/kr_bank_account_formats.hpp` | 국내 금융기관 계좌번호 형식표 | `kr_account_formats` |
 | `src/detect/data/iban_registry.hpp` | IBAN 국가별 구조(도구로 생성, 직접 고치지 않음) | `iban_countries` |
