@@ -16,9 +16,10 @@ namespace {
         case EntityType::IpAddress: return 1;
         case EntityType::KoreanPhone: return 2;
         case EntityType::KoreanBusinessNo: return 3;
-        case EntityType::InternalTerm: return 4;
-        case EntityType::Organization: return 5;
-        case EntityType::Person: return 6;
+        case EntityType::InstitutionId: return 4;
+        case EntityType::InternalTerm: return 5;
+        case EntityType::Organization: return 6;
+        case EntityType::Person: return 7;
         // 차단 종류는 enum 순서를 그대로 쓴다.
         case EntityType::KoreanRrn:
         case EntityType::ApiKey:
