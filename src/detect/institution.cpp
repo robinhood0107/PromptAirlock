@@ -56,8 +56,20 @@ constexpr std::size_t min_id_digits = 3;
         ++i;
     }
     std::size_t end = i;
-    while (end < text.size() && is_id_char(text[end]) && end - i <= max_id_value) {
-        ++end;
+    while (end < text.size() && end - i <= max_id_value) {
+        if (is_id_char(text[end])) {
+            ++end;
+            continue;
+        }
+        // 하이픈 뒤에 공백이 끼어도 번호가 이어진다(공문서의 "1AA-2409-   0794254"). 공백은 3개까지.
+        std::size_t next = end;
+        while (next < text.size() && next - end < 3 && is_blank(text[next])) {
+            ++next;
+        }
+        if (next == end || text[end - 1] != U'-' || next >= text.size() || !is_ascii_alnum(text[next])) {
+            break;
+        }
+        end = next;
     }
     if (end - i > max_id_value || (end < text.size() && text[end] == U'_')) {
         return std::nullopt;
