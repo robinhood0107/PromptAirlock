@@ -27,9 +27,9 @@ TEST(ExtractRunner, RealExtractorReturnsTextOrReason) {
     const auto text = ex::extract_in_child(PA_EXTRACT_EXE, "txt", bytes("첫 줄\n둘째 줄"));
     ASSERT_TRUE(text && *text);
     EXPECT_EQ((*text)->blocks.size(), 2U);
-    const auto legacy = ex::extract_in_child(PA_EXTRACT_EXE, "doc", bytes("\xD0\xCF\x11\xE0\xA1\xB1\x1A\xE1"));
-    ASSERT_TRUE(legacy);
-    EXPECT_EQ(legacy->error(), ex::ExtractError::LegacyFormat);
+    const auto broken = ex::extract_in_child(PA_EXTRACT_EXE, "doc", bytes("\xD0\xCF\x11\xE0\xA1\xB1\x1A\xE1"));
+    ASSERT_TRUE(broken);
+    EXPECT_EQ(broken->error(), ex::ExtractError::Damaged);  // 몸 없는 CFB
     // 이상한 확장자는 넘기지 않는다(내용으로만 판별).
     const auto odd = ex::extract_in_child(PA_EXTRACT_EXE, "--x y", bytes("글"));
     ASSERT_TRUE(odd && *odd);

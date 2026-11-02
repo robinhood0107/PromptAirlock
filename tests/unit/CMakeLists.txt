@@ -122,3 +122,6 @@ target_link_libraries(extract_runner_test PRIVATE prompt_airlock_extract_client)
 target_compile_definitions(extract_runner_test PRIVATE "PA_TEST_CHILD=\"$<TARGET_FILE:extract_test_child>\""
                            "PA_EXTRACT_EXE=\"$<TARGET_FILE:prompt-airlock-extract>\"")
 add_dependencies(extract_runner_test extract_test_child prompt-airlock-extract)
+find_package(ZLIB REQUIRED)
+pa_add_gtest(extract_hwp_test extract_hwp_test.cpp)
+target_link_libraries(extract_hwp_test PRIVATE prompt_airlock_extract prompt_airlock_extract_client ZLIB::ZLIB)

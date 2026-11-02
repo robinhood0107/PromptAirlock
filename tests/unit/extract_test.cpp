@@ -185,7 +185,7 @@ TEST(ExtractZip, NestedDocumentsNamesAndDepth) {
     EXPECT_EQ(deep.error(), ex::ExtractError::Bomb);
     // 안의 문서 하나라도 못 읽으면 전체를 거절한다.
     EXPECT_EQ(run(make_zip({{"ok.txt", "글"}, {"old.doc", "\xD0\xCF\x11\xE0\xA1\xB1\x1A\xE1"}})).error(),
-              ex::ExtractError::LegacyFormat);
+              ex::ExtractError::Damaged);
 }
 
 TEST(ExtractLimits, BombsAndLimits) {
@@ -221,8 +221,9 @@ TEST(ExtractLimits, HostileXmlAndBrokenFiles) {
     // 잘린 zip
     const auto whole = docx("<w:p><w:r><w:t>글</w:t></w:r></w:p>");
     EXPECT_FALSE(run(whole.substr(0, whole.size() / 2)));
-    EXPECT_EQ(run(std::string("\xD0\xCF\x11\xE0\xA1\xB1\x1A\xE1", 8)).error(), ex::ExtractError::LegacyFormat);
-    EXPECT_EQ(run(std::string("\xD0\xCF\x11\xE0\xA1\xB1\x1A\xE1", 8), "hwp").error(), ex::ExtractError::Unsupported);
+    // CFB 머리만 있고 몸이 없는 파일. 옛 형식·hwp 판정은 extract_hwp_test 가 진짜 CFB 로 본다.
+    EXPECT_EQ(run(std::string("\xD0\xCF\x11\xE0\xA1\xB1\x1A\xE1", 8)).error(), ex::ExtractError::Damaged);
+    EXPECT_EQ(run(std::string("\xD0\xCF\x11\xE0\xA1\xB1\x1A\xE1", 8), "hwp").error(), ex::ExtractError::Damaged);
     EXPECT_EQ(run("%PDF-1.7\n").error(), ex::ExtractError::Unsupported);
 }
 

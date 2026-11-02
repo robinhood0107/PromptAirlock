@@ -4,7 +4,9 @@
 #include <cstddef>
 #include <expected>
 #include <functional>
+#include <cstdint>
 #include <memory>
+#include <optional>
 #include <span>
 #include <string>
 #include <string_view>
@@ -70,6 +72,40 @@ private:
     std::unique_ptr<Impl> impl_;
     std::vector<std::string> names_;
 };
+
+// 메모리의 복합 문서(CFB). file 은 Cfb 보다 오래 살아야 한다. 스트림 크기는 상한으로 보고 풀린 byte 를 센다.
+class Cfb {
+public:
+    [[nodiscard]] static std::expected<Cfb, ExtractError> open(std::span<const std::byte> file, Context& context);
+    // 경로는 "FileHeader", "BodyText/Section0" 처럼 '/' 로 나눈다.
+    [[nodiscard]] std::expected<std::string, ExtractError> read(std::string_view path, Context& context) const;
+    [[nodiscard]] bool contains(std::string_view path) const;
+
+private:
+    struct Entry {
+        std::u16string name;
+        std::uint8_t type = 0;  // 1 저장소, 2 스트림, 5 뿌리
+        std::uint32_t left = 0xFFFFFFFF;
+        std::uint32_t right = 0xFFFFFFFF;
+        std::uint32_t child = 0xFFFFFFFF;
+        std::uint32_t start = 0;
+        std::uint32_t size = 0;
+    };
+    [[nodiscard]] std::expected<std::string, ExtractError> chain(std::uint32_t start, std::size_t size, bool mini,
+                                                                 Context& context) const;
+    [[nodiscard]] std::optional<std::uint32_t> find_child(std::uint32_t storage, std::string_view name) const;
+
+    std::span<const std::byte> file_;
+    std::size_t sector_ = 512;
+    std::uint32_t mini_cutoff_ = 4096;
+    std::vector<std::uint32_t> fat_;
+    std::vector<std::uint32_t> mini_fat_;
+    std::vector<Entry> entries_;
+    std::string mini_stream_;
+};
+
+// hwp 5.0(CFB 안 FileHeader·BodyText). 암호·배포용·DRM 문서는 Encrypted.
+[[nodiscard]] std::expected<void, ExtractError> extract_hwp(const Cfb& cfb, Context& context);
 
 [[nodiscard]] std::expected<void, ExtractError> extract_docx(const Zip& zip, Context& context);
 [[nodiscard]] std::expected<void, ExtractError> extract_xlsx(const Zip& zip, Context& context);

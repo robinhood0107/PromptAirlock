@@ -12,7 +12,7 @@
 
 namespace prompt_airlock::extract {
 
-enum class DocumentFormat : std::uint8_t { Text, Csv, Markdown, Html, Docx, Xlsx, Pptx, Hwpx, Hwpml, Zip };
+enum class DocumentFormat : std::uint8_t { Text, Csv, Markdown, Html, Docx, Xlsx, Pptx, Hwpx, Hwpml, Hwp, Zip };
 
 enum class ExtractError : std::uint8_t {
     TooLarge,        // 파일·풀린 크기·출력이 상한을 넘음
