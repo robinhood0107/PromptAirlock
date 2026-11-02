@@ -1,4 +1,4 @@
-// 문서 추출(ADR 0028): 글자 형식, docx·xlsx·pptx·hwpx, zip 묶음, 상한과 공격 입력.
+// 문서 추출(ADR 0028): 글자 형식, docx·xlsx·pptx·hwpx, zip 묶음, 상한과 공격 입력, 주고받는 JSON.
 // 문서는 시험 안에서 libzip 으로 만든다(바이너리 시험 파일을 저장소에 두지 않음). 내용은 모두 합성이다.
 #include <gtest/gtest.h>
 #include <zip.h>
@@ -8,6 +8,7 @@
 #include <vector>
 
 #include "prompt_airlock/extract/document.hpp"
+#include "prompt_airlock/extract/runner.hpp"
 
 namespace ex = prompt_airlock::extract;
 
@@ -223,6 +224,22 @@ TEST(ExtractLimits, HostileXmlAndBrokenFiles) {
     EXPECT_EQ(run(std::string("\xD0\xCF\x11\xE0\xA1\xB1\x1A\xE1", 8)).error(), ex::ExtractError::LegacyFormat);
     EXPECT_EQ(run(std::string("\xD0\xCF\x11\xE0\xA1\xB1\x1A\xE1", 8), "hwp").error(), ex::ExtractError::Unsupported);
     EXPECT_EQ(run("%PDF-1.7\n").error(), ex::ExtractError::Unsupported);
+}
+
+TEST(ExtractProtocol, RoundTripAndRejectsBadOutput) {
+    ex::ExtractedDocument doc{ex::DocumentFormat::Hwpx, {{"section0 p1", "가"}}, {1, 2, 3, 4}};
+    const auto back = ex::from_json(ex::to_json(doc));
+    ASSERT_TRUE(back && *back);
+    EXPECT_EQ((*back)->blocks, doc.blocks);
+    EXPECT_EQ((*back)->omitted, doc.omitted);
+    const auto failed = ex::from_json(ex::to_json(std::unexpected(ex::ExtractError::Encrypted)));
+    ASSERT_TRUE(failed);
+    EXPECT_EQ(failed->error(), ex::ExtractError::Encrypted);
+    for (const std::string_view bad : {"", "{", "[]", R"({"v":2,"ok":true})", R"({"v":1,"ok":false,"error":"x"})",
+                                       R"({"v":1,"ok":true,"format":"exe","blocks":[],"omitted":{}})",
+                                       R"({"v":1,"ok":true,"format":"txt","blocks":[{"at":1}],"omitted":{}})"}) {
+        EXPECT_EQ(ex::from_json(bad).error(), ex::RunError::BadOutput) << bad;
+    }
 }
 
 TEST(ExtractText, XmlIsNeverSentAsMarkup) {
