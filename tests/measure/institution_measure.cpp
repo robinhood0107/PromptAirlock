@@ -1,13 +1,18 @@
 // 기관 정책 묶음 측정(Phase 11-2, 11-3). 기본 빌드·ctest 에 넣지 않고 직접 실행한다.
 //   cmake --build <빌드 디렉터리> --target institution_measure
 //   <빌드 디렉터리>/tests/measure/institution_measure tests/fixtures/institution/institution-dev.jsonl
+//   <빌드 디렉터리>/tests/measure/institution_measure --docs <글 폴더> <저장소 밖 상세 파일>
 // 문장마다 그 문장의 업종 하나만 고른 탐지기(결정론 규칙만, NER 없음)로 돌려, 무리별로
 // 기밀 문장 차단 수와 기관 번호 일치 수를 센다. 원문은 출력하지 않는다(무리·업종·개수·비율만).
+#include <algorithm>
 #include <chrono>
 #include <cstdio>
+#include <filesystem>
 #include <fstream>
+#include <iterator>
 #include <map>
 #include <string>
+#include <string_view>
 #include <vector>
 
 #include <nlohmann/json.hpp>
@@ -29,11 +34,93 @@ struct Count {
 
 double pct(int a, int b) { return b == 0 ? 0.0 : 100.0 * a / b; }
 
+// UTF-8 글자 경계로 당긴다(이어지는 byte 위면 앞으로).
+std::size_t boundary(std::string_view s, std::size_t at) {
+    while (at > 0 && at < s.size() && (static_cast<unsigned char>(s[at]) & 0xC0) == 0x80) {
+        --at;
+    }
+    return at;
+}
+
+// 문서 모드(11-3): 폴더의 .txt 를 4 KiB 이하 조각(줄 경계, 긴 줄은 글자 경계)으로 나눠 공공 업종 셋으로 돌린다.
+// 화면에는 문서 ID 와 개수, 조각 시간만 낸다. 원문이 섞인 상세(찾은 값과 앞뒤 30 byte)는 detail 파일에만 쓴다.
+int measure_documents(const std::filesystem::path& folder, const std::filesystem::path& detail_path) {
+    constexpr std::size_t chunk_bytes = 4096;
+    pd::InstitutionPolicy policy;
+    policy.industries = {pd::Industry::PublicAdmin, pd::Industry::PublicEnterprise, pd::Industry::HumanResources};
+    const auto detectors = *pd::Detectors::make({}, {}, policy);
+    std::vector<std::filesystem::path> files;
+    for (const auto& entry : std::filesystem::directory_iterator(folder)) {
+        if (entry.path().extension() == ".txt") {
+            files.push_back(entry.path());
+        }
+    }
+    std::ranges::sort(files);
+    std::ofstream detail(detail_path, std::ios::binary);
+    std::vector<double> times;
+    int docs_confidential = 0;
+    int total_confidential = 0;
+    int total_ids = 0;
+    int failed = 0;
+    std::printf("doc\tbytes\tchunks\tconfidential\tinstitution_ids\n");
+    for (const auto& file : files) {
+        std::ifstream in(file, std::ios::binary);
+        const std::string text((std::istreambuf_iterator<char>(in)), std::istreambuf_iterator<char>());
+        int chunks = 0;
+        int confidential = 0;
+        int ids = 0;
+        for (std::size_t at = 0; at < text.size();) {
+            std::size_t end = std::min(text.size(), at + chunk_bytes);
+            if (end < text.size()) {
+                const auto newline = std::string_view(text).substr(at, end - at).rfind('\n');
+                end = newline != std::string_view::npos && newline > 0 ? at + newline + 1 : boundary(text, end);
+            }
+            const std::string_view chunk = std::string_view(text).substr(at, end - at);
+            const auto start = std::chrono::steady_clock::now();
+            const auto found = detectors.detect_segment(chunk, pc::SegmentIndex{0});
+            times.push_back(std::chrono::duration<double, std::milli>(std::chrono::steady_clock::now() - start).count());
+            ++chunks;
+            if (!found) {
+                ++failed;
+            } else {
+                for (const auto& e : *found) {
+                    const bool conf = e.type() == pc::EntityType::ConfidentialMatter;
+                    if (!conf && e.type() != pc::EntityType::InstitutionId) {
+                        continue;
+                    }
+                    (conf ? confidential : ids) += 1;
+                    const auto b = e.span().begin().value();
+                    const auto from = boundary(chunk, b > 30 ? b - 30 : 0);
+                    const auto to = boundary(chunk, std::min(chunk.size(), b + e.span().size() + 30));
+                    detail << file.stem().string() << '\t' << (conf ? "CONFIDENTIAL_MATTER" : "INSTITUTION_ID") << '\t'
+                           << chunk.substr(b, e.span().size()) << '\t' << chunk.substr(from, to - from) << '\n';
+                }
+            }
+            at = end;
+        }
+        docs_confidential += confidential > 0 ? 1 : 0;
+        total_confidential += confidential;
+        total_ids += ids;
+        std::printf("%s\t%zu\t%d\t%d\t%d\n", file.stem().string().c_str(), text.size(), chunks, confidential, ids);
+    }
+    std::ranges::sort(times);
+    const auto at = [&](double q) { return times.empty() ? 0.0 : times[static_cast<std::size_t>(q * (times.size() - 1))]; };
+    std::printf("\ndocuments\t%zu\nchunks\t%zu\ndetection failures\t%d\n", files.size(), times.size(), failed);
+    std::printf("documents with confidential blocks\t%d/%zu\t%.1f%%\n", docs_confidential, files.size(),
+                pct(docs_confidential, static_cast<int>(files.size())));
+    std::printf("confidential blocks\t%d\ninstitution ids\t%d\n", total_confidential, total_ids);
+    std::printf("chunk time ms p50 %.3f p95 %.3f max %.3f\n", at(0.5), at(0.95), times.empty() ? 0.0 : times.back());
+    return failed == 0 ? 0 : 1;
+}
+
 }  // namespace
 
 int main(int argc, char** argv) {
+    if (argc == 4 && std::string_view(argv[1]) == "--docs") {
+        return measure_documents(argv[2], argv[3]);
+    }
     if (argc != 2) {
-        std::fputs("usage: institution_measure <set.jsonl>\n", stderr);
+        std::fputs("usage: institution_measure <set.jsonl> | --docs <folder> <detail.tsv>\n", stderr);
         return 2;
     }
     std::ifstream in(argv[1], std::ios::binary);
