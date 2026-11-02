@@ -108,6 +108,12 @@ struct Pipeline::Trace {
         reason = nlohmann::json::parse(response.body)["error"]["code"].get<std::string>();
         return response;
     }
+    void count(std::span<const core::EntitySpan> found) {
+        for (const auto& entity : found) {
+            auto& n = entities[std::string(core::entity_type_name(entity.type()))];
+            n = n.is_number() ? n.get<int>() + 1 : 1;
+        }
+    }
 };
 
 Pipeline::Pipeline(const detect::Detectors& detectors, ScopeOpener open_scope, ProviderCall provider,
@@ -211,61 +217,19 @@ std::expected<Pipeline::Outbound, JsonResponse> Pipeline::prepare(AcceptedReques
     if (!detected) {
         return std::unexpected(trace.reject(core::Rejection::from_error(detected.error())));
     }
-    for (const auto& entity : detected->entities) {
-        auto& count = trace.entities[std::string(core::entity_type_name(entity.type()))];
-        count = count.is_number() ? count.get<int>() + 1 : 1;
-    }
+    trace.count(detected->entities);
     auto checked = core::check_policy(std::move(raw), detected->entities, core::Policy::standard(output_cap_));
     if (!checked) {
         return std::unexpected(trace.reject(checked.error()));
     }
-    if (sentence_) {
-        // 경고 모드(ADR 0023): 규칙이 막지 않은 요청의 메시지만 판별한다. 판별하지 못하면 거절한다.
-        std::vector<std::string> categories;
-        const auto segments = checked->document().segments();
-        for (std::uint32_t i = 0; i < segments.size(); ++i) {
-            if (!std::holds_alternative<core::MessageSource>(segments[i].source())) {
-                continue;
-            }
-            const bool named_person = std::ranges::any_of(detected->entities, [&](const core::EntitySpan& e) {
-                return e.segment().value() == i && e.type() == core::EntityType::Person;
-            });
-            const auto hit = sentence_(segments[i].text(), named_person, stop);
-            if (!hit) {
-                return std::unexpected(trace.reject(core::Rejection::from_error(hit.error())));
-            }
-            if (*hit && std::ranges::find(categories, **hit) == categories.end()) {
-                categories.push_back(**hit);
-            }
-        }
-        if (!categories.empty()) {
-            const auto now = ConfirmLedger::Clock::now();
-            const bool confirmed = !request.confirm.empty() && confirms_.redeem(request.confirm, body_sha256, now);
-            trace.sentence = {{"categories", categories}, {"confirmed", confirmed}};
-            if (!confirmed) {
-                const auto token = confirms_.issue(body_sha256, now);
-                if (!token) {
-                    return std::unexpected(trace.fail(EntryError::Overloaded));
-                }
-                trace.reason = "confirmation_required";
-                return std::unexpected(confirm_response(*token, categories));
-            }
-        }
+    if (auto stopped = confirm_sentences(*checked, detected->entities, request.confirm, body_sha256, trace, stop)) {
+        return std::unexpected(std::move(*stopped));
     }
     auto scope = open_scope_();
     if (!scope) {
         return std::unexpected(trace.reject(core::Rejection::from_error(scope.error())));
     }
-    auto protected_prompt = core::protect(std::move(*checked), *scope);
-    if (!protected_prompt) {
-        return std::unexpected(trace.reject(protected_prompt.error()));
-    }
-    const auto residual = detectors_.detect(protected_prompt->document(), stop);
-    if (!residual) {
-        return std::unexpected(trace.reject(core::Rejection::from_error(residual.error())));
-    }
-    auto verified =
-        core::verify_residual(std::move(*protected_prompt), core::ResidualReport{residual->entities, residual->encoded});
+    auto verified = protect_and_verify(std::move(*checked), *scope, stop);
     if (!verified) {
         return std::unexpected(trace.reject(verified.error()));
     }
@@ -283,6 +247,65 @@ std::expected<Pipeline::Outbound, JsonResponse> Pipeline::prepare(AcceptedReques
         return std::unexpected(trace.fail(EntryError::Unavailable));
     }
     return outbound;
+}
+
+// 경고 모드(ADR 0023): 규칙이 막지 않은 요청의 메시지만 판별한다. 판별하지 못하면 거절한다.
+// 걸렸는데 확인 표지가 없으면 409 응답을 돌려주고, 통과하면 nullopt.
+std::optional<JsonResponse> Pipeline::confirm_sentences(const core::PolicyCheckedPrompt& checked,
+                                                        std::span<const core::EntitySpan> entities,
+                                                        const std::string& confirm, const std::string& body_sha256,
+                                                        Trace& trace, std::stop_token stop) const {
+    if (!sentence_) {
+        return std::nullopt;
+    }
+    std::vector<std::string> categories;
+    const auto segments = checked.document().segments();
+    for (std::uint32_t i = 0; i < segments.size(); ++i) {
+        if (!std::holds_alternative<core::MessageSource>(segments[i].source())) {
+            continue;
+        }
+        const bool named_person = std::ranges::any_of(entities, [&](const core::EntitySpan& e) {
+            return e.segment().value() == i && e.type() == core::EntityType::Person;
+        });
+        const auto hit = sentence_(segments[i].text(), named_person, stop);
+        if (!hit) {
+            return trace.reject(core::Rejection::from_error(hit.error()));
+        }
+        if (*hit && std::ranges::find(categories, **hit) == categories.end()) {
+            categories.push_back(**hit);
+        }
+    }
+    if (categories.empty()) {
+        return std::nullopt;
+    }
+    const auto now = ConfirmLedger::Clock::now();
+    const bool confirmed = !confirm.empty() && confirms_.redeem(confirm, body_sha256, now);
+    trace.sentence = {{"categories", categories}, {"confirmed", confirmed}};
+    if (confirmed) {
+        return std::nullopt;
+    }
+    const auto token = confirms_.issue(body_sha256, now);
+    if (!token) {
+        return trace.fail(EntryError::Overloaded);
+    }
+    trace.reason = "confirmation_required";
+    return confirm_response(*token, categories);
+}
+
+// 가명화한 뒤 같은 탐지기로 다시 훑어(잔여 검사) 남은 값이 없을 때만 검증된 요청이 된다.
+std::expected<core::VerifiedPrompt, core::Rejection> Pipeline::protect_and_verify(core::PolicyCheckedPrompt checked,
+                                                                                  PseudonymScope& scope,
+                                                                                  std::stop_token stop) const {
+    auto protected_prompt = core::protect(std::move(checked), scope);
+    if (!protected_prompt) {
+        return std::unexpected(protected_prompt.error());
+    }
+    const auto residual = detectors_.detect(protected_prompt->document(), stop);
+    if (!residual) {
+        return std::unexpected(core::Rejection::from_error(residual.error()));
+    }
+    return core::verify_residual(std::move(*protected_prompt),
+                                 core::ResidualReport{residual->entities, residual->encoded});
 }
 
 // provider 답 검사부터 복원한 응답까지.

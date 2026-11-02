@@ -1,5 +1,5 @@
 // 요청 처리 단계. 인증·등급 확정(server) 뒤에 부른다.
-// 순서: JSON 읽기 → 파라미터 → 탐지 → 정책 → 가명 범위 → 가명화 → 잔여 검사 → provider 요청 → provider 호출
+// 순서: JSON 읽기 → 파라미터 → 탐지 → 정책 → 경고 확인(켰을 때) → 가명 범위 → 가명화 → 잔여 검사 → provider 요청 → provider 호출
 // → 응답 읽기 → 응답 검사 → 같은 범위에서 복원 → 새로 만든 응답.
 // 어느 단계든 실패하면 거절하고 provider 는 부르지 않는다(fail closed).
 // 시간 상한을 넘기거나 부른 쪽이 취소하면(연결 끊김) 남은 단계를 멈추고 가명 범위를 지운 뒤 거절로 끝낸다.
@@ -16,6 +16,7 @@
 #include <functional>
 #include <memory>
 #include <optional>
+#include <span>
 #include <stop_token>
 #include <string>
 #include <string_view>
@@ -107,7 +108,15 @@ private:
         std::string body;                     // provider 로 보낼 검증된 본문
     };
     boost::asio::awaitable<JsonResponse> run(AcceptedRequest request, Trace& trace) const;
+    // 처리 순서(위 머리말)대로 아래 단계를 부른다.
     std::expected<Outbound, JsonResponse> prepare(AcceptedRequest request, Trace& trace, std::stop_token stop) const;
+    std::optional<JsonResponse> confirm_sentences(const core::PolicyCheckedPrompt& checked,
+                                                  std::span<const core::EntitySpan> entities,
+                                                  const std::string& confirm, const std::string& body_sha256,
+                                                  Trace& trace, std::stop_token stop) const;
+    std::expected<core::VerifiedPrompt, core::Rejection> protect_and_verify(core::PolicyCheckedPrompt checked,
+                                                                            PseudonymScope& scope,
+                                                                            std::stop_token stop) const;
     JsonResponse finish(const std::expected<ProviderReply, ProviderError>& reply, PseudonymScope& scope, Trace& trace,
                         std::stop_token stop) const;
 
