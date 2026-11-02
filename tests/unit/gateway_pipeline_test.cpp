@@ -464,3 +464,19 @@ TEST_F(GatewayPipeline, ResponseChecksRejectUnsafeAnswers) {
 }
 
 }  // namespace
+
+TEST_F(GatewayPipeline, InstitutionIdsLeaveAsTokensAndComeBackRestored) {
+    // 기관 번호(ADR 0027): 업종 표지어 뒤 번호와 기관 형식 마스크 모두 가명으로 나가고, 잔여 검사가 token 을 다시 잡지 않는다.
+    detect::InstitutionPolicy policy{{detect::Industry::Hospital}, {}, {*detect::IdFormat::parse("HR-####-###")}};
+    const auto detectors = *detect::Detectors::make({}, {}, policy);
+    const auto pipeline = make(detectors);
+    const auto reply = run(pipeline, ask("차트번호: 20231234 환자 건, 담당 HR-2024-117 에게 전달"));
+    ASSERT_EQ(provider_calls_, 1);
+    EXPECT_EQ(sent_.front().find("20231234"), std::string::npos);
+    EXPECT_EQ(sent_.front().find("HR-2024-117"), std::string::npos);
+    EXPECT_NE(sent_.front().find("INSTITUTION_ID_"), std::string::npos);
+    ASSERT_EQ(reply.status, 200u) << reply.body;
+    const std::string restored = json::parse(reply.body)["choices"][0]["message"]["content"];
+    EXPECT_NE(restored.find("20231234"), std::string::npos);
+    EXPECT_NE(restored.find("HR-2024-117"), std::string::npos);
+}

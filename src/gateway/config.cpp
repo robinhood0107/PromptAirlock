@@ -246,6 +246,73 @@ Result parse_terms(const json& root, std::vector<std::string>& out) {
     return {};
 }
 
+// policy.<key> 의 문자열 배열. 빈 값과 같은 값 두 번은 받지 않는다. 각 값은 check 로 바꾼다(실패면 InvalidValue).
+template <class T, class F>
+Result string_list(const json& policy, std::string_view key, std::size_t max_items, std::vector<T>& out, F check) {
+    if (!policy.contains(key)) {
+        return {};
+    }
+    const std::string at = "policy." + std::string(key);
+    auto node = member(policy, key, "policy", json::value_t::array);
+    if (!node) {
+        return std::unexpected(node.error());
+    }
+    if ((*node)->size() > max_items) {
+        return fail(ConfigProblem::InvalidValue, at);
+    }
+    std::set<std::string> seen;
+    for (std::size_t i = 0; i < (*node)->size(); ++i) {
+        const json& item = (**node)[i];
+        const std::string field = at + "[" + std::to_string(i) + "]";
+        if (!item.is_string()) {
+            return fail(ConfigProblem::WrongType, field);
+        }
+        const auto& s = item.get_ref<const std::string&>();
+        if (!seen.insert(s).second) {
+            return fail(ConfigProblem::Duplicate, field);
+        }
+        auto value = s.empty() ? std::nullopt : check(s);
+        if (!value) {
+            return fail(ConfigProblem::InvalidValue, field);
+        }
+        out.push_back(std::move(*value));
+    }
+    return {};
+}
+
+// 기관 정책 묶음(ADR 0027). 없으면 업종 표지어도 기관 번호 규칙도 쓰지 않는다.
+Result parse_policy(const json& root, detect::InstitutionPolicy& out) {
+    if (!root.contains("policy")) {
+        return {};
+    }
+    auto node = member(root, "policy", "", json::value_t::object);
+    if (!node) {
+        return std::unexpected(node.error());
+    }
+    const json& policy = **node;
+    if (auto r = only_keys(policy, {"industries", "id_labels", "id_formats"}, "policy"); !r) {
+        return r;
+    }
+    if (auto r = string_list(policy, "industries", detect::industry_count, out.industries,
+                             [](const std::string& s) { return detect::industry_from_name(s); });
+        !r) {
+        return r;
+    }
+    if (auto r = string_list(policy, "id_labels", detect::max_id_labels, out.id_labels,
+                             [](const std::string& s) -> std::optional<std::string> {
+                                 // 글자 수(UTF-8 이어지는 byte 를 뺀 수). UTF-8 검증은 탐지기 조립이 한다.
+                                 const auto chars = std::ranges::count_if(s, [](char c) { return (c & 0xC0) != 0x80; });
+                                 return static_cast<std::size_t>(chars) <= detect::max_id_label_length
+                                            ? std::optional(s)
+                                            : std::nullopt;
+                             });
+        !r) {
+        return r;
+    }
+    return string_list(policy, "id_formats", detect::max_id_formats, out.id_formats,
+                       [](const std::string& s) { return detect::IdFormat::parse(s); });
+}
+
 // 같은 객체 안의 중복 키를 찾는다. 라이브러리는 마지막 값을 조용히 쓰므로 직접 막는다.
 class DuplicateKeyGuard {
 public:
@@ -281,7 +348,7 @@ std::expected<Config, ConfigError> parse_config(std::string_view json_text, cons
     if (guard.found()) {
         return fail(ConfigProblem::Duplicate, "");
     }
-    if (auto r = only_keys(root, {"listen", "provider", "origins", "internal_terms", "output_token_cap", "history_retention_days", "sentence_warn"}, ""); !r) {
+    if (auto r = only_keys(root, {"listen", "provider", "origins", "internal_terms", "policy", "output_token_cap", "history_retention_days", "sentence_warn"}, ""); !r) {
         return std::unexpected(r.error());
     }
     Config config;
@@ -289,6 +356,7 @@ std::expected<Config, ConfigError> parse_config(std::string_view json_text, cons
     if (auto r = parse_provider(root, base_dir, config.provider); !r) return std::unexpected(r.error());
     if (auto r = parse_origins(root, config.origins); !r) return std::unexpected(r.error());
     if (auto r = parse_terms(root, config.internal_terms); !r) return std::unexpected(r.error());
+    if (auto r = parse_policy(root, config.policy); !r) return std::unexpected(r.error());
     if (root.contains("output_token_cap")) {
         auto value = member(root, "output_token_cap", "", json::value_t::number_unsigned);
         if (!value) {
