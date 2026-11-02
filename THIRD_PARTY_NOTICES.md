@@ -15,6 +15,9 @@ Prompt Airlock 배포 묶음에 함께 들어가는 다른 사람의 라이브�
 | Boost(Asio, Beast 와 하위 라이브러리) | 1.92.0 | BSL-1.0 | https://www.boost.org |
 | OpenSSL | 3.6.5 | Apache-2.0 | https://www.openssl.org |
 | JSON for Modern C++(nlohmann-json) | 3.12.0 | MIT | https://github.com/nlohmann/json |
+| libzip | 1.11.4 | BSD-3-Clause | https://libzip.org |
+| Expat | 2.8.5 | MIT | https://github.com/libexpat/libexpat |
+| zlib | 1.3.2 | Zlib | https://zlib.net |
 | ONNX Runtime(공식 배포본) | 1.30.0 | MIT, 배포본의 ThirdPartyNotices.txt 를 함께 넣음 | https://github.com/microsoft/onnxruntime |
 | tokio | 1.53.2 | MIT | https://github.com/tokio-rs/tokio |
 | prost | 0.14.4 | Apache-2.0 | https://github.com/tokio-rs/prost |

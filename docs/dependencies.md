@@ -20,6 +20,9 @@
 | boost-beast | 1.92.0 | BSL-1.0 | `src/gateway`(HTTPS 서버) | 헤더만 |
 | OpenSSL | 3.6.5 | Apache-2.0 | `src/tls`(TLS 협상 범위, ADR 0014), `src/gateway`(HTTPS 입출력) | Windows DLL, Linux 정적 |
 | nlohmann-json | 3.12.0 | MIT | `src/ner`(tokenizer.json 읽기), `src/gateway`(설정·오류 응답, ADR 0020), `src/audit`(감사 기록) | 헤더만 |
+| libzip | 1.11.4 | BSD-3-Clause | `src/extract`(문서 추출 실행 파일만, zip 읽기, 기본 기능 끔: bzip2·AES 없음, ADR 0028) | Windows DLL, Linux 정적 |
+| Expat | 2.8.5 | MIT(일부 파일 CC0-1.0) | `src/extract`(문서 XML 스트림 해석, DOCTYPE·개체 선언 거부) | Windows DLL, Linux 정적 |
+| zlib | 1.3.2 | Zlib | libzip 의 deflate 풀기 | Windows DLL, Linux 정적 |
 | gtest | 1.18.0 | BSD-3-Clause | 시험만 | 배포하지 않음 |
 | sentencepiece | 0.2.1 | Apache-2.0 | `tests/measure` 의 문장 판별 후보 측정만(vcpkg 기능 `sentence-spike`, 기본 빌드에 없음, ADR 0022) | 배포하지 않음(정적, 측정 도구에만) |
 
