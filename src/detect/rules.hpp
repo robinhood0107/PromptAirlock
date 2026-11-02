@@ -118,4 +118,8 @@ void find_organizations(const DetectionView& view, std::u32string_view text, std
 void find_institution_ids(const DetectionView& view, std::u32string_view text, const TermMatcher& labels,
                           std::span<const IdFormat> formats, std::vector<Hit>& out);
 
+// 기밀 문장(ADR 0027): markers 와 subjects 가 같은 창에 있으면 CONFIDENTIAL_MATTER. subjects 가 비면 아무것도 안 한다.
+void find_confidential(const DetectionView& view, std::u32string_view text, const TermMatcher& markers,
+                       const TermMatcher& subjects, std::vector<Hit>& out);
+
 }  // namespace prompt_airlock::detect::rules

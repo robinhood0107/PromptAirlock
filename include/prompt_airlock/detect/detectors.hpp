@@ -50,7 +50,7 @@ public:
 
 private:
     Detectors(TermMatcher internal_terms, TermMatcher institution_labels, std::vector<IdFormat> id_formats,
-              std::shared_ptr<const NerScanner> ner);
+              TermMatcher confidential_markers, TermMatcher confidential_subjects, std::shared_ptr<const NerScanner> ner);
     [[nodiscard]] std::expected<std::vector<core::EntitySpan>, core::DetectError> scan(
         std::string_view text, core::SegmentIndex segment, SensitiveTally& tally, std::stop_token stop) const;
     // 덩어리를 깊이 2까지 풀고 푼 결과를 같은 탐지기로 본다.
@@ -59,6 +59,8 @@ private:
     TermMatcher internal_terms_;
     TermMatcher institution_labels_;  // 업종 + 기관 표지어
     std::vector<IdFormat> id_formats_;
+    TermMatcher confidential_markers_;   // 기밀 표지어(공통 + 기관)
+    TermMatcher confidential_subjects_;  // 업종 + 기관 대상어. 비면 기밀 문장 규칙이 꺼진다
     std::shared_ptr<const NerScanner> ner_;  // 여러 Detectors 사본이 같은 pool 을 함께 쓴다
     TermMatcher account_context_;   // 계좌 문맥어(data/account_context_terms.hpp)
     TermMatcher secret_markers_;    // 인증 표지어(data/credential_markers.hpp)
