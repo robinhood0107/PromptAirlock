@@ -74,6 +74,17 @@ test('API errors do not expose server response or credentials', async () => {
   await assert.rejects(api('https://example.com'));
 });
 
+test('API paths allow compare ranges but not parent segments', async () => {
+  const seen = [];
+  const api = makeApi('private-token', async (url) => { seen.push(url); return { ok: true, json: async () => ({}) }; });
+  await api(`repos/o/r/compare/main...${'a'.repeat(40)}`);
+  assert.equal(seen.length, 1);
+  for (const path of ['repos/o/r/../x', 'repos/o/r/%2e%2e/x', 'repos/o/r/%2E./x', 'repos/o/..', 'repos/o/r/./x']) {
+    await assert.rejects(api(path), { message: 'Invalid repository API path.' });
+  }
+  assert.equal(seen.length, 1);
+});
+
 function fixtureApi({ text = 'Neutral source', truncated = false, changed = false, failCommits = false, failPullList = false,
   tooManyFiles = false } = {}) {
   const writes = [];
