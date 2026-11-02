@@ -30,6 +30,7 @@
 #include "prompt_airlock/detect/detectors.hpp"
 #include "prompt_airlock/gateway/confirm.hpp"
 #include "prompt_airlock/gateway/error_body.hpp"
+#include "prompt_airlock/gateway/provider_port.hpp"
 #include "prompt_airlock/gateway/server.hpp"
 
 namespace prompt_airlock::gateway {
@@ -69,17 +70,6 @@ private:
 };
 
 using ScopeOpener = std::function<std::expected<PseudonymScope, core::VaultError>()>;
-
-struct ProviderReply {
-    unsigned status;
-    std::string body;
-};
-
-enum class ProviderError : std::uint8_t { Unavailable, Timeout, BadResponse };
-
-// provider 호출. 검증된 요청 본문만 받는다. 주소와 자격 증명은 구현(provider 클라이언트)이 가진다.
-using ProviderCall =
-    std::function<boost::asio::awaitable<std::expected<ProviderReply, ProviderError>>(std::string body)>;
 
 // 문장 판별(경고 모드, ADR 0023). text 는 메시지 segment 하나, named_person 은 NER 이 그 segment 에서 사람을 찾았는지다.
 // 걸리면 범주 이름, 아니면 nullopt. 판별하지 못하면 탐지 실패로 거절한다(fail closed).
