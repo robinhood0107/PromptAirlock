@@ -10,7 +10,8 @@ export function makeApi(token, fetcher = fetch) {
   let requests = 0;
   return async function api(path, method = 'GET', body) {
     if (++requests > 4000) throw new Error('Publication audit request limit exceeded.');
-    if (!path.startsWith('repos/') || path.includes('..')) {
+    // 상위 경로 조각(`..`, 인코딩된 `%2e%2e` 포함)만 막는다. 비교 범위 `main...<sha>` 는 한 조각이라 통과한다.
+    if (!path.startsWith('repos/') || path.split(/[/?#]/).some((part) => /^(\.|%2e){1,2}$/i.test(part))) {
       throw new Error('Invalid repository API path.');
     }
     const response = await fetcher(`https://api.github.com/${path}`, {
