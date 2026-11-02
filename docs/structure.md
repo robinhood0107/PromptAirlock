@@ -37,6 +37,8 @@ LLM의 답이 오면 token을 원래 값으로 되돌려 직원에게 준다.
 | `include/prompt_airlock/core/`, `src/core/` | 도메인 타입과 판정 함수. 파일·네트워크·시계·난수를 쓰지 않는다 |
 | `include/prompt_airlock/detect/`, `src/detect/` | 규칙 기반(결정론) 탐지기. core에만 의존한다 |
 | `src/detect/data/` | 탐지 형식표와 단어 사전. 항목마다 출처 주석이 있다 |
+| `include/prompt_airlock/extract/`, `src/extract/` | 문서 추출(ADR 0028). 파일 해석기(libzip, Expat)는 추출 실행 파일만 링크하고, 게이트웨이 쪽은 자식 실행기와 주고받는 JSON 만 쓴다 |
+| `apps/prompt-airlock-extract/` | 문서 추출 실행 파일. 요청마다 자식으로 떠서 자기 자원을 제한한 뒤 표준 입력의 파일에서 글자를 뽑아 JSON 으로 낸다 |
 | `include/prompt_airlock/vault_client/`, `src/vault_client/` | Vault 프로세스 실행, IPC 연결, 연결 풀. core에만 의존한다 |
 | `include/prompt_airlock/tls/`, `src/tls/` | TLS 설정. 협상 범위가 고정이고, OpenSSL 설정을 직접 부르는 곳은 여기뿐이다 |
 | `include/prompt_airlock/gateway/`, `src/gateway/` | HTTP 입구: 설정 파일, 출처 인증, 오류 응답, HTTPS 서버, 요청 JSON 읽기, 처리 단계 |
@@ -129,6 +131,20 @@ LLM의 답이 오면 token을 원래 값으로 되돌려 직원에게 준다.
 | `src/detect/data/personal_markers.hpp` | 특정 개인 표지(호칭, 자기 진술) | `honorific_suffixes`, `self_statements` |
 | `src/detect/data/sensitive_category_terms.hpp` | 민감정보 범주어 | `sensitive_terms` |
 | `src/detect/CMakeLists.txt` | `prompt_airlock_detect` 정의 | - |
+
+## extract
+
+| 파일 | 하는 일 | 주요 이름 |
+|---|---|---|
+| `extract/document.hpp` | 추출 결과와 상한(#226 고정) | `DocumentFormat`, `ExtractError`, `TextBlock`, `Omitted`, `ExtractedDocument`, `ExtractLimits`, `extract` |
+| `extract/runner.hpp`, `src/extract/runner.cpp` | 추출 자식 실행기: 상속 핸들 제한, 쓰기·읽기 스레드, 시간·출력 상한·취소에서 죽임 | `extract_in_child`, `RunLimits`, `RunError`, `ChildResult` |
+| `src/extract/protocol.cpp` | 자식과 주고받는 JSON(버전 1), 형식·오류 이름 | `to_json`, `from_json`, `format_name`, `error_name` |
+| `src/extract/extract.cpp` | 매직과 zip 안 항목으로 형식 판별, 글자 형식, zip 묶음(깊이 2) | `extract_into` |
+| `src/extract/text.cpp` | 인코딩 판별(UTF-8, UTF-16, CP949), htm 글자 뽑기 | `decode_text`, `cp949_to_utf8`, `html_lines` |
+| `src/extract/zip.cpp` | 메모리 zip(libzip): 항목 수·압축률·풀린 크기 상한, 암호 거절 | `Zip` |
+| `src/extract/xml.cpp` | XML 스트림 해석(Expat): DOCTYPE·개체 선언 거부, 깊이 상한 | `parse_xml` |
+| `src/extract/ooxml.cpp`, `hwpx.cpp` | docx·xlsx·pptx·hwpx 글자 뽑기와 뺀 부분 세기 | `extract_docx`, `extract_xlsx`, `extract_pptx`, `extract_hwpx` |
+| `src/extract/data/cp949_table.hpp` | CP949 두 byte 글자 표(`tools/gen_cp949_table.c` 로 생성) | `cp949_table` |
 
 ## vault_client
 
