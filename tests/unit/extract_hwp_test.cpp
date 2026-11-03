@@ -105,6 +105,26 @@ TEST(ExtractHwp, EquationScripts) {
     EXPECT_EQ(run(hwp(0, record(eqedit, 0, equation(u"x").substr(0, 7)))).error(), ex::ExtractError::Damaged);
 }
 
+// 넣은 OLE 개체(결정 #238): BinData/BIN0001.OLE 안의 문서도 뽑고, 읽지 못하는 개체는 센다.
+TEST(ExtractHwp, EmbeddedOleObjects) {
+    const auto inner = hwp(0, record(para_text, 0, utf16(u"안쪽 문서 글\r")));
+    const auto ole = std::string(4, '\0') + inner;  // 길이 4 byte 뒤에 CFB
+    const auto legacy = std::string(4, '\0') + make_cfb({{u"Root Entry", 5, "", none, none, 1},
+                                                         {u"Workbook", 2, std::string(600, 'x')}});
+    const auto outer = make_cfb({{u"Root Entry", 5, "", none, none, 1},
+                                 {u"FileHeader", 2, pa_test::hwp::file_header(0), none, 2},
+                                 {u"BodyText", 1, "", none, 4, 3},
+                                 {u"Section0", 2, record(para_text, 0, utf16(u"바깥 글\r"))},
+                                 {u"BinData", 1, "", none, none, 5},
+                                 {u"BIN0001.OLE", 2, ole, none, 6},
+                                 {u"BIN0002.OLE", 2, legacy}});
+    const auto doc = run(outer);
+    ASSERT_TRUE(doc) << ex::error_name(doc.error());
+    EXPECT_EQ(texts(*doc), (std::vector<std::string>{"바깥 글", "안쪽 문서 글"}));
+    EXPECT_EQ(doc->blocks[1].where, "BinData/BIN0001.OLE:section0 p1");
+    EXPECT_EQ(doc->omitted.other_parts, 1U);
+}
+
 TEST(ExtractHwp, CompressedSectionsAndLongRecords) {
     std::u16string long_text;  // 크기 칸 0xFFF 를 넘는 레코드, 압축률 상한에 걸리지 않게 섞인 글자
     for (std::size_t i = 0; i < 3000; ++i) {

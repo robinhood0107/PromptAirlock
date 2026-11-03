@@ -7,6 +7,7 @@
 #include <utility>
 #include <vector>
 
+#include "hwp_writer.hpp"
 #include "prompt_airlock/extract/document.hpp"
 #include "prompt_airlock/extract/runner.hpp"
 
@@ -167,6 +168,24 @@ TEST(ExtractOffice, TextBoxesAndEquations) {
     const auto hwpx_doc = run(make_zip({{"mimetype", "application/hwp+zip", true}, {"Contents/section0.xml", section}}));
     ASSERT_TRUE(hwpx_doc);
     EXPECT_EQ(texts(*hwpx_doc), std::vector<std::string>{"식 {a} over {b} 끝"});
+}
+
+// 넣은 파일(결정 #238): docx 안 docx, OLE 로 싼 docx 는 뽑고, 옛 형식 OLE 는 세기만 하며, 그림은 풀지 않는다.
+TEST(ExtractOffice, EmbeddedFiles) {
+    using pa_test::hwp::make_cfb;
+    using pa_test::hwp::none;
+    const auto inner = docx("<w:p><w:r><w:t>넣은 문서 글</w:t></w:r></w:p>");
+    const auto packaged = make_cfb({{u"Root Entry", 5, "", none, none, 1}, {u"Package", 2, inner}});
+    const auto legacy = make_cfb({{u"Root Entry", 5, "", none, none, 1}, {u"Workbook", 2, std::string(600, 'x')}});
+    const auto doc = run(docx("<w:p><w:r><w:t>바깥 글</w:t></w:r></w:p>",
+                              {{"word/embeddings/inner.docx", inner},
+                               {"word/embeddings/oleObject1.bin", packaged},
+                               {"word/embeddings/oleObject2.bin", legacy},
+                               {"word/media/image1.png", std::string(100, '\x89')}}));
+    ASSERT_TRUE(doc) << ex::error_name(doc.error());
+    EXPECT_EQ(texts(*doc), (std::vector<std::string>{"바깥 글", "넣은 문서 글", "넣은 문서 글"}));
+    EXPECT_EQ(doc->blocks[1].where, "word/embeddings/inner.docx:p1");
+    EXPECT_EQ(doc->omitted.other_parts, 1U);
 }
 
 TEST(ExtractOffice, HwpxSectionsMemoAndEncryption) {

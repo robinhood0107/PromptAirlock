@@ -27,6 +27,12 @@ namespace {
 constexpr std::array<std::string_view, 13> known_entries = {"txt", "csv", "md", "htm", "html", "hwpx", "docx",
                                                             "xlsx", "pptx", "zip", "hwp", "pdf", "doc"};
 
+constexpr std::string_view cfb_magic = "\xD0\xCF\x11\xE0\xA1\xB1\x1A\xE1";
+
+// 문서 안에 넣은 다른 파일이 있는 곳(Office 의 embeddings, hwpx 의 BinData). 결정 #238.
+constexpr std::array<std::string_view, 4> embedded_prefixes = {"word/embeddings/", "xl/embeddings/", "ppt/embeddings/",
+                                                               "BinData/"};
+
 [[nodiscard]] bool looks_html(std::string_view text) {
     const auto first = text.find_first_not_of(" \t\r\n");
     if (first == std::string_view::npos) {
@@ -116,7 +122,76 @@ constexpr std::array<std::string_view, 13> known_entries = {"txt", "csv", "md", 
     return {};
 }
 
+// Office·hwpx 안에 넣은 파일. 그림은 풀지 않고, 문서 형식과 OLE 포장(.bin, .ole)만 읽는다.
+[[nodiscard]] std::expected<void, ExtractError> extract_embedded(const Zip& zip, std::size_t depth, Context& context) {
+    for (const auto& name : zip.names()) {
+        if (std::ranges::none_of(embedded_prefixes, [&](std::string_view p) { return name.starts_with(p); })) {
+            continue;
+        }
+        const auto ext = extension(name);
+        if (std::ranges::find(known_entries, ext) == known_entries.end() && ext != "bin" && ext != "ole") {
+            continue;  // 그림
+        }
+        auto bytes = zip.read(name, context);
+        if (!bytes) {
+            return std::unexpected(bytes.error());
+        }
+        if (auto r = extract_object(*bytes, ext, name, depth, context); !r) {
+            return r;
+        }
+    }
+    return {};
+}
+
 }  // namespace
+
+std::expected<void, ExtractError> extract_object(std::string_view payload, std::string_view ext,
+                                                 const std::string& label, std::size_t depth, Context& context) {
+    std::string unwrapped;
+    std::string_view as = ext;
+    if (payload.starts_with(cfb_magic)) {
+        // OLE 포장: 안의 Package(넣은 Office 문서)나 CONTENTS(넣은 PDF)를 꺼낸다. hwp 문서 자체(FileHeader)는 그대로.
+        auto cfb = Cfb::open(std::as_bytes(std::span(payload.data(), payload.size())), context);
+        if (cfb && !cfb->contains("FileHeader")) {
+            for (const auto& [stream, kind] : {std::pair<std::string_view, std::string_view>{"Package", ""},
+                                               std::pair<std::string_view, std::string_view>{"CONTENTS", "pdf"}}) {
+                if (cfb->contains(stream)) {
+                    auto inner = cfb->read(stream, context);
+                    if (!inner) {
+                        return std::unexpected(inner.error());
+                    }
+                    unwrapped = std::move(*inner);
+                    as = kind;
+                    break;
+                }
+            }
+            if (unwrapped.empty()) {
+                ++context.doc.omitted.other_parts;  // 옛 형식 개체(xls 등)는 읽지 않고 센다
+                return {};
+            }
+            payload = unwrapped;
+        }
+    }
+    if (depth >= context.limits.depth) {
+        ++context.doc.omitted.other_parts;  // 넣은 파일 안의 넣은 파일은 깊이 상한 밖
+        return {};
+    }
+    if (++context.nested > context.limits.nested_documents) {
+        return std::unexpected(ExtractError::Bomb);
+    }
+    const auto saved = context.prefix;
+    context.prefix += label + ":";
+    auto inner = extract_into(std::as_bytes(std::span(payload.data(), payload.size())), as, depth + 1, context);
+    context.prefix = saved;
+    if (!inner) {
+        // 넣은 파일은 못 읽으면 보내지 않고 센다(내용이 나가지 않음). 상한·폭탄은 전체를 멈춘다.
+        if (inner.error() == ExtractError::Bomb || inner.error() == ExtractError::TooLarge) {
+            return std::unexpected(inner.error());
+        }
+        ++context.doc.omitted.other_parts;
+    }
+    return {};
+}
 
 std::expected<DocumentFormat, ExtractError> extract_into(std::span<const std::byte> file, std::string_view hint,
                                                         std::size_t depth, Context& context) {
@@ -133,6 +208,9 @@ std::expected<DocumentFormat, ExtractError> extract_into(std::span<const std::by
             }
             if (mime->starts_with("application/hwp+zip")) {
                 auto r = extract_hwpx(*zip, context);
+                if (r) {
+                    r = extract_embedded(*zip, depth, context);
+                }
                 return r ? std::expected<DocumentFormat, ExtractError>(DocumentFormat::Hwpx) : std::unexpected(r.error());
             }
         }
@@ -146,6 +224,9 @@ std::expected<DocumentFormat, ExtractError> extract_into(std::span<const std::by
                               Office{"ppt/presentation.xml", DocumentFormat::Pptx, extract_pptx}}) {
             if (zip->contains(o.part)) {
                 auto r = o.run(*zip, context);
+                if (r) {
+                    r = extract_embedded(*zip, depth, context);
+                }
                 return r ? std::expected<DocumentFormat, ExtractError>(o.format) : std::unexpected(r.error());
             }
         }
@@ -161,7 +242,7 @@ std::expected<DocumentFormat, ExtractError> extract_into(std::span<const std::by
         if (!cfb->contains("FileHeader")) {
             return std::unexpected(ExtractError::LegacyFormat);
         }
-        auto r = extract_hwp(*cfb, context);
+        auto r = extract_hwp(*cfb, depth, context);
         return r ? std::expected<DocumentFormat, ExtractError>(DocumentFormat::Hwp) : std::unexpected(r.error());
     }
     if (head.starts_with("%PDF-")) {

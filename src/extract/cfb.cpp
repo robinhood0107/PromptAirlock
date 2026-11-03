@@ -241,4 +241,33 @@ std::optional<std::uint32_t> Cfb::find_child(std::uint32_t storage, std::string_
     return std::nullopt;
 }
 
+std::vector<std::string> Cfb::streams(std::string_view storage) const {
+    std::vector<std::string> out;
+    const auto parent = find_child(0, storage);
+    if (!parent || entries_[*parent].type != 1) {
+        return out;
+    }
+    std::vector<bool> seen(entries_.size(), false);
+    std::vector<std::uint32_t> todo{entries_[*parent].child};
+    while (!todo.empty()) {
+        const auto id = todo.back();
+        todo.pop_back();
+        if (id == no_stream || id >= entries_.size() || seen[id]) {
+            continue;
+        }
+        seen[id] = true;
+        const auto& e = entries_[id];
+        if (e.type == 2 && std::ranges::all_of(e.name, [](char16_t c) { return c > 0x20 && c < 0x7F; })) {
+            auto& name = out.emplace_back();
+            for (const char16_t c : e.name) {
+                name.push_back(static_cast<char>(c));
+            }
+        }
+        todo.push_back(e.left);
+        todo.push_back(e.right);
+    }
+    std::ranges::sort(out, natural_less);
+    return out;
+}
+
 }  // namespace prompt_airlock::extract::detail

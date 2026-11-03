@@ -109,7 +109,7 @@ constexpr std::uint32_t hidden_comment_ctrl = ctrl_id('t', 'c', 'm', 't');
 
 }  // namespace
 
-std::expected<void, ExtractError> extract_hwp(const Cfb& cfb, Context& context) {
+std::expected<void, ExtractError> extract_hwp(const Cfb& cfb, std::size_t depth, Context& context) {
     auto header = cfb.read("FileHeader", context);
     if (!header) {
         return std::unexpected(header.error());
@@ -216,6 +216,35 @@ std::expected<void, ExtractError> extract_hwp(const Cfb& cfb, Context& context) 
                     return r;
                 }
             }
+        }
+    }
+    // 넣은 OLE 개체(결정 #238): BinData/BINxxxx.OLE 는 문서 압축 설정을 따르고, 풀면 길이 4 byte 뒤에 CFB 가 온다.
+    // 그림 등 다른 BinData 는 그대로 둔다.
+    for (const auto& name : cfb.streams("BinData")) {
+        if (!name.ends_with(".OLE") && !name.ends_with(".ole")) {
+            continue;
+        }
+        auto raw = cfb.read("BinData/" + name, context);
+        if (!raw) {
+            return std::unexpected(raw.error());
+        }
+        std::string data = std::move(*raw);
+        if ((props & prop_compressed) != 0) {
+            auto inflated = inflate_raw(data, context);
+            if (!inflated && inflated.error() == ExtractError::Bomb) {
+                return std::unexpected(inflated.error());
+            }
+            if (inflated) {
+                data = std::move(*inflated);  // 개체마다 압축하지 않기도 해서, 풀리지 않으면 그대로 본다
+            }
+        }
+        const auto at = std::string_view(data).find("\xD0\xCF\x11\xE0\xA1\xB1\x1A\xE1");
+        if (at == std::string_view::npos || at > 4) {
+            ++context.doc.omitted.other_parts;
+            continue;
+        }
+        if (auto r = extract_object(std::string_view(data).substr(at), "", "BinData/" + name, depth, context); !r) {
+            return r;
         }
     }
     return {};
