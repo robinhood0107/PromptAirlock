@@ -72,6 +72,7 @@ TEST(DetectEvasion, SplitNumbersAndAddresses) {
         {"900101-123\xC2\xAD" "4567", EntityType::KoreanRrn},     // soft hyphen
         {"900101-123\xE2\x81\xA3" "4567", EntityType::KoreanRrn}, // U+2063
         {"900101-123\xE1\xA0\x8E" "4567", EntityType::KoreanRrn}, // U+180E
+        {"900101-123\xEF\xB8\x8E" "4567", EntityType::KoreanRrn}, // 변이 선택자 U+FE0E(기본 무시 문자)
         {"$900101\\text{-}1234567$", EntityType::KoreanRrn},      // LaTeX
         {"900101{-}1234567", EntityType::KoreanRrn},
         {"900101\\,-\\,1234567", EntityType::KoreanRrn},
@@ -103,6 +104,8 @@ TEST(DetectEvasion, SplitNumbersKeepSpansAndLimits) {
     EXPECT_EQ(spans("번호 $900101\\text{-}1234567$ 끝"), std::vector<std::string_view>{"900101\\text{-}1234567"});
     // 한계: 탐지 보기는 매크로를 펼치지 않는다. LaTeX·Typst 문서 파일의 매크로는 추출 단계 pandoc 이 맡는다(결정 #238).
     EXPECT_FALSE(detected("\\newcommand{\\front}{900101}\n번호 \\front-1234567").contains(EntityType::KoreanRrn));
+    // 보이는 서식 문자(아랍 숫자 기호 U+0600)는 기본 무시 문자가 아니라 지우지 않는다.
+    EXPECT_FALSE(detected("900101-123\xD8\x80" "4567").contains(EntityType::KoreanRrn));
     EXPECT_EQ(spans("hong.gildong@\nexample.com 으로"), std::vector<std::string_view>{"hong.gildong@\nexample.com"});
     // 빈 줄을 넘거나 줄바꿈이 두 번이면 잇지 않는다(표의 다른 줄).
     EXPECT_FALSE(detected("900101-\n\n1234567").contains(EntityType::KoreanRrn));

@@ -19,8 +19,10 @@ namespace pc = core;
 constexpr auto nfkc_options =
     static_cast<utf8proc_option_t>(UTF8PROC_STABLE | UTF8PROC_COMPOSE | UTF8PROC_COMPAT);
 
-// 번호·이메일을 끊는 보이지 않는 글자(#234): 서식 문자 Cf(zero-width, soft hyphen, BOM, U+2063 등),
-// 탭·줄바꿈 밖의 제어 문자(C0, DEL, C1), 비문자 U+FFFE/FFFF(PDFium 이 대응표 없는 글자에 넣음).
+// 번호·이메일을 끊는 보이지 않는 글자(#234, 결정 #238): 유니코드 표준의 기본 무시 문자(Default_Ignorable_Code_Point,
+// utf8proc 의 ignorable 속성: zero-width, soft hyphen, BOM, U+2060~2064, U+180B~180F, 변이 선택자 등), 탭·줄바꿈 밖의
+// 제어 문자(C0, DEL, C1), 비문자 U+FFFE/FFFF(PDFium 이 대응표 없는 글자에 넣음). 서식 문자(Cf)를 통째로 지우면 아랍 숫자
+// 기호처럼 보이는 글자까지 지우므로 표준 속성을 쓴다.
 [[nodiscard]] bool is_invisible(char32_t c) noexcept {
     if (c < 0x20) {
         return c != U'\t' && c != U'\n' && c != U'\r';
@@ -28,7 +30,7 @@ constexpr auto nfkc_options =
     if ((c >= 0x7F && c < 0xA0) || c == 0xFFFE || c == 0xFFFF) {
         return true;
     }
-    return c >= 0x80 && utf8proc_category(static_cast<utf8proc_int32_t>(c)) == UTF8PROC_CATEGORY_CF;
+    return c >= 0x80 && utf8proc_get_property(static_cast<utf8proc_int32_t>(c))->ignorable != 0;
 }
 
 [[nodiscard]] bool is_alpha(char32_t c) noexcept { return (c | 0x20U) >= U'a' && (c | 0x20U) <= U'z'; }
