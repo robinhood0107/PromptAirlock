@@ -1,7 +1,7 @@
 // 본 제품은 한컴의 HWP 문서 파일(.hwp) 공개 문서를 참고하여 개발하였습니다.
 // hwp 5.0: CFB 안 FileHeader 의 속성으로 암호·배포용·DRM 을 거르고, BodyText/Section* 레코드에서 문단 글자를 뽑는다.
 // 레코드 머리(32 bit) = 태그 10 bit, 단계 10 bit, 크기 12 bit(0xFFF 면 다음 32 bit 가 크기).
-// 머리글·바닥글·각주·미주 안 문단은 본문이 아니므로 세기만 하고, 숨은 설명은 메모로 센다.
+// 머리글·바닥글·각주·미주 안 문단은 본문이 아니므로 세기만 하고, 숨은 설명은 메모로 센다. 수식은 스크립트를 글자로 낸다.
 #include <zlib.h>
 
 #include <array>
@@ -14,6 +14,7 @@ namespace {
 
 constexpr std::uint32_t tag_para_text = 0x10 + 51;
 constexpr std::uint32_t tag_ctrl_header = 0x10 + 55;
+constexpr std::uint32_t tag_eqedit = 0x10 + 72;  // 수식: 속성 4 byte, 스크립트 길이 2 byte, UTF-16 스크립트, …
 
 // FileHeader 속성 비트(한컴 hwp 5.0 형식): 0 압축, 1 암호, 2 배포용, 4 DRM, 8 공인인증서 암호화, 10 공인인증서 DRM.
 constexpr std::uint32_t prop_compressed = 1U << 0;
@@ -147,6 +148,7 @@ std::expected<void, ExtractError> extract_hwp(const Cfb& cfb, Context& context) 
             records = std::move(*raw);
         }
         std::size_t number = 0;
+        std::size_t equations = 0;
         std::uint32_t skip_level = 0;
         bool skipping = false;
         for (std::size_t at = 0; at < records.size();) {
@@ -183,6 +185,24 @@ std::expected<void, ExtractError> extract_hwp(const Cfb& cfb, Context& context) 
                     ++(other ? context.doc.omitted.other_parts : context.doc.omitted.comments);
                     skipping = true;
                     skip_level = level;
+                }
+            } else if (tag == tag_eqedit) {
+                // 수식 스크립트도 본문이므로 글자로 낸다(결정 #235). 길이가 레코드를 넘으면 손상.
+                if (data.size() < 6) {
+                    return std::unexpected(ExtractError::Damaged);
+                }
+                const std::size_t length = static_cast<unsigned char>(data[4]) | static_cast<unsigned char>(data[5]) << 8;
+                if (6 + 2 * length > data.size()) {
+                    return std::unexpected(ExtractError::Damaged);
+                }
+                auto script = para_text(data.substr(6, 2 * length));
+                if (!script) {
+                    return std::unexpected(script.error());
+                }
+                if (auto r = context.add("section" + std::to_string(section) + " eq" + std::to_string(++equations),
+                                         std::move(*script));
+                    !r) {
+                    return r;
                 }
             } else if (tag == tag_para_text) {
                 auto text = para_text(data);

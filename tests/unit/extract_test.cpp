@@ -150,6 +150,25 @@ TEST(ExtractOffice, PptxSlidesInNumberOrderAndHiddenSlides) {
     EXPECT_EQ(doc->omitted.other_parts, 1U);
 }
 
+// 글상자와 수식(#234, 결정 #235): 글상자 앞 글을 잃지 않고, 옛 판용 대체 내용은 두 번 내지 않으며, 수식 스크립트를 낸다.
+TEST(ExtractOffice, TextBoxesAndEquations) {
+    const std::string box = R"(<w:txbxContent><w:p><w:r><w:t>상자 글</w:t></w:r></w:p></w:txbxContent>)";
+    const auto docx_doc = run(docx(
+        R"(<w:p><w:r><w:t>앞 글</w:t></w:r><w:r><mc:AlternateContent xmlns:mc="mc"><mc:Choice Requires="wps"><w:drawing>)"
+        R"(<wps:txbx xmlns:wps="wps">)" + box + R"(</wps:txbx></w:drawing></mc:Choice><mc:Fallback><w:pict>)"
+        R"(<v:textbox xmlns:v="v">)" + box + R"(</v:textbox></w:pict></mc:Fallback></mc:AlternateContent></w:r>)"
+        R"(<w:r><w:t>뒤 글</w:t></w:r></w:p>)"));
+    ASSERT_TRUE(docx_doc);
+    EXPECT_EQ(texts(*docx_doc), (std::vector<std::string>{"앞 글", "상자 글", "뒤 글"}));
+
+    const std::string section = R"(<hs:sec xmlns:hs="hs" xmlns:hp="hp"><hp:p><hp:run><hp:t>식</hp:t></hp:run>)"
+                                R"(<hp:run><hp:equation><hp:script>{a} over {b}</hp:script></hp:equation></hp:run>)"
+                                R"(<hp:run><hp:t>끝</hp:t></hp:run></hp:p></hs:sec>)";
+    const auto hwpx_doc = run(make_zip({{"mimetype", "application/hwp+zip", true}, {"Contents/section0.xml", section}}));
+    ASSERT_TRUE(hwpx_doc);
+    EXPECT_EQ(texts(*hwpx_doc), std::vector<std::string>{"식 {a} over {b} 끝"});
+}
+
 TEST(ExtractOffice, HwpxSectionsMemoAndEncryption) {
     const std::string section = R"(<hs:sec xmlns:hs="hs" xmlns:hp="hp"><hp:p><hp:run><hp:t>첫 문단</hp:t></hp:run></hp:p>)"
                                 R"(<hp:p><hp:run><hp:t>표 앞</hp:t></hp:run><hp:run><hp:tbl><hp:tr><hp:tc><hp:subList>)"

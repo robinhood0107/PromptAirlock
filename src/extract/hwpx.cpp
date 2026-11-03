@@ -1,4 +1,5 @@
-// hwpx(OWPML, KS X 6101). Contents/section*.xml 의 문단(hp:p) 글자(hp:t)를 뽑는다. 메모 안 글자는 빼고 센다.
+// hwpx(OWPML, KS X 6101). Contents/section*.xml 의 문단(hp:p) 글자(hp:t)와 수식 스크립트(hp:script)를 뽑는다.
+// 메모 안 글자는 빼고 센다.
 #include <algorithm>
 
 #include "detail.hpp"
@@ -36,6 +37,7 @@ std::expected<void, ExtractError> extract_hwpx(const Zip& zip, Context& context)
         std::size_t number = 0;
         int depth_in_text = 0;
         int in_memo = 0;
+        int in_script = 0;  // 수식(hp:equation)의 스크립트. 본문이므로 앞뒤에 빈칸을 두고 문단에 넣는다(결정 #235)
         std::expected<void, ExtractError> failed;
         XmlHandler h;
         h.start = [&](std::string_view n, std::span<const std::pair<std::string_view, std::string_view>>) {
@@ -44,6 +46,9 @@ std::expected<void, ExtractError> extract_hwpx(const Zip& zip, Context& context)
                 ++context.doc.omitted.comments;
             } else if (n == "t") {
                 ++depth_in_text;
+            } else if (n == "script") {
+                ++in_script;
+                paragraph.push_back(' ');
             } else if (n == "tab" && depth_in_text > 0) {
                 paragraph.push_back('\t');
             } else if (n == "p" && depth_in_text == 0) {
@@ -63,6 +68,9 @@ std::expected<void, ExtractError> extract_hwpx(const Zip& zip, Context& context)
                 --in_memo;
             } else if (n == "t") {
                 --depth_in_text;
+            } else if (n == "script") {
+                --in_script;
+                paragraph.push_back(' ');
             } else if (n == "p") {
                 ++number;
                 if (auto r = context.add(section + " p" + std::to_string(number), std::move(paragraph)); !r && failed) {
@@ -72,7 +80,7 @@ std::expected<void, ExtractError> extract_hwpx(const Zip& zip, Context& context)
             }
         };
         h.text = [&](std::string_view s) {
-            if (depth_in_text > 0 && in_memo == 0) {
+            if ((depth_in_text > 0 || in_script > 0) && in_memo == 0) {
                 paragraph.append(s);
             }
         };

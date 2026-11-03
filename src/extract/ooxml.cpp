@@ -70,15 +70,34 @@ std::expected<void, ExtractError> extract_docx(const Zip& zip, Context& context)
     }
     std::string paragraph;
     std::size_t number = 0;
+    int p_depth = 0;
+    int in_fallback = 0;
     bool in_text = false;
     bool in_run = false;
     bool in_run_props = false;
     bool run_hidden = false;
     std::expected<void, ExtractError> failed;
+    const auto flush = [&] {
+        ++number;
+        if (auto r = context.add("p" + std::to_string(number), std::move(paragraph)); !r && failed) {
+            failed = r;
+        }
+        paragraph.clear();
+    };
     XmlHandler h;
     h.start = [&](std::string_view n, Attrs) {
+        // 글상자(w:txbxContent)는 같은 내용을 옛 판용 대체(mc:Fallback, VML)로 한 번 더 담는다. 대체 쪽은 읽지 않는다.
+        if (n == "Fallback") {
+            ++in_fallback;
+        }
+        if (in_fallback > 0) {
+            return;
+        }
         if (n == "p") {
-            paragraph.clear();
+            // 글상자 문단은 바깥 문단 안에 들어 있다. 안쪽 문단이 시작되면 지금까지 모은 바깥 글을 먼저 낸다(#234).
+            if (p_depth++ > 0 && !paragraph.empty()) {
+                flush();
+            }
         } else if (n == "r") {
             in_run = true;
             run_hidden = false;
@@ -98,6 +117,10 @@ std::expected<void, ExtractError> extract_docx(const Zip& zip, Context& context)
         }
     };
     h.end = [&](std::string_view n) {
+        if (in_fallback > 0) {
+            in_fallback -= n == "Fallback" ? 1 : 0;
+            return;
+        }
         if (n == "t") {
             in_text = false;
         } else if (n == "rPr") {
@@ -105,15 +128,12 @@ std::expected<void, ExtractError> extract_docx(const Zip& zip, Context& context)
         } else if (n == "r") {
             in_run = false;
         } else if (n == "p") {
-            ++number;
-            if (auto r = context.add("p" + std::to_string(number), std::move(paragraph)); !r && failed) {
-                failed = r;
-            }
-            paragraph.clear();
+            --p_depth;
+            flush();
         }
     };
     h.text = [&](std::string_view s) {
-        if (in_text) {
+        if (in_text && in_fallback == 0) {
             paragraph.append(s);
         }
     };

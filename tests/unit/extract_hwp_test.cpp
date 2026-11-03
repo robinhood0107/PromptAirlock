@@ -30,6 +30,11 @@ std::string utf16(const std::u16string& s) {
 constexpr std::uint32_t para_header = 0x10 + 50;
 constexpr std::uint32_t para_text = 0x10 + 51;
 constexpr std::uint32_t ctrl_header = 0x10 + 55;
+constexpr std::uint32_t eqedit = 0x10 + 72;
+
+std::string equation(const std::u16string& script) {  // 속성 4 byte + 길이 2 byte + 스크립트
+    return std::string(4, '\0') + std::string{static_cast<char>(script.size()), 0} + utf16(script);
+}
 
 std::string ctrl(const char (&id)[5]) {  // 4 글자 id 를 저장 순서(거꾸로)로
     return std::string{id[3], id[2], id[1], id[0]} + std::string(8, '\0');
@@ -86,6 +91,18 @@ TEST(ExtractHwp, HeadersFootersAndHiddenCommentsAreSkipped) {
     EXPECT_EQ(texts(*doc), (std::vector<std::string>{"본문", "다시 본문"}));
     EXPECT_EQ(doc->omitted.other_parts, 1U);
     EXPECT_EQ(doc->omitted.comments, 1U);
+}
+
+// 수식(결정 #235): 스크립트를 글자로 낸다. 머리글 안 수식은 머리글과 함께 건너뛴다. 길이가 레코드를 넘으면 손상.
+TEST(ExtractHwp, EquationScripts) {
+    const auto section = record(para_text, 0, utf16(u"식\r")) + record(ctrl_header, 1, ctrl("eqed")) +
+                         record(eqedit, 2, equation(u"{900101 - 1234567} over 2")) +
+                         record(ctrl_header, 1, ctrl("head")) + record(eqedit, 2, equation(u"머리글 식"));
+    const auto doc = run(hwp(0, section));
+    ASSERT_TRUE(doc) << ex::error_name(doc.error());
+    EXPECT_EQ(texts(*doc), (std::vector<std::string>{"식", "{900101 - 1234567} over 2"}));
+    EXPECT_EQ(doc->blocks[1].where, "section0 eq1");
+    EXPECT_EQ(run(hwp(0, record(eqedit, 0, equation(u"x").substr(0, 7)))).error(), ex::ExtractError::Damaged);
 }
 
 TEST(ExtractHwp, CompressedSectionsAndLongRecords) {
