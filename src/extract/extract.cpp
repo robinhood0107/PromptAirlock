@@ -153,11 +153,20 @@ std::expected<DocumentFormat, ExtractError> extract_into(std::span<const std::by
         return r ? std::expected<DocumentFormat, ExtractError>(DocumentFormat::Zip) : std::unexpected(r.error());
     }
     if (head.starts_with("\xD0\xCF\x11\xE0\xA1\xB1\x1A\xE1")) {
-        // 복합 문서(CFB): hwp 5.0 은 11.5-2 에서 받고, doc·xls·ppt 는 옛 형식으로 거절한다.
-        return std::unexpected(hint == "hwp" ? ExtractError::Unsupported : ExtractError::LegacyFormat);
+        // 복합 문서(CFB): FileHeader 스트림이 있으면 hwp, 없으면 doc·xls·ppt 같은 옛 형식으로 거절한다.
+        auto cfb = Cfb::open(file, context);
+        if (!cfb) {
+            return std::unexpected(cfb.error());
+        }
+        if (!cfb->contains("FileHeader")) {
+            return std::unexpected(ExtractError::LegacyFormat);
+        }
+        auto r = extract_hwp(*cfb, context);
+        return r ? std::expected<DocumentFormat, ExtractError>(DocumentFormat::Hwp) : std::unexpected(r.error());
     }
     if (head.starts_with("%PDF-")) {
-        return std::unexpected(ExtractError::Unsupported);  // 11.5-2
+        auto r = extract_pdf(file, context);
+        return r ? std::expected<DocumentFormat, ExtractError>(DocumentFormat::Pdf) : std::unexpected(r.error());
     }
     return extract_text(file, hint, context);
 }

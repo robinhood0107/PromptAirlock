@@ -32,6 +32,33 @@ Prompt Airlock 배포 묶음에 함께 들어가는 다른 사람의 라이브�
 | libc(Linux) | 0.2.190 | MIT OR Apache-2.0 | https://github.com/rust-lang/libc |
 | windows-link(Windows) | 0.2.1 | MIT OR Apache-2.0 | https://github.com/microsoft/windows-rs |
 
+## 문서 형식 공개 문서
+
+- 본 제품은 한컴의 HWP 문서 파일(.hwp) 공개 문서를 참고하여 개발하였습니다.
+  hwp 5.0 해석(`src/extract/hwp.cpp`)은 한컴이 공개한 HWP 5.0 형식 문서를 참고했습니다. 한컴의 공개 조건에 따라 이 문구를 제품의 설명서·도움말·소스에 함께 둡니다.
+
+## PDFium 과 함께 들어오는 코드(추출 실행 파일에만 정적으로 링크)
+
+PDFium 을 공식 소스(커밋 b75764a1def138ff0f308c637865f195774ccdc4)에서 빌드해 `prompt-airlock-extract` 에만 링크합니다(결정 #229). 빌드 설정에서 실제로 링크되는 코드와 라이선스는 아래와 같고, 배포 묶음에는 각 라이선스 원문을 함께 넣습니다.
+
+| 이름 | 판 | 라이선스 |
+|---|---|---|
+| PDFium | b75764a1 | BSD-3-Clause |
+| FreeType | VER-2-14-3 | FTL(FreeType License). Portions of this software are copyright (c) The FreeType Project (www.freetype.org). All rights reserved. |
+| Little CMS(lcms2) | 2.19.1 | MIT |
+| OpenJPEG | 2.5.4 | BSD-2-Clause |
+| libjpeg-turbo | 3.1.0 | IJG, BSD-3-Clause |
+| Anti-Grain Geometry | 2.3 | MIT |
+| zlib(Chromium 판) | 1.3.2 | Zlib |
+| Abseil | PDFium 판에 고정 | Apache-2.0 |
+| Brotli | PDFium 판에 고정 | MIT |
+| Dragonbox | 1.1.3 | Apache-2.0 with LLVM Exception 또는 BSL-1.0 |
+| fast_float | 8.3.0 | MIT |
+| HarfBuzz | 14.5.0 | MIT(Modern Variant) |
+| Highway | PDFium 판에 고정 | Apache-2.0 |
+| ICU | 78.2 | Unicode-3.0, ICU, MIT, BSD-2/3-Clause, NAIST-2003, HPND |
+| libyuv | 1974 | BSD-3-Clause |
+
 ## 모델
 
 ### NER 모델 koelectra-ko-pii-ner

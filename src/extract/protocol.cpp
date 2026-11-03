@@ -13,9 +13,10 @@ namespace {
 
 using json = nlohmann::json;
 
-constexpr std::array<DocumentFormat, 10> all_formats = {
+constexpr std::array<DocumentFormat, 12> all_formats = {
     DocumentFormat::Text, DocumentFormat::Csv,  DocumentFormat::Markdown, DocumentFormat::Html,  DocumentFormat::Docx,
-    DocumentFormat::Xlsx, DocumentFormat::Pptx, DocumentFormat::Hwpx,     DocumentFormat::Hwpml, DocumentFormat::Zip,
+    DocumentFormat::Xlsx, DocumentFormat::Pptx, DocumentFormat::Hwpx,     DocumentFormat::Hwpml, DocumentFormat::Hwp,
+    DocumentFormat::Pdf,  DocumentFormat::Zip,
 };
 constexpr std::array<ExtractError, 8> all_errors = {
     ExtractError::TooLarge,  ExtractError::UnknownFormat, ExtractError::LegacyFormat, ExtractError::Unsupported,
@@ -35,6 +36,8 @@ std::string_view format_name(DocumentFormat format) noexcept {
         case DocumentFormat::Pptx: return "pptx";
         case DocumentFormat::Hwpx: return "hwpx";
         case DocumentFormat::Hwpml: return "hwpml";
+        case DocumentFormat::Hwp: return "hwp";
+        case DocumentFormat::Pdf: return "pdf";
         case DocumentFormat::Zip: return "zip";
     }
     return "invalid";

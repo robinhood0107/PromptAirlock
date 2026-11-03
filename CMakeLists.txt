@@ -17,6 +17,7 @@ find_package(GTest CONFIG REQUIRED)
 
 add_subdirectory(src/core)
 add_subdirectory(src/detect)
+include(Pdfium)
 add_subdirectory(src/extract)
 add_subdirectory(src/ner)
 add_subdirectory(src/vault_client)
