@@ -35,6 +35,28 @@ namespace {
                       static_cast<std::uint32_t>(last - view.units.begin()), entity.type(), entity.detector()};
 }
 
+// 다른 보기에서 찾은 원문 구간을 이 보기의 글자로 덮는다. 경계가 어긋나면 넓게 잡아 치환이 모자라지 않게 한다.
+[[nodiscard]] std::optional<rules::Hit> cover(const DetectionView& view, core::ByteSpan span, core::EntityType type,
+                                              core::DetectorKind kind) {
+    const auto& u = view.units;
+    const auto first = std::ranges::partition_point(u, [&](const auto& x) { return x.source.end() <= span.begin(); });
+    const auto after = std::ranges::partition_point(u, [&](const auto& x) { return x.source.begin() < span.end(); });
+    if (first >= after) {
+        return std::nullopt;
+    }
+    return rules::Hit{static_cast<std::uint32_t>(first - u.begin()), static_cast<std::uint32_t>(after - u.begin() - 1),
+                      type, kind};
+}
+
+[[nodiscard]] std::u32string chars_of(const DetectionView& view) {
+    std::u32string chars;
+    chars.reserve(view.units.size());
+    for (const auto& unit : view.units) {
+        chars.push_back(unit.value);
+    }
+    return chars;
+}
+
 // 설정에서 온 단어를 보기와 같은 정규화로 바꾸고 단어 안 공백을 뺀다. 같은 글자로 비교하려면 필요하다.
 [[nodiscard]] std::expected<std::vector<std::u32string>, core::InputError> normalize_terms(
     std::span<const std::string_view> terms) {
@@ -137,11 +159,7 @@ std::expected<std::vector<core::EntitySpan>, core::DetectError> Detectors::scan(
     if (!view) {
         return std::unexpected(view.error());
     }
-    std::u32string chars;
-    chars.reserve(view->units.size());
-    for (const auto& unit : view->units) {
-        chars.push_back(unit.value);
-    }
+    const auto chars = chars_of(*view);
 
     std::vector<rules::Hit> hits;
     const auto runs = digit_runs(*view);
@@ -149,6 +167,23 @@ std::expected<std::vector<core::EntitySpan>, core::DetectError> Detectors::scan(
     rules::find_network(chars, hits);
     rules::find_secrets(chars, hits);
     rules::find_accounts(runs, chars, account_context_, *view, hits);
+    // LaTeX 표기(\text{-}, {-}, \,, $)로 끊은 번호·이메일은 표기를 걷어 낸 보기에서 한 번 더 찾는다(결정 #235).
+    // 계좌는 문맥어와 통화 기호($ 는 금액)에 기대므로 이 보기에서 돌리지 않는다. % 는 보통 글에 흔해 홀로는 부르지 않는다.
+    if (text.find_first_of("\\${}") != std::string_view::npos) {
+        const auto plain = make_view(text, ViewKind::WithoutLatex);
+        if (!plain) {
+            return std::unexpected(plain.error());
+        }
+        const auto plain_chars = chars_of(*plain);
+        std::vector<rules::Hit> found;
+        rules::find_identifiers(digit_runs(*plain), plain_chars, found);
+        rules::find_network(plain_chars, found);
+        for (const auto& h : found) {
+            if (const auto c = cover(*view, source_span(*plain, h.first, h.last), h.type, h.kind)) {
+                hits.push_back(*c);
+            }
+        }
+    }
     rules::find_credentials(chars, secret_markers_, user_markers_, account_markers_, *view, hits);
     for (const auto& hit : internal_terms_.find(*view)) {
         hits.push_back({hit.first_unit, hit.last_unit, core::EntityType::InternalTerm, core::DetectorKind::InternalTerm});

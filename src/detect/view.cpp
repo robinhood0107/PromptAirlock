@@ -6,7 +6,10 @@
 #include <array>
 #include <cstdlib>
 #include <memory>
+#include <span>
 #include <string>
+#include <string_view>
+#include <vector>
 
 namespace prompt_airlock::detect {
 namespace {
@@ -16,8 +19,55 @@ namespace pc = core;
 constexpr auto nfkc_options =
     static_cast<utf8proc_option_t>(UTF8PROC_STABLE | UTF8PROC_COMPOSE | UTF8PROC_COMPAT);
 
-[[nodiscard]] constexpr bool is_zero_width(char32_t c) noexcept {
-    return c == U'​' || c == U'‌' || c == U'‍' || c == U'⁠' || c == U'﻿';
+// 번호·이메일을 끊는 보이지 않는 글자(#234): 서식 문자 Cf(zero-width, soft hyphen, BOM, U+2063 등),
+// 탭·줄바꿈 밖의 제어 문자(C0, DEL, C1), 비문자 U+FFFE/FFFF(PDFium 이 대응표 없는 글자에 넣음).
+[[nodiscard]] bool is_invisible(char32_t c) noexcept {
+    if (c < 0x20) {
+        return c != U'\t' && c != U'\n' && c != U'\r';
+    }
+    if ((c >= 0x7F && c < 0xA0) || c == 0xFFFE || c == 0xFFFF) {
+        return true;
+    }
+    return c >= 0x80 && utf8proc_category(static_cast<utf8proc_int32_t>(c)) == UTF8PROC_CATEGORY_CF;
+}
+
+// LaTeX 표기를 지울 글자를 고른다(ViewKind::WithoutLatex). \영문명령, \, \! \; \: \-(쌍째), \{ \$ \_ 같은
+// 이스케이프(역슬래시만), { } $, % 에서 줄 끝까지(줄바꿈과 다음 줄 앞 빈칸 포함, LaTeX 가 줄을 잇는 방식).
+// ~(LaTeX 의 붙는 빈칸)는 한글 문서에서 기간 표시("2025. 10. 21 ~ 2026. 3. 7")라 그대로 둔다. 날짜가 번호로 붙는다.
+void mark_latex(std::span<const pc::DecodedCodepoint> d, std::vector<bool>& drop) {
+    const auto alpha = [](char32_t c) { return (c | 0x20U) >= U'a' && (c | 0x20U) <= U'z'; };
+    const auto n = d.size();
+    for (std::size_t i = 0; i < n; ++i) {
+        const char32_t c = d[i].value;
+        if (c == U'\\') {
+            drop[i] = true;
+            if (i + 1 >= n) {
+                break;
+            }
+            const char32_t next = d[i + 1].value;
+            if (alpha(next)) {
+                while (i + 1 < n && alpha(d[i + 1].value)) {
+                    drop[++i] = true;
+                }
+            } else if (std::u32string_view(U",!;:-").find(next) != std::u32string_view::npos) {
+                drop[++i] = true;
+            } else {
+                ++i;  // 이스케이프한 글자와 "\ "(빈칸)는 남긴다
+            }
+        } else if (c == U'{' || c == U'}' || c == U'$') {
+            drop[i] = true;
+        } else if (c == U'%') {
+            while (i < n && d[i].value != U'\n') {
+                drop[i++] = true;
+            }
+            if (i < n) {
+                drop[i] = true;
+            }
+            while (i + 1 < n && (d[i + 1].value == U' ' || d[i + 1].value == U'\t')) {
+                drop[++i] = true;
+            }
+        }
+    }
 }
 
 // 한글 조합형 자모. 앞 글자와 합쳐질 수 있는 모음(V)·받침(T)은 starter 지만 새 구간을 시작하지 않는다.
@@ -63,20 +113,25 @@ struct Decomposed {
 
 }  // namespace
 
-std::expected<DetectionView, pc::DetectError> make_view(std::string_view text) {
+std::expected<DetectionView, pc::DetectError> make_view(std::string_view text, ViewKind kind) {
     auto decoded = pc::decode_utf8(text);
     if (!decoded) {
         return std::unexpected(pc::DetectError::Unavailable);
     }
+    std::vector<bool> drop(decoded->size(), false);
+    if (kind == ViewKind::WithoutLatex) {
+        mark_latex(*decoded, drop);
+    }
 
-    // 1. zero-width 를 빼고, 글자마다 호환 분해(NFKD)한다. 분해된 글자는 원래 글자의 원문 구간을 물려받는다.
+    // 1. 보이지 않는 글자(와 LaTeX 표기)를 빼고, 글자마다 호환 분해(NFKD)한다. 분해된 글자는 원래 글자의 원문 구간을 물려받는다.
     std::string stripped;
     stripped.reserve(text.size());
     std::vector<Decomposed> nfkd;
     nfkd.reserve(decoded->size());
     std::array<utf8proc_int32_t, 32> buf{};
-    for (const auto& unit : *decoded) {
-        if (is_zero_width(unit.value)) {
+    for (std::size_t k = 0; k < decoded->size(); ++k) {
+        const auto& unit = (*decoded)[k];
+        if (drop[k] || is_invisible(unit.value)) {
             continue;
         }
         stripped.append(text.substr(unit.source.begin().value(), unit.source.size()));
