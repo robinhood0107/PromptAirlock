@@ -76,8 +76,6 @@ TEST(DetectEvasion, SplitNumbersAndAddresses) {
         {"900101{-}1234567", EntityType::KoreanRrn},
         {"900101\\,-\\,1234567", EntityType::KoreanRrn},
         {"\\item 900101-123% 주석\n  4567", EntityType::KoreanRrn},  // LaTeX 주석이 줄을 이음
-        {"\\newcommand{\\front}{900101}\n번호 \\front-1234567", EntityType::KoreanRrn},  // 사용자 정의 명령
-        {"\\def\\back{1234567}\n번호 900101-\\back", EntityType::KoreanRrn},
         {"번호 900101#sym.dash1234567", EntityType::KoreanRrn},  // Typst 기호
         {"번호 900101#[-]1234567", EntityType::KoreanRrn},        // Typst 내용 묶음
         {"010-2345-\n6789", EntityType::KoreanPhone},
@@ -101,12 +99,10 @@ TEST(DetectEvasion, SplitNumbersKeepSpansAndLimits) {
         }
         return out;
     };
-    // 치환 구간은 LaTeX 명령까지 덮는다. 펼친 명령은 쓴 자리의 명령째 덮는다.
+    // 치환 구간은 LaTeX 명령까지 덮는다.
     EXPECT_EQ(spans("번호 $900101\\text{-}1234567$ 끝"), std::vector<std::string_view>{"900101\\text{-}1234567"});
-    EXPECT_EQ(spans("\\newcommand{\\front}{900101}\n번호 \\front-1234567 끝"),
-              std::vector<std::string_view>{"\\front-1234567"});
-    // 인자가 있는 정의, 다른 명령을 품은 정의는 펼치지 않는다(한계).
-    EXPECT_FALSE(detected("\\newcommand{\\f}[1]{900101}\n번호 \\f{x}-1234567").contains(EntityType::KoreanRrn));
+    // 한계: 탐지 보기는 매크로를 펼치지 않는다. LaTeX·Typst 문서 파일의 매크로는 추출 단계 pandoc 이 맡는다(결정 #238).
+    EXPECT_FALSE(detected("\\newcommand{\\front}{900101}\n번호 \\front-1234567").contains(EntityType::KoreanRrn));
     EXPECT_EQ(spans("hong.gildong@\nexample.com 으로"), std::vector<std::string_view>{"hong.gildong@\nexample.com"});
     // 빈 줄을 넘거나 줄바꿈이 두 번이면 잇지 않는다(표의 다른 줄).
     EXPECT_FALSE(detected("900101-\n\n1234567").contains(EntityType::KoreanRrn));
