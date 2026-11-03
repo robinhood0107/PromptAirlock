@@ -6,9 +6,11 @@
 #include <array>
 #include <cstdlib>
 #include <memory>
+#include <optional>
 #include <span>
 #include <string>
 #include <string_view>
+#include <tuple>
 #include <vector>
 
 namespace prompt_airlock::detect {
@@ -34,28 +36,132 @@ constexpr auto nfkc_options =
 // LaTeX 표기를 지울 글자를 고른다(ViewKind::WithoutLatex). \영문명령, \, \! \; \: \-(쌍째), \{ \$ \_ 같은
 // 이스케이프(역슬래시만), { } $, % 에서 줄 끝까지(줄바꿈과 다음 줄 앞 빈칸 포함, LaTeX 가 줄을 잇는 방식).
 // ~(LaTeX 의 붙는 빈칸)는 한글 문서에서 기간 표시("2025. 10. 21 ~ 2026. 3. 7")라 그대로 둔다. 날짜가 번호로 붙는다.
-void mark_latex(std::span<const pc::DecodedCodepoint> d, std::vector<bool>& drop) {
-    const auto alpha = [](char32_t c) { return (c | 0x20U) >= U'a' && (c | 0x20U) <= U'z'; };
+// 인자 없는 사용자 정의 명령(\newcommand{\a}{9001}, \def\a{9001})은 정의를 지우고 쓴 자리에 내용을 넣는다(결정 #238).
+// 내용은 ASCII 64자까지, 정의는 256개까지, 한 단계만 펼친다(TeX 를 돌리지 않음). 넣은 글자는 쓴 명령의 원문 구간을 가진다.
+struct Insert {
+    std::u32string body;
+    std::size_t last = 0;  // 쓴 명령의 마지막 글자
+};
+
+constexpr std::size_t max_macros = 256;
+constexpr std::size_t max_macro_body = 64;
+
+[[nodiscard]] bool is_alpha(char32_t c) noexcept { return (c | 0x20U) >= U'a' && (c | 0x20U) <= U'z'; }
+
+[[nodiscard]] std::u32string name_at(std::span<const pc::DecodedCodepoint> d, std::size_t i) {
+    std::u32string name;
+    while (i < d.size() && is_alpha(d[i].value)) {
+        name.push_back(d[i++].value);
+    }
+    return name;
+}
+
+// at 에서 시작하는 정의를 읽는다. 성공하면 (이름, 내용, 정의 끝 다음 위치).
+[[nodiscard]] std::optional<std::tuple<std::u32string, std::u32string, std::size_t>> read_definition(
+    std::span<const pc::DecodedCodepoint> d, std::size_t at) {
     const auto n = d.size();
+    const auto skip_space = [&](std::size_t i) {
+        while (i < n && (d[i].value == U' ' || d[i].value == U'\t')) {
+            ++i;
+        }
+        return i;
+    };
+    const auto keyword = name_at(d, at + 1);
+    const bool def = keyword == U"def";
+    if (!def && keyword != U"newcommand" && keyword != U"renewcommand" && keyword != U"providecommand") {
+        return std::nullopt;
+    }
+    std::size_t i = skip_space(at + 1 + keyword.size());
+    if (!def && i < n && d[i].value == U'*') {
+        i = skip_space(i + 1);
+    }
+    const bool braced = !def && i < n && d[i].value == U'{';
+    i = skip_space(i + (braced ? 1 : 0));
+    if (i >= n || d[i].value != U'\\') {
+        return std::nullopt;
+    }
+    auto name = name_at(d, i + 1);
+    if (name.empty()) {
+        return std::nullopt;
+    }
+    i += 1 + name.size();
+    if (braced) {
+        i = skip_space(i);
+        if (i >= n || d[i].value != U'}') {
+            return std::nullopt;
+        }
+        ++i;
+    }
+    i = skip_space(i);
+    if (i >= n || d[i].value != U'{') {
+        return std::nullopt;  // 인자가 있는 정의([1], #1)는 펼치지 않는다
+    }
+    std::u32string body;
+    int depth = 0;
+    for (; i < n; ++i) {
+        const char32_t c = d[i].value;
+        if (c == U'{') {
+            ++depth;
+        } else if (c == U'}') {
+            if (--depth == 0) {
+                return std::tuple{std::move(name), std::move(body), i + 1};
+            }
+        } else if (c == U'\\' || c == U'#' || c >= 0x80 || body.size() >= max_macro_body) {
+            return std::nullopt;  // 다른 명령·인자·비 ASCII 를 품은 내용은 펼치지 않는다
+        } else if (c != U'$') {
+            body.push_back(c);
+        }
+    }
+    return std::nullopt;
+}
+
+void mark_latex(std::span<const pc::DecodedCodepoint> d, std::vector<bool>& drop, std::vector<Insert>& insert) {
+    const auto alpha = is_alpha;
+    const auto n = d.size();
+    std::vector<std::pair<std::u32string, std::u32string>> macros;
     for (std::size_t i = 0; i < n; ++i) {
         const char32_t c = d[i].value;
         if (c == U'\\') {
+            if (macros.size() < max_macros) {
+                if (auto definition = read_definition(d, i)) {
+                    auto& [name, body, end] = *definition;
+                    std::erase_if(macros, [&](const auto& m) { return m.first == name; });
+                    macros.emplace_back(std::move(name), std::move(body));
+                    for (std::size_t k = i; k < end; ++k) {
+                        drop[k] = true;
+                    }
+                    i = end - 1;
+                    continue;
+                }
+            }
             drop[i] = true;
             if (i + 1 >= n) {
                 break;
             }
             const char32_t next = d[i + 1].value;
             if (alpha(next)) {
+                const auto name = name_at(d, i + 1);
+                const auto used = std::ranges::find(macros, name, &std::pair<std::u32string, std::u32string>::first);
+                const auto first = i;
                 while (i + 1 < n && alpha(d[i + 1].value)) {
                     drop[++i] = true;
+                }
+                if (used != macros.end()) {
+                    insert[first] = {used->second, i};
                 }
             } else if (std::u32string_view(U",!;:-").find(next) != std::u32string_view::npos) {
                 drop[++i] = true;
             } else {
                 ++i;  // 이스케이프한 글자와 "\ "(빈칸)는 남긴다
             }
-        } else if (c == U'{' || c == U'}' || c == U'$') {
+        } else if (c == U'{' || c == U'}' || c == U'$' || c == U'[' || c == U']') {
+            drop[i] = true;  // [ ] 는 Typst 내용 묶음(900101#[-]1234567)
+        } else if (c == U'#' && i + 1 < n && (is_alpha(d[i + 1].value) || d[i + 1].value == U'[')) {
+            // Typst 함수·기호 부르기(#sym.dash, #text). 이름과 점으로 이은 하위 이름까지 지운다.
             drop[i] = true;
+            while (i + 1 < n && (is_alpha(d[i + 1].value) || d[i + 1].value == U'.')) {
+                drop[++i] = true;
+            }
         } else if (c == U'%') {
             while (i < n && d[i].value != U'\n') {
                 drop[i++] = true;
@@ -119,8 +225,9 @@ std::expected<DetectionView, pc::DetectError> make_view(std::string_view text, V
         return std::unexpected(pc::DetectError::Unavailable);
     }
     std::vector<bool> drop(decoded->size(), false);
+    std::vector<Insert> insert(kind == ViewKind::WithoutLatex ? decoded->size() : 0);
     if (kind == ViewKind::WithoutLatex) {
-        mark_latex(*decoded, drop);
+        mark_latex(*decoded, drop, insert);
     }
 
     // 1. 보이지 않는 글자(와 LaTeX 표기)를 빼고, 글자마다 호환 분해(NFKD)한다. 분해된 글자는 원래 글자의 원문 구간을 물려받는다.
@@ -131,6 +238,14 @@ std::expected<DetectionView, pc::DetectError> make_view(std::string_view text, V
     std::array<utf8proc_int32_t, 32> buf{};
     for (std::size_t k = 0; k < decoded->size(); ++k) {
         const auto& unit = (*decoded)[k];
+        if (!insert.empty() && !insert[k].body.empty()) {
+            // 펼친 명령 내용(ASCII). 글자마다 쓴 명령 전체의 원문 구간을 준다.
+            const auto span = pc::ByteSpan::hull(unit.source, (*decoded)[insert[k].last].source);
+            for (const char32_t c : insert[k].body) {
+                stripped.push_back(static_cast<char>(c));
+                nfkd.push_back({c, span});
+            }
+        }
         if (drop[k] || is_invisible(unit.value)) {
             continue;
         }

@@ -179,9 +179,10 @@ std::expected<std::vector<core::EntitySpan>, core::DetectError> Detectors::scan(
             }
         }
     }
-    // LaTeX 표기(\text{-}, {-}, \,, $)로 끊은 번호·이메일은 표기를 걷어 낸 보기에서 한 번 더 찾는다(결정 #235).
-    // 계좌는 문맥어와 통화 기호($ 는 금액)에 기대므로 이 보기에서 돌리지 않는다. % 는 보통 글에 흔해 홀로는 부르지 않는다.
-    if (text.find_first_of("\\${}") != std::string_view::npos) {
+    // LaTeX·Typst 표기(\text{-}, {-}, \,, $, 사용자 정의 명령, #sym.dash, #[-])로 끊은 번호·이메일은 표기를 걷어 낸
+    // 보기에서 한 번 더 찾는다(결정 #235, #238). 계좌는 문맥어와 통화 기호($ 는 금액)에 기대므로 이 보기에서 돌리지
+    // 않는다. % 는 보통 글에 흔해 홀로는 부르지 않는다.
+    if (text.find_first_of("\\${}#[") != std::string_view::npos) {
         const auto plain = make_view(text, ViewKind::WithoutLatex);
         if (!plain) {
             return std::unexpected(plain.error());
