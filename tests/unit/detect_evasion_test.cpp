@@ -106,8 +106,15 @@ TEST(DetectEvasion, SplitNumbersKeepSpansAndLimits) {
     EXPECT_TRUE(detected("25.10.21\n26.03.07\n25.11.04").empty());
     EXPECT_FALSE(detected("900101\n1234567").contains(EntityType::KoreanRrn));
     EXPECT_TRUE(detected("1-1\n1-2\n1-3\n1-4\n1-5\n1-6\n1-7").empty());
-    // 한계: 숫자 묶음 가운데서 줄이 끊긴 번호는 잇지 않는다(줄 나눔은 하이픈 뒤에서 일어난다).
+    // 숫자 사이에서 줄이 끊긴 번호는 단서 낱말 뒤에서만 잇는다(결정 #238).
     EXPECT_FALSE(detected("900101-123\n4567").contains(EntityType::KoreanRrn));
+    EXPECT_TRUE(detected("주민등록번호 900101-123\n4567").contains(EntityType::KoreanRrn));
+    EXPECT_TRUE(detected("주민번호: 900101\n1234567").contains(EntityType::KoreanRrn));
+    EXPECT_TRUE(detected("휴대폰 010 2345\n6789").contains(EntityType::KoreanPhone));
+    EXPECT_TRUE(detected("Card 4111 1111 1111\n1111").contains(EntityType::CardNumber));
+    EXPECT_TRUE(detected("사업자등록번호 220-81-\n62517").contains(EntityType::KoreanBusinessNo));
+    // 단서가 있어도 표의 날짜는 번호가 되지 않는다(날짜 모양은 주민번호 구조를 못 맞춤).
+    EXPECT_FALSE(detected("주민센터 일정\n25.10.21\n26.03.07").contains(EntityType::KoreanRrn));
     // 주소 끝 마침표 뒤 줄바꿈은 다음 줄 낱말로 넘어가도 주소는 그대로 찾는다.
     EXPECT_TRUE(detected("메일 hong@example.com\n2024년").contains(EntityType::Email));
     // 기간 표시 ~ 는 날짜를 번호로 잇지 않는다.

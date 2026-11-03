@@ -31,6 +31,9 @@ struct Hit {
 // text 는 view.units 의 글자만 모은 문자열이다(위치가 같다). runs 는 digit_runs(view).
 void find_identifiers(std::span<const DigitRun> runs, std::u32string_view text, std::vector<Hit>& out);
 
+// 번호 hit 앞(data::wrapped_cue_window 글자 안)에 그 종류의 단서 낱말이 있는가. 줄을 넘어 이은 번호에만 쓴다.
+[[nodiscard]] bool has_wrapped_cue(std::u32string_view text, const Hit& hit);
+
 // 묶음 [a, b] 를 이어 붙인 숫자가 max_digit_run 이하인 모든 구간을 차례로 본다. 구간 수는 묶음 수 × 34 이하.
 template <class F>
 void for_each_window(const DigitRun& run, F&& fn) {

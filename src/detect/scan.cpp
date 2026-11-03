@@ -28,7 +28,7 @@ constexpr std::size_t max_separators = 3;
 
 }  // namespace
 
-std::vector<DigitRun> digit_runs(const DetectionView& view) {
+std::vector<DigitRun> digit_runs(const DetectionView& view, bool join_lines) {
     const auto& u = view.units;
     const std::size_t n = u.size();
     std::vector<DigitRun> runs;
@@ -77,7 +77,8 @@ std::vector<DigitRun> digit_runs(const DetectionView& view) {
             for (std::size_t s = j; s < k; ++s) {
                 dash = dash || is_dash(u[s].value);
             }
-            if (k == j || k >= n || !is_ascii_digit(u[k].value) || (newlines > 0 && (run_wrapped || !dash))) {
+            if (k == j || k >= n || !is_ascii_digit(u[k].value) ||
+                (newlines > 0 && (run_wrapped || (!dash && !join_lines)))) {
                 break;
             }
             run_wrapped = run_wrapped || newlines > 0;

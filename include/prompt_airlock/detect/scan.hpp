@@ -24,7 +24,9 @@ struct DigitRun {
     std::vector<DigitGroup> groups;
 };
 
-[[nodiscard]] std::vector<DigitRun> digit_runs(const DetectionView& view);
+// join_lines 면 하이픈 없는 줄바꿈도 한 번 건너 잇는다(숫자 사이에서 줄이 끊긴 번호, 결정 #238). 이 묶음은 표의 날짜도
+// 이으므로, 줄을 넘는 번호를 그 종류의 단서 낱말 뒤에 올 때만 받는 쪽(Detectors::scan)에서만 쓴다.
+[[nodiscard]] std::vector<DigitRun> digit_runs(const DetectionView& view, bool join_lines = false);
 
 // 문장 구간 [first_unit, end_unit). 종결 부호(. ? ! 。 …) 뒤에 공백·줄바꿈·끝이 오거나 줄바꿈이면 끝난다.
 // "3.14", "v1.2" 처럼 부호 뒤에 바로 글자가 오면 경계가 아니다. 긴 문장도 자르지 않는다.

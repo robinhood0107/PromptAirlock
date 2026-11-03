@@ -167,6 +167,18 @@ std::expected<std::vector<core::EntitySpan>, core::DetectError> Detectors::scan(
     rules::find_network(chars, hits);
     rules::find_secrets(chars, hits);
     rules::find_accounts(runs, chars, account_context_, *view, hits);
+    // 숫자 사이에서 줄이 끊긴 번호(결정 #238): 하이픈 없는 줄바꿈도 이은 묶음에서 다시 찾되, 줄을 넘는 번호는
+    // 그 종류의 단서 낱말("주민", "전화", "카드" …) 뒤에 올 때만 받는다. 표의 날짜가 이어지지 않게 한다(#236).
+    if (chars.find(U'\n') != std::u32string::npos) {
+        std::vector<rules::Hit> wrapped;
+        rules::find_identifiers(digit_runs(*view, true), chars, wrapped);
+        for (const auto& h : wrapped) {
+            const auto span = std::u32string_view(chars).substr(h.first, h.last - h.first + 1);
+            if (span.find(U'\n') != std::u32string_view::npos && rules::has_wrapped_cue(chars, h)) {
+                hits.push_back(h);
+            }
+        }
+    }
     // LaTeX 표기(\text{-}, {-}, \,, $)로 끊은 번호·이메일은 표기를 걷어 낸 보기에서 한 번 더 찾는다(결정 #235).
     // 계좌는 문맥어와 통화 기호($ 는 금액)에 기대므로 이 보기에서 돌리지 않는다. % 는 보통 글에 흔해 홀로는 부르지 않는다.
     if (text.find_first_of("\\${}") != std::string_view::npos) {
