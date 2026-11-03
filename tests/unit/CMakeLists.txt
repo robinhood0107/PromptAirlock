@@ -124,7 +124,7 @@ target_compile_definitions(extract_runner_test PRIVATE "PA_TEST_CHILD=\"$<TARGET
 add_dependencies(extract_runner_test extract_test_child prompt-airlock-extract)
 find_package(ZLIB REQUIRED)
 pa_add_gtest(extract_hwp_test extract_hwp_test.cpp)
-target_link_libraries(extract_hwp_test PRIVATE prompt_airlock_extract prompt_airlock_extract_client ZLIB::ZLIB)
+target_link_libraries(extract_hwp_test PRIVATE prompt_airlock_extract prompt_airlock_extract_client ZLIB::ZLIB pa_test_support)
 pa_add_gtest(extract_pdf_test extract_pdf_test.cpp)
 target_link_libraries(extract_pdf_test PRIVATE prompt_airlock_extract prompt_airlock_extract_client)
 if(PA_WITH_PDFIUM)

@@ -1,4 +1,4 @@
-# zip 구조와 문서 형식 XML 의 낱말. 첫 byte 는 확장자 힌트다.
+# zip 구조, 문서 형식 XML, hwp 5.0(CFB 항목 이름은 UTF-16LE, 제어 id 는 거꾸로 저장)의 낱말. 첫 byte 는 확장자 힌트다.
 "PK\x03\x04"
 "PK\x01\x02"
 "PK\x05\x06"
@@ -29,4 +29,10 @@
 "\xEF\xBB\xBF"
 "\xFF\xFE"
 "\xD0\xCF\x11\xE0\xA1\xB1\x1A\xE1"
+"HWP Document File"
+"F\x00i\x00l\x00e\x00H\x00e\x00a\x00d\x00e\x00r\x00"
+"B\x00o\x00d\x00y\x00T\x00e\x00x\x00t\x00"
+"S\x00e\x00c\x00t\x00i\x00o\x00n\x000\x00"
+"daeh"
+"tmct"
 "%PDF-"
