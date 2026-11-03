@@ -202,6 +202,26 @@ void find_passports(std::u32string_view text, std::vector<Hit>& out) {
 
 }  // namespace
 
+bool has_wrapped_cue(std::u32string_view text, const Hit& hit) {
+    const std::size_t from = hit.first > data::wrapped_cue_window ? hit.first - data::wrapped_cue_window : 0;
+    std::u32string before(text.substr(from, hit.first - from));
+    for (auto& c : before) {
+        c = c >= U'A' && c <= U'Z' ? c + 32 : c;
+    }
+    const auto any = [&](const auto& cues) {
+        return std::ranges::any_of(cues, [&](std::u32string_view cue) { return before.find(cue) != std::u32string::npos; });
+    };
+    switch (hit.type) {
+        case EntityType::KoreanRrn:
+        case EntityType::KoreanAlienRegistrationNo: return any(data::resident_cues);
+        case EntityType::KoreanPhone: return any(data::phone_cues);
+        case EntityType::CardNumber: return any(data::card_cues);
+        case EntityType::KoreanBusinessNo: return any(data::business_cues);
+        case EntityType::KoreanDriverLicenseNo: return any(data::license_cues);
+        default: return false;
+    }
+}
+
 void find_identifiers(std::span<const DigitRun> runs, std::u32string_view text, std::vector<Hit>& out) {
     for (const auto& run : runs) {
         for_each_window(run, [&](std::size_t a, std::size_t b, std::string_view d) { check_window(run, a, b, d, text, out); });

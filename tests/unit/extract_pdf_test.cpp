@@ -57,6 +57,41 @@ TEST(ExtractPdf, PageTextAndAnnotations) {
     EXPECT_EQ(doc->omitted.comments, 1U);
 }
 
+// 줄 끝 하이픈(#234): PDFium 은 하이픈과 줄바꿈을 지우고 표시해 둔다. 하이픈을 되돌려 번호·주소가 붙지 않게 한다.
+TEST(ExtractPdf, LineEndHyphenIsKept) {
+    const auto doc = run(page_pdf("BT /F1 12 Tf 72 712 Td (Account-) Tj 0 -14 Td (2026) Tj ET"));
+    ASSERT_TRUE(doc) << ex::error_name(doc.error());
+    EXPECT_EQ(doc->blocks.at(0).text, "Account-2026");
+}
+
+// 채운 양식 칸 값은 뽑고(결정 #235), 링크는 메모로 세지 않는다. 숨긴 칸은 숨긴 부분으로 센다.
+TEST(ExtractPdf, FormFieldValues) {
+    const std::string ap = "BT /F1 12 Tf 2 2 Td (900101-1234567) Tj ET";
+    const auto field = [](const std::string& name, const std::string& flags) {
+        return "<< /Type /Annot /Subtype /Widget /FT /Tx /T (" + name + ") /V (900101-1234567) /Rect [72 600 300 620] " +
+               flags + "/P 3 0 R /AP << /N 7 0 R >> >>";
+    };
+    const auto doc = run(make_pdf({
+        "<< /Type /Catalog /Pages 2 0 R /AcroForm << /Fields [6 0 R 8 0 R] >> >>",
+        "<< /Type /Pages /Kids [3 0 R] /Count 1 >>",
+        "<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Contents 4 0 R /Resources << /Font << /F1 5 0 R >> >> "
+        "/Annots [6 0 R 8 0 R 9 0 R] >>",
+        "<< /Length 38 >>\nstream\nBT /F1 12 Tf 72 712 Td (Name field) Tj ET\nendstream",
+        "<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>",
+        field("rrn", ""),
+        "<< /Type /XObject /Subtype /Form /BBox [0 0 228 20] /Resources << /Font << /F1 5 0 R >> >> /Length " +
+            std::to_string(ap.size()) + " >>\nstream\n" + ap + "\nendstream",
+        field("hidden", "/F 2 "),
+        "<< /Type /Annot /Subtype /Link /Rect [0 0 10 10] /A << /S /URI /URI (https://example.com) >> >>",
+    }));
+    ASSERT_TRUE(doc) << ex::error_name(doc.error());
+    ASSERT_EQ(doc->blocks.size(), 2U);
+    EXPECT_EQ(doc->blocks[1].where, "page1 field1");
+    EXPECT_EQ(doc->blocks[1].text, "900101-1234567");
+    EXPECT_EQ(doc->omitted.comments, 0U);
+    EXPECT_EQ(doc->omitted.hidden, 1U);
+}
+
 TEST(ExtractPdf, ScannedAndBrokenFiles) {
     // 글자 그리기 없는 쪽(스캔본과 같음)
     EXPECT_EQ(run(page_pdf("0 0 1 rg 10 10 100 100 re f")).error(), ex::ExtractError::NoText);

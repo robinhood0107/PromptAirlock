@@ -42,4 +42,14 @@ inline constexpr std::array<std::u32string_view, 16> license_region_names = {
 inline constexpr std::u32string_view license_keyword = U"면허";
 inline constexpr std::size_t license_keyword_window = 20;
 
+// 숫자 사이에서 줄이 끊긴 번호(결정 #238)는 그 종류의 단서 낱말이 번호 앞 30글자 안에 있을 때만 받는다.
+// 단서 없이 이으면 표에서 줄마다 놓인 날짜가 주민등록번호·카드로 이어진다(#236). 영문은 소문자로 비교한다.
+inline constexpr std::size_t wrapped_cue_window = 30;
+inline constexpr std::array<std::u32string_view, 4> resident_cues = {U"주민", U"생년월일", U"등록번호", U"외국인"};
+inline constexpr std::array<std::u32string_view, 9> phone_cues = {
+    U"전화", U"연락", U"휴대", U"핸드폰", U"팩스", U"tel", U"phone", U"mobile", U"fax"};
+inline constexpr std::array<std::u32string_view, 2> card_cues = {U"카드", U"card"};
+inline constexpr std::array<std::u32string_view, 1> business_cues = {U"사업자"};
+inline constexpr std::array<std::u32string_view, 1> license_cues = {U"면허"};
+
 }  // namespace prompt_airlock::detect::data

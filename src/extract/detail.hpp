@@ -80,6 +80,8 @@ public:
     // 경로는 "FileHeader", "BodyText/Section0" 처럼 '/' 로 나눈다.
     [[nodiscard]] std::expected<std::string, ExtractError> read(std::string_view path, Context& context) const;
     [[nodiscard]] bool contains(std::string_view path) const;
+    // 저장소(예 "BinData") 바로 아래 스트림 이름(ASCII 만). 없으면 빈 목록.
+    [[nodiscard]] std::vector<std::string> streams(std::string_view storage) const;
 
 private:
     struct Entry {
@@ -107,8 +109,14 @@ private:
 // PDF 글자 층(PDFium). PA_WITH_PDFIUM 없이 빌드하면 Unsupported.
 [[nodiscard]] std::expected<void, ExtractError> extract_pdf(std::span<const std::byte> file, Context& context);
 
-// hwp 5.0(CFB 안 FileHeader·BodyText). 암호·배포용·DRM 문서는 Encrypted.
-[[nodiscard]] std::expected<void, ExtractError> extract_hwp(const Cfb& cfb, Context& context);
+// hwp 5.0(CFB 안 FileHeader·BodyText, BinData 의 넣은 OLE 개체). 암호·배포용·DRM 문서는 Encrypted.
+[[nodiscard]] std::expected<void, ExtractError> extract_hwp(const Cfb& cfb, std::size_t depth, Context& context);
+
+// 문서 안에 넣은 파일 하나(결정 #238). OLE 포장이면 안의 Package·CONTENTS 를 꺼내고, 같은 해석기로 depth + 1 에서 뽑는다.
+// 못 읽으면 보내지 않고 다른 부분으로 센다(폭탄·상한은 전체를 멈춤). label 은 덩어리 위치 앞머리에 붙는다.
+[[nodiscard]] std::expected<void, ExtractError> extract_object(std::string_view payload, std::string_view ext,
+                                                               const std::string& label, std::size_t depth,
+                                                               Context& context);
 
 [[nodiscard]] std::expected<void, ExtractError> extract_docx(const Zip& zip, Context& context);
 [[nodiscard]] std::expected<void, ExtractError> extract_xlsx(const Zip& zip, Context& context);

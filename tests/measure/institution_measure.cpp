@@ -42,8 +42,17 @@ std::size_t boundary(std::string_view s, std::size_t at) {
     return at;
 }
 
+// 상세 파일 한 줄이 한 탐지가 되도록 값 안 줄바꿈·탭을 글자로 적는다.
+std::string escaped(std::string_view s) {
+    std::string out;
+    for (const char c : s) {
+        out += c == '\n' ? "\\n" : c == '\r' ? "\\r" : c == '\t' ? "\\t" : std::string(1, c);
+    }
+    return out;
+}
+
 // 문서 모드(11-3): 폴더의 .txt 를 4 KiB 이하 조각(줄 경계, 긴 줄은 글자 경계)으로 나눠 공공 업종 셋으로 돌린다.
-// 화면에는 문서 ID 와 개수, 조각 시간만 낸다. 원문이 섞인 상세(찾은 값과 앞뒤 30 byte)는 detail 파일에만 쓴다.
+// 화면에는 문서 ID 와 개수, 종류별 합계, 조각 시간만 낸다. 원문이 섞인 상세(찾은 값과 앞뒤 30 byte)는 detail 파일에만 쓴다.
 int measure_documents(const std::filesystem::path& folder, const std::filesystem::path& detail_path) {
     constexpr std::size_t chunk_bytes = 4096;
     pd::InstitutionPolicy policy;
@@ -62,6 +71,7 @@ int measure_documents(const std::filesystem::path& folder, const std::filesystem
     int total_confidential = 0;
     int total_ids = 0;
     int failed = 0;
+    std::map<std::string_view, int> by_type;  // 모든 종류(번호 탐지 변경 전후 비교용)
     std::printf("doc\tbytes\tchunks\tconfidential\tinstitution_ids\n");
     for (const auto& file : files) {
         std::ifstream in(file, std::ios::binary);
@@ -85,15 +95,16 @@ int measure_documents(const std::filesystem::path& folder, const std::filesystem
             } else {
                 for (const auto& e : *found) {
                     const bool conf = e.type() == pc::EntityType::ConfidentialMatter;
-                    if (!conf && e.type() != pc::EntityType::InstitutionId) {
-                        continue;
+                    ++by_type[pc::entity_type_name(e.type())];
+                    if (conf || e.type() == pc::EntityType::InstitutionId) {
+                        (conf ? confidential : ids) += 1;
                     }
-                    (conf ? confidential : ids) += 1;
                     const auto b = e.span().begin().value();
                     const auto from = boundary(chunk, b > 30 ? b - 30 : 0);
                     const auto to = boundary(chunk, std::min(chunk.size(), b + e.span().size() + 30));
-                    detail << file.stem().string() << '\t' << (conf ? "CONFIDENTIAL_MATTER" : "INSTITUTION_ID") << '\t'
-                           << chunk.substr(b, e.span().size()) << '\t' << chunk.substr(from, to - from) << '\n';
+                    detail << file.stem().string() << '\t' << pc::entity_type_name(e.type()) << '\t'
+                           << escaped(chunk.substr(b, e.span().size())) << '\t'
+                           << escaped(chunk.substr(from, to - from)) << '\n';
                 }
             }
             at = end;
@@ -109,6 +120,9 @@ int measure_documents(const std::filesystem::path& folder, const std::filesystem
     std::printf("documents with confidential blocks\t%d/%zu\t%.1f%%\n", docs_confidential, files.size(),
                 pct(docs_confidential, static_cast<int>(files.size())));
     std::printf("confidential blocks\t%d\ninstitution ids\t%d\n", total_confidential, total_ids);
+    for (const auto& [type, n] : by_type) {
+        std::printf("type\t%.*s\t%d\n", static_cast<int>(type.size()), type.data(), n);
+    }
     std::printf("chunk time ms p50 %.3f p95 %.3f max %.3f\n", at(0.5), at(0.95), times.empty() ? 0.0 : times.back());
     return failed == 0 ? 0 : 1;
 }

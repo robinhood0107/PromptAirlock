@@ -7,6 +7,7 @@
 #include <utility>
 #include <vector>
 
+#include "hwp_writer.hpp"
 #include "prompt_airlock/extract/document.hpp"
 #include "prompt_airlock/extract/runner.hpp"
 
@@ -147,6 +148,43 @@ TEST(ExtractOffice, PptxSlidesInNumberOrderAndHiddenSlides) {
     EXPECT_EQ(texts(*doc), (std::vector<std::string>{"둘", "열"}));
     EXPECT_EQ(doc->blocks[1].where, "slide10");
     EXPECT_EQ(doc->omitted.hidden, 1U);
+    EXPECT_EQ(doc->omitted.other_parts, 1U);
+}
+
+// 글상자와 수식(#234, 결정 #235): 글상자 앞 글을 잃지 않고, 옛 판용 대체 내용은 두 번 내지 않으며, 수식 스크립트를 낸다.
+TEST(ExtractOffice, TextBoxesAndEquations) {
+    const std::string box = R"(<w:txbxContent><w:p><w:r><w:t>상자 글</w:t></w:r></w:p></w:txbxContent>)";
+    const auto docx_doc = run(docx(
+        R"(<w:p><w:r><w:t>앞 글</w:t></w:r><w:r><mc:AlternateContent xmlns:mc="mc"><mc:Choice Requires="wps"><w:drawing>)"
+        R"(<wps:txbx xmlns:wps="wps">)" + box + R"(</wps:txbx></w:drawing></mc:Choice><mc:Fallback><w:pict>)"
+        R"(<v:textbox xmlns:v="v">)" + box + R"(</v:textbox></w:pict></mc:Fallback></mc:AlternateContent></w:r>)"
+        R"(<w:r><w:t>뒤 글</w:t></w:r></w:p>)"));
+    ASSERT_TRUE(docx_doc);
+    EXPECT_EQ(texts(*docx_doc), (std::vector<std::string>{"앞 글", "상자 글", "뒤 글"}));
+
+    const std::string section = R"(<hs:sec xmlns:hs="hs" xmlns:hp="hp"><hp:p><hp:run><hp:t>식</hp:t></hp:run>)"
+                                R"(<hp:run><hp:equation><hp:script>{a} over {b}</hp:script></hp:equation></hp:run>)"
+                                R"(<hp:run><hp:t>끝</hp:t></hp:run></hp:p></hs:sec>)";
+    const auto hwpx_doc = run(make_zip({{"mimetype", "application/hwp+zip", true}, {"Contents/section0.xml", section}}));
+    ASSERT_TRUE(hwpx_doc);
+    EXPECT_EQ(texts(*hwpx_doc), std::vector<std::string>{"식 {a} over {b} 끝"});
+}
+
+// 넣은 파일(결정 #238): docx 안 docx, OLE 로 싼 docx 는 뽑고, 옛 형식 OLE 는 세기만 하며, 그림은 풀지 않는다.
+TEST(ExtractOffice, EmbeddedFiles) {
+    using pa_test::hwp::make_cfb;
+    using pa_test::hwp::none;
+    const auto inner = docx("<w:p><w:r><w:t>넣은 문서 글</w:t></w:r></w:p>");
+    const auto packaged = make_cfb({{u"Root Entry", 5, "", none, none, 1}, {u"Package", 2, inner}});
+    const auto legacy = make_cfb({{u"Root Entry", 5, "", none, none, 1}, {u"Workbook", 2, std::string(600, 'x')}});
+    const auto doc = run(docx("<w:p><w:r><w:t>바깥 글</w:t></w:r></w:p>",
+                              {{"word/embeddings/inner.docx", inner},
+                               {"word/embeddings/oleObject1.bin", packaged},
+                               {"word/embeddings/oleObject2.bin", legacy},
+                               {"word/media/image1.png", std::string(100, '\x89')}}));
+    ASSERT_TRUE(doc) << ex::error_name(doc.error());
+    EXPECT_EQ(texts(*doc), (std::vector<std::string>{"바깥 글", "넣은 문서 글", "넣은 문서 글"}));
+    EXPECT_EQ(doc->blocks[1].where, "word/embeddings/inner.docx:p1");
     EXPECT_EQ(doc->omitted.other_parts, 1U);
 }
 

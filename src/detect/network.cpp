@@ -1,4 +1,5 @@
 // 이메일(RFC 5321 길이 한도)과 IP 주소(IPv4 RFC 791 점 표기, IPv6 RFC 4291 2.2절 텍스트 표기).
+#include <string>
 #include <string_view>
 
 #include "prompt_airlock/detect/scan.hpp"
@@ -50,24 +51,67 @@ constexpr std::size_t max_ipv6_text = 45;
     return true;
 }
 
+// PDF 가 주소를 줄에서 끊은 자리(#234): pos 에서 시작하는 줄바꿈 하나(CRLF 포함)의 길이, 아니면 0.
+[[nodiscard]] std::size_t line_break_at(std::u32string_view t, std::size_t pos) noexcept {
+    if (pos < t.size() && t[pos] == U'\n') {
+        return 1;
+    }
+    return pos + 1 < t.size() && t[pos] == U'\r' && t[pos + 1] == U'\n' ? 2 : 0;
+}
+
 // '@' 마다 왼쪽 local part, 오른쪽 domain 을 넓힌다. 양쪽 모두 '@' 에서 멈추므로 글자마다 최대 두 번 본다.
+// 줄바꿈은 끊는 자리로 흔한 곳에서만 한 번 건넌다: domain 쪽은 '@'·'.'·'-' 뒤, local 쪽은 '.'·'-'·'_' 뒤와 '@' 바로 앞.
 void find_emails(std::u32string_view text, std::vector<Hit>& out) {
     for (std::size_t at = text.find(U'@'); at != std::u32string_view::npos; at = text.find(U'@', at + 1)) {
         std::size_t begin = at;
-        while (begin > 0 && at - begin < max_local_part && is_local_char(text[begin - 1])) {
-            --begin;
+        bool local_wrapped = false;
+        while (begin > 0 && at - begin < max_local_part) {
+            if (is_local_char(text[begin - 1])) {
+                --begin;
+                continue;
+            }
+            const std::size_t lb = text[begin - 1] == U'\n' && begin >= 2 && text[begin - 2] == U'\r' ? 2 : 1;
+            const bool wrap = !local_wrapped && text[begin - 1] == U'\n' && begin > lb &&
+                              is_local_char(text[begin - 1 - lb]) &&
+                              (begin == at || std::u32string_view(U".-_").find(text[begin - 1 - lb]) !=
+                                                  std::u32string_view::npos);
+            if (!wrap) {
+                break;
+            }
+            local_wrapped = true;
+            begin -= lb;
         }
-        while (begin < at && text[begin] == U'.') {
+        while (begin < at && (text[begin] == U'.' || text[begin] == U'\n' || text[begin] == U'\r')) {
             ++begin;
         }
+        std::u32string domain;
         std::size_t end = at + 1;
-        while (end < text.size() && end - at - 1 < max_domain && is_domain_char(text[end])) {
-            ++end;
+        bool domain_wrapped = false;
+        while (end < text.size() && domain.size() < max_domain) {
+            if (is_domain_char(text[end])) {
+                domain.push_back(text[end++]);
+                continue;
+            }
+            const auto lb = line_break_at(text, end);
+            const char32_t before = text[end - 1];
+            if (lb == 0 || domain_wrapped || end + lb >= text.size() || !is_domain_char(text[end + lb]) ||
+                (before != U'@' && before != U'.' && before != U'-')) {
+                break;
+            }
+            domain_wrapped = true;
+            end += lb;
         }
-        while (end > at + 1 && (text[end - 1] == U'.' || text[end - 1] == U'-')) {
-            --end;  // 문장 끝 마침표
+        while (!domain.empty() && (domain.back() == U'.' || domain.back() == U'-')) {
+            domain.pop_back();  // 문장 끝 마침표
+            --end;
         }
-        if (begin == at || text[at - 1] == U'.' || !is_domain(text.substr(at + 1, end - at - 1))) {
+        std::u32string local;
+        for (std::size_t i = begin; i < at; ++i) {
+            if (text[i] != U'\n' && text[i] != U'\r') {
+                local.push_back(text[i]);
+            }
+        }
+        if (local.empty() || local.back() == U'.' || !is_domain(domain)) {
             continue;
         }
         out.push_back({static_cast<std::uint32_t>(begin), static_cast<std::uint32_t>(end - 1), EntityType::Email,

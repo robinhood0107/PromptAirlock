@@ -1,7 +1,7 @@
 #pragma once
 
 // 시험·fuzz 용 hwp 5.0 작성기. 바이너리 시험 파일을 저장소에 두지 않고(공개 감사는 NUL 이 든 파일을 받지 않음)
-// 시험 안에서 CFB 를 만든다. 섹터 512 byte, FAT 섹터 1개, 디렉터리 섹터 1개(항목 4개까지).
+// 시험 안에서 CFB 를 만든다. 섹터 512 byte, FAT 섹터 1개, 디렉터리는 항목 4개마다 섹터 하나.
 // 작은 스트림 문턱을 0 으로 둬 모든 스트림이 일반 섹터를 쓴다(작은 스트림 경로는 받은 문서 측정과 fuzz 가 본다).
 #include <cstdint>
 #include <cstring>
@@ -41,7 +41,12 @@ inline std::string make_cfb(std::vector<Node> nodes) {
     for (std::size_t i = 1; i < 109; ++i) {
         put32(out, 0x4C + i * 4, none);
     }
-    std::vector<std::uint32_t> fat = {0xFFFFFFFD, endc};
+    // 디렉터리는 섹터 1 부터 항목 4개마다 한 섹터씩 이어진다.
+    const std::size_t dir_sectors = (nodes.size() + 3) / 4;
+    std::vector<std::uint32_t> fat = {0xFFFFFFFD};
+    for (std::size_t k = 0; k < dir_sectors; ++k) {
+        fat.push_back(k + 1 < dir_sectors ? static_cast<std::uint32_t>(fat.size() + 1) : endc);
+    }
     std::string data;
     std::vector<std::uint32_t> starts(nodes.size(), endc);
     for (std::size_t i = 1; i < nodes.size(); ++i) {
@@ -61,8 +66,8 @@ inline std::string make_cfb(std::vector<Node> nodes) {
     for (std::size_t i = 0; i < fat.size() && i < 128; ++i) {
         put32(fat_sector, i * 4, fat[i]);
     }
-    std::string dir(512, '\0');
-    for (std::size_t i = 0; i < 4; ++i) {
+    std::string dir(512 * dir_sectors, '\0');
+    for (std::size_t i = 0; i < 4 * dir_sectors; ++i) {
         put32(dir, i * 128 + 0x44, none);
         put32(dir, i * 128 + 0x48, none);
         put32(dir, i * 128 + 0x4C, none);
