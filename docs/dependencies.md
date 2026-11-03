@@ -22,9 +22,15 @@
 | nlohmann-json | 3.12.0 | MIT | `src/ner`(tokenizer.json 읽기), `src/gateway`(설정·오류 응답, ADR 0020), `src/audit`(감사 기록) | 헤더만 |
 | libzip | 1.11.4 | BSD-3-Clause | `src/extract`(문서 추출 실행 파일만, zip 읽기, 기본 기능 끔: bzip2·AES 없음, ADR 0028) | Windows DLL, Linux 정적 |
 | Expat | 2.8.5 | MIT(일부 파일 CC0-1.0) | `src/extract`(문서 XML 스트림 해석, DOCTYPE·개체 선언 거부) | Windows DLL, Linux 정적 |
-| zlib | 1.3.2 | Zlib | libzip 의 deflate 풀기 | Windows DLL, Linux 정적 |
+| zlib | 1.3.2 | Zlib | libzip 의 deflate 풀기, hwp 본문 풀기 | Windows DLL, Linux 정적 |
 | gtest | 1.18.0 | BSD-3-Clause | 시험만 | 배포하지 않음 |
 | sentencepiece | 0.2.1 | Apache-2.0 | `tests/measure` 의 문장 판별 후보 측정만(vcpkg 기능 `sentence-spike`, 기본 빌드에 없음, ADR 0022) | 배포하지 않음(정적, 측정 도구에만) |
+
+## 우리가 소스에서 빌드하는 것
+
+| 이름 | 판 | 라이선스 | 쓰는 곳 | 연결 방식 |
+|---|---|---|---|---|
+| PDFium(함께 들어오는 코드는 THIRD_PARTY_NOTICES.md 표) | 커밋 b75764a1def138ff0f308c637865f195774ccdc4 | BSD-3-Clause, 함께 들어오는 코드는 모두 허용적 라이선스 | `src/extract/pdf.cpp`(PDF 글자 층, 추출 실행 파일만) | 정적. 저장소 밖에서 depot_tools 로 빌드(결정 #229, Python 은 이 빌드에만), `PA_PDFIUM_DIR` 로 넘기고 라이브러리 SHA-256 을 `cmake/Pdfium.cmake` 에 고정. 주지 않으면 PDF 는 거절 |
 
 ## 공식 배포본과 모델(CMake 가 고정 해시로 받음)
 
