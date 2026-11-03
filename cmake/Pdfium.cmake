@@ -5,7 +5,7 @@ set(PA_PDFIUM_DIR "" CACHE PATH "PDFium 빌드 결과 폴더(비우면 PDF 를 �
 set(PA_PDFIUM_REVISION b75764a1def138ff0f308c637865f195774ccdc4)
 if(WIN32)
   set(PA_PDFIUM_LIB "lib/pdfium.lib")
-  set(PA_PDFIUM_SHA256 "")
+  set(PA_PDFIUM_SHA256 bccc260ed8ad99ccfb8f0241a4ce7ef969c86bcbab219cf512af2435037c0471)
 else()
   set(PA_PDFIUM_LIB "lib/libpdfium.a")
   set(PA_PDFIUM_SHA256 4f83dec1a3c9b55e5c0cd69cdcceb98cdf4fac603930218105e7603256a949be)
