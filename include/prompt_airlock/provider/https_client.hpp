@@ -6,11 +6,13 @@
 #include <boost/asio/awaitable.hpp>
 #include <boost/asio/ssl/context.hpp>
 
+#include <array>
 #include <chrono>
 #include <cstddef>
 #include <cstdint>
 #include <expected>
 #include <filesystem>
+#include <optional>
 #include <string>
 
 #include "prompt_airlock/core/sensitive.hpp"
@@ -27,6 +29,15 @@ struct Endpoint {
 struct ClientLimits {
     std::chrono::seconds timeout{120};  // 연결부터 응답 끝까지
     std::size_t response_bytes = 1024 * 1024;
+};
+
+enum class ClientPhase : std::uint8_t { Credential, Resolve, Connect, Handshake, Write, Headers, Body, Shutdown, Count };
+
+// 측정할 때만 부른 쪽이 소유한다. 요청마다 별도 값이며 본문·주소·자격 증명은 담지 않는다.
+struct ClientTimings {
+    std::array<std::chrono::microseconds, static_cast<std::size_t>(ClientPhase::Count)> phases{};
+    std::chrono::microseconds total{};
+    std::optional<ClientPhase> last;
 };
 
 enum class CredentialError : std::uint8_t { Unreadable, Empty, InvalidCharacter, NotProtected };
@@ -50,8 +61,9 @@ public:
                 ClientLimits limits = {});
 
     // 여러 요청이 함께 불러도 된다(상태를 바꾸지 않는다). 자격 증명을 읽지 못하면 연결하지 않고 Unavailable.
+    // timings는 선택한 요청의 호출자가 소유하고, co_await가 끝날 때까지 유지한다. 요청 사이에 공유하지 않는다.
     [[nodiscard]] boost::asio::awaitable<std::expected<gateway::ProviderReply, gateway::ProviderError>> send(
-        std::string body) const;
+        std::string body, ClientTimings* timings = nullptr) const;
 
 private:
     boost::asio::ssl::context& tls_;

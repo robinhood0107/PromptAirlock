@@ -4,13 +4,17 @@
 #include <boost/asio/co_spawn.hpp>
 #include <boost/asio/detached.hpp>
 #include <boost/asio/post.hpp>
+#include <boost/asio/steady_timer.hpp>
+#include <boost/asio/this_coro.hpp>
 #include <boost/asio/use_awaitable.hpp>
+#include <boost/asio/write.hpp>
 #include <boost/beast/core.hpp>
 #include <boost/beast/http.hpp>
 #include <boost/beast/ssl.hpp>
 #include <nlohmann/json.hpp>
 
 #include <atomic>
+#include <array>
 #include <fstream>
 #include <mutex>
 #include <utility>
@@ -99,8 +103,47 @@ asio::awaitable<void> session(std::shared_ptr<MockProvider::State> state, tcp::s
         state->record(req.body());
         res = reply(http::status::ok, make_answer(req.body()));
     }
-    (void)co_await http::async_write(stream, res, use_tuple);
-    (void)co_await stream.async_shutdown(use_tuple);
+    const auto& options = state->options;
+    if (options.body_mode == BodyMode::NoBody) {
+        res.result(http::status::no_content);
+        res.body().clear();
+        res.prepare_payload();
+    }
+    if (options.body_mode == BodyMode::Chunked) {
+        res.erase(http::field::content_length);
+        res.chunked(true);
+    } else if (options.body_mode == BodyMode::CloseDelimited) {
+        res.erase(http::field::content_length);
+    } else if (options.body_mode == BodyMode::Truncated) {
+        res.content_length(res.body().size() + 10);
+    }
+    if (options.body_mode == BodyMode::Truncated || options.body_mode == BodyMode::CloseDelimited) {
+        // 불완전한 길이도 그대로 보내는 시험이므로 HTTP 직렬화기의 길이 보정을 거치지 않는다.
+        const std::string wire = "HTTP/1.1 200 OK\r\nConnection: close\r\nContent-Type: application/json\r\n" +
+            (options.body_mode == BodyMode::Truncated
+                ? "Content-Length: " + std::to_string(res.body().size() + 10) + "\r\n" : "") + "\r\n" + res.body();
+        (void)co_await asio::async_write(stream, asio::buffer(wire), use_tuple);
+    } else if (options.body_delay.count() > 0) {
+        http::response_serializer<http::string_body> serializer(res);
+        (void)co_await http::async_write_header(stream, serializer, use_tuple);
+        asio::steady_timer delay(co_await asio::this_coro::executor, options.body_delay);
+        (void)co_await delay.async_wait(use_tuple);
+        (void)co_await http::async_write(stream, serializer, use_tuple);
+    } else {
+        (void)co_await http::async_write(stream, res, use_tuple);
+    }
+    if (options.shutdown_delay.count() > 0) {
+        if (options.body_mode != BodyMode::CloseDelimited && options.body_mode != BodyMode::Truncated) {
+            // 본문이 끝난 클라이언트의 종료 요청을 받은 뒤 지연한다. 본문 소비 시간을 종료 지연에 섞지 않는다.
+            std::array<char, 1> pending{};
+            (void)co_await stream.async_read_some(asio::buffer(pending), use_tuple);
+        }
+        asio::steady_timer delay(co_await asio::this_coro::executor, options.shutdown_delay);
+        (void)co_await delay.async_wait(use_tuple);
+    }
+    if (options.shutdown_mode == ShutdownMode::Notify) {
+        (void)co_await stream.async_shutdown(use_tuple);
+    }
 }
 
 asio::awaitable<void> accept_loop(std::shared_ptr<MockProvider::State> state) {

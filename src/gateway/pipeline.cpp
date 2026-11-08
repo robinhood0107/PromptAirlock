@@ -96,6 +96,8 @@ struct Pipeline::Trace {
     nlohmann::json blocked = nlohmann::json::array();
     nlohmann::json entities = nlohmann::json::object();
     nlohmann::json sentence;  // 경고 모드: 걸린 범주 이름과 사용자 확인 여부만
+    std::optional<std::chrono::steady_clock::time_point> provider_started;
+    std::optional<std::chrono::steady_clock::time_point> provider_finished;
 
     JsonResponse reject(const core::Rejection& rejection) {
         const auto user = rejection.for_user();
@@ -159,7 +161,8 @@ asio::awaitable<JsonResponse> Pipeline::handle(AcceptedRequest request) const {
         }
     }
     if (audit_ != nullptr) {
-        const auto ms = std::chrono::duration<double, std::milli>(std::chrono::steady_clock::now() - start).count();
+        const auto finished = std::chrono::steady_clock::now();
+        const auto ms = std::chrono::duration<double, std::milli>(finished - start).count();
         nlohmann::json fields = {{"request_id", trace.id}, {"origin", origin},       {"client", client},
                                  {"grade", "O"},           {"status", reply.status}, {"entities", trace.entities},
                                  {"ms", ms},               {"result", reply.status == 200 ? "pass" : "reject"}};
@@ -169,6 +172,12 @@ asio::awaitable<JsonResponse> Pipeline::handle(AcceptedRequest request) const {
         }
         if (!trace.sentence.is_null()) {
             fields["sentence_warn"] = trace.sentence;
+        }
+        if (trace.provider_started && trace.provider_finished) {
+            fields["before_provider_ms"] = std::chrono::duration<double, std::milli>(*trace.provider_started - start).count();
+            fields["provider_ms"] = std::chrono::duration<double, std::milli>(*trace.provider_finished - *trace.provider_started).count();
+            // 응답 검사·복원·범위 삭제까지다. 이 request 행의 쓰기와 HTTP 반환은 호출자의 왕복에 포함된다.
+            fields["after_provider_ms"] = std::chrono::duration<double, std::milli>(finished - *trace.provider_finished).count();
         }
         if (!audit_->append("request", reply.status == 200 ? "info" : "warn", std::move(fields))) {
             co_return error_response(EntryError::Unavailable);  // 기록하지 못한 요청은 내보내지 않는다
@@ -189,7 +198,9 @@ asio::awaitable<JsonResponse> Pipeline::run(AcceptedRequest request, Trace& trac
     std::expected<ProviderReply, ProviderError> reply = std::unexpected(ProviderError::Unavailable);
     bool stopped = co_await cancelled();
     if (!stopped) {
+        trace.provider_started = std::chrono::steady_clock::now();
         reply = co_await provider_(std::move(outbound->body));  // 취소되면 provider 연결을 끊고 돌아온다
+        trace.provider_finished = std::chrono::steady_clock::now();
         stopped = co_await cancelled();
     }
     co_return co_await on_pool(work_, stop, [&] {

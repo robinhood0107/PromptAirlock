@@ -11,6 +11,7 @@
 #include <openssl/ssl.h>
 
 #include <fstream>
+#include <sstream>
 #include <iterator>
 #include <optional>
 #include <span>
@@ -257,6 +258,20 @@ TEST_F(GatewayHttp, AuditKeepsMetadataAndEgressButNoRawValues) {
     }
     EXPECT_EQ(requests, 4u);
     EXPECT_EQ(egress, 2u);  // 거절된 두 요청(등급 S, 주민번호)은 이력 본문이 없다
+    std::size_t timed = 0;
+    std::istringstream lines(text);
+    for (std::string line; std::getline(lines, line);) {
+        const auto record = nlohmann::json::parse(line);
+        if (!record.contains("provider_ms")) continue;
+        ++timed;
+        for (const auto* key : {"before_provider_ms", "provider_ms", "after_provider_ms"}) {
+            ASSERT_TRUE(record.contains(key));
+            EXPECT_GE(record[key].get<double>(), 0.0);
+        }
+        EXPECT_NEAR(record["before_provider_ms"].get<double>() + record["provider_ms"].get<double>() +
+                        record["after_provider_ms"].get<double>(), record["ms"].get<double>(), 0.0001);
+    }
+    EXPECT_EQ(timed, egress);
     EXPECT_NE(text.find("\"reason\":\"entity_blocked\""), std::string::npos);
     EXPECT_TRUE(prompt_airlock::audit::verify(audit_dir_).has_value());
 }

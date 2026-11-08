@@ -3,12 +3,18 @@
 
 #include <boost/asio/co_spawn.hpp>
 #include <boost/asio/use_future.hpp>
+#include <boost/asio/steady_timer.hpp>
+#include <boost/asio/cancellation_signal.hpp>
+#include <boost/asio/bind_cancellation_slot.hpp>
 #include <gtest/gtest.h>
 #include <nlohmann/json.hpp>
 
 #include <fstream>
+#include <array>
+#include <future>
 #include <optional>
 #include <thread>
+#include <vector>
 
 #include "mock_provider.hpp"
 #include "prompt_airlock/tls/context.hpp"
@@ -52,6 +58,27 @@ protected:
                                credential_file_, {std::chrono::seconds(5)});
         asio::io_context io;
         auto future = asio::co_spawn(io, client.send(std::move(body)), asio::use_future);
+        io.run();
+        return future.get();
+    }
+
+    void set_options(pa_mock::MockOptions options) {
+        mock_->stop();
+        thread_.join();
+        mock_.reset();
+        io_.restart();
+        mock_.emplace(io_, *server_tls_, tcp::endpoint(asio::ip::make_address("127.0.0.1"), 0), std::move(options));
+        mock_->start();
+        thread_ = std::thread([this] { io_.run(); });
+    }
+
+    std::expected<gw::ProviderReply, gw::ProviderError> measured_send(pv::ClientTimings& timing,
+                                                                   std::chrono::seconds timeout = std::chrono::seconds(5)) {
+        EXPECT_TRUE(pv::store_credential(credential_file_, "provider-secret").has_value());
+        pv::HttpsClient client(*client_tls_, {"127.0.0.1", mock_->local_endpoint().port(), "/v1/chat/completions"},
+                               credential_file_, {timeout});
+        asio::io_context io;
+        auto future = asio::co_spawn(io, client.send("{}", &timing), asio::use_future);
         io.run();
         return future.get();
     }
@@ -110,6 +137,108 @@ TEST_F(ProviderClient, UsesReplacedCredentialOnNextRequest) {
     EXPECT_EQ(send("127.0.0.1", "expired-token", "{}")->status, 401u);
     EXPECT_EQ(send("127.0.0.1", "provider-secret", "{}")->status, 200u);
     EXPECT_EQ(mock_->received().size(), 1u);
+}
+
+TEST_F(ProviderClient, MeasuresBodyDelaySeparately) {
+    pa_mock::MockOptions options{"provider-secret", {}};
+    options.body_delay = std::chrono::milliseconds(120);
+    set_options(options);
+    pv::ClientTimings timing;
+    ASSERT_TRUE(measured_send(timing));
+    // 스케줄링으로 헤더 소비가 늦어지면 대기의 일부는 헤더 구간에 들어간다.
+    EXPECT_GE(timing.phases[static_cast<std::size_t>(pv::ClientPhase::Headers)] +
+                  timing.phases[static_cast<std::size_t>(pv::ClientPhase::Body)], std::chrono::milliseconds(100));
+    EXPECT_EQ(timing.last, pv::ClientPhase::Shutdown);
+    EXPECT_GE(timing.total, timing.phases[static_cast<std::size_t>(pv::ClientPhase::Body)]);
+}
+
+TEST_F(ProviderClient, MeasuresShutdownDelaySeparately) {
+    pa_mock::MockOptions options{"provider-secret", {}};
+    options.shutdown_delay = std::chrono::milliseconds(120);
+    set_options(options);
+    pv::ClientTimings timing;
+    ASSERT_TRUE(measured_send(timing));
+    EXPECT_GE(timing.phases[static_cast<std::size_t>(pv::ClientPhase::Shutdown)], std::chrono::milliseconds(100));
+    EXPECT_EQ(timing.last, pv::ClientPhase::Shutdown);
+}
+
+TEST_F(ProviderClient, AcceptsOnlyCompleteResponsesWithoutShutdownNotification) {
+    for (const auto mode : {pa_mock::BodyMode::Standard, pa_mock::BodyMode::Chunked, pa_mock::BodyMode::Truncated,
+                            pa_mock::BodyMode::CloseDelimited, pa_mock::BodyMode::NoBody}) {
+        SCOPED_TRACE(static_cast<int>(mode));
+        pa_mock::MockOptions options{"provider-secret", {}};
+        options.body_mode = mode;
+        options.shutdown_mode = pa_mock::ShutdownMode::Abrupt;
+        set_options(options);
+        pv::ClientTimings timing;
+        const auto result = measured_send(timing);
+        EXPECT_EQ(result.has_value(), mode != pa_mock::BodyMode::Truncated && mode != pa_mock::BodyMode::CloseDelimited);
+    }
+}
+
+TEST_F(ProviderClient, AcceptsCloseDelimitedResponseWithSecureEof) {
+    pa_mock::MockOptions options{"provider-secret", {}};
+    options.body_mode = pa_mock::BodyMode::CloseDelimited;
+    set_options(options);
+    pv::ClientTimings timing;
+    EXPECT_TRUE(measured_send(timing));
+}
+
+TEST_F(ProviderClient, SlowBodyStillTimesOut) {
+    pa_mock::MockOptions options{"provider-secret", {}};
+    options.body_delay = std::chrono::milliseconds(1500);
+    set_options(options);
+    pv::ClientTimings timing;
+    const auto result = measured_send(timing, std::chrono::seconds(1));
+    ASSERT_FALSE(result);
+    EXPECT_EQ(result.error(), gw::ProviderError::Timeout);
+    EXPECT_EQ(timing.last, pv::ClientPhase::Body);
+}
+
+TEST_F(ProviderClient, ConcurrentTimingsStayRequestLocal) {
+    ASSERT_TRUE(pv::store_credential(credential_file_, "provider-secret"));
+    pv::HttpsClient client(*client_tls_, {"127.0.0.1", mock_->local_endpoint().port(), "/v1/chat/completions"},
+                           credential_file_, {std::chrono::seconds(5)});
+    asio::io_context io;
+    std::array<pv::ClientTimings, 8> timings;
+    std::vector<std::future<std::expected<gw::ProviderReply, gw::ProviderError>>> futures;
+    for (auto& timing : timings) futures.push_back(asio::co_spawn(io, client.send("{}", &timing), asio::use_future));
+    const auto missing_file = credential_file_.string() + ".missing";
+    ASSERT_FALSE(std::filesystem::exists(missing_file));
+    pv::HttpsClient unavailable(*client_tls_, {"127.0.0.1", mock_->local_endpoint().port(), "/v1/chat/completions"}, missing_file);
+    pv::ClientTimings failed_timing;
+    auto failed = asio::co_spawn(io, unavailable.send("{}", &failed_timing), asio::use_future);
+    io.run();
+    for (std::size_t i = 0; i < futures.size(); ++i) {
+        ASSERT_TRUE(futures[i].get());
+        EXPECT_EQ(timings[i].last, pv::ClientPhase::Shutdown);
+        EXPECT_GT(timings[i].total.count(), 0);
+    }
+    EXPECT_EQ(failed.get().error(), gw::ProviderError::Unavailable);
+    EXPECT_EQ(failed_timing.last, pv::ClientPhase::Credential);
+    EXPECT_EQ(failed_timing.phases[static_cast<std::size_t>(pv::ClientPhase::Shutdown)].count(), 0);
+    EXPECT_EQ(mock_->received().size(), timings.size());
+}
+
+TEST_F(ProviderClient, CancellationWhileReadingCannotReturnSuccess) {
+    pa_mock::MockOptions options{"provider-secret", {}};
+    options.body_delay = std::chrono::milliseconds(120);
+    set_options(options);
+    ASSERT_TRUE(pv::store_credential(credential_file_, "provider-secret"));
+    pv::HttpsClient client(*client_tls_, {"127.0.0.1", mock_->local_endpoint().port(), "/v1/chat/completions"},
+                           credential_file_);
+    asio::io_context io;
+    asio::cancellation_signal cancel;
+    asio::steady_timer timer(io, std::chrono::milliseconds(40));
+    timer.async_wait([&](auto) { cancel.emit(asio::cancellation_type::all); });
+    pv::ClientTimings timing;
+    auto future = asio::co_spawn(io, [&]() -> asio::awaitable<std::expected<gw::ProviderReply, gw::ProviderError>> {
+        co_await asio::this_coro::throw_if_cancelled(false);
+        co_return co_await client.send("{}", &timing);
+    }, asio::bind_cancellation_slot(cancel.slot(), asio::use_future));
+    io.run();
+    EXPECT_FALSE(future.get());
+    EXPECT_GT(timing.total.count(), 0);
 }
 
 TEST_F(ProviderClient, UnreadableCredentialMakesNoCall) {
