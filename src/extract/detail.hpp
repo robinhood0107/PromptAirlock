@@ -25,6 +25,9 @@ struct Context {
     std::size_t nested = 0;    // 안에 든 문서 수
     std::size_t output = 0;    // 뽑은 글자 byte 합
     std::string prefix;        // 안의 문서 위치 앞머리("a.zip/b.docx:")
+    std::uint32_t document = 0;
+    std::uint32_t region = 0;
+    std::uint32_t next_region = 0;
 
     // 빈 글자는 버린다. 출력 상한을 넘으면 TooLarge.
     [[nodiscard]] std::expected<void, ExtractError> add(std::string where, std::string text);

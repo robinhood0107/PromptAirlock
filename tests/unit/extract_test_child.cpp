@@ -47,7 +47,7 @@ int main(int argc, char** argv) {
         std::fputs("not json", stdout);
         return 0;
     }
-    std::printf(R"({"v":1,"ok":true,"format":"txt","blocks":[{"at":"line1","text":"%zu"}],"omitted":{"comments":0,"revisions":0,"hidden":0,"other_parts":0}})",
+    std::printf(R"({"v":2,"ok":true,"format":"txt","documents":[{"format":"txt","pages":null}],"blocks":[{"at":"line1","text":"%zu","document":0,"region":0}],"omitted":{"comments":0,"revisions":0,"hidden":0,"other_parts":0}})",
                 total);
     return 0;
 }

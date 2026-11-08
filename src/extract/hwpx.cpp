@@ -37,10 +37,20 @@ std::expected<void, ExtractError> extract_hwpx(const Zip& zip, Context& context)
         std::size_t number = 0;
         int depth_in_text = 0;
         int in_memo = 0;
+        std::vector<std::uint32_t> regions;
         int in_script = 0;  // 수식(hp:equation)의 스크립트. 본문이므로 앞뒤에 빈칸을 두고 문단에 넣는다(결정 #235)
         std::expected<void, ExtractError> failed;
         XmlHandler h;
         h.start = [&](std::string_view n, std::span<const std::pair<std::string_view, std::string_view>>) {
+            if (n == "tc") {
+                if (!paragraph.empty()) {
+                    auto added = context.add(section + " p" + std::to_string(++number), std::move(paragraph));
+                    if (!added && failed) failed = added;
+                    paragraph.clear();
+                }
+                regions.push_back(context.region);
+                context.region = ++context.next_region;
+            }
             if (n == "memo") {
                 ++in_memo;
                 ++context.doc.omitted.comments;
@@ -64,6 +74,10 @@ std::expected<void, ExtractError> extract_hwpx(const Zip& zip, Context& context)
             }
         };
         h.end = [&](std::string_view n) {
+            if (n == "tc" && !regions.empty()) {
+                context.region = regions.back();
+                regions.pop_back();
+            }
             if (n == "memo") {
                 --in_memo;
             } else if (n == "t") {
@@ -103,6 +117,7 @@ std::expected<void, ExtractError> extract_hwpml(std::string_view xml, Context& c
     std::size_t number = 0;
     int in_char = 0;
     int in_hidden = 0;
+    std::vector<std::uint32_t> cell_regions;
     std::expected<void, ExtractError> failed;
     XmlHandler h;
     h.start = [&](std::string_view n, std::span<const std::pair<std::string_view, std::string_view>>) {
@@ -113,6 +128,9 @@ std::expected<void, ExtractError> extract_hwpml(std::string_view xml, Context& c
             ++in_char;
         } else if (n == "TAB" && in_char > 0) {
             paragraph.push_back('\t');
+        } else if (n == "CELL") {
+            cell_regions.push_back(context.region);
+            context.region = ++context.next_region;
         }
     };
     h.end = [&](std::string_view n) {
@@ -120,6 +138,9 @@ std::expected<void, ExtractError> extract_hwpml(std::string_view xml, Context& c
             --in_hidden;
         } else if (n == "CHAR") {
             --in_char;
+        } else if (n == "CELL" && !cell_regions.empty()) {
+            context.region = cell_regions.back();
+            cell_regions.pop_back();
         } else if (n == "P") {
             ++number;
             if (auto r = context.add("p" + std::to_string(number), std::move(paragraph)); !r && failed) {

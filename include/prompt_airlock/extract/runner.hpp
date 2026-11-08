@@ -34,13 +34,15 @@ struct RunLimits {
 // 자식이 해석에 실패하면(암호, 손상 등) 안쪽 expected 의 오류로 온다.
 using ChildResult = std::expected<std::expected<ExtractedDocument, ExtractError>, RunError>;
 
+[[nodiscard]] std::filesystem::path default_executable();
+
 // exe 는 prompt-airlock-extract 경로, name_hint 는 확장자(소문자, 점 없이, 영문·숫자만 넘긴다).
 [[nodiscard]] ChildResult extract_in_child(const std::filesystem::path& exe, std::string_view name_hint,
                                            std::span<const std::byte> file, const RunLimits& limits = {},
                                            std::stop_token stop = {});
 
 // 자식과 주고받는 형식(버전 1). 자식은 to_json 으로 쓰고 부모는 from_json 으로 읽는다.
-inline constexpr int protocol_version = 1;
+inline constexpr int protocol_version = 2;
 [[nodiscard]] std::string to_json(const std::expected<ExtractedDocument, ExtractError>& result);
 [[nodiscard]] std::expected<std::expected<ExtractedDocument, ExtractError>, RunError> from_json(std::string_view json);
 

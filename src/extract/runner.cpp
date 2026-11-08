@@ -24,6 +24,23 @@ extern char** environ;
 #endif
 
 namespace prompt_airlock::extract {
+
+std::filesystem::path default_executable() {
+#ifdef _WIN32
+    std::wstring path(32768, L'\0');
+    const auto size = GetModuleFileNameW(nullptr, path.data(), static_cast<DWORD>(path.size()));
+    if (size == 0 || size >= path.size()) return {};
+    path.resize(size);
+    return std::filesystem::path(path).parent_path() / L"prompt-airlock-extract.exe";
+#else
+    std::string path(4096, '\0');
+    const auto size = readlink("/proc/self/exe", path.data(), path.size());
+    if (size <= 0 || static_cast<std::size_t>(size) >= path.size()) return {};
+    path.resize(static_cast<std::size_t>(size));
+    return std::filesystem::path(path).parent_path() / "prompt-airlock-extract";
+#endif
+}
+
 namespace {
 
 #ifdef _WIN32

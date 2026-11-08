@@ -5,6 +5,7 @@
 #include <cstddef>
 #include <cstdint>
 #include <expected>
+#include <optional>
 #include <span>
 #include <string>
 #include <string_view>
@@ -30,7 +31,7 @@ struct Omitted {
     std::uint32_t comments = 0;   // 메모·주석
     std::uint32_t revisions = 0;  // 변경 추적의 지운 글
     std::uint32_t hidden = 0;     // 숨긴 시트·행·슬라이드
-    std::uint32_t other_parts = 0;  // 머리글·바닥글·노트처럼 본문이 아닌 부분, 해석하지 않은 zip 항목
+    std::uint32_t other_parts = 0;  // 비본문·미디어 부품 수(화면의 그림 개수와는 다름), 읽지 않은 zip 항목
     bool operator==(const Omitted&) const noexcept = default;
 };
 
@@ -38,13 +39,22 @@ struct Omitted {
 struct TextBlock {
     std::string where;
     std::string text;  // UTF-8
+    std::uint32_t document = 0;
+    std::uint32_t region = 0;  // 서로 다른 표 칸·양식 칸은 다른 영역이다. 0은 본문 흐름.
     bool operator==(const TextBlock&) const noexcept = default;
+};
+
+struct DocumentInfo {
+    DocumentFormat format = DocumentFormat::Text;
+    std::optional<std::uint32_t> pages;
+    bool operator==(const DocumentInfo&) const noexcept = default;
 };
 
 struct ExtractedDocument {
     DocumentFormat format = DocumentFormat::Text;
     std::vector<TextBlock> blocks;
     Omitted omitted;
+    std::vector<DocumentInfo> documents{};
 };
 
 // 고정 상한(#226 댓글에 측정 전 고정). 시험만 더 작은 값을 쓴다.
