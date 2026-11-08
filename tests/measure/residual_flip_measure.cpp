@@ -16,6 +16,7 @@
 #include "prompt_airlock/core/grade.hpp"
 #include "prompt_airlock/core/policy.hpp"
 #include "prompt_airlock/core/privacy.hpp"
+#include "prompt_airlock/core/residual.hpp"
 #include "prompt_airlock/detect/detectors.hpp"
 #include "prompt_airlock/gateway/documents.hpp"
 #include "prompt_airlock/ner/pool.hpp"
@@ -61,7 +62,7 @@ json run_once(const detect::Detectors& detectors, const std::string& bytes, cons
     Scope scope{&vault};
     auto protected_prompt = core::protect(std::move(*checked), scope);
     if (!protected_prompt) return {{"error", "protect"}};
-    const auto residual = detectors.detect(protected_prompt->document(), {});
+    const auto residual = detectors.detect(core::residual_scan_document(*protected_prompt), {});
     if (!residual) return {{"error", "residual_detect"}};
     json left = json::array();
     const auto replacements = protected_prompt->replacements();
