@@ -117,6 +117,13 @@ target_link_libraries(audit_log_test PRIVATE prompt_airlock_audit)
 
 # 문서 추출(ADR 0028). 해석 시험은 시험 안에서 libzip 으로 문서를 만든다.
 find_package(libzip CONFIG REQUIRED)
+target_compile_definitions(gateway_pipeline_test PRIVATE "PA_EXTRACT_EXE=\"$<TARGET_FILE:prompt-airlock-extract>\"")
+target_link_libraries(gateway_pipeline_test PRIVATE libzip::zip)
+add_dependencies(gateway_pipeline_test prompt-airlock-extract)
+pa_add_gtest(gateway_documents_test gateway_documents_test.cpp)
+target_link_libraries(gateway_documents_test PRIVATE prompt_airlock_gateway prompt_airlock_extract libzip::zip pa_test_support)
+target_compile_definitions(gateway_documents_test PRIVATE "PA_EXTRACT_EXE=\"$<TARGET_FILE:prompt-airlock-extract>\"")
+add_dependencies(gateway_documents_test prompt-airlock-extract)
 pa_add_gtest(extract_test extract_test.cpp)
 target_link_libraries(extract_test PRIVATE prompt_airlock_extract prompt_airlock_extract_client libzip::zip pa_test_support)
 add_executable(extract_test_child extract_test_child.cpp)

@@ -21,6 +21,8 @@
 
 namespace prompt_airlock::gateway {
 
+struct UploadLease;
+
 struct ServerLimits {
     std::size_t header_bytes = 8 * 1024;
     std::size_t body_bytes = 64 * 1024;
@@ -35,6 +37,7 @@ struct AcceptedRequest {
     std::string body;
     std::string client;   // 접속 주소(감사 기록용)
     std::string confirm;  // 경고 확인 표지(X-Prompt-Airlock-Confirm, ADR 0023). 없으면 빈 문자열
+    std::shared_ptr<UploadLease> upload{};
 };
 
 // 요청 처리. 여러 연결이 함께 부르므로 스레드 안전해야 한다.

@@ -25,6 +25,11 @@ enum class EntryError : std::uint8_t {
     ProviderFailed,        // 502: provider 연결 실패·시간 초과·오류 응답
     Timeout,               // 504: 요청 전체 시간 상한을 넘김
     Cancelled,             // 499: 처리 중 클라이언트가 연결을 끊음(받을 사람이 없어 감사 기록용)
+    DocumentInvalid,
+    DocumentUnsupported,
+    DocumentEncrypted,
+    DocumentNoText,
+    ContextLimit,
 };
 
 struct JsonResponse {
