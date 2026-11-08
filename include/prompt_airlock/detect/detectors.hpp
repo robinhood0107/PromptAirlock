@@ -52,7 +52,7 @@ private:
     Detectors(TermMatcher internal_terms, TermMatcher institution_labels, std::vector<IdFormat> id_formats,
               TermMatcher confidential_markers, TermMatcher confidential_subjects, std::shared_ptr<const NerScanner> ner);
     [[nodiscard]] std::expected<std::vector<core::EntitySpan>, core::DetectError> scan(
-        std::string_view text, core::SegmentIndex segment, SensitiveTally& tally, std::stop_token stop) const;
+        std::string_view text, core::SegmentIndex segment, SensitiveTally& tally, std::stop_token stop, core::DocumentKind kind = core::DocumentKind::Text) const;
     // 덩어리를 깊이 2까지 풀고 푼 결과를 같은 탐지기로 본다.
     [[nodiscard]] std::expected<std::vector<core::EncodedFinding>, core::DetectError> scan_encoded(
         std::string_view text, core::SegmentIndex segment, std::stop_token stop) const;

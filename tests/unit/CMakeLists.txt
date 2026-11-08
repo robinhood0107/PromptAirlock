@@ -83,6 +83,10 @@ foreach(name IN ITEMS
 endforeach()
 
 # TLS 설정(ADR 0014). 시험 인증서는 실행 때마다 새로 만든다.
+if(EXISTS "${PA_SENTENCE_MODEL_DIR}/classifier.json")
+  target_compile_definitions(ner_sentence_classifier_test PRIVATE
+    PA_TEST_SENTENCE_MODEL_DIR="${PA_SENTENCE_MODEL_DIR}")
+endif()
 pa_add_gtest(tls_context_test tls_context_test.cpp)
 target_link_libraries(tls_context_test PRIVATE prompt_airlock_tls pa_test_cert)
 

@@ -20,6 +20,9 @@ namespace prompt_airlock::core {
 // 메시지 content 의 원래 모양. 문자열 하나인지, text part 배열인지(ADR 0017).
 enum class ContentForm : std::uint8_t { String, TextParts };
 
+enum class DocumentKind : std::uint8_t { Text, ExtractedFiles };
+inline constexpr std::size_t max_document_text_bytes = 8U << 20;
+
 // segment 가 온 곳. 메시지의 몇 번째 part 이거나, 몇 번째 stop 문자열이다.
 struct MessageSource {
     MessageRole role;
@@ -56,7 +59,7 @@ private:
 class PromptDocument {
 public:
     PromptDocument(detail::StateKey<PromptDocument>, std::vector<Segment> segments,
-                   std::vector<ContentForm> forms) noexcept;
+                   std::vector<ContentForm> forms, DocumentKind kind = DocumentKind::Text) noexcept;
     // std::vector 는 원소가 복사 불가여도 복사 가능하다고 답하므로 복사를 명시적으로 지운다.
     PromptDocument(const PromptDocument&) = delete;
     PromptDocument& operator=(const PromptDocument&) = delete;
@@ -68,12 +71,14 @@ public:
     std::span<const Segment> segments() const&& = delete;
     [[nodiscard]] std::size_t total_bytes() const noexcept;
     [[nodiscard]] std::size_t message_count() const noexcept { return forms_.size(); }
+    [[nodiscard]] DocumentKind kind() const noexcept { return kind_; }
     // 범위 밖이면 String 을 돌려준다. 호출하는 쪽은 segment 의 message 번호만 넘긴다.
     [[nodiscard]] ContentForm content_form(std::uint32_t message) const noexcept;
 
 private:
     std::vector<Segment> segments_;
     std::vector<ContentForm> forms_;
+    DocumentKind kind_;
 };
 
 // 바깥(JSON 경계)에서 받은 메시지와 stop 을 검사해 묶음을 만든다.
@@ -82,8 +87,8 @@ public:
     PromptDocumentBuilder& add_message(MessageRole role, ContentForm form, std::vector<SensitiveText> parts) &;
     PromptDocumentBuilder& add_stop(SensitiveText stop) &;
     // 메시지가 없으면 EmptyDocument, String 인데 part 가 1개가 아니거나 TextParts 인데 0개면 EmptyContent,
-    // UTF-8 이 아니면 InvalidUtf8, 모든 segment 합이 max_prompt_bytes 를 넘으면 TooLarge.
-    [[nodiscard]] std::expected<PromptDocument, InputError> build() &&;
+    // UTF-8이 아니면 InvalidUtf8. Text는 64KiB, ExtractedFiles는 별도 문서 공유 예산을 적용한다.
+    [[nodiscard]] std::expected<PromptDocument, InputError> build(DocumentKind kind = DocumentKind::Text) &&;
 
 private:
     struct Message {

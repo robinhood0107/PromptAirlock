@@ -143,6 +143,15 @@ std::expected<std::vector<float>, SentenceError> SentenceClassifier::probabiliti
         for (const auto& t : tokens) {
             ids.push_back(t.id);
         }
+        return infer_probabilities(ids);
+    } catch (const std::exception&) {
+        return std::unexpected(SentenceError::Unavailable);
+    }
+}
+
+std::expected<std::vector<float>, SentenceError> SentenceClassifier::infer_probabilities(
+    std::span<const std::int64_t> ids) const {
+    try {
         const auto logits = impl_->session.run(ids);
         if (!logits || logits->length != 1) {
             return std::unexpected(SentenceError::Unavailable);
@@ -158,6 +167,44 @@ std::expected<std::vector<float>, SentenceError> SentenceClassifier::probabiliti
             v /= sum;
         }
         return p;
+    } catch (const std::exception&) { return std::unexpected(SentenceError::Unavailable); }
+}
+
+// 측정용 확률의 truncation 계약은 유지하고, 실제 판정은 모든 창을 본다.
+std::expected<std::optional<SentenceHit>, SentenceError> SentenceClassifier::classify_sentence_all(
+    std::string_view sentence, bool personal, std::stop_token stop, SentenceScanStatistics* statistics) const {
+    try {
+        const auto units = core::decode_utf8(sentence);
+        if (!units) return std::unexpected(SentenceError::Unavailable);
+        const auto tokens = impl_->tokenizer.encode(*units);
+        if (tokens.size() < 2) return std::unexpected(SentenceError::Unavailable);
+        const auto body = std::span(tokens).subspan(1, tokens.size() - 2);
+        if (statistics) statistics->tokens += body.size();
+        const auto capacity = impl_->max_tokens - 2;
+        const auto overlap = std::min<std::size_t>(32, capacity / 2);
+        std::optional<SentenceHit> best;
+        std::size_t covered = 0;
+        for (std::size_t first = 0;; first += capacity - overlap) {
+            if (stop.stop_requested()) return std::unexpected(SentenceError::Timeout);
+            const auto end = std::min(first + capacity, body.size());
+            std::vector<std::int64_t> ids{tokens.front().id};
+            for (const auto& token : body.subspan(first, end - first)) ids.push_back(token.id);
+            ids.push_back(tokens.back().id);
+            const auto p = infer_probabilities(ids);
+            if (!p || p->size() != impl_->categories.size() + 1) return std::unexpected(SentenceError::Unavailable);
+            if (statistics) {
+                ++statistics->windows;
+                statistics->checked_tokens += end - covered;
+            }
+            covered = end;
+            const auto top = std::max_element(p->begin(), p->begin() + static_cast<std::ptrdiff_t>(impl_->categories.size()));
+            const auto pred = static_cast<std::size_t>(top - p->begin());
+            // 창마다 기존 argmax·문턱·개인 조건을 먼저 적용한다. 다른 창의 미달 판정이 양성을 덮지 않는다.
+            if ((personal || impl_->categories[pred] == "Credential") && *top >= impl_->thresholds[pred] &&
+                (!best || *top > best->score)) best = SentenceHit{impl_->categories[pred], *top};
+            if (end == body.size()) break;
+        }
+        return best;
     } catch (const std::exception&) {
         return std::unexpected(SentenceError::Unavailable);
     }
@@ -183,7 +230,8 @@ bool SentenceClassifier::refers_to_person(std::string_view text) const {
 
 std::expected<std::optional<SentenceHit>, SentenceError> SentenceClassifier::classify(std::string_view text,
                                                                                      bool named_person,
-                                                                                     std::stop_token stop) const {
+    std::stop_token stop, SentenceScanStatistics* statistics) const {
+    if (statistics) *statistics = {};
     if (!impl_->slots.try_acquire_for(sentence_wait_limit)) {
         return std::unexpected(SentenceError::Overloaded);
     }
@@ -191,33 +239,14 @@ std::expected<std::optional<SentenceHit>, SentenceError> SentenceClassifier::cla
         std::counting_semaphore<sentence_concurrency>& slots;
         ~Release() { slots.release(); }
     } release{impl_->slots};
-    // 글 전체에서 None 을 뺀 범주 확률이 가장 큰 문장·범주 하나를 고른다(같으면 앞선 것).
-    float best = -1.0F;
-    std::size_t pred = 0;
+    const bool personal = named_person || refers_to_person(text);
+    std::optional<SentenceHit> best;
     for (const auto sentence : split_sentences(text)) {
-        if (stop.stop_requested()) {
-            return std::unexpected(SentenceError::Timeout);
-        }
-        const auto p = probabilities(sentence);
-        if (!p) {
-            return std::unexpected(p.error());
-        }
-        for (std::size_t c = 0; c < impl_->categories.size(); ++c) {
-            if ((*p)[c] > best) {
-                best = (*p)[c];
-                pred = c;
-            }
-        }
+        auto hit = classify_sentence_all(sentence, personal, stop, statistics);
+        if (!hit) return std::unexpected(hit.error());
+        if (*hit && (!best || (*hit)->score > best->score)) best = std::move(**hit);
     }
-    if (best < 0.0F) {
-        return std::nullopt;  // 문장이 없다
-    }
-    // Credential 은 사람이 없어도 쓴다(Python Scorer 와 같음).
-    const bool usable = named_person || impl_->categories[pred] == "Credential" || refers_to_person(text);
-    if (!usable || best < impl_->thresholds[pred]) {
-        return std::nullopt;
-    }
-    return SentenceHit{impl_->categories[pred], best};
+    return best;
 }
 
 }  // namespace prompt_airlock::ner

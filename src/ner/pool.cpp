@@ -49,16 +49,28 @@ public:
         return std::move(*found);
     }
 
+    Result run_batch(std::string_view text, pc::SegmentIndex segment, const detect::DetectionView& view,
+                     const TokenBatch& batch, std::stop_token stop) override {
+        auto found = engine_.detect_batch(text, segment, view, batch, stop);
+        if (!found) return std::unexpected(to_detect_error(found.error()));
+        return std::move(*found);
+    }
+
 private:
     NerEngine engine_;
 };
 
 // 일 하나. 요청이 시간 초과로 먼저 떠나도 worker 가 안전하게 쓰도록 글과 보기의 사본을 가진다.
 // 글 사본은 SensitiveText 라 일이 끝나 사라질 때 지워진다.
-struct Job {
+struct ScanInput {
     pc::SensitiveText text;
-    pc::SegmentIndex segment;
     detect::DetectionView view;
+};
+
+struct Job {
+    std::shared_ptr<const ScanInput> input;
+    pc::SegmentIndex segment;
+    std::optional<TokenBatch> batch;
     std::stop_source abandon;      // 요청이 결과를 기다리지 않고 떠나면 켠다
     std::optional<Result> result;  // State::mutex 로 보호한다
 };
@@ -73,17 +85,19 @@ struct NerPool::State {
     std::size_t depth = 0;
     std::chrono::milliseconds wait_limit{};
     bool stopping = false;
+    Result submit(std::shared_ptr<Job> job, std::stop_token stop);
 };
 
 NerPool::NerPool(Key, std::vector<std::unique_ptr<NerWorker>> workers, std::size_t queue_depth,
-                 std::chrono::milliseconds wait_limit)
-    : state_(std::make_unique<State>()), workers_(std::move(workers)) {
+                 std::chrono::milliseconds wait_limit, std::unique_ptr<const WordPieceTokenizer> tokenizer)
+    : state_(std::make_unique<State>()), workers_(std::move(workers)), tokenizer_(std::move(tokenizer)) {
     state_->depth = queue_depth;
     state_->wait_limit = wait_limit;
 }
 
 std::expected<std::shared_ptr<NerPool>, pc::DetectError> NerPool::make(const std::filesystem::path& dir) {
     std::vector<std::unique_ptr<NerWorker>> workers;
+    std::unique_ptr<const WordPieceTokenizer> tokenizer;
     {
         // 모델 바이트(약 54 MB)는 세션이 복사해 가므로 엔진을 다 만들면 이 블록을 나가며 바로 버린다.
         const auto files = read_verified_model_files(dir);
@@ -91,6 +105,9 @@ std::expected<std::shared_ptr<NerPool>, pc::DetectError> NerPool::make(const std
         if (!files || !env) {
             return std::unexpected(pc::DetectError::Unavailable);
         }
+        auto parsed_tokenizer = WordPieceTokenizer::parse(files->tokenizer);
+        if (!parsed_tokenizer) return std::unexpected(pc::DetectError::Unavailable);
+        tokenizer = std::make_unique<WordPieceTokenizer>(std::move(*parsed_tokenizer));
         for (std::size_t i = 0; i < ner_workers; ++i) {
             auto engine = NerEngine::make(*files, *env);
             if (!engine) {
@@ -99,17 +116,18 @@ std::expected<std::shared_ptr<NerPool>, pc::DetectError> NerPool::make(const std
             workers.push_back(std::make_unique<EngineWorker>(std::move(*engine)));
         }
     }
-    return start(std::move(workers));
+    return start(std::move(workers), ner_queue_depth, ner_wait_limit, std::move(tokenizer));
 }
 
 std::expected<std::shared_ptr<NerPool>, pc::DetectError> NerPool::start(std::vector<std::unique_ptr<NerWorker>> workers,
                                                                           std::size_t queue_depth,
-                                                                          std::chrono::milliseconds wait_limit) {
+                                                                          std::chrono::milliseconds wait_limit,
+                                                                          std::unique_ptr<const WordPieceTokenizer> tokenizer) {
     if (workers.empty() || queue_depth == 0 ||
         std::ranges::any_of(workers, [](const auto& w) { return w == nullptr; })) {
         return std::unexpected(pc::DetectError::Unavailable);
     }
-    auto pool = std::make_shared<NerPool>(Key{}, std::move(workers), queue_depth, wait_limit);
+    auto pool = std::make_shared<NerPool>(Key{}, std::move(workers), queue_depth, wait_limit, std::move(tokenizer));
     try {
         pool->threads_.reserve(pool->workers_.size());
         for (auto& worker : pool->workers_) {
@@ -153,7 +171,10 @@ void NerPool::work(NerWorker& worker) {
         }
         Result found = std::unexpected(pc::DetectError::Unavailable);
         try {
-            found = worker.run(job->text.view(), job->segment, job->view, job->abandon.get_token());
+            found = job->batch ? worker.run_batch(job->input->text.view(), job->segment, job->input->view,
+                                                   *job->batch, job->abandon.get_token())
+                               : worker.run(job->input->text.view(), job->segment, job->input->view,
+                                            job->abandon.get_token());
         } catch (...) {
             // 예외가 worker 스레드를 빠져나가면 프로세스가 끝난다. 이 일만 실패로 돌려주고 worker 는 계속 돈다.
         }
@@ -165,31 +186,70 @@ void NerPool::work(NerWorker& worker) {
     }
 }
 
+Result NerPool::State::submit(std::shared_ptr<Job> job, std::stop_token stop) {
+    if (stop.stop_requested()) return std::unexpected(pc::DetectError::Timeout);
+    std::unique_lock lock(mutex);
+    if (stopping) return std::unexpected(pc::DetectError::Unavailable);
+    if (jobs.size() >= depth) return std::unexpected(pc::DetectError::Overloaded);
+    jobs.push_back(job);
+    ready.notify_one();
+    if (done.wait_for(lock, stop, wait_limit, [&] { return job->result.has_value(); })) {
+        return std::move(*job->result);
+    }
+    std::erase(jobs, job);
+    job->abandon.request_stop();
+    return std::unexpected(pc::DetectError::Timeout);
+}
+
 Result NerPool::scan(std::string_view text, pc::SegmentIndex segment, const detect::DetectionView& view,
                      std::stop_token stop) const {
     try {
-        if (stop.stop_requested()) {
-            return std::unexpected(pc::DetectError::Timeout);  // 이미 포기한 요청은 줄을 세우지 않는다
-        }
-        auto job = std::make_shared<Job>(Job{pc::SensitiveText::copy_of(text), segment, view, {}, {}});
-        std::unique_lock lock(state_->mutex);
-        if (state_->stopping) {
-            return std::unexpected(pc::DetectError::Unavailable);
-        }
-        if (state_->jobs.size() >= state_->depth) {
-            return std::unexpected(pc::DetectError::Overloaded);  // 기다리지 않는다
-        }
-        state_->jobs.push_back(job);
-        state_->ready.notify_one();
-        if (state_->done.wait_for(lock, stop, state_->wait_limit, [&] { return job->result.has_value(); })) {
-            return std::move(*job->result);
-        }
-        // 늦었거나 요청이 취소됐다. 아직 대기열에 있으면 빼서 돌리지 않게 하고, 이미 돌고 있으면 멈추라고 알린다.
-        std::erase(state_->jobs, job);
-        job->abandon.request_stop();
-        return std::unexpected(pc::DetectError::Timeout);
+        if (stop.stop_requested()) return std::unexpected(pc::DetectError::Timeout);
+        auto input = std::make_shared<ScanInput>(ScanInput{pc::SensitiveText::copy_of(text), view});
+        return state_->submit(std::make_shared<Job>(Job{std::move(input), segment, std::nullopt, {}, {}}), stop);
     } catch (const std::exception&) {
-        return std::unexpected(pc::DetectError::Unavailable);  // 사본·대기열 메모리 부족 등
+        return std::unexpected(pc::DetectError::Unavailable);
+    }
+}
+
+Result NerPool::scan_document(std::string_view text, pc::SegmentIndex segment, const detect::DetectionView& view,
+                              std::stop_token stop) const {
+    if (!tokenizer_) return scan(text, segment, view, stop);
+    try {
+        if (stop.stop_requested()) return std::unexpected(pc::DetectError::Timeout);
+        auto input = std::make_shared<ScanInput>(ScanInput{pc::SensitiveText::copy_of(text), view});
+        const auto tokens = tokenizer_->encode(input->view.units);
+        if (tokens.size() < 2) return std::unexpected(pc::DetectError::Unavailable);
+        const auto body = std::span(tokens).subspan(1, tokens.size() - 2);
+        const auto cuts = sentence_cuts(body, input->view);
+        const auto windows = split_windows(static_cast<std::uint32_t>(body.size()), cuts, body.size());
+        if (!windows) return std::unexpected(pc::DetectError::Unavailable);
+        std::vector<pc::EntitySpan> out;
+        for (std::size_t first = 0; first < windows->size(); first += document_batch_windows) {
+            if (stop.stop_requested()) return std::unexpected(pc::DetectError::Timeout);
+            const auto end = std::min(first + document_batch_windows, windows->size());
+            const auto begin_token = (*windows)[first].first;
+            const auto end_token = (*windows)[end - 1].end;
+            TokenBatch batch{{body.begin() + begin_token, body.begin() + end_token}, {}, tokens.front().id, tokens.back().id};
+            for (auto w : std::span(*windows).subspan(first, end - first)) {
+                w.first -= begin_token;
+                w.end -= begin_token;
+                batch.windows.push_back(w);
+            }
+            auto found = state_->submit(std::make_shared<Job>(Job{input, segment, std::move(batch), {}, {}}), stop);
+            if (!found) return std::unexpected(found.error());
+            out.insert(out.end(), found->begin(), found->end());
+            std::ranges::sort(out);
+            const auto unique = std::ranges::unique(out);
+            out.erase(unique.begin(), unique.end());
+            if (out.size() > pc::max_entities) {
+                out.erase(out.begin() + static_cast<std::ptrdiff_t>(pc::max_entities + 1), out.end());
+                break;
+            }
+        }
+        return out;
+    } catch (const std::exception&) {
+        return std::unexpected(pc::DetectError::Unavailable);
     }
 }
 

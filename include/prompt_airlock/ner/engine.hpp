@@ -20,6 +20,7 @@
 #include "prompt_airlock/ner/model_files.hpp"
 #include "prompt_airlock/ner/session.hpp"
 #include "prompt_airlock/ner/tokenizer.hpp"
+#include "prompt_airlock/ner/batch.hpp"
 
 namespace prompt_airlock::ner {
 
@@ -65,6 +66,10 @@ public:
     [[nodiscard]] std::expected<std::vector<core::EntitySpan>, NerError> detect_all(
         std::string_view text, core::SegmentIndex segment, const detect::DetectionView& view,
         std::stop_token stop = {});
+
+    [[nodiscard]] std::expected<std::vector<core::EntitySpan>, NerError> detect_batch(
+        std::string_view text, core::SegmentIndex segment, const detect::DetectionView& view,
+        const TokenBatch& batch, std::stop_token stop);
 
 private:
     NerEngine(WordPieceTokenizer tokenizer, OrtSession session, std::vector<NerLabel> labels);

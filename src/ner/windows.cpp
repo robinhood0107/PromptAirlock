@@ -4,12 +4,13 @@
 
 namespace prompt_airlock::ner {
 
-std::optional<std::vector<TokenWindow>> split_windows(std::uint32_t tokens, std::span<const std::uint32_t> cut_after) {
+std::optional<std::vector<TokenWindow>> split_windows(std::uint32_t tokens,
+    std::span<const std::uint32_t> cut_after, std::size_t max_windows) {
     static_assert(window_overlap_tokens < window_body_tokens);  // 되돌아가도 창마다 앞으로 나아간다
     std::vector<TokenWindow> out;
     std::uint32_t start = 0;
     while (start < tokens) {
-        if (out.size() == max_ner_windows) {
+        if (out.size() == max_windows) {
             return std::nullopt;
         }
         const std::uint32_t limit = std::min(tokens, start + window_body_tokens);
@@ -29,6 +30,19 @@ std::optional<std::vector<TokenWindow>> split_windows(std::uint32_t tokens, std:
         }
     }
     return out;
+}
+
+std::vector<std::uint32_t> sentence_cuts(std::span<const Token> tokens, const detect::DetectionView& view) {
+    const auto is_stop = [](char32_t c) { return c == U'.' || c == U'?' || c == U'!' || c == U'\u3002'; };
+    const auto is_newline = [](char32_t c) { return c == U'\n' || c == U'\r'; };
+    std::vector<std::uint32_t> cuts;
+    for (std::uint32_t i = 0; i + 1 < tokens.size(); ++i) {
+        const auto gap = std::span(view.units).subspan(tokens[i].last_unit + 1,
+            tokens[i + 1].first_unit - tokens[i].last_unit - 1);
+        if (is_stop(view.units[tokens[i].last_unit].value) ||
+            std::ranges::any_of(gap, [&](const auto& u) { return is_newline(u.value); })) cuts.push_back(i);
+    }
+    return cuts;
 }
 
 }  // namespace prompt_airlock::ner

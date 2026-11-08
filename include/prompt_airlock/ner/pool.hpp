@@ -13,6 +13,7 @@
 
 #include "prompt_airlock/core/error.hpp"
 #include "prompt_airlock/detect/ner_scanner.hpp"
+#include "prompt_airlock/ner/batch.hpp"
 
 namespace prompt_airlock::ner {
 
@@ -35,6 +36,12 @@ public:
 
     [[nodiscard]] virtual std::expected<std::vector<core::EntitySpan>, core::DetectError> run(
         std::string_view text, core::SegmentIndex segment, const detect::DetectionView& view, std::stop_token stop) = 0;
+
+    [[nodiscard]] virtual std::expected<std::vector<core::EntitySpan>, core::DetectError> run_batch(
+        std::string_view text, core::SegmentIndex segment, const detect::DetectionView& view,
+        const TokenBatch&, std::stop_token stop) {
+        return run(text, segment, view, stop);
+    }
 };
 
 class NerPool final : public detect::NerScanner {
@@ -49,10 +56,11 @@ public:
     // 이미 만든 worker 로 pool 을 띄운다(make 와 시험이 쓴다). worker 가 없거나 깊이가 0 이면 Unavailable.
     [[nodiscard]] static std::expected<std::shared_ptr<NerPool>, core::DetectError> start(
         std::vector<std::unique_ptr<NerWorker>> workers, std::size_t queue_depth = ner_queue_depth,
-        std::chrono::milliseconds wait_limit = ner_wait_limit);
+        std::chrono::milliseconds wait_limit = ner_wait_limit,
+        std::unique_ptr<const WordPieceTokenizer> tokenizer = {});
 
     NerPool(Key, std::vector<std::unique_ptr<NerWorker>> workers, std::size_t queue_depth,
-            std::chrono::milliseconds wait_limit);
+            std::chrono::milliseconds wait_limit, std::unique_ptr<const WordPieceTokenizer> tokenizer = {});
     NerPool(const NerPool&) = delete;
     NerPool& operator=(const NerPool&) = delete;
     // 남은 일은 Unavailable 로 끝내고 worker 를 모두 기다린다.
@@ -67,6 +75,10 @@ public:
     // 지금 기다리는 일의 수(실행 중 제외). 측정과 시험용.
     [[nodiscard]] std::size_t waiting() const;
 
+    [[nodiscard]] std::expected<std::vector<core::EntitySpan>, core::DetectError> scan_document(
+        std::string_view text, core::SegmentIndex segment, const detect::DetectionView& view,
+        std::stop_token stop) const override;
+
 private:
     struct State;
     void work(NerWorker& worker);
@@ -74,6 +86,7 @@ private:
     std::unique_ptr<State> state_;
     std::vector<std::unique_ptr<NerWorker>> workers_;
     std::vector<std::thread> threads_;
+    std::unique_ptr<const WordPieceTokenizer> tokenizer_;
 };
 
 }  // namespace prompt_airlock::ner
