@@ -1,5 +1,12 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import { mkdtempSync, writeFileSync, rmSync, copyFileSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
+import { spawnSync } from 'node:child_process';
+import { inspectCommandEvent } from '../../.githooks/command-guard.mjs';
+import { checkFiles } from './check-publication-text.mjs';
 import { createPolicy, paginate } from './publication-policy.mjs';
 import { auditEvent, auditPull, auditPush, makeApi, runAudit } from './run-publication-policy.mjs';
 
@@ -8,6 +15,72 @@ const policy = createPolicy(pattern);
 const sha = 'a'.repeat(40);
 const treeSha = 'b'.repeat(40);
 const blobSha = 'c'.repeat(40);
+
+test('command guard allows ordinary commands and hook configuration reads', () => {
+  for (const command of ['git status --short', 'git commit -m "fix: validate input"', 'git push origin main',
+    'git config --get core.hooksPath', 'git config --show-origin --get core.hooksPath',
+    'git config --get-all core.hooksPath', 'git config --list']) {
+    inspectCommandEvent({ tool_name: 'Bash', tool_input: { command } });
+  }
+});
+
+test('command guard rejects bypasses and chained hook configuration changes', () => {
+  for (const command of ['git commit --no-verify', 'git push --no-verify', 'git commit -n', 'git commit -an',
+    'git.exe commit -n', 'git -c core.hooksPath=/tmp/hooks status',
+    'git config core.hooksPath /tmp/hooks', 'git config --unset core.hooksPath',
+    'git config --get core.hooksPath && git config core.hooksPath /tmp/hooks',
+    'git config --get core.hooksPath\ngit -c core.hooksPath=/tmp/hooks status']) {
+    assert.throws(() => inspectCommandEvent({ tool_name: 'Bash', tool_input: { command } }));
+  }
+});
+
+test('command guard rejects missing or malformed shell input', () => {
+  for (const input of [null, {}, { tool_input: {} }, { tool_input: { command: 7 } },
+    { tool_input: { command: '' } }]) assert.throws(() => inspectCommandEvent(input));
+});
+
+test('command guard CLI works from a path containing spaces and non-ASCII characters', () => {
+  const root = mkdtempSync(path.join(tmpdir(), '명령 검사 '));
+  try {
+    const script = path.join(root, '명령 검사.mjs');
+    copyFileSync(fileURLToPath(new URL('../../.githooks/command-guard.mjs', import.meta.url)), script);
+    for (const [input, expected] of [
+      [JSON.stringify({ tool_name: 'Bash', tool_input: { command: 'git status' } }), 0],
+      [JSON.stringify({ tool_name: 'Bash', tool_input: { command: 'git commit -n' } }), 2],
+      ['{', 2], ['', 2],
+    ]) {
+      const result = spawnSync(process.execPath, [script], { input, encoding: 'utf8' });
+      assert.equal(result.status, expected);
+      assert.doesNotMatch(result.stderr, /git commit/);
+    }
+  } finally { rmSync(root, { recursive: true, force: true }); }
+});
+
+test('text checker handles spaces and non-ASCII paths with the local policy', () => {
+  const root = mkdtempSync(path.join(tmpdir(), '공개 검사 '));
+  try {
+    writeFileSync(path.join(root, '.publication-policy.local.json'), JSON.stringify({ pattern }));
+    const file = path.join(root, '검사 글.md');
+    writeFileSync(file, '중립적인 변경 설명');
+    checkFiles([file], root, {});
+    writeFileSync(file, 'SampleTool');
+    assert.throws(() => checkFiles([file], root, {}));
+  } finally { rmSync(root, { recursive: true, force: true }); }
+});
+
+test('text checker fails closed for missing policy, invalid configuration and missing files', () => {
+  const root = mkdtempSync(path.join(tmpdir(), 'publication-check-'));
+  try {
+    const file = path.join(root, 'text.md');
+    writeFileSync(file, 'neutral');
+    assert.throws(() => checkFiles([], root, {}));
+    assert.throws(() => checkFiles([file], root, {}));
+    checkFiles([file], root, { PUBLICATION_DENY_PATTERN: pattern });
+    assert.throws(() => checkFiles([path.join(root, 'missing.md')], root, { PUBLICATION_DENY_PATTERN: pattern }));
+    writeFileSync(path.join(root, '.publication-policy.local.json'), '{');
+    assert.throws(() => checkFiles([file], root, { PUBLICATION_DENY_PATTERN: pattern }));
+  } finally { rmSync(root, { recursive: true, force: true }); }
+});
 
 test('neutral changes and approved branches pass', () => {
   policy.inspectText('fix: repair request validation');
