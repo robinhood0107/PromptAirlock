@@ -16,6 +16,10 @@ struct ResidualReport {
     std::vector<EncodedFinding> encoded;
 };
 
+// 잔여 검사에 넘길 사본. 가명 token 의 무작위 10자만 '0'으로 바꾼다(길이·위치 그대로).
+// 무작위 글자가 NER 문맥을 흔들어 같은 문서의 판정이 실행마다 바뀌는 것을 막는다. 보내는 글은 바꾸지 않는다.
+[[nodiscard]] PromptDocument residual_scan_document(const ProtectedPrompt& prompt);
+
 // 잔여 검사(spec §28). 순서: 결과 수 한도, 위치 재대조(맞지 않으면 DetectorUnavailable),
 // 바꿔 넣은 자리 안에 완전히 들어간 결과는 무시(생성한 token·표지라 원문이 없다),
 // 남은 가명화·차단 대상이 있으면 ResidualFound, 인코딩 판정(judge_encoded)을 통과해야 검증 완료.

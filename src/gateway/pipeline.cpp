@@ -380,7 +380,7 @@ std::expected<core::VerifiedPrompt, core::Rejection> Pipeline::protect_and_verif
     if (!protected_prompt) {
         return std::unexpected(protected_prompt.error());
     }
-    const auto residual = detectors_.detect(protected_prompt->document(), stop);
+    const auto residual = detectors_.detect(core::residual_scan_document(*protected_prompt), stop);
     if (!residual) {
         return std::unexpected(core::Rejection::from_error(residual.error()));
     }

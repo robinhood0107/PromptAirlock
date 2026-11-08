@@ -3,6 +3,7 @@
 #include <algorithm>
 #include <utility>
 
+#include "prompt_airlock/core/token.hpp"
 #include "prompt_airlock/core/utf8.hpp"
 #include "state_access.hpp"
 
@@ -14,6 +15,30 @@ namespace {
 }
 
 }  // namespace
+
+PromptDocument residual_scan_document(const ProtectedPrompt& prompt) {
+    const auto& document = prompt.document();
+    const auto segments = document.segments();
+    std::vector<std::string> texts;
+    texts.reserve(segments.size());
+    for (const auto& segment : segments) texts.emplace_back(segment.text());
+    for (const auto& r : prompt.replacements()) {
+        if (r.segment.value() >= texts.size() || !span_fits(segments, r.segment, r.span)) continue;
+        auto& text = texts[r.segment.value()];
+        const auto view = std::string_view(text).substr(r.span.begin().value(), r.span.end().value() - r.span.begin().value());
+        if (!parse_token(view)) continue;  // 차단 표지는 무작위 글자가 없다.
+        const auto random_end = r.span.end().value() - token_close.size();
+        std::fill_n(text.begin() + static_cast<std::ptrdiff_t>(random_end - token_random_length), token_random_length, '0');
+    }
+    std::vector<Segment> copies;
+    copies.reserve(segments.size());
+    for (std::size_t i = 0; i < segments.size(); ++i) {
+        copies.emplace_back(segments[i].source(), SensitiveText(std::move(texts[i])));
+    }
+    std::vector<ContentForm> forms;
+    for (std::uint32_t m = 0; m < document.message_count(); ++m) forms.push_back(document.content_form(m));
+    return PromptDocument(detail::StateAccess::key<PromptDocument>(), std::move(copies), std::move(forms), document.kind());
+}
 
 std::expected<VerifiedPrompt, Rejection> verify_residual(ProtectedPrompt prompt, const ResidualReport& report) {
     if (report.entities.size() > max_entities) {
