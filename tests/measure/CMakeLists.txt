@@ -85,3 +85,8 @@ pa_copy_runtime_dlls(document_baseline_measure)
 add_executable(institution_measure EXCLUDE_FROM_ALL institution_measure.cpp)
 target_link_libraries(institution_measure PRIVATE prompt_airlock_detect pa_options nlohmann_json::nlohmann_json)
 pa_copy_runtime_dlls(institution_measure)
+# 잔여 검사 판정 변동의 원인 나누기(11.5-3): 같은 문서를 다른·같은 가명으로 여러 번 돌린다. 원문은 출력하지 않는다.
+add_executable(residual_flip_measure EXCLUDE_FROM_ALL residual_flip_measure.cpp)
+target_link_libraries(residual_flip_measure PRIVATE prompt_airlock_gateway prompt_airlock_ner prompt_airlock_detect pa_test_support pa_options nlohmann_json::nlohmann_json)
+target_compile_definitions(residual_flip_measure PRIVATE PA_NER_MODEL_DIR="${PA_NER_MODEL_DIR}")
+pa_copy_runtime_dlls(residual_flip_measure)
