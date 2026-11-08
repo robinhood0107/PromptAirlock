@@ -15,6 +15,8 @@
 
 ## 빌드와 시험
 
+문서 첨부 요청과 처리 범위는 [문서 파일 입력](docs/file-input.md)에 있습니다.
+
 필요한 도구: CMake 3.28 이상, Ninja, vcpkg(`VCPKG_ROOT`), Rust stable. Windows는 Visual Studio 2022 빌드 도구와 LLVM clang-cl, Linux는 gcc-14 또는 clang-23.
 
 Windows
