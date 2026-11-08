@@ -33,6 +33,29 @@ using tcp = asio::ip::tcp;
 using Result = std::expected<gateway::ProviderReply, gateway::ProviderError>;
 constexpr auto use_tuple = asio::as_tuple(asio::use_awaitable);
 
+// 측정값의 수명은 send를 기다리는 호출자에게 있다. 오류로 먼저 돌아가도 총 시간을 남긴다.
+struct ClientTimer {
+    ClientTimings* output;
+    std::chrono::steady_clock::time_point start = std::chrono::steady_clock::now();
+    std::chrono::steady_clock::time_point previous = start;
+
+    explicit ClientTimer(ClientTimings* timings) : output(timings) {
+        if (output) *output = {};
+    }
+    ~ClientTimer() {
+        if (output) output->total = std::chrono::duration_cast<std::chrono::microseconds>(
+            std::chrono::steady_clock::now() - start);
+    }
+    void mark(ClientPhase phase) {
+        if (!output) return;
+        const auto now = std::chrono::steady_clock::now();
+        output->phases[static_cast<std::size_t>(phase)] =
+            std::chrono::duration_cast<std::chrono::microseconds>(now - previous);
+        output->last = phase;
+        previous = now;
+    }
+};
+
 gateway::ProviderError classify(const beast::error_code& ec) {
     return ec == beast::error::timeout ? gateway::ProviderError::Timeout : gateway::ProviderError::Unavailable;
 }
@@ -126,9 +149,11 @@ HttpsClient::HttpsClient(asio::ssl::context& tls, Endpoint endpoint, std::filesy
                          ClientLimits limits)
     : tls_(tls), endpoint_(std::move(endpoint)), credential_file_(std::move(credential_file)), limits_(limits) {}
 
-asio::awaitable<Result> HttpsClient::send(std::string body) const {
+asio::awaitable<Result> HttpsClient::send(std::string body, ClientTimings* timings) const {
+    ClientTimer timer(timings);
     // 보내기 직전에 읽어 바꿔 끼운 자격 증명을 쓴다. 읽지 못하면 연결도 하지 않는다(실패하면 막는 쪽).
     const auto credential = load_credential(credential_file_);
+    timer.mark(ClientPhase::Credential);
     if (!credential) {
         co_return std::unexpected(gateway::ProviderError::Unavailable);
     }
@@ -136,6 +161,7 @@ asio::awaitable<Result> HttpsClient::send(std::string body) const {
     tcp::resolver resolver(executor);
     auto [resolve_error, results] =
         co_await resolver.async_resolve(endpoint_.host, std::to_string(endpoint_.port), use_tuple);
+    timer.mark(ClientPhase::Resolve);
     if (resolve_error) {
         co_return std::unexpected(gateway::ProviderError::Unavailable);
     }
@@ -153,11 +179,15 @@ asio::awaitable<Result> HttpsClient::send(std::string body) const {
         co_return std::unexpected(gateway::ProviderError::Unavailable);
     }
 
-    if (auto [ec, connected] = co_await beast::get_lowest_layer(stream).async_connect(results, use_tuple); ec) {
-        co_return std::unexpected(classify(ec));
+    auto [connect_error, connected] = co_await beast::get_lowest_layer(stream).async_connect(results, use_tuple);
+    timer.mark(ClientPhase::Connect);
+    if (connect_error) {
+        co_return std::unexpected(classify(connect_error));
     }
-    if (auto [ec] = co_await stream.async_handshake(asio::ssl::stream_base::client, use_tuple); ec) {
-        co_return std::unexpected(classify(ec));
+    auto [handshake_error] = co_await stream.async_handshake(asio::ssl::stream_base::client, use_tuple);
+    timer.mark(ClientPhase::Handshake);
+    if (handshake_error) {
+        co_return std::unexpected(classify(handshake_error));
     }
 
     http::request<http::string_body> req{http::verb::post, endpoint_.target, 11};
@@ -169,19 +199,33 @@ asio::awaitable<Result> HttpsClient::send(std::string body) const {
     req.keep_alive(false);
     req.body() = std::move(body);
     req.prepare_payload();
-    if (auto [ec, written] = co_await http::async_write(stream, req, use_tuple); ec) {
-        co_return std::unexpected(classify(ec));
+    auto [write_error, written] = co_await http::async_write(stream, req, use_tuple);
+    timer.mark(ClientPhase::Write);
+    if (write_error) {
+        co_return std::unexpected(classify(write_error));
     }
 
     beast::flat_buffer buffer;
     http::response_parser<http::string_body> parser;
     parser.body_limit(limits_.response_bytes);
-    if (auto [ec, read] = co_await http::async_read(stream, buffer, parser, use_tuple); ec) {
-        co_return std::unexpected(ec == http::error::body_limit ? gateway::ProviderError::BadResponse : classify(ec));
+    auto [header_error, header_bytes] = co_await http::async_read_header(stream, buffer, parser, use_tuple);
+    timer.mark(ClientPhase::Headers);
+    if (header_error) {
+        co_return std::unexpected(header_error == http::error::body_limit ? gateway::ProviderError::BadResponse
+                                                                        : classify(header_error));
+    }
+    if (!parser.is_done()) {
+        auto [body_error, body_bytes] = co_await http::async_read(stream, buffer, parser, use_tuple);
+        timer.mark(ClientPhase::Body);
+        if (body_error) {
+            co_return std::unexpected(body_error == http::error::body_limit ? gateway::ProviderError::BadResponse
+                                                                          : classify(body_error));
+        }
     }
     auto& res = parser.get();
     gateway::ProviderReply reply{res.result_int(), std::move(res.body())};
     (void)co_await stream.async_shutdown(use_tuple);  // 응답은 이미 받았으므로 닫기 실패는 무시한다
+    timer.mark(ClientPhase::Shutdown);
     co_return reply;
 }
 

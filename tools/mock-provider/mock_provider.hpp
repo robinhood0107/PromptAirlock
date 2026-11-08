@@ -8,6 +8,7 @@
 #include <boost/asio/ssl/context.hpp>
 
 #include <cstddef>
+#include <chrono>
 #include <filesystem>
 #include <memory>
 #include <string>
@@ -15,9 +16,16 @@
 
 namespace pa_mock {
 
+enum class BodyMode { Standard, Chunked, Truncated, CloseDelimited, NoBody };
+enum class ShutdownMode { Notify, Abrupt };
+
 struct MockOptions {
     std::string credential;              // 기대하는 Bearer 값
     std::filesystem::path record_file;   // 비어 있으면 파일에 쓰지 않는다
+    std::chrono::milliseconds body_delay{};
+    std::chrono::milliseconds shutdown_delay{};
+    BodyMode body_mode = BodyMode::Standard;
+    ShutdownMode shutdown_mode = ShutdownMode::Notify;
 };
 
 class MockProvider {

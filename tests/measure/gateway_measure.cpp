@@ -4,7 +4,10 @@
 // 과부하 구간은 처리 중 요청 상한보다 많이 동시에 보내 응답 상태를 센다. 끝에 provider 가 받은 본문에 원문 값이 있는지 센다.
 //   gateway_measure [--no-ner] [--sequential N] [--clients C] [--per-client K]
 //                   [--overload-clients C] [--overload-per-client K]
+//   gateway_measure --provider-profile <설정.json> <합성 요청.json> --count N
 #include <boost/asio/io_context.hpp>
+#include <boost/asio/co_spawn.hpp>
+#include <boost/asio/use_future.hpp>
 #include <boost/asio/thread_pool.hpp>
 #include <boost/asio/ssl.hpp>
 #include <boost/beast/core.hpp>
@@ -17,6 +20,7 @@
 #include <atomic>
 #include <chrono>
 #include <cstdio>
+#include <fstream>
 #include <cstdlib>
 #include <filesystem>
 #include <stdexcept>
@@ -34,6 +38,7 @@
 #include "prompt_airlock/detect/view.hpp"
 #include "prompt_airlock/gateway/pipeline.hpp"
 #include "prompt_airlock/gateway/server.hpp"
+#include "prompt_airlock/gateway/config.hpp"
 #include "prompt_airlock/ner/pool.hpp"
 #include "prompt_airlock/ner/tokenizer.hpp"
 #include "prompt_airlock/provider/https_client.hpp"
@@ -303,7 +308,44 @@ void measure_sequential(Rig& rig, const std::string& name, const std::string& te
     report(name + " gateway = handle - provider (ms)", gateway);
 }
 
+// 같은 클라이언트의 구간을 합성 요청으로 직접 잰다. 주소·본문·자격 증명·응답은 출력하지 않는다.
+int measure_provider(const std::filesystem::path& config_file, const std::filesystem::path& request_file, int count) {
+    const auto read = [](const std::filesystem::path& file) {
+        std::ifstream in(file, std::ios::binary);
+        return std::string(std::istreambuf_iterator<char>(in), std::istreambuf_iterator<char>());
+    };
+    const auto config = gw::parse_config(read(config_file), config_file.parent_path());
+    const auto body = read(request_file);
+    if (!config || body.empty() || count <= 0 || count > 100) return 2;
+    std::optional<std::string> trust;
+    if (!config->provider.trust_file.empty()) trust = read(config->provider.trust_file);
+    auto tls = prompt_airlock::tls::make_client_context(trust ? std::optional<std::string_view>(*trust) : std::nullopt);
+    if (!tls) return 2;
+    prompt_airlock::provider::HttpsClient client(*tls,
+        {config->provider.host, config->provider.port, config->provider.target}, config->provider.credential_file);
+    constexpr std::string_view names[] = {"credential", "resolve", "connect", "handshake", "write", "headers", "body", "shutdown"};
+    asio::io_context io;
+    for (int i = 0; i < count; ++i) {
+        io.restart();
+        prompt_airlock::provider::ClientTimings timing;
+        auto future = asio::co_spawn(io, client.send(body, &timing), asio::use_future);
+        io.run();
+        const auto result = future.get();
+        json record = {{"sample", i + 1}, {"status", result ? result->status : 0},
+                       {"total_us", timing.total.count()}, {"last_phase", timing.last ? static_cast<int>(*timing.last) : -1}};
+        if (!result) record["error"] = static_cast<int>(result.error());
+        for (std::size_t p = 0; p < std::size(names); ++p) record[std::string(names[p]) + "_us"] = timing.phases[p].count();
+        std::printf("%s\n", record.dump().c_str());
+        std::fflush(stdout);
+    }
+    return 0;
+}
+
 int run(int argc, char** argv) {
+    if (argc > 1 && std::string_view(argv[1]) == "--provider-profile") {
+        if (argc != 6 || std::string_view(argv[4]) != "--count") return 2;
+        return measure_provider(argv[2], argv[3], std::atoi(argv[5]));
+    }
     bool with_ner = true;
     int n = 200;
     int clients = 8;
