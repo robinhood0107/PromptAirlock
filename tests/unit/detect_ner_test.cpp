@@ -133,3 +133,21 @@ TEST(DetectNer, SameInputGivesSameResult) {
     const std::string text = "김민수와 김민수가 만났다. 010-2345-6789";
     EXPECT_EQ(found(d, text), found(d, text));
 }
+
+TEST(DetectNer, APartialDocumentHeadingIsNotAPersonalBeliefAnchor) {
+    for (const std::string text : {"- (애로ㆍ건의) 종교단체의 시설 운영 지원입니다.",
+                                   "- (애로·건의) 종교단체의 시설 운영 지원입니다."}) {
+        const auto at = text.find("건의");
+        const auto label = text.substr(text.find("애로"), at + std::string("건").size() - text.find("애로"));
+        const auto result = found(with_ner(std::make_shared<FakeNer>(label)), text);
+        EXPECT_TRUE(std::ranges::none_of(result, [](const auto& p) {
+            return p.first == pc::EntityType::SensitivePersonalInfo;
+        }));
+    }
+    const auto d = with_ner(std::make_shared<FakeNer>("김가상"));
+    for (const std::string_view text : {"(김가상)의 종교는 불교입니다.", "노동조합\n지부장 김가상"}) {
+        EXPECT_TRUE(std::ranges::any_of(found(d, text), [](const auto& p) {
+            return p.first == pc::EntityType::SensitivePersonalInfo;
+        }));
+    }
+}

@@ -3,6 +3,7 @@
 
 #include <gtest/gtest.h>
 
+#include <algorithm>
 #include <string>
 #include <string_view>
 #include <utility>
@@ -90,4 +91,16 @@ TEST(DetectSensitive, WordsInsideOtherWordsAreNotCategories) {
                                         "김가상 과장이 서버 장애를 보고했습니다."}) {
         EXPECT_TRUE(sensitive(text).empty()) << text;
     }
+}
+
+TEST(DetectSensitive, AggregateCountCellsAreNotAPersonalHealthAnchor) {
+    // 식별번호처럼 이어지는 통계 칸은 개인의 건강 정보가 아니다. 번호 자체의 차단은 그대로 둔다.
+    const std::string text = "근로자 수 411 111 111 111 111 1\n질환 예방 활동 안내입니다.";
+    EXPECT_TRUE(sensitive(text).empty());
+    const auto entities = detectors().detect_segment(text, pc::SegmentIndex{0});
+    ASSERT_TRUE(entities);
+    EXPECT_TRUE(std::ranges::any_of(*entities, [](const auto& e) { return e.type() == pc::EntityType::CardNumber; }));
+    EXPECT_FALSE(sensitive("근로자 수 4111 1111 1111 1111\n질환 상담 내역입니다.").empty());
+    EXPECT_FALSE(sensitive("근로자 수 010-2345-6789\n질환 상담 내역입니다.").empty());
+    EXPECT_FALSE(sensitive("근로자 수 411 111 111 111 111 1\n김가상 씨의 질환 내역입니다.").empty());
 }
