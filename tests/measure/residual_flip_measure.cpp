@@ -41,7 +41,8 @@ struct Scope {
 
 // 추출·탐지·정책·가명화·잔여 탐지를 한 번 돈다. 정책 거절이면 그 사유, 아니면 가명 구간 밖에 남은 탐지.
 json run_once(const detect::Detectors& detectors, const std::string& bytes, const std::string& ext,
-              const char* extractor, std::uint64_t seed) {
+              const char* extractor, std::uint64_t seed,
+              std::string_view filler = core::residual_scan_filler) {
     const json body = {{"messages", json::array({{{"role", "user"}, {"content", json::array({
         {{"type", "text"}, {"text", "문서 확인 사례"}},
         {{"type", "file"}, {"file", {{"filename", "input." + ext},
@@ -62,7 +63,7 @@ json run_once(const detect::Detectors& detectors, const std::string& bytes, cons
     Scope scope{&vault};
     auto protected_prompt = core::protect(std::move(*checked), scope);
     if (!protected_prompt) return {{"error", "protect"}};
-    const auto residual = detectors.detect(core::residual_scan_document(*protected_prompt), {});
+    const auto residual = detectors.detect(core::residual_scan_document(*protected_prompt, filler), {});
     if (!residual) return {{"error", "residual_detect"}};
     json left = json::array();
     const auto replacements = protected_prompt->replacements();
@@ -86,7 +87,16 @@ json run_once(const detect::Detectors& detectors, const std::string& bytes, cons
 }  // namespace
 
 int main(int argc, char** argv) {
-    if (argc != 4) return 2;
+    // 5번째 인자: 쉼표로 나눈 채움 글자 후보. 주면 후보마다 seed 7 로 한 번씩만 돈다.
+    if (argc != 4 && argc != 5) return 2;
+    std::vector<std::string> fillers;
+    if (argc == 5) {
+        for (std::string_view rest = argv[4]; !rest.empty();) {
+            const auto comma = rest.find(',');
+            fillers.emplace_back(rest.substr(0, comma));
+            rest = comma == std::string_view::npos ? std::string_view{} : rest.substr(comma + 1);
+        }
+    }
     const auto ner = prompt_airlock::ner::NerPool::make(PA_NER_MODEL_DIR);
     if (!ner) return 1;
     detect::InstitutionPolicy policy;
@@ -107,6 +117,12 @@ int main(int argc, char** argv) {
         std::ifstream file(std::filesystem::path(std::u8string(name.begin(), name.end())), std::ios::binary);
         const std::string bytes((std::istreambuf_iterator<char>(file)), std::istreambuf_iterator<char>());
         const std::string ext = item.value("ext", "txt");
+        if (!fillers.empty()) {
+            json by_filler;
+            for (const auto& f : fillers) by_filler[f] = run_once(*detectors, bytes, ext, argv[2], 7, f);
+            out << json{{"id", item["id"]}, {"fillers", by_filler}}.dump() << '\n';
+            continue;
+        }
         json varied = json::array();
         for (std::uint64_t seed = 1; seed <= 10; ++seed) varied.push_back(run_once(*detectors, bytes, ext, argv[2], seed));
         json fixed = json::array();
