@@ -16,7 +16,7 @@ namespace {
 
 }  // namespace
 
-PromptDocument residual_scan_document(const ProtectedPrompt& prompt) {
+PromptDocument residual_scan_document(const ProtectedPrompt& prompt, std::string_view filler) {
     const auto& document = prompt.document();
     const auto segments = document.segments();
     std::vector<std::string> texts;
@@ -28,7 +28,8 @@ PromptDocument residual_scan_document(const ProtectedPrompt& prompt) {
         const auto view = std::string_view(text).substr(r.span.begin().value(), r.span.end().value() - r.span.begin().value());
         if (!parse_token(view)) continue;  // 차단 표지는 무작위 글자가 없다.
         const auto random_end = r.span.end().value() - token_close.size();
-        std::fill_n(text.begin() + static_cast<std::ptrdiff_t>(random_end - token_random_length), token_random_length, '0');
+        if (filler.size() != token_random_length) continue;
+        std::copy(filler.begin(), filler.end(), text.begin() + static_cast<std::ptrdiff_t>(random_end - token_random_length));
     }
     std::vector<Segment> copies;
     copies.reserve(segments.size());

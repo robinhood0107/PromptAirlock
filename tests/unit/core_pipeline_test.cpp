@@ -244,7 +244,7 @@ TEST(CorePipeline, ResponseRoundTripRestoresOriginals) {
     EXPECT_EQ(restored->view(), "확인했습니다. " + user_text);
 }
 
-// 가명 무작위 글자가 달라도 잔여 검사 사본은 같다. 무작위 10자만 '0'이 되고 길이는 그대로다.
+// 가명 무작위 글자가 달라도 잔여 검사 사본은 같다. 무작위 10자만 고정 글자가 되고 길이는 그대로다.
 TEST(CorePipeline, ResidualScanCopyDoesNotDependOnPseudonymRandomness) {
     auto scan = [](std::uint64_t seed) {
         pc::PromptDocumentBuilder builder;
@@ -268,5 +268,5 @@ TEST(CorePipeline, ResidualScanCopyDoesNotDependOnPseudonymRandomness) {
     EXPECT_NE(sent1, sent2);
     EXPECT_EQ(copy1, copy2);
     EXPECT_EQ(copy1.size(), sent1.size());
-    EXPECT_NE(copy1.find("_0000000000"), std::string::npos);
+    EXPECT_NE(copy1.find(std::string("_") + std::string(pc::residual_scan_filler)), std::string::npos);
 }
