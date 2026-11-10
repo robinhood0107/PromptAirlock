@@ -56,7 +56,8 @@ using Attrs = std::span<const std::pair<std::string_view, std::string_view>>;
 [[nodiscard]] std::uint32_t count_parts(const Zip& zip, std::initializer_list<std::string_view> prefixes) {
     std::uint32_t n = 0;
     for (const auto& name : zip.names()) {
-        n += std::ranges::any_of(prefixes, [&](std::string_view p) { return name.starts_with(p); }) ? 1 : 0;
+        n += !name.ends_with('/') &&
+                     std::ranges::any_of(prefixes, [&](std::string_view p) { return name.starts_with(p); }) ? 1 : 0;
     }
     return n;
 }
@@ -71,6 +72,7 @@ std::expected<void, ExtractError> extract_docx(const Zip& zip, Context& context)
     std::string paragraph;
     std::size_t number = 0;
     int p_depth = 0;
+    std::vector<std::uint32_t> regions;
     int in_fallback = 0;
     bool in_text = false;
     bool in_run = false;
@@ -92,6 +94,10 @@ std::expected<void, ExtractError> extract_docx(const Zip& zip, Context& context)
         }
         if (in_fallback > 0) {
             return;
+        }
+        if (n == "tc") {
+            regions.push_back(context.region);
+            context.region = ++context.next_region;
         }
         if (n == "p") {
             // 글상자 문단은 바깥 문단 안에 들어 있다. 안쪽 문단이 시작되면 지금까지 모은 바깥 글을 먼저 낸다(#234).
@@ -121,6 +127,10 @@ std::expected<void, ExtractError> extract_docx(const Zip& zip, Context& context)
             in_fallback -= n == "Fallback" ? 1 : 0;
             return;
         }
+        if (n == "tc" && !regions.empty()) {
+            context.region = regions.back();
+            regions.pop_back();
+        }
         if (n == "t") {
             in_text = false;
         } else if (n == "rPr") {
@@ -149,7 +159,7 @@ std::expected<void, ExtractError> extract_docx(const Zip& zip, Context& context)
     }
     context.doc.omitted.comments += *comments;
     context.doc.omitted.other_parts +=
-        count_parts(zip, {"word/header", "word/footer", "word/footnotes", "word/endnotes", "docProps/"});
+        count_parts(zip, {"word/header", "word/footer", "word/footnotes", "word/endnotes", "docProps/", "word/media/"});
     return {};
 }
 
@@ -231,7 +241,7 @@ std::expected<void, ExtractError> extract_xlsx(const Zip& zip, Context& context)
         if (!xml) {
             return std::unexpected(xml.error());
         }
-        std::string row;
+        std::vector<std::string> cells;
         std::string row_number;
         std::size_t rows = 0;
         std::string cell;
@@ -242,7 +252,7 @@ std::expected<void, ExtractError> extract_xlsx(const Zip& zip, Context& context)
         XmlHandler h;
         h.start = [&](std::string_view n, Attrs a) {
             if (n == "row") {
-                row.clear();
+                cells.clear();
                 ++rows;
                 const auto r = attr(a, "r");
                 row_number = r ? std::string(*r) : std::to_string(rows);
@@ -264,17 +274,17 @@ std::expected<void, ExtractError> extract_xlsx(const Zip& zip, Context& context)
                     const auto [p, ec] = std::from_chars(cell.data(), cell.data() + cell.size(), index);
                     cell = ec == std::errc{} && p == cell.data() + cell.size() && index < shared.size() ? shared[index] : "";
                 }
-                if (!cell.empty()) {
-                    if (!row.empty()) {
-                        row.push_back('\t');
-                    }
-                    row.append(cell);
-                }
+                cells.push_back(std::move(cell));
             } else if (n == "row" && !row_hidden) {
-                if (auto r = context.add(sheet.name + "!" + row_number, std::move(row)); !r && failed) {
-                    failed = r;
+                for (std::size_t c = 0; c < cells.size(); ++c) {
+                    const auto saved = context.region;
+                    context.region = ++context.next_region;
+                    auto added = context.add(sheet.name + "!" + row_number + " cell" + std::to_string(c + 1),
+                                             std::move(cells[c]));
+                    context.region = saved;
+                    if (!added && failed) failed = added;
                 }
-                row.clear();
+                cells.clear();
             }
         };
         h.text = [&](std::string_view s) {
@@ -294,7 +304,7 @@ std::expected<void, ExtractError> extract_xlsx(const Zip& zip, Context& context)
         return std::unexpected(comments.error());
     }
     context.doc.omitted.comments += *comments;
-    context.doc.omitted.other_parts += count_parts(zip, {"docProps/"});
+    context.doc.omitted.other_parts += count_parts(zip, {"docProps/", "xl/media/"});
     return {};
 }
 
@@ -346,7 +356,7 @@ std::expected<void, ExtractError> extract_pptx(const Zip& zip, Context& context)
         }
     }
     context.doc.omitted.comments += count_parts(zip, {"ppt/comments/"});
-    context.doc.omitted.other_parts += count_parts(zip, {"ppt/notesSlides/", "docProps/"});
+    context.doc.omitted.other_parts += count_parts(zip, {"ppt/notesSlides/", "docProps/", "ppt/media/"});
     return {};
 }
 

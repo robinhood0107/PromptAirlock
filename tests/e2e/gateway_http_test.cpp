@@ -7,6 +7,10 @@
 #include <boost/beast/http.hpp>
 #include <boost/beast/ssl.hpp>
 #include <gtest/gtest.h>
+#include "document_writer.hpp"
+#include "hwp_writer.hpp"
+#include "pdf_writer.hpp"
+#include "prompt_airlock/gateway/request_json.hpp"
 #include <nlohmann/json.hpp>
 #include <openssl/ssl.h>
 
@@ -104,10 +108,11 @@ protected:
                 return gw::PseudonymScope(std::move(*scope));
             },
             [this](std::string body) { return provider_->send(std::move(body)); }, core::OutputTokenCap::standard(),
-            "demo-alias", work_.get_executor(), audit_.get());
+            "demo-alias", work_.get_executor(), audit_.get(), gw::pipeline_in_flight_limit,
+            gw::request_time_limit, gw::SentenceCheck{}, PA_EXTRACT_EXE);
         pa_test::retry_listen([&] { server_.emplace(io_, *server_tls_, loopback, auth_,
                         [this](gw::AcceptedRequest request) { return pipeline_->handle(std::move(request)); },
-                        gw::ServerLimits{}, audit_.get()); });
+                        gw::ServerLimits{.body_bytes = gw::max_file_json_bytes}, audit_.get()); });
         server_->start();
         thread_ = std::thread([this] { io_.run(); });
     }
@@ -131,10 +136,14 @@ protected:
     }
 
     Reply post(std::string_view text, std::string_view grade = {}) {
+        return post_json(json{{"model", "any"}, {"messages", json::array({{{"role", "user"}, {"content", text}}})}}, grade);
+    }
+
+    Reply post_json(const json& body, std::string_view grade = {}, std::chrono::seconds client_timeout = 30s) {
         asio::io_context io;
         beast::ssl_stream<beast::tcp_stream> stream(io, *client_tls_);
         SSL_set1_host(stream.native_handle(), "localhost");
-        beast::get_lowest_layer(stream).expires_after(30s);
+        beast::get_lowest_layer(stream).expires_after(client_timeout);
         const tcp::endpoint server(asio::ip::make_address("127.0.0.1"), server_->local_endpoint().port());
         if (const auto ec = pa_test::retry_connect(beast::get_lowest_layer(stream), server)) {
             throw boost::system::system_error(ec, "connect");
@@ -147,7 +156,7 @@ protected:
         if (!grade.empty()) {
             req.set("X-Prompt-Airlock-Grade", grade);
         }
-        req.body() = json{{"model", "any"}, {"messages", json::array({{{"role", "user"}, {"content", text}}})}}.dump();
+        req.body() = body.dump();
         req.prepare_payload();
         http::write(stream, req);
         beast::flat_buffer buffer;
@@ -277,3 +286,132 @@ TEST_F(GatewayHttp, AuditKeepsMetadataAndEgressButNoRawValues) {
 }
 
 }  // namespace
+json file_request(std::string_view name, std::string_view bytes) {
+    return {{"messages", json::array({{{"role", "user"},
+              {"content", json::array({{{"type", "text"}, {"text", "첨부 문서를 확인해 주세요."}},
+                  {{"type", "file"}, {"file", {{"filename", name},
+                    {"file_data", "data:application/octet-stream;base64," + pa_test::documents::base64(bytes)}}}}})}}})}};
+}
+
+TEST_F(GatewayHttp, FileTextRoundTripProtectsContentsAndDoesNotExposeFilename) {
+    const std::string name = person + "-" + phone + ".txt";
+    const std::string content = person + " 주무관 전화 " + phone + "\n회의 일정 안내";
+    const auto reply = post_json(file_request(name, content));
+    ASSERT_EQ(reply.status, 200U) << reply.body.dump();
+    const auto sent = mock_->received();
+    ASSERT_EQ(sent.size(), 1U);
+    EXPECT_EQ(sent.front().find(phone), std::string::npos);
+    EXPECT_EQ(sent.front().find(name), std::string::npos);
+    EXPECT_EQ(sent.front().find("file_data"), std::string::npos);
+    EXPECT_NE(reply.body["choices"][0]["message"]["content"].get<std::string>().find(phone), std::string::npos);
+    const auto& info = reply.body["prompt_airlock"]["documents"][0];
+    EXPECT_EQ(info["format"], "txt");
+    EXPECT_EQ(info["bytes"], content.size());
+    EXPECT_EQ(info["sha256"], hash_of(content));
+    EXPECT_FALSE(info.contains("filename"));
+    const auto audit = audit_text();
+    EXPECT_EQ(audit.find(name), std::string::npos);
+    EXPECT_EQ(audit.find(phone), std::string::npos);
+}
+
+TEST_F(GatewayHttp, FileJoinsFlowParagraphsButKeepsTableCellsSeparate) {
+    const auto blocked = post_json(file_request("joined.txt", "주민번호:900101\n1234567"));
+    EXPECT_EQ(blocked.status, 400U);
+    EXPECT_TRUE(mock_->received().empty());
+    const auto table = pa_test::documents::docx(
+        "<w:tbl><w:tr><w:tc><w:p><w:r><w:t>주민번호:900101</w:t></w:r></w:p></w:tc>"
+        "<w:tc><w:p><w:r><w:t>1234567</w:t></w:r></w:p></w:tc></w:tr></w:tbl>");
+    const auto separate = post_json(file_request("table.docx", table));
+    EXPECT_EQ(separate.status, 200U) << separate.body.dump();
+    ASSERT_EQ(mock_->received().size(), 1U);
+    EXPECT_NE(mock_->received().front().find("\\n|\\n"), std::string::npos);
+}
+
+TEST_F(GatewayHttp, FileFailuresAndSensitiveGradeMakeZeroProviderCalls) {
+    EXPECT_EQ(post_json(file_request("a.txt", "일반 안내"), "S").status, 403U);
+    auto malformed = file_request("a.txt", "일반 안내");
+    malformed["messages"][0]["content"][1]["file"]["file_data"] = "https://example.invalid/raw";
+    EXPECT_EQ(post_json(malformed).status, 400U);
+    EXPECT_NE(post_json(file_request("bad.bin", std::string("bad\0", 4))).status, 200U);
+    auto multiple = file_request("a.txt", "일반 안내");
+    multiple["messages"][0]["content"].push_back(
+        file_request("bad.bin", std::string("bad\0", 4))["messages"][0]["content"][1]);
+    EXPECT_NE(post_json(multiple).status, 200U);
+    EXPECT_TRUE(mock_->received().empty());
+}
+
+TEST_F(GatewayHttp, AggregateContextNeverUnblocksAnIdentifier) {
+    const auto reply = post_json(file_request("counts.txt", "근로자 수 411 111 111 111 111 1\n질환 예방 활동 안내입니다."));
+    EXPECT_EQ(reply.status, 400U);
+    EXPECT_TRUE(mock_->received().empty());
+    const auto types = reply.body["error"]["blocked_types"].get<std::vector<std::string>>();
+    EXPECT_NE(std::ranges::find(types, "CARD_NUMBER"), types.end());
+    EXPECT_EQ(std::ranges::find(types, "SENSITIVE_PERSONAL_INFO"), types.end());
+}
+TEST_F(GatewayHttp, FileBeyond128WindowsReachesProviderOnlyAfterItsTailIsProtected) {
+    std::string content = "[링크] ";
+    for (int i = 0; i < 10000; ++i) content += "the and. ";
+    content += "전화 " + phone + " the end.";
+    ASSERT_GT(content.size(), core::max_prompt_bytes);
+    const auto reply = post_json(file_request("long.txt", content), {}, gw::request_time_limit + 5s);
+    // 모의 제공자는 표시어 때문에 token을 링크에 넣는다. 입력이 끝까지 보호된 뒤 응답 검사에서 막혀야 한다.
+    EXPECT_EQ(reply.status, 502U) << reply.body.dump();
+    EXPECT_EQ(code_of(reply), reason(core::ReasonCode::ResponseTokenInLink));
+    const auto sent = mock_->received();
+    ASSERT_EQ(sent.size(), 1U);
+    EXPECT_EQ(sent.front().find(phone), std::string::npos);
+    const auto body = json::parse(sent.front());
+    const auto& projected = body["messages"][0]["content"][1]["text"].get_ref<const std::string&>();
+    EXPECT_TRUE(projected.starts_with("[링크] the and."));
+    EXPECT_TRUE(projected.ends_with("the end."));
+    EXPECT_GT(projected.size(), core::max_prompt_bytes);
+}
+TEST_F(GatewayHttp, FileSupportedFormatsAndOmittedPartsUseTheSameProtectedRoundTrip) {
+    namespace writer = pa_test::documents;
+    std::string wide;
+    for (const unsigned char c : phone) { wide.push_back(static_cast<char>(c)); wide.push_back('\0'); }
+    const std::vector<std::pair<std::string, std::string>> cases = {
+        {"txt", "전화 " + phone},
+        {"csv", "전화,\"" + phone + "\"\r\n"},
+        {"md", "# 안내\n전화 " + phone},
+        {"htm", "<html><body><table><tr><td>전화</td><td>" + phone + "</td></tr></table></body></html>"},
+        {"docx", writer::docx("<w:p><w:r><w:t>" + phone + "</w:t></w:r></w:p>",
+                              {{"word/media/image.png", "omitted-image-marker"}})},
+        {"xlsx", writer::make_zip({
+            {"xl/workbook.xml", R"(<workbook xmlns:r="r"><sheets><sheet name="visible" r:id="r1"/></sheets></workbook>)"},
+            {"xl/_rels/workbook.xml.rels", R"(<Relationships><Relationship Id="r1" Target="worksheets/sheet1.xml"/></Relationships>)"},
+            {"xl/worksheets/sheet1.xml", "<worksheet><sheetData><row r=\"1\"><c t=\"inlineStr\"><is><t>" +
+                                         phone + "</t></is></c></row></sheetData></worksheet>"}})},
+        {"pptx", writer::make_zip({{"ppt/presentation.xml", "<presentation/>"},
+            {"ppt/slides/slide1.xml", "<sld><p><r><t>" + phone + "</t></r></p></sld>"}})},
+        {"hwpx", writer::make_zip({{"mimetype", "application/hwp+zip"},
+            {"Contents/section0.xml", "<section><p><run><t>" + phone + "</t></run></p></section>"}})},
+        {"hwp", pa_test::hwp::hwp(0, pa_test::hwp::record(67, 1, wide))},
+        {"zip", writer::make_zip({{"one.txt", "전화 " + phone}, {"two.md", "# 안내\n끝"}})},
+    };
+    for (const auto& [ext, content] : cases) {
+        const auto before = mock_->received().size();
+        const auto reply = post_json(file_request("input." + ext, content));
+        ASSERT_EQ(reply.status, 200U) << ext << ": " << reply.body.dump();
+        const auto received = mock_->received();
+        ASSERT_EQ(received.size(), before + 1) << ext;
+        EXPECT_EQ(received.back().find(phone), std::string::npos) << ext;
+        EXPECT_EQ(received.back().find("omitted-image-marker"), std::string::npos);
+        EXPECT_EQ(reply.body["prompt_airlock"]["documents"][0]["format"], ext);
+        if (ext == "docx") EXPECT_EQ(reply.body["prompt_airlock"]["documents"][0]["omitted"]["other_parts"], 1);
+    }
+    const auto xml = post_json(file_request("xml.hwp",
+        "<?xml version=\"1.0\"?><HWPML><BODY><SECTION><P><TEXT><CHAR>" + phone +
+        "</CHAR></TEXT></P></SECTION></BODY></HWPML>"));
+    ASSERT_EQ(xml.status, 200U) << xml.body.dump();
+    EXPECT_EQ(xml.body["prompt_airlock"]["documents"][0]["format"], "hwpml");
+    const auto pdf = post_json(file_request("input.pdf", pa_test::pdf::page_pdf(
+        "BT /F1 12 Tf 72 720 Td (" + phone + ") Tj ET")));
+#ifdef PA_TEST_WITH_PDFIUM
+    EXPECT_EQ(pdf.status, 200U) << pdf.body.dump();
+    if (pdf.status == 200) EXPECT_EQ(pdf.body["prompt_airlock"]["documents"][0]["pages"], 1);
+#else
+    EXPECT_EQ(pdf.status, 415U);
+    EXPECT_EQ(code_of(pdf), "document_unsupported");
+#endif
+}

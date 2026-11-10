@@ -8,6 +8,7 @@ add_library(prompt_airlock_gateway
   auth.cpp
   config.cpp
   confirm.cpp
+  documents.cpp
   error_body.cpp
   pipeline.cpp
   provider_json.cpp
@@ -17,7 +18,7 @@ add_library(prompt_airlock_gateway
 target_include_directories(prompt_airlock_gateway PUBLIC "${PROJECT_SOURCE_DIR}/include")
 target_link_libraries(prompt_airlock_gateway
   PUBLIC prompt_airlock_core prompt_airlock_detect prompt_airlock_audit Boost::asio OpenSSL::SSL
-  PRIVATE nlohmann_json::nlohmann_json Boost::beast pa_options)
+  PRIVATE prompt_airlock_extract_client nlohmann_json::nlohmann_json Boost::beast pa_options)
 if(MSVC)
   target_compile_options(prompt_airlock_gateway PRIVATE /WX)
 else()

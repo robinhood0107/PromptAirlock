@@ -42,6 +42,51 @@ constexpr std::array<std::string_view, 4> embedded_prefixes = {"word/embeddings/
     return head.starts_with("<!doctype html") || head.starts_with("<html");
 }
 
+// 쉼표로 구분한 칸은 독립 영역이다. 따옴표 안 줄바꿈은 같은 칸에 남긴다.
+std::expected<void, ExtractError> extract_csv_text(std::string_view text, Context& context) {
+    std::string cell;
+    bool quoted = false;
+    bool after_quote = false;
+    std::size_t row = 1, column = 1;
+    const auto flush = [&]() {
+        const auto saved = context.region;
+        context.region = ++context.next_region;
+        auto result = context.add("row" + std::to_string(row) + " cell" + std::to_string(column), std::move(cell));
+        context.region = saved;
+        cell.clear();
+        after_quote = false;
+        return result;
+    };
+    for (std::size_t i = 0; i < text.size(); ++i) {
+        const char c = text[i];
+        if (quoted) {
+            if (c == '"') {
+                if (i + 1 < text.size() && text[i + 1] == '"') { cell.push_back('"'); ++i; }
+                else { quoted = false; after_quote = true; }
+            } else if (c == '\r') {
+                cell.push_back('\n');
+                if (i + 1 < text.size() && text[i + 1] == '\n') ++i;
+            } else cell.push_back(c);
+            continue;
+        }
+        if (c == ',' || c == '\n' || c == '\r') {
+            if (auto added = flush(); !added) return added;
+            if (c == ',') ++column;
+            else {
+                ++row;
+                column = 1;
+                if (c == '\r' && i + 1 < text.size() && text[i + 1] == '\n') ++i;
+            }
+        } else if (c == '"' && cell.empty() && !after_quote) {
+            quoted = true;
+        } else if (after_quote) {
+            if (c != ' ' && c != '\t') return std::unexpected(ExtractError::Damaged);
+        } else cell.push_back(c);
+    }
+    if (quoted) return std::unexpected(ExtractError::Damaged);
+    return flush();
+}
+
 [[nodiscard]] std::expected<DocumentFormat, ExtractError> extract_text(std::span<const std::byte> file,
                                                                       std::string_view hint, Context& context) {
     auto text = decode_text(file);
@@ -62,7 +107,11 @@ constexpr std::array<std::string_view, 4> embedded_prefixes = {"word/embeddings/
                         : hint == "csv" ? DocumentFormat::Csv
                         : hint == "md"  ? DocumentFormat::Markdown
                                         : DocumentFormat::Text;
-    const std::string label = format == DocumentFormat::Csv ? "row" : "line";
+    if (format == DocumentFormat::Csv) {
+        auto result = extract_csv_text(*text, context);
+        return result ? std::expected<DocumentFormat, ExtractError>(format) : std::unexpected(result.error());
+    }
+    const std::string label = "line";
     if (html) {
         std::size_t n = 0;
         for (auto& line : html_lines(*text)) {
@@ -85,8 +134,12 @@ constexpr std::array<std::string_view, 4> embedded_prefixes = {"word/embeddings/
             line.remove_suffix(1);
         }
         ++n;
-        if (auto r = context.add(label + std::to_string(n), std::string(line)); !r) {
-            return std::unexpected(r.error());
+        const auto saved_region = context.region;
+
+        const auto added = context.add(label + std::to_string(n), std::string(line));
+        context.region = saved_region;
+        if (!added) {
+            return std::unexpected(added.error());
         }
         start = end + 1;
     }
@@ -99,6 +152,7 @@ constexpr std::array<std::string_view, 4> embedded_prefixes = {"word/embeddings/
         return std::unexpected(ExtractError::Bomb);
     }
     for (const auto& name : zip.names()) {
+        if (name.ends_with('/')) continue;
         const auto ext = extension(name);
         if (std::ranges::find(known_entries, ext) == known_entries.end()) {
             ++context.doc.omitted.other_parts;
@@ -125,12 +179,14 @@ constexpr std::array<std::string_view, 4> embedded_prefixes = {"word/embeddings/
 // Office·hwpx 안에 넣은 파일. 그림은 풀지 않고, 문서 형식과 OLE 포장(.bin, .ole)만 읽는다.
 [[nodiscard]] std::expected<void, ExtractError> extract_embedded(const Zip& zip, std::size_t depth, Context& context) {
     for (const auto& name : zip.names()) {
+        if (name.ends_with('/')) continue;
         if (std::ranges::none_of(embedded_prefixes, [&](std::string_view p) { return name.starts_with(p); })) {
             continue;
         }
         const auto ext = extension(name);
         if (std::ranges::find(known_entries, ext) == known_entries.end() && ext != "bin" && ext != "ole") {
-            continue;  // 그림
+            ++context.doc.omitted.other_parts;
+            continue;  // 그림은 읽지 않고 부품 수만 센다.
         }
         auto bytes = zip.read(name, context);
         if (!bytes) {
@@ -181,6 +237,9 @@ std::expected<void, ExtractError> extract_object(std::string_view payload, std::
     }
     const auto saved = context.prefix;
     context.prefix += label + ":";
+    const auto blocks_before = context.doc.blocks.size();
+    const auto documents_before = context.doc.documents.size();
+    const auto output_before = context.output;
     auto inner = extract_into(std::as_bytes(std::span(payload.data(), payload.size())), as, depth + 1, context);
     context.prefix = saved;
     if (!inner) {
@@ -188,12 +247,15 @@ std::expected<void, ExtractError> extract_object(std::string_view payload, std::
         if (inner.error() == ExtractError::Bomb || inner.error() == ExtractError::TooLarge) {
             return std::unexpected(inner.error());
         }
+        context.doc.blocks.resize(blocks_before);
+        context.doc.documents.resize(documents_before);
+        context.output = output_before;
         ++context.doc.omitted.other_parts;
     }
     return {};
 }
 
-std::expected<DocumentFormat, ExtractError> extract_into(std::span<const std::byte> file, std::string_view hint,
+static std::expected<DocumentFormat, ExtractError> extract_current(std::span<const std::byte> file, std::string_view hint,
                                                         std::size_t depth, Context& context) {
     const std::string_view head(reinterpret_cast<const char*>(file.data()), std::min<std::size_t>(file.size(), 8));
     if (head.starts_with("PK\x03\x04") || head.starts_with("PK\x05\x06")) {
@@ -250,6 +312,21 @@ std::expected<DocumentFormat, ExtractError> extract_into(std::span<const std::by
         return r ? std::expected<DocumentFormat, ExtractError>(DocumentFormat::Pdf) : std::unexpected(r.error());
     }
     return extract_text(file, hint, context);
+}
+
+std::expected<DocumentFormat, ExtractError> extract_into(std::span<const std::byte> file,
+        std::string_view hint, std::size_t depth, Context& context) {
+    const auto saved_document = context.document;
+    const auto saved_region = context.region;
+    context.document = static_cast<std::uint32_t>(context.doc.documents.size());
+    context.region = 0;
+    context.doc.documents.push_back({});
+    const auto index = context.document;
+    auto result = extract_current(file, hint, depth, context);
+    if (result) context.doc.documents[index].format = *result;
+    context.document = saved_document;
+    context.region = saved_region;
+    return result;
 }
 
 }  // namespace detail

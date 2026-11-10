@@ -262,3 +262,82 @@ TEST(NerPool, MissingModelOrBadSetupMeansUnavailable) {
     std::vector<std::unique_ptr<pn::NerWorker>> null_worker(1);
     EXPECT_EQ(pn::NerPool::start(std::move(null_worker)).error(), pc::DetectError::Unavailable);
 }
+struct DocumentBatchState {
+    std::atomic<std::size_t> batches{0};
+    std::atomic<std::size_t> windows{0};
+    std::atomic<std::size_t> ordinary{0};
+    const char* document_data = nullptr;
+    std::optional<std::uint32_t> next_first_unit;
+    std::optional<std::stop_source> cancel;
+};
+
+class DocumentBatchWorker final : public pn::NerWorker {
+public:
+    explicit DocumentBatchWorker(std::shared_ptr<DocumentBatchState> state) : state_(std::move(state)) {}
+    std::expected<std::vector<pc::EntitySpan>, pc::DetectError> run(
+        std::string_view, pc::SegmentIndex, const pd::DetectionView&, std::stop_token) override {
+        ++state_->ordinary;
+        return std::vector<pc::EntitySpan>{};
+    }
+    std::expected<std::vector<pc::EntitySpan>, pc::DetectError> run_batch(
+        std::string_view text, pc::SegmentIndex, const pd::DetectionView&, const pn::TokenBatch& batch,
+        std::stop_token) override {
+        EXPECT_LE(batch.windows.size(), pn::document_batch_windows);
+        EXPECT_FALSE(batch.windows.empty());
+        if (state_->document_data) EXPECT_TRUE(state_->document_data == text.data());
+        state_->document_data = text.data();
+        if (state_->next_first_unit) EXPECT_EQ(batch.tokens.front().first_unit, *state_->next_first_unit);
+        const auto last = batch.windows.back();
+        if (last.end >= pn::window_overlap_tokens)
+            state_->next_first_unit = batch.tokens[last.end - pn::window_overlap_tokens].first_unit;
+        ++state_->batches;
+        state_->windows += batch.windows.size();
+        if (state_->cancel) state_->cancel->request_stop();
+        return std::vector<pc::EntitySpan>{};
+    }
+private:
+    std::shared_ptr<DocumentBatchState> state_;
+};
+
+TEST(NerPool, DocumentBatchesKeepOverlapAndShareOneOwnedInput) {
+    auto tokenizer = pn::WordPieceTokenizer::load(std::filesystem::path(PA_NER_MODEL_DIR) / "tokenizer.json");
+    ASSERT_TRUE(tokenizer);
+    auto state = std::make_shared<DocumentBatchState>();
+    std::vector<std::unique_ptr<pn::NerWorker>> workers;
+    workers.push_back(std::make_unique<DocumentBatchWorker>(state));
+    auto pool = pn::NerPool::start(std::move(workers), 2, std::chrono::seconds(2),
+                                  std::make_unique<pn::WordPieceTokenizer>(std::move(*tokenizer)));
+    ASSERT_TRUE(pool);
+    std::string text;
+    for (int i = 0; i < 50000; ++i) text += "가 ";
+    const auto view = pd::make_view(text);
+    ASSERT_TRUE(view);
+    const auto found = (*pool)->scan_document(text, pc::SegmentIndex{0}, *view, {});
+    ASSERT_TRUE(found);
+    EXPECT_TRUE(found->empty());
+    EXPECT_GT(state->windows.load(), 128U);
+    EXPECT_GE(state->batches.load(), 3U);
+    EXPECT_EQ(state->ordinary.load(), 0U);
+}
+
+TEST(NerPool, DocumentCancellationStopsBeforeTheNextBatch) {
+    auto tokenizer = pn::WordPieceTokenizer::load(std::filesystem::path(PA_NER_MODEL_DIR) / "tokenizer.json");
+    ASSERT_TRUE(tokenizer);
+    auto state = std::make_shared<DocumentBatchState>();
+    std::stop_source stop;
+    state->cancel = stop;
+    std::vector<std::unique_ptr<pn::NerWorker>> workers;
+    workers.push_back(std::make_unique<DocumentBatchWorker>(state));
+    auto pool = pn::NerPool::start(std::move(workers), 2, std::chrono::seconds(2),
+                                  std::make_unique<pn::WordPieceTokenizer>(std::move(*tokenizer)));
+    ASSERT_TRUE(pool);
+    std::string text;
+    for (int i = 0; i < 50000; ++i) text += "가 ";
+    const auto view = pd::make_view(text);
+    ASSERT_TRUE(view);
+    const auto found = (*pool)->scan_document(text, pc::SegmentIndex{0}, *view, stop.get_token());
+    EXPECT_FALSE(found);
+    if (!found) EXPECT_EQ(found.error(), pc::DetectError::Timeout);
+    pool->reset();
+    EXPECT_EQ(state->batches.load(), 1U);
+}

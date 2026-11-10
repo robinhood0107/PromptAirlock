@@ -130,7 +130,7 @@ std::expected<ProtectedPrompt, Rejection> apply_protection(PolicyCheckedPrompt p
     }
     // 보호 후 텍스트는 token 이 원문보다 길 수 있어 64 KiB 를 다시 재지 않는다(입력 한도는 원문 기준).
     PromptDocument protected_document(detail::StateAccess::key<PromptDocument>(), std::move(rewritten),
-                                      std::move(forms));
+                                      std::move(forms), document.kind());
     return ProtectedPrompt(detail::StateAccess::key<ProtectedPrompt>(), std::move(protected_document),
                            prompt.params(), prompt.grade(), std::move(replacements));
 }

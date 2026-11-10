@@ -26,6 +26,11 @@ public:
     // stop 은 요청이 포기됐다는 신호다(시간 상한, 연결 끊김). 켜지면 기다리지 않고 Timeout 으로 돌아온다.
     [[nodiscard]] virtual std::expected<std::vector<core::EntitySpan>, core::DetectError> scan(
         std::string_view text, core::SegmentIndex segment, const DetectionView& view, std::stop_token stop) const = 0;
+
+    [[nodiscard]] virtual std::expected<std::vector<core::EntitySpan>, core::DetectError> scan_document(
+        std::string_view text, core::SegmentIndex segment, const DetectionView& view, std::stop_token stop) const {
+        return scan(text, segment, view, stop);
+    }
 };
 
 }  // namespace prompt_airlock::detect

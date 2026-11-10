@@ -52,6 +52,16 @@ Shape entry_shape(EntryError error) {
         case EntryError::Cancelled:
             // 표준 번호가 없어 흔히 쓰는 499(client closed request)를 쓴다
             return {499, "api_error", "cancelled", "The client closed the connection."};
+        case EntryError::DocumentInvalid:
+            return {400, "invalid_request_error", "document_invalid", "The document could not be read."};
+        case EntryError::DocumentUnsupported:
+            return {415, "invalid_request_error", "document_unsupported", "The document format is not supported."};
+        case EntryError::DocumentEncrypted:
+            return {422, "invalid_request_error", "document_encrypted", "The document requires decryption."};
+        case EntryError::DocumentNoText:
+            return {422, "invalid_request_error", "document_no_text", "The document has no readable text."};
+        case EntryError::ContextLimit:
+            return {400, "invalid_request_error", "model_context_exceeded", "The request exceeds the model context."};
     }
     return {500, "api_error", "internal_error", "Internal error."};
 }

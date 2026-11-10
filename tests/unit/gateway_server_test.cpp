@@ -19,6 +19,7 @@
 #include <span>
 #include <string>
 #include <thread>
+#include <vector>
 
 #include "prompt_airlock/core/sha256.hpp"
 #include "prompt_airlock/tls/context.hpp"
@@ -46,6 +47,7 @@ struct Reply {
 
 class GatewayServer : public ::testing::Test {
 protected:
+    virtual std::size_t body_limit() const { return 1024; }
     void SetUp() override {
         cert_ = pa_test::make_test_certificate();
         auto server_tls = prompt_airlock::tls::make_server_context(cert_.certificate_pem, cert_.private_key_pem);
@@ -54,7 +56,7 @@ protected:
         server_tls_.emplace(std::move(*server_tls));
         client_tls_.emplace(std::move(*client_tls));
         gw::ServerLimits limits;
-        limits.body_bytes = 1024;
+        limits.body_bytes = body_limit();
         limits.io_timeout = std::chrono::seconds(5);
         pa_test::retry_listen([&] { server_.emplace(io_, *server_tls_, tcp::endpoint(asio::ip::make_address("127.0.0.1"), 0), auth_,
                         [this](gw::AcceptedRequest request) -> asio::awaitable<gw::JsonResponse> {
@@ -63,6 +65,7 @@ protected:
                                 ++handled_;
                                 last_origin_ = request.origin->name;
                                 last_body_ = request.body;
+                                if (retain_uploads_) uploads_.push_back(request.upload);
                             }
                             changed_.notify_all();
                             if (hold_) {
@@ -95,7 +98,7 @@ protected:
     }
 
     // 요청 하나를 보내고 응답을 받는다. 연결이나 handshake 가 실패하면 nullopt.
-    std::optional<Reply> send(http::request<http::string_body> req, SSL_CTX* tls = nullptr) {
+    std::optional<Reply> send(http::request<http::string_body> req, SSL_CTX* tls = nullptr, bool chunked = false) {
         asio::io_context io;
         std::optional<asio::ssl::context> owned;  // 넘겨받은 SSL_CTX 는 여기서 해제한다
         if (tls != nullptr) {
@@ -116,6 +119,10 @@ protected:
             return std::nullopt;
         }
         req.prepare_payload();
+        if (chunked) {
+            req.erase(http::field::content_length);
+            req.chunked(true);
+        }
         http::write(stream, req, ec);
         beast::flat_buffer buffer;
         http::response<http::string_body> res;
@@ -162,6 +169,8 @@ protected:
     int handled_ = 0;
     std::string last_origin_;
     std::string last_body_;
+    std::atomic<bool> retain_uploads_{false};
+    std::vector<std::shared_ptr<gw::UploadLease>> uploads_;
 };
 
 TEST_F(GatewayServer, PassesAuthenticatedRequestToHandler) {
@@ -261,3 +270,41 @@ TEST_F(GatewayServer, ClientDisconnectCancelsTheRunningHandler) {
 }
 
 }  // namespace
+class GatewayLargeServer : public GatewayServer {
+protected:
+    std::size_t body_limit() const override { return 44U << 20; }
+};
+
+TEST_F(GatewayLargeServer, CountsChunkedAndFixedUploadsAndReleasesSharedBudget) {
+    retain_uploads_ = true;
+    const std::string large(70000, 'x');
+    const auto first = send(request("open-token", large));
+    ASSERT_TRUE(first);
+    EXPECT_EQ(first->status, 200U);
+    {
+        std::scoped_lock lock(mutex_);
+        EXPECT_EQ(last_body_, large);
+    }
+    const auto second = send(request("open-token", large), nullptr, true);
+    ASSERT_TRUE(second);
+    EXPECT_EQ(second->status, 200U);
+    {
+        std::scoped_lock lock(mutex_);
+        EXPECT_EQ(last_body_, large);
+    }
+    const auto overloaded = send(request("open-token", large), nullptr, true);
+    ASSERT_TRUE(overloaded);
+    EXPECT_EQ(overloaded->status, 503U);
+    EXPECT_EQ(code_of(*overloaded), "overloaded");
+    const auto small = send(request("open-token", "small"));
+    ASSERT_TRUE(small);
+    EXPECT_EQ(small->status, 200U);
+    {
+        std::scoped_lock lock(mutex_);
+        uploads_.clear();
+    }
+    const auto retry = send(request("open-token", large));
+    ASSERT_TRUE(retry);
+    EXPECT_EQ(retry->status, 200U);
+    EXPECT_EQ(handled(), 4);
+}

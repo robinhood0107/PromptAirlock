@@ -14,6 +14,10 @@
 #include <boost/none.hpp>
 
 #include <atomic>
+#include <array>
+
+#include "prompt_airlock/core/types.hpp"
+#include "prompt_airlock/core/sensitive.hpp"
 #include <exception>
 #include <optional>
 #include <string_view>
@@ -56,12 +60,38 @@ struct Server::Shared {
     ServerLimits limits;
     audit::AuditLog* audit;
     std::atomic<std::size_t> connections{0};
+    std::atomic<std::size_t> large_preparations{0};
 };
+
+struct UploadLease {
+    explicit UploadLease(std::shared_ptr<Server::Shared> owner) : state(std::move(owner)) {}
+    UploadLease(const UploadLease&) = delete;
+    UploadLease& operator=(const UploadLease&) = delete;
+    ~UploadLease() { if (acquired) state->large_preparations.fetch_sub(1); }
+    std::shared_ptr<Server::Shared> state;
+    bool acquired = false;
+};
+
+std::shared_ptr<UploadLease> reserve_large_upload(const std::shared_ptr<Server::Shared>& state) {
+    auto lease = std::make_shared<UploadLease>(state);
+    auto count = state->large_preparations.load();
+    while (count < 2) {
+        if (state->large_preparations.compare_exchange_weak(count, count + 1)) {
+            lease->acquired = true;
+            return lease;
+        }
+    }
+    return {};
+}
 
 namespace {
 
 using Stream = beast::ssl_stream<beast::tcp_stream>;
-using Parser = http::request_parser<http::string_body>;
+using Parser = http::request_parser<http::buffer_body>;
+struct BodyCleanup {
+    std::string& body;
+    ~BodyCleanup() { core::SensitiveText discarded(std::move(body)); }
+};
 constexpr auto use_tuple = asio::as_tuple(asio::use_awaitable);
 
 constexpr std::string_view endpoint_path = "/v1/chat/completions";
@@ -204,26 +234,54 @@ asio::awaitable<void> session(std::shared_ptr<Server::Shared> shared, tcp::socke
         const unsigned version = head.version();
 
         std::optional<JsonResponse> reply;
+        std::shared_ptr<UploadLease> upload;
+        std::string request_body;
+        BodyCleanup cleanup{request_body};
         auto accepted = check_headers(head, shared->auth, client, shared->audit);
         if (!accepted) {
             reply = std::move(accepted.error());
         } else if (const auto length = parser.content_length(); length && *length > shared->limits.body_bytes) {
             reply = error_response(EntryError::BodyTooLarge);
         } else {
-            parser.body_limit(shared->limits.body_bytes);  // chunked 본문은 읽으면서 센다
+            parser.body_limit(shared->limits.body_bytes);
+            if (const auto length = parser.content_length(); length && *length > core::max_prompt_bytes) {
+                upload = reserve_large_upload(shared);
+                if (!upload) reply = error_response(EntryError::Overloaded);
+            }
             deadline();
-            auto [body_error, body_bytes] = co_await http::async_read(stream, buffer, parser, use_tuple);
-            if (body_error == http::error::body_limit) {
-                reply = error_response(EntryError::BodyTooLarge);
-            } else if (body_error) {
-                break;
-            } else {
+            std::array<char, 16 * 1024> chunk{};
+            struct ChunkCleanup {
+                std::span<char> bytes;
+                ~ChunkCleanup() { core::secure_wipe(bytes); }
+            } clear_chunk{chunk};
+            while (!reply && !parser.is_done()) {
+                parser.get().body().data = chunk.data();
+                parser.get().body().size = chunk.size();
+                auto [body_error, body_bytes] = co_await http::async_read_some(stream, buffer, parser, use_tuple);
+                const auto consumed = chunk.size() - parser.get().body().size;
+                if (body_error == http::error::body_limit ||
+                    consumed > shared->limits.body_bytes - request_body.size()) {
+                    reply = error_response(EntryError::BodyTooLarge);
+                    break;
+                }
+                if (body_error && body_error != http::error::need_buffer) co_return;
+                if (!upload && request_body.size() + consumed > core::max_prompt_bytes) {
+                    upload = reserve_large_upload(shared);
+                    if (!upload) {
+                        reply = error_response(EntryError::Overloaded);
+                        break;
+                    }
+                }
+                request_body.append(chunk.data(), consumed);
+                core::secure_wipe(chunk);
+            }
+            if (!reply) {
                 using namespace asio::experimental::awaitable_operators;
                 try {
                     // 처리 중 연결이 끊기면 처리 단계에 asio 취소를 보내 남은 단계를 멈추고 가명 범위를 지우게 한다
                     auto outcome = co_await (shared->handler(AcceptedRequest{accepted->first, accepted->second,
-                                                                             std::move(parser.get().body()), client,
-                                                                             std::string(head[confirm_header])}) ||
+                                                                             std::move(request_body), client,
+                                                                             std::string(head[confirm_header]), std::move(upload)}) ||
                                              client_gone(beast::get_lowest_layer(stream).socket()));
                     if (outcome.index() == 1) {
                         co_return;  // 받을 사람이 없다

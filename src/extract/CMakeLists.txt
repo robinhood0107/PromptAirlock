@@ -34,6 +34,8 @@ endif()
 
 # 추출 실행 파일(ADR 0028). 게이트웨이가 요청마다 자식으로 띄운다.
 add_executable(prompt-airlock-extract "${PROJECT_SOURCE_DIR}/apps/prompt-airlock-extract/main.cpp")
+set_target_properties(prompt-airlock-extract PROPERTIES
+  RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/apps/prompt-airlock")
 target_link_libraries(prompt-airlock-extract PRIVATE prompt_airlock_extract prompt_airlock_extract_client pa_options)
 pa_copy_runtime_dlls(prompt-airlock-extract)
 if(MSVC)

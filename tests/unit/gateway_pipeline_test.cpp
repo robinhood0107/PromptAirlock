@@ -18,6 +18,8 @@
 #include <chrono>
 #include <condition_variable>
 #include <future>
+#include <fstream>
+#include "document_writer.hpp"
 #include <memory>
 #include <mutex>
 #include <stop_token>
@@ -123,7 +125,8 @@ private:
 class GatewayPipeline : public ::testing::Test {
 protected:
     gw::Pipeline make(const detect::Detectors& detectors, std::size_t in_flight_limit = gw::pipeline_in_flight_limit,
-                      std::chrono::milliseconds time_limit = gw::request_time_limit, gw::SentenceCheck sentence = {}) {
+                      std::chrono::milliseconds time_limit = gw::request_time_limit, gw::SentenceCheck sentence = {},
+                      prompt_airlock::audit::AuditLog* audit = nullptr, std::filesystem::path extractor = {}) {
         return gw::Pipeline(
             detectors,
             [this]() -> std::expected<gw::PseudonymScope, core::VaultError> {
@@ -147,10 +150,10 @@ protected:
                 if (provider_fails_) {
                     co_return std::unexpected(gw::ProviderError::Timeout);
                 }
-                co_return gw::ProviderReply{200, answer_ ? answer_(sent_.back()) : pa_mock::make_answer(sent_.back())};
+                co_return gw::ProviderReply{provider_status_, answer_ ? answer_(sent_.back()) : pa_mock::make_answer(sent_.back())};
             },
-            *core::OutputTokenCap::make(512), "demo-alias", work_.get_executor(), nullptr, in_flight_limit, time_limit,
-            std::move(sentence));
+            *core::OutputTokenCap::make(512), "demo-alias", work_.get_executor(), audit, in_flight_limit, time_limit,
+            std::move(sentence), std::move(extractor));
     }
 
     gw::JsonResponse run(const gw::Pipeline& pipeline, std::string body,
@@ -194,6 +197,7 @@ protected:
     bool vault_down_ = false;
     bool issuer_fails_ = false;
     bool provider_fails_ = false;
+    unsigned provider_status_ = 200;
     bool provider_hangs_ = false;
     std::atomic<int> live_scopes_{0};
     int provider_calls_ = 0;
@@ -492,4 +496,41 @@ TEST_F(GatewayPipeline, ConfidentialSentenceIsBlockedWithoutProviderCall) {
     EXPECT_NE(reply.body.find("CONFIDENTIAL_MATTER"), std::string::npos);
     EXPECT_EQ(reply.body.find("잠정"), std::string::npos);
     EXPECT_EQ(provider_calls_, 0);
+}
+TEST_F(GatewayPipeline, ExplicitProviderContextErrorIsSafeAndDoesNotRetry) {
+    provider_status_ = 400;
+    answer_ = [](const std::string&) {
+        return R"({"error":{"code":"context_length_exceeded","message":"private-upstream-detail"}})";
+    };
+    auto pipeline = make(detectors_);
+    const auto reply = run(pipeline, ask("일반 업무 문의"));
+    EXPECT_EQ(reply.status, 400U);
+    EXPECT_EQ(code_of(reply), "model_context_exceeded");
+    EXPECT_EQ(reply.body.find("private-upstream-detail"), std::string::npos);
+    EXPECT_EQ(provider_calls_, 1);
+    answer_ = [](const std::string&) { return R"({"error":{"code":"INVALID_ARGUMENT","message":"context maybe"}})"; };
+    const auto unknown = run(pipeline, ask("일반 업무 문의"));
+    EXPECT_EQ(unknown.status, 502U);
+    EXPECT_EQ(code_of(unknown), "provider_error");
+    EXPECT_EQ(provider_calls_, 2);
+}
+
+TEST_F(GatewayPipeline, FileMetadataAuditFailurePreventsProviderCall) {
+    const auto dir = std::filesystem::temp_directory_path() / "pa-document-audit-failure";
+    std::filesystem::remove_all(dir);
+    auto log = prompt_airlock::audit::AuditLog::open(dir, std::chrono::days(365));
+    ASSERT_TRUE(log);
+    ASSERT_TRUE(std::filesystem::remove(dir));
+    { std::ofstream denied(dir); denied << "not a directory"; }
+    auto pipeline = make(detectors_, gw::pipeline_in_flight_limit, gw::request_time_limit, {},
+                         log->get(), PA_EXTRACT_EXE);
+    const json body = {{"messages", json::array({{{"role", "user"}, {"content", json::array({
+        {{"type", "file"}, {"file", {{"filename", "a.txt"},
+            {"file_data", "data:text/plain;base64," + pa_test::documents::base64("일반 안내")}}}}
+    })}}})}};
+    const auto reply = run(pipeline, body.dump());
+    EXPECT_NE(reply.status, 200U);
+    EXPECT_EQ(provider_calls_, 0);
+    log->reset();
+    std::filesystem::remove(dir);
 }

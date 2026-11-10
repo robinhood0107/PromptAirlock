@@ -154,7 +154,7 @@ std::expected<std::vector<core::EntitySpan>, core::DetectError> Detectors::detec
 std::expected<std::vector<core::EntitySpan>, core::DetectError> Detectors::scan(std::string_view text,
                                                                              core::SegmentIndex segment,
                                                                              SensitiveTally& tally,
-                                                                             std::stop_token stop) const {
+                                                                             std::stop_token stop, core::DocumentKind kind) const {
     const auto view = make_view(text);
     if (!view) {
         return std::unexpected(view.error());
@@ -205,7 +205,9 @@ std::expected<std::vector<core::EntitySpan>, core::DetectError> Detectors::scan(
     rules::find_institution_ids(*view, chars, institution_labels_, id_formats_, hits);
     rules::find_confidential(*view, chars, confidential_markers_, confidential_subjects_, hits);
     if (ner_) {
-        const auto names = ner_->scan(text, segment, *view, stop);
+        const auto names = kind == core::DocumentKind::ExtractedFiles
+                               ? ner_->scan_document(text, segment, *view, stop)
+                               : ner_->scan(text, segment, *view, stop);
         if (!names) {
             return std::unexpected(names.error());
         }
@@ -302,7 +304,7 @@ std::expected<DocumentDetection, core::DetectError> Detectors::detect(const core
     for (std::uint32_t i = 0; i < segments.size(); ++i) {
         const auto text = segments[i].text();
         if (result.entities.size() <= core::max_entities) {
-            auto found = scan(text, core::SegmentIndex{i}, result.sensitive_passed, stop);
+            auto found = scan(text, core::SegmentIndex{i}, result.sensitive_passed, stop, document.kind());
             if (!found) {
                 return std::unexpected(found.error());
             }

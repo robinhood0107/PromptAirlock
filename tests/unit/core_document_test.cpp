@@ -86,3 +86,12 @@ TEST(CoreDocument, SizeLimitCoversMessagesAndStops) {
         .add_stop(pc::SensitiveText(std::string(half + 1, 'y')));
     EXPECT_EQ(std::move(over).build().error(), pc::InputError::TooLarge);
 }
+TEST(CoreDocument, ExtractedDocumentUsesSeparateBudgetAndKeepsItsKind) {
+    pc::PromptDocumentBuilder builder;
+    builder.add_message(MessageRole::User, ContentForm::TextParts,
+                        parts({std::string(pc::max_prompt_bytes + 1, 'x')}));
+    const auto document = std::move(builder).build(pc::DocumentKind::ExtractedFiles);
+    ASSERT_TRUE(document);
+    EXPECT_EQ(document->kind(), pc::DocumentKind::ExtractedFiles);
+    EXPECT_GT(document->total_bytes(), pc::max_prompt_bytes);
+}

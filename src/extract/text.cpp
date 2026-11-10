@@ -202,6 +202,14 @@ std::vector<std::string> html_lines(std::string_view html) {
                 i = end_close == std::string_view::npos ? html.size() : end_close + 1;
                 continue;
             }
+            // 표 칸 시작을 단단한 구분자로 남긴다. 실제 본문에 들어 있던 탭과 구별한다.
+            const auto tag_named = [&](std::string_view name) {
+                return iequals_prefix(tag, 0, name) && tag.size() > name.size() &&
+                       (tag[name.size()] == '>' || tag[name.size()] == ' ' || tag[name.size()] == '/' ||
+                        tag[name.size()] == '\t' || tag[name.size()] == '\n' || tag[name.size()] == '\r');
+            };
+            if (tag_named("<td") || tag_named("<th")) text.append("| ");
+            if (tag_named("</tr")) text.append(" |");
             // 줄을 끊는 태그는 줄바꿈으로, 칸을 나누는 태그는 탭으로.
             for (const std::string_view breaker : {"<br", "</p", "<p", "</div", "</tr", "</li", "</h", "<h"}) {
                 if (iequals_prefix(tag, 0, breaker)) {
@@ -274,7 +282,7 @@ std::expected<void, ExtractError> Context::add(std::string where, std::string te
     if (output > limits.output_bytes) {
         return std::unexpected(ExtractError::TooLarge);
     }
-    doc.blocks.push_back({prefix + where, std::move(text)});
+    doc.blocks.push_back({prefix + where, std::move(text), document, region});
     return {};
 }
 

@@ -120,3 +120,47 @@ TEST(GatewayRequestJson, DocumentRulesComeFromCore) {
 }
 
 }  // namespace
+TEST(GatewayRequestJson, InlineFileIsDecodedAndKeptOutOfTextProjection) {
+    const auto request = prompt_airlock::gateway::parse_request(
+        R"({"messages":[{"role":"user","content":[{"type":"text","text":"질문"},{"type":"file","file":{"filename":"문서.TXT","file_data":"data:text/plain;base64,aGVsbG8="}}]}]})");
+    ASSERT_TRUE(request);
+    ASSERT_EQ(request->files.size(), 1U);
+    EXPECT_EQ(request->files[0].extension, "txt");
+    EXPECT_EQ(request->files[0].bytes.view(), "hello");
+    EXPECT_EQ(request->files[0].message, 0U);
+    EXPECT_EQ(request->files[0].part, 1U);
+    EXPECT_TRUE(request->document.segments()[1].text().empty());
+    EXPECT_EQ(request->document.kind(), prompt_airlock::core::DocumentKind::ExtractedFiles);
+}
+
+TEST(GatewayRequestJson, RejectsFileReferencesPathsAndNoncanonicalBase64) {
+    using prompt_airlock::gateway::parse_request;
+    for (const auto file : {
+             R"({"filename":"a.txt","file_data":"https://example.invalid/a"})",
+             R"({"filename":"../a.txt","file_data":"data:text/plain;base64,YQ=="})",
+             R"({"filename":"C:\\a.txt","file_data":"data:text/plain;base64,YQ=="})",
+             R"({"filename":"a.txt","file_id":"remote"})",
+             R"({"filename":"a.txt","file_data":"data:text/plain;base64,YR=="})",
+             R"({"filename":"a.txt","file_data":"data:text/plain;base64,YQ=Y"})",
+             R"({"filename":"a.txt","file_data":"data:text/plain;base64,YQ==AAAA"})",
+             R"({"filename":"a.txt","file_data":"data:;base64,YQ=="})",
+             R"({"filename":"a.txt","file_data":"data:text/plain;base64,"})"}) {
+        const std::string body = std::string(R"({"messages":[{"role":"user","content":[{"type":"file","file":)") +
+                                 file + R"(}]}]})";
+        EXPECT_FALSE(parse_request(body)) << file;
+    }
+    EXPECT_FALSE(parse_request(R"({"messages":[{"role":"user","content":[{"type":"file","text":"hidden","file":{"filename":"a.txt","file_data":"data:text/plain;base64,YQ=="}}]}]})"));
+    EXPECT_FALSE(parse_request(R"({"messages":[{"role":"user","content":[{"type":"file","file":{"filename":"a.txt","file_data":"data:text/plain;base64,YQ==","file_data":"data:text/plain;base64,Yg=="}}]}]})"));
+}
+TEST(GatewayRequestJson, FileDecodedBudgetIsSharedAcrossAttachments) {
+    const auto limit = prompt_airlock::gateway::max_file_bytes;
+    std::string encoded(((limit + 2) / 3) * 4, 'A');
+    encoded.back() = '=';
+    const std::string body =
+        R"({"messages":[{"role":"user","content":[{"type":"file","file":{"filename":"a.bin","file_data":"data:application/octet-stream;base64,YQ=="}},{"type":"file","file":{"filename":"b.bin","file_data":"data:application/octet-stream;base64,)" +
+        encoded + R"("}}]}]})";
+    ASSERT_LT(body.size(), prompt_airlock::gateway::max_file_json_bytes);
+    const auto result = prompt_airlock::gateway::parse_request(body);
+    ASSERT_FALSE(result);
+    EXPECT_EQ(result.error().code(), prompt_airlock::core::ReasonCode::PromptTooLarge);
+}

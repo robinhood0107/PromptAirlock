@@ -8,6 +8,7 @@
 #include <vector>
 
 #include "hwp_writer.hpp"
+#include "document_writer.hpp"
 #include "prompt_airlock/extract/document.hpp"
 #include "prompt_airlock/extract/runner.hpp"
 
@@ -15,38 +16,10 @@ namespace ex = prompt_airlock::extract;
 
 namespace {
 
-struct Entry {
-    std::string name;
-    std::string data;
-    bool store = false;  // 압축하지 않음
-};
-
-// 메모리 zip 을 만든다.
-std::string make_zip(const std::vector<Entry>& entries) {
-    zip_error_t error;
-    zip_error_init(&error);
-    zip_source_t* buffer = zip_source_buffer_create(nullptr, 0, 0, &error);
-    zip_source_keep(buffer);
-    zip_t* archive = zip_open_from_source(buffer, ZIP_TRUNCATE, &error);
-    EXPECT_NE(archive, nullptr);
-    for (const auto& e : entries) {
-        zip_source_t* src = zip_source_buffer(archive, e.data.data(), e.data.size(), 0);
-        const auto index = zip_file_add(archive, e.name.c_str(), src, ZIP_FL_ENC_RAW);
-        EXPECT_GE(index, 0);
-        zip_set_file_compression(archive, static_cast<zip_uint64_t>(index), e.store ? ZIP_CM_STORE : ZIP_CM_DEFLATE, 0);
-    }
-    EXPECT_EQ(zip_close(archive), 0);
-    zip_source_open(buffer);
-    zip_source_seek(buffer, 0, SEEK_END);
-    const auto size = zip_source_tell(buffer);
-    zip_source_seek(buffer, 0, SEEK_SET);
-    std::string out(static_cast<std::size_t>(size), '\0');
-    zip_source_read(buffer, out.data(), static_cast<zip_uint64_t>(size));
-    zip_source_close(buffer);
-    zip_source_free(buffer);
-    zip_error_fini(&error);
-    return out;
-}
+using pa_test::documents::Entry;
+using pa_test::documents::make_zip;
+using pa_test::documents::docx;
+using pa_test::documents::w;
 
 std::expected<ex::ExtractedDocument, ex::ExtractError> run(std::string_view bytes, std::string_view hint = {},
                                                          const ex::ExtractLimits& limits = {}) {
@@ -61,13 +34,6 @@ std::vector<std::string> texts(const ex::ExtractedDocument& doc) {
     return out;
 }
 
-const std::string w = R"(xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main")";
-
-std::string docx(std::string body, std::vector<Entry> extra = {}) {
-    extra.push_back({"[Content_Types].xml", "<Types/>"});
-    extra.push_back({"word/document.xml", "<w:document " + w + "><w:body>" + body + "</w:body></w:document>"});
-    return make_zip(extra);
-}
 
 }  // namespace
 
@@ -86,12 +52,12 @@ TEST(ExtractText, Encodings) {
 TEST(ExtractText, CsvAndHtml) {
     const auto csv = *run("이름,번호\n가,1\n", "csv");
     EXPECT_EQ(csv.format, ex::DocumentFormat::Csv);
-    EXPECT_EQ(csv.blocks[1].where, "row2");
+    EXPECT_EQ(csv.blocks[2].where, "row2 cell1");
     const auto html = *run("<!DOCTYPE html><html><head><style>p{}</style><script>var x='비밀';</script></head>"
                            "<body><!-- 숨김 --><p>가 &amp; 나&#44;&#xAC00;</p><table><tr><td>a</td><td>b</td></tr>"
                            "</table></body></html>");
     EXPECT_EQ(html.format, ex::DocumentFormat::Html);
-    EXPECT_EQ(texts(html), (std::vector<std::string>{"가 & 나,가", "a\tb"}));
+    EXPECT_EQ(texts(html), (std::vector<std::string>{"가 & 나,가", "| a\t| b\t |"}));
 }
 
 TEST(ExtractOffice, DocxBodyHiddenRevisionsAndComments) {
@@ -127,9 +93,11 @@ TEST(ExtractOffice, XlsxSharedStringsHiddenSheetsAndRows) {
     }));
     ASSERT_TRUE(doc);
     EXPECT_EQ(doc->format, ex::DocumentFormat::Xlsx);
-    ASSERT_EQ(doc->blocks.size(), 2U);
-    EXPECT_EQ(doc->blocks[0], (ex::TextBlock{"보이는!1", "이름\t42"}));
-    EXPECT_EQ(doc->blocks[1], (ex::TextBlock{"보이는!3", "홍길동\t직접"}));
+    ASSERT_EQ(doc->blocks.size(), 4U);
+    EXPECT_EQ(doc->blocks[0], (ex::TextBlock{"보이는!1 cell1", "이름", 0, 1}));
+    EXPECT_EQ(doc->blocks[1], (ex::TextBlock{"보이는!1 cell2", "42", 0, 2}));
+    EXPECT_EQ(doc->blocks[2], (ex::TextBlock{"보이는!3 cell1", "홍길동", 0, 3}));
+    EXPECT_EQ(doc->blocks[3], (ex::TextBlock{"보이는!3 cell2", "직접", 0, 4}));
     EXPECT_EQ(doc->omitted.hidden, 2U);  // 숨긴 시트 1, 숨긴 행 1
 }
 
@@ -185,7 +153,7 @@ TEST(ExtractOffice, EmbeddedFiles) {
     ASSERT_TRUE(doc) << ex::error_name(doc.error());
     EXPECT_EQ(texts(*doc), (std::vector<std::string>{"바깥 글", "넣은 문서 글", "넣은 문서 글"}));
     EXPECT_EQ(doc->blocks[1].where, "word/embeddings/inner.docx:p1");
-    EXPECT_EQ(doc->omitted.other_parts, 1U);
+    EXPECT_EQ(doc->omitted.other_parts, 2U);  // 옛 형식 개체와 읽지 않은 미디어 부품
 }
 
 TEST(ExtractOffice, HwpxSectionsMemoAndEncryption) {

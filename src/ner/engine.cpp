@@ -114,17 +114,7 @@ std::expected<std::vector<pc::EntitySpan>, NerError> NerEngine::detect_all(std::
                                                                            std::stop_token stop) {
     const auto tokens = tokenizer_.encode(view.units);
     const auto body = std::span(tokens).subspan(1, tokens.size() - 2);
-    // 문장 끝: 토큰의 마지막 글자가 문장 부호이거나, 다음 토큰과의 사이에 줄바꿈이 있다.
-    const auto is_stop = [](char32_t c) { return c == U'.' || c == U'?' || c == U'!' || c == U'\u3002'; };
-    const auto is_newline = [](char32_t c) { return c == U'\n' || c == U'\r'; };
-    std::vector<std::uint32_t> cuts;
-    for (std::uint32_t i = 0; i + 1 < body.size(); ++i) {
-        const auto gap = std::span(view.units).subspan(body[i].last_unit + 1, body[i + 1].first_unit - body[i].last_unit - 1);
-        if (is_stop(view.units[body[i].last_unit].value) ||
-            std::ranges::any_of(gap, [&](const auto& u) { return is_newline(u.value); })) {
-            cuts.push_back(i);
-        }
-    }
+    const auto cuts = sentence_cuts(body, view);
     const auto windows = split_windows(static_cast<std::uint32_t>(body.size()), cuts);
     if (!windows) {
         return std::unexpected(NerError::TooManyWindows);
@@ -143,6 +133,30 @@ std::expected<std::vector<pc::EntitySpan>, NerError> NerEngine::detect_all(std::
     std::ranges::sort(out);
     const auto [first, last] = std::ranges::unique(out);
     out.erase(first, last);
+    return out;
+}
+
+
+std::expected<std::vector<core::EntitySpan>, NerError> NerEngine::detect_batch(
+    std::string_view text, core::SegmentIndex segment, const detect::DetectionView& view,
+    const TokenBatch& batch, std::stop_token stop) {
+    if (batch.windows.size() > document_batch_windows) return std::unexpected(NerError::TooManyWindows);
+    std::vector<core::EntitySpan> out;
+    for (const auto& w : batch.windows) {
+        if (stop.stop_requested()) return std::unexpected(NerError::Stopped);
+        if (w.first >= w.end || w.end > batch.tokens.size() || w.end - w.first > window_body_tokens)
+            return std::unexpected(NerError::InvalidSpan);
+        const auto tokens = std::span(batch.tokens).subspan(w.first, w.end - w.first);
+        for (const auto& token : tokens) {
+            if (token.first_unit > token.last_unit || token.last_unit >= view.units.size())
+                return std::unexpected(NerError::InvalidSpan);
+        }
+        if (auto r = infer(text, segment, view, 0, tokens, batch.cls, batch.sep, out); !r)
+            return std::unexpected(r.error());
+    }
+    std::ranges::sort(out);
+    const auto unique = std::ranges::unique(out);
+    out.erase(unique.begin(), unique.end());
     return out;
 }
 

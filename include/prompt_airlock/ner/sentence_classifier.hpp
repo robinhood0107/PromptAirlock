@@ -10,6 +10,8 @@
 #include <filesystem>
 #include <memory>
 #include <optional>
+#include <span>
+#include <cstdint>
 #include <stop_token>
 #include <string>
 #include <string_view>
@@ -31,6 +33,13 @@ enum class SentenceError : std::uint8_t { Unavailable, Overloaded, Timeout };
 struct SentenceHit {
     std::string category;  // classifier.json 의 범주 이름(Health, ..., Credential)
     float score;
+};
+
+// 호출자가 소유하는 선택 진단값이다. 문장·범주 점수·토큰 ID를 담지 않는다.
+struct SentenceScanStatistics {
+    std::size_t windows = 0;
+    std::size_t tokens = 0;
+    std::size_t checked_tokens = 0;
 };
 
 // 문장 나누기: 마침표·물음표·느낌표·줄바꿈 뒤(다음이 공백·줄바꿈이거나 끝)에서 나누고 공백뿐인 조각은 버린다.
@@ -55,7 +64,7 @@ public:
     // 걸리면 범주와 점수, 아니면 nullopt. 스레드 안전하다.
     [[nodiscard]] std::expected<std::optional<SentenceHit>, SentenceError> classify(std::string_view text,
                                                                                    bool named_person,
-                                                                                   std::stop_token stop = {}) const;
+        std::stop_token stop = {}, SentenceScanStatistics* statistics = nullptr) const;
 
     // 문장 하나의 범주 확률(마지막이 None). 측정 도구가 Python 과 견줄 때 쓴다.
     [[nodiscard]] std::expected<std::vector<float>, SentenceError> probabilities(std::string_view sentence) const;
@@ -64,6 +73,10 @@ public:
     [[nodiscard]] bool refers_to_person(std::string_view text) const;
 
 private:
+    [[nodiscard]] std::expected<std::vector<float>, SentenceError> infer_probabilities(
+        std::span<const std::int64_t> ids) const;
+    [[nodiscard]] std::expected<std::optional<SentenceHit>, SentenceError> classify_sentence_all(
+        std::string_view sentence, bool personal, std::stop_token stop, SentenceScanStatistics* statistics) const;
     std::unique_ptr<Impl> impl_;
 };
 

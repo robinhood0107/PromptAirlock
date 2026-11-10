@@ -6,6 +6,7 @@
 #include "prompt_airlock/core/sha256.hpp"
 #include "prompt_airlock/gateway/provider_json.hpp"
 #include "prompt_airlock/gateway/request_json.hpp"
+#include "prompt_airlock/gateway/documents.hpp"
 #include "prompt_airlock/gateway/response_json.hpp"
 
 #include <boost/asio/as_tuple.hpp>
@@ -77,6 +78,22 @@ bool has_active_content(std::string_view text) {
 }
 
 // 게이트웨이 요청 ID. provider 의 id 대신 클라이언트에 준다.
+// 명시적인 기계 판독 코드만 구분한다. 모호한 400이나 제공자 메시지로 원인을 추측하지 않는다.
+bool context_limit_error(unsigned status, std::string_view text) {
+    if (status != 400 && status != 413) return false;
+    try {
+        auto body = nlohmann::json::parse(text, nullptr, false);
+        if (body.is_array() && body.size() == 1) body = body.front();
+        if (!body.is_object() || !body.contains("error") || !body["error"].is_object()) return false;
+        const auto code = body["error"].find("code");
+        if (code == body["error"].end() || !code->is_string()) return false;
+        const auto& value = code->get_ref<const std::string&>();
+        return value == "context_length_exceeded" || value == "context_window_exceeded" || value == "prompt_too_long";
+    } catch (const nlohmann::json::exception&) {
+        return false;
+    }
+}
+
 std::string new_request_id() {
     std::random_device device;
     std::string id = "chatcmpl-pa-";
@@ -96,6 +113,7 @@ struct Pipeline::Trace {
     nlohmann::json blocked = nlohmann::json::array();
     nlohmann::json entities = nlohmann::json::object();
     nlohmann::json sentence;  // 경고 모드: 걸린 범주 이름과 사용자 확인 여부만
+    nlohmann::json documents = nlohmann::json::array();
     std::optional<std::chrono::steady_clock::time_point> provider_started;
     std::optional<std::chrono::steady_clock::time_point> provider_finished;
 
@@ -121,7 +139,7 @@ struct Pipeline::Trace {
 Pipeline::Pipeline(const detect::Detectors& detectors, ScopeOpener open_scope, ProviderCall provider,
                    core::OutputTokenCap output_cap, std::string model_alias, asio::any_io_executor work,
                    audit::AuditLog* audit, std::size_t in_flight_limit, std::chrono::milliseconds time_limit,
-                   SentenceCheck sentence)
+                   SentenceCheck sentence, std::filesystem::path extractor)
     : detectors_(detectors),
       open_scope_(std::move(open_scope)),
       provider_(std::move(provider)),
@@ -131,7 +149,7 @@ Pipeline::Pipeline(const detect::Detectors& detectors, ScopeOpener open_scope, P
       audit_(audit),
       in_flight_limit_(in_flight_limit),
       time_limit_(time_limit),
-      sentence_(std::move(sentence)) {}
+      sentence_(std::move(sentence)), extractor_(std::move(extractor)) {}
 
 asio::awaitable<JsonResponse> Pipeline::handle(AcceptedRequest request) const {
     const auto start = std::chrono::steady_clock::now();
@@ -170,6 +188,7 @@ asio::awaitable<JsonResponse> Pipeline::handle(AcceptedRequest request) const {
             fields["reason"] = trace.reason;
             fields["blocked_types"] = trace.blocked;
         }
+        if (!trace.documents.empty()) fields["documents"] = trace.documents;
         if (!trace.sentence.is_null()) {
             fields["sentence_warn"] = trace.sentence;
         }
@@ -215,15 +234,65 @@ std::expected<Pipeline::Outbound, JsonResponse> Pipeline::prepare(AcceptedReques
                                                                 std::stop_token stop) const {
     // 확인 표지는 받은 본문 바이트 그대로에 묶는다
     const std::string body_sha256 = sentence_ ? core::sha256_hex(std::as_bytes(std::span(request.body))) : std::string();
-    auto parsed = parse_request(request.body);
+    core::SensitiveText owned_body(std::move(request.body));
+    auto parsed = parse_request(owned_body.view());
     if (!parsed) {
         return std::unexpected(trace.reject(parsed.error()));
+    }
+    if (parsed->files.empty() && owned_body.size() > core::max_prompt_bytes) {
+        return std::unexpected(trace.fail(EntryError::BodyTooLarge));
     }
     auto params = core::RequestParams::create(parsed->params, output_cap_);
     if (!params) {
         return std::unexpected(trace.reject(params.error()));
     }
-    auto raw = core::RawPrompt::create(std::move(parsed->document), *params, request.grade);
+    std::vector<FileStatistics> statistics;
+    const auto executable = !parsed->files.empty() && extractor_.empty() ? extract::default_executable() : extractor_;
+    auto resolved = resolve_documents(*parsed, executable,
+                                      statistics, stop);
+    for (std::size_t i = 0; i < statistics.size(); ++i) {
+        const auto& stat = statistics[i];
+        trace.documents.push_back({{"index", i}, {"bytes", stat.bytes}, {"sha256", stat.sha256},
+                                   {"format", stat.format ? nlohmann::json(extract::format_name(*stat.format))
+                                                          : nlohmann::json(nullptr)},
+                                   {"pages", stat.pages ? nlohmann::json(*stat.pages) : nlohmann::json(nullptr)},
+                                   {"characters", stat.characters},
+                                   {"omitted", {{"comments", stat.omitted.comments}, {"revisions", stat.omitted.revisions},
+                                                {"hidden", stat.omitted.hidden}, {"other_parts", stat.omitted.other_parts}}}});
+    }
+    if (audit_ != nullptr && !trace.documents.empty() &&
+        !audit_->append("documents", resolved ? "info" : "warn",
+                        {{"request_id", trace.id}, {"ok", resolved.has_value()}, {"documents", trace.documents}})) {
+        return std::unexpected(trace.fail(EntryError::Unavailable));
+    }
+    if (!resolved) {
+        auto failed = std::visit([&](auto error) -> JsonResponse {
+            using E = decltype(error);
+            if constexpr (std::is_same_v<E, core::InputError>) {
+                return trace.reject(core::Rejection::from_error(error));
+            } else if constexpr (std::is_same_v<E, extract::RunError>) {
+                if (error == extract::RunError::Timeout) return trace.fail(EntryError::Timeout);
+                if (error == extract::RunError::Cancelled) return trace.fail(EntryError::Cancelled);
+                if (error == extract::RunError::OutputTooLarge) return trace.fail(EntryError::BodyTooLarge);
+                return trace.fail(EntryError::Unavailable);
+            } else {
+                switch (error) {
+                    case extract::ExtractError::TooLarge:
+                    case extract::ExtractError::Bomb: return trace.fail(EntryError::BodyTooLarge);
+                    case extract::ExtractError::UnknownFormat:
+                    case extract::ExtractError::LegacyFormat:
+                    case extract::ExtractError::Unsupported: return trace.fail(EntryError::DocumentUnsupported);
+                    case extract::ExtractError::Encrypted: return trace.fail(EntryError::DocumentEncrypted);
+                    case extract::ExtractError::NoText: return trace.fail(EntryError::DocumentNoText);
+                    case extract::ExtractError::Damaged: return trace.fail(EntryError::DocumentInvalid);
+                }
+                return trace.fail(EntryError::Unavailable);
+            }
+        }, resolved.error());
+        return std::unexpected(std::move(failed));
+    }
+    auto raw = core::RawPrompt::create(std::move(resolved->document), *params, request.grade);
+
     const auto detected = detectors_.detect(raw.document(), stop);
     if (!detected) {
         return std::unexpected(trace.reject(core::Rejection::from_error(detected.error())));
@@ -311,7 +380,7 @@ std::expected<core::VerifiedPrompt, core::Rejection> Pipeline::protect_and_verif
     if (!protected_prompt) {
         return std::unexpected(protected_prompt.error());
     }
-    const auto residual = detectors_.detect(protected_prompt->document(), stop);
+    const auto residual = detectors_.detect(core::residual_scan_document(*protected_prompt), stop);
     if (!residual) {
         return std::unexpected(core::Rejection::from_error(residual.error()));
     }
@@ -323,6 +392,7 @@ std::expected<core::VerifiedPrompt, core::Rejection> Pipeline::protect_and_verif
 JsonResponse Pipeline::finish(const std::expected<ProviderReply, ProviderError>& reply, PseudonymScope& scope,
                               Trace& trace, std::stop_token stop) const {
     if (!reply || reply->status != 200) {
+        if (reply && context_limit_error(reply->status, reply->body)) return trace.fail(EntryError::ContextLimit);
         return trace.fail(EntryError::ProviderFailed);  // provider 오류 본문은 넘기지 않는다
     }
     // 복원 전 응답. provider 오류 본문은 남기지 않는다(200 일 때만)
@@ -361,8 +431,13 @@ JsonResponse Pipeline::finish(const std::expected<ProviderReply, ProviderError>&
     const auto created = std::chrono::duration_cast<std::chrono::seconds>(
                              std::chrono::system_clock::now().time_since_epoch())
                              .count();
-    return JsonResponse{200, client_response_body(trace.id, created, model_alias_, restored, answer->finish_reason,
-                                                  answer->usage)};
+    auto response = client_response_body(trace.id, created, model_alias_, restored, answer->finish_reason, answer->usage);
+    if (!trace.documents.empty()) {
+        auto body = nlohmann::json::parse(response);
+        body["prompt_airlock"] = {{"documents", trace.documents}};
+        response = body.dump();
+    }
+    return JsonResponse{200, std::move(response)};
 }
 
 }  // namespace prompt_airlock::gateway

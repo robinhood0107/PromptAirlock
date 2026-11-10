@@ -5,6 +5,9 @@
 #include <cstddef>
 #include <expected>
 #include <string_view>
+#include <string>
+#include <cstdint>
+#include <vector>
 
 #include "prompt_airlock/core/document.hpp"
 #include "prompt_airlock/core/reason.hpp"
@@ -13,10 +16,22 @@
 namespace prompt_airlock::gateway {
 
 inline constexpr std::size_t max_json_depth = 16;
+inline constexpr std::size_t max_file_bytes = 32U << 20;
+inline constexpr std::size_t max_file_parts = 64;
+inline constexpr std::size_t max_file_json_bytes = 44U << 20;
+
+// 원래 메시지 part의 빈 자리를 추출 후 채운다. 이름은 버리고 제한된 확장자와 파일 byte만 보관한다.
+struct FilePart {
+    std::uint32_t message;
+    std::uint32_t part;
+    std::string extension;
+    core::SensitiveText bytes;
+};
 
 struct ParsedRequest {
     core::PromptDocument document;
     core::RequestParamsInput params;
+    std::vector<FilePart> files;
 };
 
 // 사유 코드: 문법·UTF-8·깊이 오류는 InvalidText, 허용 밖 키·중복 키·모양이 다른 값은 FieldNotAllowed,

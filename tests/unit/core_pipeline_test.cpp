@@ -243,3 +243,30 @@ TEST(CorePipeline, ResponseRoundTripRestoresOriginals) {
     ASSERT_TRUE(restored);
     EXPECT_EQ(restored->view(), "확인했습니다. " + user_text);
 }
+
+// 가명 무작위 글자가 달라도 잔여 검사 사본은 같다. 무작위 10자만 고정 글자가 되고 길이는 그대로다.
+TEST(CorePipeline, ResidualScanCopyDoesNotDependOnPseudonymRandomness) {
+    auto scan = [](std::uint64_t seed) {
+        pc::PromptDocumentBuilder builder;
+        std::vector<pc::SensitiveText> parts;
+        parts.push_back(pc::SensitiveText::copy_of(user_text));
+        builder.add_message(pc::MessageRole::User, pc::ContentForm::String, std::move(parts));
+        auto raw = pc::RawPrompt::create(*std::move(builder).build(),
+                                         *pc::RequestParams::create({.max_tokens = 500}, pc::OutputTokenCap::standard()),
+                                         *pc::resolve_grade(pc::GradePolicy::OOnly, {}));
+        const std::vector<pc::EntitySpan> detected{entity(0, user_text, "가상인", EntityType::Person)};
+        auto checked = pc::check_policy(std::move(raw), detected,
+                                        pc::Policy::standard());
+        pa_test::FakeVault vault(seed);
+        auto protected_prompt = pc::protect(std::move(*checked), vault);
+        const auto sent = std::string(protected_prompt->document().segments()[0].text());
+        const auto copy = pc::residual_scan_document(*protected_prompt);
+        return std::pair{sent, std::string(copy.segments()[0].text())};
+    };
+    const auto [sent1, copy1] = scan(1);
+    const auto [sent2, copy2] = scan(2);
+    EXPECT_NE(sent1, sent2);
+    EXPECT_EQ(copy1, copy2);
+    EXPECT_EQ(copy1.size(), sent1.size());
+    EXPECT_NE(copy1.find(std::string("_") + std::string(pc::residual_scan_filler)), std::string::npos);
+}

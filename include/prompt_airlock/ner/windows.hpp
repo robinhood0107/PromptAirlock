@@ -7,6 +7,9 @@
 #include <span>
 #include <vector>
 
+#include "prompt_airlock/detect/view.hpp"
+#include "prompt_airlock/ner/tokenizer.hpp"
+
 namespace prompt_airlock::ner {
 
 // 창 하나의 본문 토큰 한도. 앞뒤 special 2개를 더하면 256 으로, 합격 기준(D5) 지연 측정 길이와 같다.
@@ -27,6 +30,9 @@ struct TokenWindow {
 // 창은 window_body_tokens 안에서 가장 늦은 문장 끝에서 자르고, 문장 끝이 없으면 그 자리에서 자른 뒤
 // window_overlap_tokens 만큼 되돌아가 다음 창을 시작한다. 창이 max_ner_windows 를 넘으면 nullopt.
 [[nodiscard]] std::optional<std::vector<TokenWindow>> split_windows(std::uint32_t tokens,
-                                                                    std::span<const std::uint32_t> cut_after);
+    std::span<const std::uint32_t> cut_after, std::size_t max_windows = max_ner_windows);
+
+[[nodiscard]] std::vector<std::uint32_t> sentence_cuts(std::span<const Token> tokens,
+                                                      const detect::DetectionView& view);
 
 }  // namespace prompt_airlock::ner

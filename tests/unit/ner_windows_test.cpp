@@ -72,3 +72,14 @@ TEST(NerWindows, TooManyWindowsIsRefused) {
     EXPECT_EQ(fits->size(), pn::max_ner_windows);
     EXPECT_FALSE(pn::split_windows(most + 1, {}));
 }
+TEST(NerWindows, DocumentWindowBudgetDoesNotTruncateAt128) {
+    EXPECT_FALSE(prompt_airlock::ner::split_windows(100000, {}));
+    const auto windows = prompt_airlock::ner::split_windows(100000, {}, 100000);
+    ASSERT_TRUE(windows);
+    ASSERT_GT(windows->size(), 128U);
+    EXPECT_EQ(windows->front().first, 0U);
+    EXPECT_EQ(windows->back().end, 100000U);
+    for (std::size_t i = 1; i < windows->size(); ++i) {
+        EXPECT_EQ((*windows)[i - 1].end - (*windows)[i].first, prompt_airlock::ner::window_overlap_tokens);
+    }
+}

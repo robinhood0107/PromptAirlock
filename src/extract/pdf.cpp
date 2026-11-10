@@ -7,9 +7,11 @@
 #ifdef PA_WITH_PDFIUM
 #include <fpdf_annot.h>
 #include <fpdf_formfill.h>
+#include <fpdf_edit.h>
 #include <fpdf_text.h>
 #include <fpdfview.h>
 
+#include <algorithm>
 #include <memory>
 #include <vector>
 #endif
@@ -114,11 +116,12 @@ std::expected<void, ExtractError> page_annotations(fpdf_form_handle_t__* form, f
         FPDFAnnot_GetFormFieldValue(form, annot.get(), value.data(), bytes);
         std::string utf8;
         append_utf16(utf8, [&](std::size_t k) -> char32_t { return value[k]; }, value.size() - 1);
-        if (auto r = context.add("page" + std::to_string(page_number) + " field" + std::to_string(++field),
+        const auto saved_region = context.region;
+        context.region = ++context.next_region;
+        auto added = context.add("page" + std::to_string(page_number) + " field" + std::to_string(++field),
                                  std::move(utf8));
-            !r) {
-            return r;
-        }
+        context.region = saved_region;
+        if (!added) return added;
     }
     return {};
 }
@@ -127,6 +130,7 @@ std::expected<void, ExtractError> page_annotations(fpdf_form_handle_t__* form, f
 
 std::expected<void, ExtractError> extract_pdf(std::span<const std::byte> file, Context& context) {
     init_once();
+    const auto first_block = context.doc.blocks.size();
     const std::unique_ptr<fpdf_document_t__, DocumentCloser> doc(
         FPDF_LoadMemDocument64(file.data(), file.size(), nullptr));
     if (!doc) {
@@ -138,6 +142,7 @@ std::expected<void, ExtractError> extract_pdf(std::span<const std::byte> file, C
     if (pages < 0 || static_cast<std::size_t>(pages) > context.limits.pdf_pages) {
         return std::unexpected(pages < 0 ? ExtractError::Damaged : ExtractError::TooLarge);
     }
+    context.doc.documents[context.document].pages = static_cast<std::uint32_t>(pages);
     // 양식 칸 값을 읽는 데만 쓴다. 콜백은 하나도 주지 않는다(PDFium 이 판 1 의 필수 콜백 없이도 값을 읽음).
     FPDF_FORMFILLINFO form_info{};
     form_info.version = 1;
@@ -147,6 +152,16 @@ std::expected<void, ExtractError> extract_pdf(std::span<const std::byte> file, C
         const std::unique_ptr<fpdf_page_t__, PageCloser> page(FPDF_LoadPage(doc.get(), i));
         if (!page) {
             return std::unexpected(ExtractError::Damaged);
+        }
+        const int objects = FPDFPage_CountObjects(page.get());
+        if (objects < 0) return std::unexpected(ExtractError::Damaged);
+        for (int object = 0; object < objects; ++object) {
+            const auto part = FPDFPage_GetObject(page.get(), object);
+            if (!part) return std::unexpected(ExtractError::Damaged);
+            if (FPDFPageObj_GetType(part) != FPDF_PAGEOBJ_TEXT) {
+                if (context.doc.omitted.other_parts == UINT32_MAX) return std::unexpected(ExtractError::TooLarge);
+                ++context.doc.omitted.other_parts;
+            }
         }
         const std::unique_ptr<fpdf_textpage_t__, TextCloser> text(FPDFText_LoadPage(page.get()));
         if (!text) {
@@ -161,6 +176,9 @@ std::expected<void, ExtractError> extract_pdf(std::span<const std::byte> file, C
             return r;
         }
     }
+    // 양식 칸은 본문 흐름 뒤에 둔다. 칸 때문에 쪽 사이 본문이 잘리지 않게 한다.
+    std::stable_partition(context.doc.blocks.begin() + static_cast<std::ptrdiff_t>(first_block),
+                          context.doc.blocks.end(), [](const TextBlock& block) { return block.region == 0; });
     return {};
 }
 #else

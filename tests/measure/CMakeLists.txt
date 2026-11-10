@@ -76,7 +76,17 @@ if(PA_WITH_VAULT)
   pa_copy_runtime_dlls(gateway_measure)
 endif()
 
+# 문서 연결 전후를 같은 기관 정책과 NER로 비교한다. 원문은 출력하지 않는다.
+add_executable(document_baseline_measure EXCLUDE_FROM_ALL document_baseline_measure.cpp)
+target_link_libraries(document_baseline_measure PRIVATE prompt_airlock_ner prompt_airlock_detect pa_options nlohmann_json::nlohmann_json)
+target_compile_definitions(document_baseline_measure PRIVATE PA_NER_MODEL_DIR="${PA_NER_MODEL_DIR}")
+pa_copy_runtime_dlls(document_baseline_measure)
 # 기관 정책 묶음(Phase 11-2, 11-3): 합성 셋으로 기밀 문장 재현율·오차단과 기관 번호 재현율을 잰다.
 add_executable(institution_measure EXCLUDE_FROM_ALL institution_measure.cpp)
 target_link_libraries(institution_measure PRIVATE prompt_airlock_detect pa_options nlohmann_json::nlohmann_json)
 pa_copy_runtime_dlls(institution_measure)
+# 잔여 검사 판정 변동의 원인 나누기(11.5-3): 같은 문서를 다른·같은 가명으로 여러 번 돌린다. 원문은 출력하지 않는다.
+add_executable(residual_flip_measure EXCLUDE_FROM_ALL residual_flip_measure.cpp)
+target_link_libraries(residual_flip_measure PRIVATE prompt_airlock_gateway prompt_airlock_ner prompt_airlock_detect pa_test_support pa_options nlohmann_json::nlohmann_json)
+target_compile_definitions(residual_flip_measure PRIVATE PA_NER_MODEL_DIR="${PA_NER_MODEL_DIR}")
+pa_copy_runtime_dlls(residual_flip_measure)

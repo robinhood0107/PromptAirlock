@@ -7,7 +7,7 @@ target_link_libraries(prompt-airlock PRIVATE prompt_airlock_audit prompt_airlock
 set(PA_SENTENCE_MODEL_DIR "${CMAKE_BINARY_DIR}/models/sentence" CACHE PATH "문장 판별기 모델 폴더")
 target_compile_definitions(prompt-airlock PRIVATE "PA_VAULT_EXE=\"${PA_VAULT_EXE}\"" PA_NER_MODEL_DIR="${PA_NER_MODEL_DIR}"
                            PA_SENTENCE_MODEL_DIR="${PA_SENTENCE_MODEL_DIR}")
-add_dependencies(prompt-airlock prompt_airlock_vault)
+add_dependencies(prompt-airlock prompt_airlock_vault prompt-airlock-extract)
 pa_copy_runtime_dlls(prompt-airlock)
 if(MSVC)
   target_compile_options(prompt-airlock PRIVATE /WX)

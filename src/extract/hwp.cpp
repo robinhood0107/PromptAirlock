@@ -150,6 +150,8 @@ std::expected<void, ExtractError> extract_hwp(const Cfb& cfb, std::size_t depth,
         std::size_t number = 0;
         std::size_t equations = 0;
         std::uint32_t skip_level = 0;
+        std::vector<std::pair<std::uint32_t, std::uint32_t>> regions;
+        context.region = 0;
         bool skipping = false;
         for (std::size_t at = 0; at < records.size();) {
             if (records.size() - at < 4) {
@@ -159,6 +161,10 @@ std::expected<void, ExtractError> extract_hwp(const Cfb& cfb, std::size_t depth,
             at += 4;
             const auto tag = head & 0x3FF;
             const auto level = head >> 10 & 0x3FF;
+            while (!regions.empty() && level <= regions.back().first) {
+                context.region = regions.back().second;
+                regions.pop_back();
+            }
             std::size_t size = head >> 20;
             if (size == 0xFFF) {
                 if (records.size() - at < 4) {
@@ -177,6 +183,11 @@ std::expected<void, ExtractError> extract_hwp(const Cfb& cfb, std::size_t depth,
             }
             if (skipping) {
                 continue;
+            }
+            // LIST_HEADER(72)는 표 칸·글상자의 문단 목록 경계다.
+            if (tag == 72) {
+                regions.emplace_back(level, context.region);
+                context.region = ++context.next_region;
             }
             if (tag == tag_ctrl_header && data.size() >= 4) {
                 const auto id = u32(data, 0);
@@ -222,6 +233,7 @@ std::expected<void, ExtractError> extract_hwp(const Cfb& cfb, std::size_t depth,
     // 그림 등 다른 BinData 는 그대로 둔다.
     for (const auto& name : cfb.streams("BinData")) {
         if (!name.ends_with(".OLE") && !name.ends_with(".ole")) {
+            ++context.doc.omitted.other_parts;
             continue;
         }
         auto raw = cfb.read("BinData/" + name, context);

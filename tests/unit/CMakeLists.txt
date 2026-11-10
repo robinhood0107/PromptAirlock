@@ -83,6 +83,10 @@ foreach(name IN ITEMS
 endforeach()
 
 # TLS 설정(ADR 0014). 시험 인증서는 실행 때마다 새로 만든다.
+if(EXISTS "${PA_SENTENCE_MODEL_DIR}/classifier.json")
+  target_compile_definitions(ner_sentence_classifier_test PRIVATE
+    PA_TEST_SENTENCE_MODEL_DIR="${PA_SENTENCE_MODEL_DIR}")
+endif()
 pa_add_gtest(tls_context_test tls_context_test.cpp)
 target_link_libraries(tls_context_test PRIVATE prompt_airlock_tls pa_test_cert)
 
@@ -113,6 +117,13 @@ target_link_libraries(audit_log_test PRIVATE prompt_airlock_audit)
 
 # 문서 추출(ADR 0028). 해석 시험은 시험 안에서 libzip 으로 문서를 만든다.
 find_package(libzip CONFIG REQUIRED)
+target_compile_definitions(gateway_pipeline_test PRIVATE "PA_EXTRACT_EXE=\"$<TARGET_FILE:prompt-airlock-extract>\"")
+target_link_libraries(gateway_pipeline_test PRIVATE libzip::zip)
+add_dependencies(gateway_pipeline_test prompt-airlock-extract)
+pa_add_gtest(gateway_documents_test gateway_documents_test.cpp)
+target_link_libraries(gateway_documents_test PRIVATE prompt_airlock_gateway prompt_airlock_extract libzip::zip pa_test_support)
+target_compile_definitions(gateway_documents_test PRIVATE "PA_EXTRACT_EXE=\"$<TARGET_FILE:prompt-airlock-extract>\"")
+add_dependencies(gateway_documents_test prompt-airlock-extract)
 pa_add_gtest(extract_test extract_test.cpp)
 target_link_libraries(extract_test PRIVATE prompt_airlock_extract prompt_airlock_extract_client libzip::zip pa_test_support)
 add_executable(extract_test_child extract_test_child.cpp)
@@ -127,6 +138,7 @@ pa_add_gtest(extract_hwp_test extract_hwp_test.cpp)
 target_link_libraries(extract_hwp_test PRIVATE prompt_airlock_extract prompt_airlock_extract_client ZLIB::ZLIB pa_test_support)
 pa_add_gtest(extract_pdf_test extract_pdf_test.cpp)
 target_link_libraries(extract_pdf_test PRIVATE prompt_airlock_extract prompt_airlock_extract_client)
+target_link_libraries(extract_pdf_test PRIVATE pa_test_support)
 if(PA_WITH_PDFIUM)
   target_compile_definitions(extract_pdf_test PRIVATE PA_TEST_WITH_PDFIUM)
 endif()

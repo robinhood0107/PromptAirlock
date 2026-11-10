@@ -8,8 +8,8 @@
 namespace prompt_airlock::core {
 
 PromptDocument::PromptDocument(detail::StateKey<PromptDocument>, std::vector<Segment> segments,
-                               std::vector<ContentForm> forms) noexcept
-    : segments_(std::move(segments)), forms_(std::move(forms)) {}
+                               std::vector<ContentForm> forms, DocumentKind kind) noexcept
+    : segments_(std::move(segments)), forms_(std::move(forms)), kind_(kind) {}
 
 std::size_t PromptDocument::total_bytes() const noexcept {
     std::size_t total = 0;
@@ -34,17 +34,18 @@ PromptDocumentBuilder& PromptDocumentBuilder::add_stop(SensitiveText stop) & {
     return *this;
 }
 
-std::expected<PromptDocument, InputError> PromptDocumentBuilder::build() && {
+std::expected<PromptDocument, InputError> PromptDocumentBuilder::build(DocumentKind kind) && {
     if (messages_.empty()) {
         return std::unexpected(InputError::EmptyDocument);
     }
     std::size_t total = 0;
-    auto accept = [&total](const SensitiveText& text) -> std::expected<void, InputError> {
+    const auto limit = kind == DocumentKind::Text ? max_prompt_bytes : max_prompt_bytes + max_document_text_bytes;
+    auto accept = [&total, limit](const SensitiveText& text) -> std::expected<void, InputError> {
         if (const auto valid = validate_utf8(text.view()); !valid) {
             return std::unexpected(valid.error());
         }
         total += text.size();
-        if (total > max_prompt_bytes) {
+        if (total > limit) {
             return std::unexpected(InputError::TooLarge);
         }
         return {};
@@ -73,7 +74,7 @@ std::expected<PromptDocument, InputError> PromptDocumentBuilder::build() && {
         }
         segments.emplace_back(StopSource{s}, std::move(stops_[s]));
     }
-    return PromptDocument(detail::StateAccess::key<PromptDocument>(), std::move(segments), std::move(forms));
+    return PromptDocument(detail::StateAccess::key<PromptDocument>(), std::move(segments), std::move(forms), kind);
 }
 
 }  // namespace prompt_airlock::core

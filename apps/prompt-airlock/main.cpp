@@ -30,6 +30,7 @@
 #include "prompt_airlock/gateway/auth.hpp"
 #include "prompt_airlock/gateway/config.hpp"
 #include "prompt_airlock/gateway/pipeline.hpp"
+#include "prompt_airlock/gateway/request_json.hpp"
 #include "prompt_airlock/gateway/server.hpp"
 #include "prompt_airlock/ner/pool.hpp"
 #include "prompt_airlock/ner/sentence_classifier.hpp"
@@ -187,7 +188,7 @@ int serve(const std::filesystem::path& config_path) {
     const asio::ip::tcp::endpoint endpoint(asio::ip::make_address(config->listen.address), config->listen.port);
     gw::Server server(io, tls->server, endpoint, auth,
                       [&pipeline](gw::AcceptedRequest request) { return pipeline.handle(std::move(request)); },
-                      gw::ServerLimits{}, audit_log->get());
+                      gw::ServerLimits{.body_bytes = gw::max_file_json_bytes}, audit_log->get());
     server.start();
     asio::signal_set signals(io, SIGINT, SIGTERM);
     signals.async_wait([&](auto, auto) {

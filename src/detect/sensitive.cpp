@@ -54,6 +54,50 @@ using core::EntityType;
     }
 }
 
+[[nodiscard]] bool is_document_heading(std::u32string_view text, const Hit& hit) {
+    if (hit.type != EntityType::Person || hit.kind != DetectorKind::Ner) return false;
+    std::size_t first = hit.first;
+    while (first > 0 && hit.first - first < 16 && text[first] != U'(' && text[first] != U'\n') --first;
+    if (text[first] != U'(') return false;
+    std::u32string label;
+    for (std::size_t i = first + 1; i < text.size() && i - first <= 32; ++i) {
+        const auto c = text[i];
+        if (c == U')') {
+            return hit.last < i && std::ranges::find(data::generic_document_headings, label) !=
+                                       data::generic_document_headings.end();
+        }
+        if (is_hangul_syllable(c)) label.push_back(c);
+        else if (c != U' ' && c != U'\t' && c != U'·' && c != U'ㆍ' && c != U'\u119E') return false;
+    }
+    return false;
+}
+
+// 짧은 정수 칸이 여러 개인 집계 행은 개인 표지가 아니다. 번호 자체의 차단 결과는 지우지 않는다.
+[[nodiscard]] bool is_aggregate_count_row(std::u32string_view text, const Hit& hit) {
+    if (core::default_action(hit.type) != core::Action::Block) return false;
+    const auto before = text.rfind(U'\n', hit.first);
+    const auto first = before == std::u32string_view::npos ? 0 : before + 1;
+    const auto after = text.find(U'\n', hit.first);
+    const auto end = after == std::u32string_view::npos ? text.size() : after;
+    if (hit.last >= end) return false;
+    const auto line = text.substr(first, end - first);
+    const auto number = line.find_first_of(U"0123456789");
+    if (number == std::u32string_view::npos) return false;
+    const auto blank = [](char32_t c) { return is_term_space(c) || c == U'\r'; };
+    auto label = line.substr(0, number);
+    while (!label.empty() && blank(label.back())) label.remove_suffix(1);
+    if (!label.ends_with(U" 수") && !label.ends_with(U" 인원")) return false;
+    std::size_t cells = 0, digits = 0;
+    for (const auto c : line.substr(number)) {
+        if (c >= U'0' && c <= U'9') {
+            if (digits++ == 0) ++cells;
+            if (digits > 3) return false;
+        } else if (blank(c)) digits = 0;
+        else return false;
+    }
+    return cells >= 3;
+}
+
 }  // namespace
 
 std::vector<bool> block_sentence_pairs(std::span<const SentenceSpan> spans, std::u32string_view text,
@@ -111,7 +155,7 @@ void find_sensitive(const DetectionView& view, std::u32string_view text, const S
         marked[sentence_of(hit.first_unit)] = true;
     }
     for (const auto& hit : identities) {
-        if (is_identity(hit.type)) {
+        if (is_identity(hit.type) && !is_document_heading(text, hit) && !is_aggregate_count_row(text, hit)) {
             marked[sentence_of(hit.first)] = true;
         }
     }

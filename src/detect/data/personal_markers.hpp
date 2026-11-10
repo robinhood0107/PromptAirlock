@@ -21,6 +21,8 @@ inline constexpr auto generic_addressees = std::to_array<std::u32string_view>({
     U"고객", U"회원", U"사용자", U"이용자", U"담당자", U"관리자", U"보호자", U"여러분", U"학부모", U"신청인",
     U"구매자", U"판매자", U"방문자", U"작성자", U"수신자", U"참석자",
 });
+// 문서 항목 제목은 특정 개인이 아니다. 공백·가운뎃점을 뺀 전체 괄호 제목이 일치할 때만 쓴다.
+inline constexpr auto generic_document_headings = std::to_array<std::u32string_view>({U"애로건의"});
 inline constexpr std::size_t name_min_syllables = 2;
 inline constexpr std::size_t name_max_syllables = 4;
 
