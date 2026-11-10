@@ -497,6 +497,34 @@ TEST_F(GatewayPipeline, ConfidentialSentenceIsBlockedWithoutProviderCall) {
     EXPECT_EQ(reply.body.find("잠정"), std::string::npos);
     EXPECT_EQ(provider_calls_, 0);
 }
+
+TEST_F(GatewayPipeline, StrongMarkerAloneNeedsConfirmationBoundToTheBody) {
+    // 강한 표지어만 있으면(결정 #224) 판별기 없이도 409 로 확인을 받고, 확인 표지는 그 본문에만 한 번 쓴다.
+    detect::InstitutionPolicy policy;
+    policy.industries = {detect::Industry::Bank};
+    const auto detectors = *detect::Detectors::make({}, {}, policy);
+    const auto pipeline = make(detectors);
+    const auto body = ask("이 자료는 대외비입니다. 회의 안건만 정리해 줘");
+    const auto first = run(pipeline, body);
+    ASSERT_EQ(first.status, 409u) << first.body;
+    const auto error = json::parse(first.body)["error"];
+    EXPECT_EQ(error["categories"], json::array({"CONFIDENTIAL_MARKER"}));
+    const auto token = error["confirm_token"].get<std::string>();
+    EXPECT_EQ(provider_calls_, 0);
+    EXPECT_EQ(live_scopes_, 0);
+    // 다른 본문에는 쓸 수 없다(표지는 한 번 쓰면 사라지므로 새로 받는다).
+    const auto other = run(pipeline, ask("이 자료는 대외비입니다. 전부 요약해 줘"), core::GradePolicy::OOnly, token);
+    EXPECT_EQ(other.status, 409u) << other.body;
+    EXPECT_EQ(provider_calls_, 0);
+    const auto again = json::parse(run(pipeline, body).body)["error"]["confirm_token"].get<std::string>();
+    EXPECT_EQ(run(pipeline, body, core::GradePolicy::OOnly, again).status, 200u);
+    ASSERT_EQ(provider_calls_, 1);
+    EXPECT_NE(sent_.front().find("대외비"), std::string::npos);  // 표지어는 바꾸지 않고 보낸다
+    // 약한 표지어만 있으면 확인 없이 간다.
+    EXPECT_EQ(run(pipeline, ask("비공개 일정은 따로 알려 드립니다")).status, 200u);
+    EXPECT_EQ(provider_calls_, 2);
+}
+
 TEST_F(GatewayPipeline, ExplicitProviderContextErrorIsSafeAndDoesNotRetry) {
     provider_status_ = 400;
     answer_ = [](const std::string&) {

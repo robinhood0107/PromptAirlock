@@ -125,7 +125,8 @@ Detectors::Detectors(TermMatcher internal_terms, TermMatcher institution_labels,
           return terms;
       }())),
       honorifics_(TermMatcher::make(data::honorific_suffixes)),
-      self_statements_(TermMatcher::make(data::self_statements)) {}
+      self_statements_(TermMatcher::make(data::self_statements)),
+      strong_markers_(TermMatcher::make(data::strong_confidential_markers)) {}
 
 std::expected<Detectors, core::InputError> Detectors::make(std::span<const std::string_view> internal_terms,
                                                          std::shared_ptr<const NerScanner> ner,
@@ -203,7 +204,7 @@ std::expected<std::vector<core::EntitySpan>, core::DetectError> Detectors::scan(
     }
     rules::find_organizations(*view, chars, hits);
     rules::find_institution_ids(*view, chars, institution_labels_, id_formats_, hits);
-    rules::find_confidential(*view, chars, confidential_markers_, confidential_subjects_, hits);
+    rules::find_confidential(*view, chars, confidential_markers_, confidential_subjects_, strong_markers_, hits);
     if (ner_) {
         const auto names = kind == core::DocumentKind::ExtractedFiles
                                ? ner_->scan_document(text, segment, *view, stop)

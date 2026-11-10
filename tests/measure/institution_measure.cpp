@@ -68,6 +68,7 @@ int measure_documents(const std::filesystem::path& folder, const std::filesystem
     std::ofstream detail(detail_path, std::ios::binary);
     std::vector<double> times;
     int docs_confidential = 0;
+    int docs_confirm = 0;  // 막히지 않고 강한 표지어(CONFIDENTIAL_MARKER)로 확인만 요청할 문서(결정 #224)
     int total_confidential = 0;
     int total_ids = 0;
     int failed = 0;
@@ -79,6 +80,7 @@ int measure_documents(const std::filesystem::path& folder, const std::filesystem
         int chunks = 0;
         int confidential = 0;
         int ids = 0;
+        bool confirm = false;
         for (std::size_t at = 0; at < text.size();) {
             std::size_t end = std::min(text.size(), at + chunk_bytes);
             if (end < text.size()) {
@@ -96,6 +98,7 @@ int measure_documents(const std::filesystem::path& folder, const std::filesystem
                 for (const auto& e : *found) {
                     const bool conf = e.type() == pc::EntityType::ConfidentialMatter;
                     ++by_type[pc::entity_type_name(e.type())];
+                    confirm = confirm || e.type() == pc::EntityType::ConfidentialMarker;
                     if (conf || e.type() == pc::EntityType::InstitutionId) {
                         (conf ? confidential : ids) += 1;
                     }
@@ -110,6 +113,7 @@ int measure_documents(const std::filesystem::path& folder, const std::filesystem
             at = end;
         }
         docs_confidential += confidential > 0 ? 1 : 0;
+        docs_confirm += confirm && confidential == 0 ? 1 : 0;
         total_confidential += confidential;
         total_ids += ids;
         std::printf("%s\t%zu\t%d\t%d\t%d\n", file.stem().string().c_str(), text.size(), chunks, confidential, ids);
@@ -119,6 +123,8 @@ int measure_documents(const std::filesystem::path& folder, const std::filesystem
     std::printf("\ndocuments\t%zu\nchunks\t%zu\ndetection failures\t%d\n", files.size(), times.size(), failed);
     std::printf("documents with confidential blocks\t%d/%zu\t%.1f%%\n", docs_confidential, files.size(),
                 pct(docs_confidential, static_cast<int>(files.size())));
+    std::printf("documents asking confirmation only\t%d/%zu\t%.1f%%\n", docs_confirm, files.size(),
+                pct(docs_confirm, static_cast<int>(files.size())));
     std::printf("confidential blocks\t%d\ninstitution ids\t%d\n", total_confidential, total_ids);
     for (const auto& [type, n] : by_type) {
         std::printf("type\t%.*s\t%d\n", static_cast<int>(type.size()), type.data(), n);

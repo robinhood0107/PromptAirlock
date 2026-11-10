@@ -91,3 +91,24 @@ TEST(DetectConfidential, InvalidTermsAreRejected) {
     broken.confidential_markers = {std::string("\xff")};
     EXPECT_EQ(pd::Detectors::make({}, {}, broken).error(), pc::InputError::InvalidUtf8);
 }
+
+// 강한 표지어(결정 #224)는 대상어가 없어도 그 낱말을 확인 종류로 낸다. 약한 표지어 홀로는 아무것도 내지 않는다.
+TEST(DetectConfidential, StrongMarkerAloneAsksForConfirmation) {
+    const auto bank = make({pd::Industry::Bank});
+    const auto markers = [&](std::string_view text) {
+        std::vector<std::string> out;
+        const auto entities = bank.detect_segment(text, pc::SegmentIndex{0});
+        EXPECT_TRUE(entities);
+        for (const auto& e : *entities) {
+            if (e.type() == pc::EntityType::ConfidentialMarker) {
+                out.emplace_back(text.substr(e.span().begin().value(), e.span().size()));
+            }
+        }
+        return out;
+    };
+    EXPECT_EQ(markers("이 문서는 대외비입니다. 내용을 정리해 줘."), std::vector<std::string>{"대외비"});
+    EXPECT_EQ(markers("Internal Only: please summarize."), std::vector<std::string>{"Internal Only"});
+    EXPECT_EQ(markers("사내 한정 자료입니다."), std::vector<std::string>{"사내 한정"});
+    EXPECT_TRUE(markers("비공개 일정은 따로 알려 드립니다.").empty());
+    EXPECT_TRUE(make({}).detect_segment("대외비 문서입니다.", pc::SegmentIndex{0})->empty());  // 업종 없으면 꺼짐
+}

@@ -69,6 +69,7 @@ private:
     TermMatcher sensitive_categories_;  // data/sensitive_category_terms.hpp 순서
     TermMatcher honorifics_;
     TermMatcher self_statements_;
+    TermMatcher strong_markers_;  // 강한 기밀 표지어(data/confidential_terms.hpp). 대상어 없이도 확인
 };
 
 }  // namespace prompt_airlock::detect
