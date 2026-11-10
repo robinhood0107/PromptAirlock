@@ -93,8 +93,21 @@ std::expected<ResolvedDocuments, DocumentFailure> resolve_documents(
         statistics.push_back({file.bytes.size(), core::sha256_hex(std::as_bytes(std::span(file.bytes.view()))),
                               std::nullopt, std::nullopt, 0, {}});
         auto& stat = statistics.back();
-        auto extracted = extract::extract_in_child(executable, file.extension,
-                                                   std::as_bytes(std::span(file.bytes.view())), {}, stop);
+        // LaTeX·Typst 는 추출기 옆의 pandoc 으로 매크로·함수를 펼친 글을 검사한다. pandoc 이 없거나 실패하면 거절.
+        std::string_view hint = file.extension;
+        core::SensitiveText converted;
+        if (const auto reader = extract::markup_reader(file.extension)) {
+            const auto pandoc = executable.parent_path() / ("pandoc" + executable.extension().string());
+            if (!std::filesystem::is_regular_file(pandoc)) return std::unexpected(extract::ExtractError::Unsupported);
+            auto plain = extract::convert_markup(pandoc, *reader, std::as_bytes(std::span(file.bytes.view())), {}, stop);
+            if (!plain) return std::unexpected(plain.error());
+            converted = core::SensitiveText(std::move(*plain));
+            file.bytes = core::SensitiveText(std::string());
+            hint = "txt";
+        }
+        const auto input = hint == "txt" && extract::markup_reader(file.extension) ? converted.view() : file.bytes.view();
+        auto extracted = extract::extract_in_child(executable, hint, std::as_bytes(std::span(input)), {}, stop);
+        converted = core::SensitiveText(std::string());
         file.bytes = core::SensitiveText(std::string());
         if (!extracted) return std::unexpected(extracted.error());
         if (!*extracted) return std::unexpected(extracted->error());

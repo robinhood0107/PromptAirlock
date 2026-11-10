@@ -8,6 +8,7 @@
 #include <cstdint>
 #include <expected>
 #include <filesystem>
+#include <optional>
 #include <span>
 #include <stop_token>
 #include <string>
@@ -40,6 +41,16 @@ using ChildResult = std::expected<std::expected<ExtractedDocument, ExtractError>
 [[nodiscard]] ChildResult extract_in_child(const std::filesystem::path& exe, std::string_view name_hint,
                                            std::span<const std::byte> file, const RunLimits& limits = {},
                                            std::stop_token stop = {});
+
+// LaTeX·Typst 확장자면 pandoc 읽기 형식(결정 #239), 아니면 nullopt.
+[[nodiscard]] std::optional<std::string_view> markup_reader(std::string_view extension) noexcept;
+
+// pandoc 을 같은 상한으로 따로 띄워 일반 글(UTF-8)로 바꾼다. 매크로·함수를 펼친 결과를 검사하기 위해서다.
+[[nodiscard]] std::expected<std::string, RunError> convert_markup(const std::filesystem::path& pandoc,
+                                                                  std::string_view reader,
+                                                                  std::span<const std::byte> file,
+                                                                  const RunLimits& limits = {},
+                                                                  std::stop_token stop = {});
 
 // 자식과 주고받는 형식(버전 1). 자식은 to_json 으로 쓰고 부모는 from_json 으로 읽는다.
 inline constexpr int protocol_version = 2;
