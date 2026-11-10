@@ -67,12 +67,59 @@ void append_utf16(std::string& out, const Unit& unit, std::size_t n) {
 
 // 쪽 글자. 줄 끝 하이픈으로 이어진 낱말은 PDFium 이 하이픈과 줄바꿈을 지우고 표시해 두므로 하이픈을 되돌린다
 // ("900101-" 줄바꿈 "1234567" 이 "9001011234567" 처럼 붙어 나오지 않게, #234). 대응표 없는 글자는 대체 문자로.
+// 단서 없이 줄이 끊긴 번호·이메일(로드맵 11.5-4): 앞 줄 끝이 쪽 글자의 오른쪽 끝까지 차고 다음 줄이 왼쪽 끝에서 시작하면
+// 문단 안 자동 줄넘김으로 보고, 양쪽 글자가 번호·주소 글자일 때만 줄바꿈을 지운다. 표 칸은 오른쪽 끝에 닿지 않아 잇지 않는다.
+std::vector<bool> soft_wraps(fpdf_textpage_t__* text, int count) {
+    struct Box {
+        double left = 0, right = 0, bottom = 0, top = 0;
+    };
+    const auto size = static_cast<std::size_t>(count);
+    std::vector<Box> boxes(size);
+    std::vector<bool> real(size, false);
+    double page_left = 1e9;
+    double page_right = -1e9;
+    for (int i = 0; i < count; ++i) {
+        auto& b = boxes[static_cast<std::size_t>(i)];
+        const auto c = FPDFText_GetUnicode(text, i);
+        if (FPDFText_IsGenerated(text, i) == 1 || c == ' ' || c == '\r' || c == '\n' ||
+            !FPDFText_GetCharBox(text, i, &b.left, &b.right, &b.bottom, &b.top)) {
+            continue;
+        }
+        real[static_cast<std::size_t>(i)] = true;
+        page_left = std::min(page_left, b.left);
+        page_right = std::max(page_right, b.right);
+    }
+    const auto joinable = [&](int i) {
+        const auto c = FPDFText_GetUnicode(text, i);
+        return (c >= '0' && c <= '9') || (c >= 'A' && c <= 'Z') || (c >= 'a' && c <= 'z') || c == '@' || c == '.' ||
+               c == '-' || c == '_';
+    };
+    std::vector<bool> skip(size, false);
+    for (int i = 0; i < count; ++i) {
+        const auto c = FPDFText_GetUnicode(text, i);
+        if (real[static_cast<std::size_t>(i)] || (c != '\r' && c != '\n')) continue;
+        int p = i - 1;
+        while (p >= 0 && !real[static_cast<std::size_t>(p)]) --p;
+        int n = i + 1;
+        while (n < count && !real[static_cast<std::size_t>(n)]) ++n;
+        if (p < 0 || n >= count || !joinable(p) || !joinable(n)) continue;
+        const auto& a = boxes[static_cast<std::size_t>(p)];
+        const auto& b = boxes[static_cast<std::size_t>(n)];
+        const double tolerance = 1.5 * std::max(a.right - a.left, b.right - b.left);  // 글자 하나 반 너비
+        if (b.top > a.bottom || page_right - a.right > tolerance || b.left - page_left > tolerance) continue;
+        for (int k = p + 1; k < n; ++k) skip[static_cast<std::size_t>(k)] = true;
+    }
+    return skip;
+}
+
 std::string page_text(fpdf_textpage_t__* text, int count) {
+    const auto skip = soft_wraps(text, count);
     std::string out;
     append_utf16(
         out,
         [&](std::size_t k) -> char32_t {
             const int index = static_cast<int>(k);
+            if (skip[k]) return U'\r';  // append_utf16 이 CR 을 버린다.
             if (FPDFText_IsHyphen(text, index) == 1) {
                 return U'-';
             }

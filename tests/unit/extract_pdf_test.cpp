@@ -38,6 +38,25 @@ TEST(ExtractPdf, LineEndHyphenIsKept) {
     EXPECT_EQ(doc->blocks.at(0).text, "Account-2026");
 }
 
+// 단서 없이 번호·주소가 줄 끝에서 끊기면(앞 줄이 오른쪽 끝까지, 다음 줄이 왼쪽 끝에서) 잇는다.
+TEST(ExtractPdf, SoftWrappedNumberAndEmailAreJoined) {
+    const auto doc = run(page_pdf("BT /F1 12 Tf 72 712 Td (Resident number 900101) Tj 0 -14 Td (1234567 next) Tj "
+                                  "0 -14 Td (Mail to kim@mail.) Tj 0 -14 Td (example.org) Tj ET"));
+    ASSERT_TRUE(doc) << ex::error_name(doc.error());
+    const auto& text = doc->blocks.at(0).text;
+    EXPECT_NE(text.find("Resident number 9001011234567 next"), std::string::npos) << text;
+    EXPECT_NE(text.find("kim@mail.\nexample.org"), std::string::npos) << text;  // 오른쪽 끝에 닿지 않은 줄
+}
+
+// 표 칸처럼 오른쪽 끝에 닿지 않은 줄은 잇지 않는다.
+TEST(ExtractPdf, ShortLinesAreNotJoined) {
+    const auto doc = run(page_pdf("BT /F1 12 Tf 72 712 Td (900101) Tj 0 -14 Td (1234567) Tj "
+                                  "0 -14 Td (a much longer line that sets the right edge) Tj ET"));
+    ASSERT_TRUE(doc) << ex::error_name(doc.error());
+    EXPECT_EQ(doc->blocks.at(0).text.find("9001011234567"), std::string::npos);
+    EXPECT_NE(doc->blocks.at(0).text.find("900101\n1234567"), std::string::npos);
+}
+
 // 채운 양식 칸 값은 뽑고(결정 #235), 링크는 메모로 세지 않는다. 숨긴 칸은 숨긴 부분으로 센다.
 TEST(ExtractPdf, FormFieldValues) {
     const std::string ap = "BT /F1 12 Tf 2 2 Td (900101-1234567) Tj ET";
