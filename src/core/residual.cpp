@@ -64,7 +64,8 @@ std::expected<VerifiedPrompt, Rejection> verify_residual(ProtectedPrompt prompt,
         const bool inside_replacement = std::any_of(replacements.begin(), replacements.end(), [&](const Replacement& r) {
             return r.segment == entity.segment() && r.span.contains(entity.span());
         });
-        if (!inside_replacement && default_action(entity.type()) != Action::Pass) {
+        // 확인 종류(강한 표지어)는 바꾸지 않고 보내므로 남아 있어도 잔여가 아니다.
+        if (!inside_replacement && default_action(entity.type()) > Action::Confirm) {
             left.insert(entity.type());
             findings.emplace_back(EntityFinding{entity.segment(), entity.span(), entity.type(), entity.detector()});
         }

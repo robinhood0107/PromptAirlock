@@ -19,10 +19,10 @@ enum class GradePolicy : std::uint8_t { OOnly, Declare };
 // 확정된 등급이 어디서 왔는가(감사 기록용).
 enum class GradeOrigin : std::uint8_t { Header, SourceDefault };
 
-// 처리 방식. 값이 클수록 엄격하다.
-enum class Action : std::uint8_t { Pass = 0, Tokenize = 1, Block = 2 };
+// 처리 방식. 값이 클수록 엄격하다. Confirm 은 바꾸지 않고 보내되 사람이 한 번 확인해야 한다(409, ADR 0023·0027).
+enum class Action : std::uint8_t { Pass = 0, Confirm = 1, Tokenize = 2, Block = 3 };
 
-// 개인정보·비밀 종류 19개(ADR 0015, 0016, 0027).
+// 개인정보·비밀 종류 20개(ADR 0015, 0016, 0027).
 enum class EntityType : std::uint8_t {
     Person,
     Organization,
@@ -43,8 +43,9 @@ enum class EntityType : std::uint8_t {
     KoreanAlienRegistrationNo,
     InstitutionId,  // 기관 번호: 업종 표지어 뒤 값, 기관 형식 마스크(ADR 0027)
     ConfidentialMatter,  // 기밀 문장: 기밀 표지어와 업종 대상어가 같은 창(ADR 0027)
+    ConfidentialMarker,  // 강한 기밀 표지어만 있음: 대상어 없이도 보내기 전에 확인(ADR 0027, 결정 #224)
 };
-inline constexpr std::size_t entity_type_count = 19;
+inline constexpr std::size_t entity_type_count = 20;
 
 // 메시지 역할. 외부 형식의 역할 문자열과는 JSON 경계(Phase 8)에서만 연결한다.
 enum class MessageRole : std::uint8_t { System, Developer, User, Model };
@@ -85,6 +86,8 @@ inline constexpr std::size_t max_entities = 512;
         case EntityType::InternalTerm:
         case EntityType::InstitutionId:
             return Action::Tokenize;
+        case EntityType::ConfidentialMarker:
+            return Action::Confirm;
     }
     return Action::Block;
 }
@@ -123,6 +126,7 @@ inline constexpr std::size_t max_entities = 512;
         case EntityType::KoreanAlienRegistrationNo: return "KOREAN_ALIEN_REGISTRATION_NO";
         case EntityType::InstitutionId: return "INSTITUTION_ID";
         case EntityType::ConfidentialMatter: return "CONFIDENTIAL_MATTER";
+        case EntityType::ConfidentialMarker: return "CONFIDENTIAL_MARKER";
     }
     return "INVALID";
 }
