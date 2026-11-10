@@ -90,3 +90,12 @@ add_executable(residual_flip_measure EXCLUDE_FROM_ALL residual_flip_measure.cpp)
 target_link_libraries(residual_flip_measure PRIVATE prompt_airlock_gateway prompt_airlock_ner prompt_airlock_detect pa_test_support pa_options nlohmann_json::nlohmann_json)
 target_compile_definitions(residual_flip_measure PRIVATE PA_NER_MODEL_DIR="${PA_NER_MODEL_DIR}")
 pa_copy_runtime_dlls(residual_flip_measure)
+
+# OCR 실험(#258). 제품에 넣지 않는 측정 도구.
+add_executable(ocr_spike_measure EXCLUDE_FROM_ALL ocr_spike_measure.cpp)
+target_link_libraries(ocr_spike_measure PRIVATE prompt_airlock_gateway prompt_airlock_ner prompt_airlock_detect pa_options nlohmann_json::nlohmann_json pa::onnxruntime)
+target_compile_definitions(ocr_spike_measure PRIVATE PA_NER_MODEL_DIR="${PA_NER_MODEL_DIR}")
+if(WIN32)
+  target_link_libraries(ocr_spike_measure PRIVATE psapi)
+endif()
+pa_copy_runtime_dlls(ocr_spike_measure)
