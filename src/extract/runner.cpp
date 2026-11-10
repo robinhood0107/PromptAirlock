@@ -109,7 +109,7 @@ void append_quoted(std::wstring& cmd, const std::wstring& arg) {
     cmd += L'"';
 }
 
-std::expected<Child, RunError> spawn(const std::filesystem::path& exe, std::string_view hint) {
+std::expected<Child, RunError> spawn(const std::filesystem::path& exe, const std::vector<std::string>& args) {
     SECURITY_ATTRIBUTES inherit{sizeof(SECURITY_ATTRIBUTES), nullptr, TRUE};
     HANDLE r = nullptr;
     HANDLE w = nullptr;
@@ -153,8 +153,10 @@ std::expected<Child, RunError> spawn(const std::filesystem::path& exe, std::stri
     si.lpAttributeList = attrs;
     std::wstring cmd;
     append_quoted(cmd, exe.wstring());
-    cmd += L" --ext ";
-    append_quoted(cmd, std::wstring(hint.begin(), hint.end()));  // 확장자는 영문·숫자만 넘어온다
+    for (const auto& arg : args) {
+        cmd += L' ';
+        append_quoted(cmd, std::wstring(arg.begin(), arg.end()));  // 인자는 고정 ASCII 와 영문·숫자 확장자뿐이다
+    }
     PROCESS_INFORMATION pi{};
     if (!CreateProcessW(exe.wstring().c_str(), cmd.data(), nullptr, nullptr, TRUE,
                         EXTENDED_STARTUPINFO_PRESENT | CREATE_NO_WINDOW, nullptr, nullptr, &si.StartupInfo, &pi)) {
@@ -227,7 +229,7 @@ struct Child {
     }
 };
 
-std::expected<Child, RunError> spawn(const std::filesystem::path& exe, std::string_view hint) {
+std::expected<Child, RunError> spawn(const std::filesystem::path& exe, const std::vector<std::string>& args) {
     int in_pipe[2];
     int out_pipe[2];
     if (::pipe2(in_pipe, O_CLOEXEC) != 0) {
@@ -244,11 +246,11 @@ std::expected<Child, RunError> spawn(const std::filesystem::path& exe, std::stri
     posix_spawn_file_actions_adddup2(&actions, out_write.fd, 1);
     posix_spawn_file_actions_addopen(&actions, 2, "/dev/null", O_WRONLY, 0);
     const std::string path = exe.string();
-    const std::string ext(hint);
-    char* argv[] = {const_cast<char*>(path.c_str()), const_cast<char*>("--ext"), const_cast<char*>(ext.c_str()),
-                    nullptr};
+    std::vector<char*> argv{const_cast<char*>(path.c_str())};
+    for (const auto& arg : args) argv.push_back(const_cast<char*>(arg.c_str()));
+    argv.push_back(nullptr);
     pid_t pid = -1;
-    const int rc = posix_spawn(&pid, path.c_str(), &actions, nullptr, argv, environ);
+    const int rc = posix_spawn(&pid, path.c_str(), &actions, nullptr, argv.data(), environ);
     posix_spawn_file_actions_destroy(&actions);
     if (rc != 0) {
         return std::unexpected(RunError::StartFailed);
@@ -257,15 +259,11 @@ std::expected<Child, RunError> spawn(const std::filesystem::path& exe, std::stri
 }
 #endif
 
-}  // namespace
-
-ChildResult extract_in_child(const std::filesystem::path& exe, std::string_view name_hint,
-                             std::span<const std::byte> file, const RunLimits& limits, std::stop_token stop) {
-    if (!std::ranges::all_of(name_hint, [](char c) { return (c >= 'a' && c <= 'z') || (c >= '0' && c <= '9'); }) ||
-        name_hint.size() > 8) {
-        name_hint = {};  // 이상한 확장자는 넘기지 않고 내용으로만 판별하게 한다
-    }
-    auto child = spawn(exe, name_hint);
+// 자식을 띄워 file 을 stdin 에 넣고 stdout 전부를 받는다. 시간·출력 상한·취소·0 아닌 종료는 실패.
+std::expected<std::string, RunError> run_child(const std::filesystem::path& exe, const std::vector<std::string>& args,
+                                               std::span<const std::byte> file, const RunLimits& limits,
+                                               std::stop_token stop) {
+    auto child = spawn(exe, args);
     if (!child) {
         return std::unexpected(child.error());
     }
@@ -319,7 +317,36 @@ ChildResult extract_in_child(const std::filesystem::path& exe, std::string_view 
             return std::unexpected(RunError::Crashed);
         }
     }
-    return from_json(output);
+    return output;
+}
+
+}  // namespace
+
+ChildResult extract_in_child(const std::filesystem::path& exe, std::string_view name_hint,
+                             std::span<const std::byte> file, const RunLimits& limits, std::stop_token stop) {
+    if (!std::ranges::all_of(name_hint, [](char c) { return (c >= 'a' && c <= 'z') || (c >= '0' && c <= '9'); }) ||
+        name_hint.size() > 8) {
+        name_hint = {};  // 이상한 확장자는 넘기지 않고 내용으로만 판별하게 한다
+    }
+    auto output = run_child(exe, {"--ext", std::string(name_hint)}, file, limits, stop);
+    if (!output) return std::unexpected(output.error());
+    return from_json(*output);
+}
+
+std::optional<std::string_view> markup_reader(std::string_view extension) noexcept {
+    if (extension == "tex" || extension == "latex") return "latex";
+    if (extension == "typ") return "typst";
+    return std::nullopt;
+}
+
+std::expected<std::string, RunError> convert_markup(const std::filesystem::path& pandoc, std::string_view reader,
+                                                    std::span<const std::byte> file, const RunLimits& limits,
+                                                    std::stop_token stop) {
+    // --sandbox: 다른 파일(\input, #include, 그림)·네트워크를 읽지 않는다. +RTS -M: pandoc 자체 메모리 상한(1 GiB).
+    return run_child(pandoc,
+                     {"--sandbox", "--from", std::string(reader), "--to", "plain", "--wrap=none", "+RTS", "-M1024m",
+                      "-RTS"},
+                     file, limits, stop);
 }
 
 }  // namespace prompt_airlock::extract

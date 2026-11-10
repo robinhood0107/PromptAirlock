@@ -2,6 +2,7 @@
 
 #include <gtest/gtest.h>
 #include <nlohmann/json.hpp>
+#include <filesystem>
 #include <stdexcept>
 #include <stop_token>
 
@@ -126,4 +127,17 @@ TEST(GatewayDocuments, ExtractedBudgetIsSharedAndSecondFileCannotBypassIt) {
     ASSERT_FALSE(result);
     EXPECT_EQ(std::get<ex::ExtractError>(result.error()), ex::ExtractError::TooLarge);
     EXPECT_EQ(stats.size(), 2U);
+}
+
+// pandoc 이 추출기 옆에 없으면 LaTeX·Typst 는 글자 파일로 넘기지 않고 거절한다(매크로로 쓴 번호를 놓치지 않게).
+TEST(GatewayDocuments, MarkupWithoutPandocIsRejected) {
+    ASSERT_FALSE(std::filesystem::exists(std::filesystem::path(PA_EXTRACT_EXE).parent_path() /
+                                         ("pandoc" + std::filesystem::path(PA_EXTRACT_EXE).extension().string())));
+    for (const auto* name : {"a.tex", "a.typ"}) {
+        auto parsed = request("\\newcommand{\\front}{900101}", name);
+        std::vector<gw::FileStatistics> stats;
+        auto resolved = gw::resolve_documents(parsed, PA_EXTRACT_EXE, stats, {});
+        ASSERT_FALSE(resolved);
+        EXPECT_EQ(std::get<ex::ExtractError>(resolved.error()), ex::ExtractError::Unsupported);
+    }
 }

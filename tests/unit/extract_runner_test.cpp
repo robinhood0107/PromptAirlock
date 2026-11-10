@@ -2,6 +2,9 @@
 #include <gtest/gtest.h>
 
 #include <chrono>
+#include <cstdlib>
+#include <filesystem>
+#include <fstream>
 #include <stop_token>
 #include <string>
 
@@ -54,4 +57,34 @@ TEST(ExtractRunner, CancelStopsTheChild) {
     const auto result = ex::extract_in_child(PA_TEST_CHILD, "hang", bytes("x"), {}, stop.get_token());
     EXPECT_EQ(result.error(), ex::RunError::Cancelled);
     EXPECT_LT(std::chrono::steady_clock::now() - start, 10s);
+}
+
+// LaTeX·Typst 는 pandoc 으로 매크로·함수를 펼친다(결정 #239). pandoc 경로는 PA_TEST_PANDOC 으로 받고, 없으면 건너뛴다.
+TEST(ExtractRunner, PandocExpandsMacrosAndRefusesOtherFiles) {
+    const char* pandoc = std::getenv("PA_TEST_PANDOC");
+    if (pandoc == nullptr) GTEST_SKIP() << "PA_TEST_PANDOC 없음";
+    EXPECT_EQ(ex::markup_reader("tex"), "latex");
+    EXPECT_EQ(ex::markup_reader("typ"), "typst");
+    EXPECT_FALSE(ex::markup_reader("txt"));
+    const auto latex = ex::convert_markup(pandoc, "latex",
+                                          bytes(R"(\newcommand{\front}{900101}
+\newcommand{\rrn}[2]{#1-#2}
+\newcommand{\me}{\rrn{\front}{1234567}}
+Number \me.
+)"));
+    ASSERT_TRUE(latex);
+    EXPECT_NE(latex->find("900101-1234567"), std::string::npos) << *latex;
+    const auto typst = ex::convert_markup(pandoc, "typst",
+                                          bytes(R"(#let rrn(a, b) = [#a\-#b]
+Number #rrn("900101", "1234567").
+)"));
+    ASSERT_TRUE(typst);
+    EXPECT_NE(typst->find("900101-1234567"), std::string::npos) << *typst;
+    // --sandbox: 다른 파일을 끼워 넣지 못한다. 실패하거나 내용이 빠져야 한다.
+    const auto secret = std::filesystem::temp_directory_path() / "pa-pandoc-sandbox.tex";
+    std::ofstream(secret) << "SANDBOXSECRET";
+    const auto input = R"(\input{)" + secret.generic_string() + "}\n";
+    const auto included = ex::convert_markup(pandoc, "latex", bytes(input));
+    std::filesystem::remove(secret);
+    EXPECT_TRUE(!included || included->find("SANDBOXSECRET") == std::string::npos);
 }

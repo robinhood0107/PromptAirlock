@@ -27,7 +27,9 @@ file_id, URL, 서버 파일 경로, 중복 키, 잘못된 padding과 남는 비�
 지원 형식은 txt·csv·md·htm·hwpx·docx·xlsx·pptx·hwp 5.0·HWPML·ZIP입니다.
 PDF 글자 층은 고정 PDFium 묶음으로 빌드한 경우에만 지원합니다.
 스캔본, 암호·DRM 문서, 손상된 파일, 옛 doc·xls·ppt는 거절합니다.
-LaTeX·Typst의 본격적인 표기 변환과 그림의 글자 인식은 이 단계에 포함하지 않습니다.
+LaTeX(.tex)·Typst(.typ)는 추출기와 같은 폴더에 pandoc이 있을 때만 받습니다. pandoc을 --sandbox로 따로 띄워 매크로·함수를 펼친 일반 글로 바꾼 뒤 검사하고, 그 글을 보냅니다. pandoc이 없으면 document_unsupported로 거절합니다.
+PDF에서 문단 안 자동 줄넘김으로 끊긴 번호·주소는 글자 좌표로 판단해 잇고, 표 칸처럼 오른쪽 끝에 닿지 않은 줄은 잇지 않습니다.
+그림의 글자 인식은 이 단계에 포함하지 않습니다.
 
 ## 검사와 예산
 
