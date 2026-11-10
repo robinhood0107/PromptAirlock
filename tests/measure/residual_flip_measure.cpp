@@ -75,7 +75,7 @@ json run_once(const detect::Detectors& detectors, const std::string& bytes, cons
             inside = inside || r.span.contains(e.span());
             touches = touches || (e.span().begin() <= r.span.end() && r.span.begin() <= e.span().end());
         }
-        if (!inside && core::default_action(e.type()) != core::Action::Pass) {
+        if (!inside && core::default_action(e.type()) > core::Action::Confirm) {
             left.push_back({{"type", core::entity_type_name(e.type())},
                             {"detector", static_cast<int>(e.detector())},  // DetectorKind 순서(5 = Ner)
                             {"touches_token", touches}});

@@ -20,6 +20,7 @@ namespace {
         case EntityType::InternalTerm: return 5;
         case EntityType::Organization: return 6;
         case EntityType::Person: return 7;
+        case EntityType::ConfidentialMarker: return 8;  // 확인 종류는 하나뿐이다
         // 차단 종류는 enum 순서를 그대로 쓴다.
         case EntityType::KoreanRrn:
         case EntityType::ApiKey:

@@ -35,6 +35,7 @@ const std::vector<std::pair<EntityType, Action>>& expected_table() {
         {EntityType::KoreanAlienRegistrationNo, Action::Block},
         {EntityType::InstitutionId, Action::Tokenize},
         {EntityType::ConfidentialMatter, Action::Block},
+        {EntityType::ConfidentialMarker, Action::Confirm},
     };
     return table;
 }
