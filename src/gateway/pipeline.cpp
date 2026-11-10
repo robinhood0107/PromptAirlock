@@ -232,8 +232,8 @@ asio::awaitable<JsonResponse> Pipeline::run(AcceptedRequest request, Trace& trac
 // JSON 읽기부터 외부 전송 이력까지. 거절이면 그 응답을 돌려준다.
 std::expected<Pipeline::Outbound, JsonResponse> Pipeline::prepare(AcceptedRequest request, Trace& trace,
                                                                 std::stop_token stop) const {
-    // 확인 표지는 받은 본문 바이트 그대로에 묶는다
-    const std::string body_sha256 = sentence_ ? core::sha256_hex(std::as_bytes(std::span(request.body))) : std::string();
+    // 확인 표지는 받은 본문 바이트 그대로에 묶는다. 판별기가 꺼져도 규칙 확인(강한 표지어)이 쓰므로 늘 계산한다.
+    const std::string body_sha256 = core::sha256_hex(std::as_bytes(std::span(request.body)));
     core::SensitiveText owned_body(std::move(request.body));
     auto parsed = parse_request(owned_body.view());
     if (!parsed) {
@@ -330,17 +330,21 @@ std::expected<Pipeline::Outbound, JsonResponse> Pipeline::prepare(AcceptedReques
 }
 
 // 경고 모드(ADR 0023): 규칙이 막지 않은 요청의 메시지만 판별한다. 판별하지 못하면 거절한다.
+// 규칙의 확인 종류(강한 기밀 표지어, 결정 #224)도 같은 표지로 확인한다. 판별기가 꺼져 있어도 규칙 확인은 한다.
 // 걸렸는데 확인 표지가 없으면 409 응답을 돌려주고, 통과하면 nullopt.
 std::optional<JsonResponse> Pipeline::confirm_sentences(const core::PolicyCheckedPrompt& checked,
                                                         std::span<const core::EntitySpan> entities,
                                                         const std::string& confirm, const std::string& body_sha256,
                                                         Trace& trace, std::stop_token stop) const {
-    if (!sentence_) {
-        return std::nullopt;
-    }
     std::vector<std::string> categories;
+    for (const auto& e : checked.entities()) {
+        if (e.action == core::Action::Confirm) {
+            const std::string name(core::entity_type_name(e.label_type));
+            if (std::ranges::find(categories, name) == categories.end()) categories.push_back(name);
+        }
+    }
     const auto segments = checked.document().segments();
-    for (std::uint32_t i = 0; i < segments.size(); ++i) {
+    for (std::uint32_t i = 0; sentence_ && i < segments.size(); ++i) {
         if (!std::holds_alternative<core::MessageSource>(segments[i].source())) {
             continue;
         }
