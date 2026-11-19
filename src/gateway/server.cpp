@@ -95,6 +95,7 @@ struct BodyCleanup {
 constexpr auto use_tuple = asio::as_tuple(asio::use_awaitable);
 
 constexpr std::string_view endpoint_path = "/v1/chat/completions";
+constexpr std::string_view preview_path = "/v1/preview";
 constexpr std::string_view grade_header = "X-Prompt-Airlock-Grade";  // ADR 0013
 constexpr std::string_view confirm_header = "X-Prompt-Airlock-Confirm";  // ADR 0023
 
@@ -149,7 +150,7 @@ std::expected<std::pair<const Origin*, core::OpenGrade>, JsonResponse> check_hea
         return std::unexpected(error_response(origin.error() == AuthFailure::Locked ? EntryError::TooManyFailures
                                                                                      : EntryError::Unauthorized));
     }
-    if (head.target() != endpoint_path) {
+    if (head.target() != endpoint_path && head.target() != preview_path) {
         return std::unexpected(error_response(EntryError::NotFound));
     }
     if (head.method() != http::verb::post) {
@@ -281,7 +282,9 @@ asio::awaitable<void> session(std::shared_ptr<Server::Shared> shared, tcp::socke
                     // 처리 중 연결이 끊기면 처리 단계에 asio 취소를 보내 남은 단계를 멈추고 가명 범위를 지우게 한다
                     auto outcome = co_await (shared->handler(AcceptedRequest{accepted->first, accepted->second,
                                                                              std::move(request_body), client,
-                                                                             std::string(head[confirm_header]), std::move(upload)}) ||
+                                                                             std::string(head[confirm_header]), std::move(upload),
+                                                                             head.target() == preview_path ? RequestPurpose::Preview
+                                                                                                           : RequestPurpose::Chat}) ||
                                              client_gone(beast::get_lowest_layer(stream).socket()));
                     if (outcome.index() == 1) {
                         co_return;  // 받을 사람이 없다

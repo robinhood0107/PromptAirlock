@@ -1,4 +1,4 @@
-// HTTPS 입구(ADR 0004, 0020). POST /v1/chat/completions 하나만 받는다.
+// HTTPS 입구(ADR 0004, 0020, 0029). 대화와 미리보기 요청을 받는다.
 // 순서: TLS → 헤더 읽기 → 출처 인증 → 경로·메서드·형식 → 등급 헤더 → 본문(상한) → handler.
 // 앞 단계에서 거절하면 본문은 읽지 않고, handler(그 뒤 provider)는 불리지 않는다.
 #pragma once
@@ -23,6 +23,8 @@ namespace prompt_airlock::gateway {
 
 struct UploadLease;
 
+enum class RequestPurpose { Chat, Preview };
+
 struct ServerLimits {
     std::size_t header_bytes = 8 * 1024;
     std::size_t body_bytes = 64 * 1024;
@@ -38,6 +40,7 @@ struct AcceptedRequest {
     std::string client;   // 접속 주소(감사 기록용)
     std::string confirm;  // 경고 확인 표지(X-Prompt-Airlock-Confirm, ADR 0023). 없으면 빈 문자열
     std::shared_ptr<UploadLease> upload{};
+    RequestPurpose purpose = RequestPurpose::Chat;
 };
 
 // 요청 처리. 여러 연결이 함께 부르므로 스레드 안전해야 한다.

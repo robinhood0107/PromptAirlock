@@ -157,14 +157,19 @@ protected:
     }
 
     gw::JsonResponse run(const gw::Pipeline& pipeline, std::string body,
-                         core::GradePolicy policy = core::GradePolicy::OOnly, std::string confirm = {}) {
+                         core::GradePolicy policy = core::GradePolicy::OOnly, std::string confirm = {},
+                         gw::RequestPurpose purpose = gw::RequestPurpose::Chat) {
         asio::io_context io;
         auto grade = core::resolve_grade(policy, {});
         auto future = asio::co_spawn(
-            io, pipeline.handle(gw::AcceptedRequest{nullptr, *grade, std::move(body), {}, std::move(confirm)}),
+            io, pipeline.handle(gw::AcceptedRequest{nullptr, *grade, std::move(body), {}, std::move(confirm), {}, purpose}),
             asio::use_future);
         io.run();
         return future.get();
+    }
+
+    gw::JsonResponse preview(const gw::Pipeline& pipeline, std::string body, std::string confirm = {}) {
+        return run(pipeline, std::move(body), core::GradePolicy::OOnly, std::move(confirm), gw::RequestPurpose::Preview);
     }
 
     static std::string ask(std::string_view text) {
@@ -300,6 +305,157 @@ gw::SentenceCheck fake_sentence(std::atomic<int>& calls, bool fail = false) {
         }
         return text.find("정신과") != std::string_view::npos ? std::optional<std::string>("Health") : std::nullopt;
     };
+}
+
+TEST_F(GatewayPipeline, PreviewReturnsOnlyVerifiedContentWithoutCallingProvider) {
+    provider_fails_ = true;
+    const auto pipeline = make(detectors_);
+    const auto plain = preview(pipeline, ask("회의 안건 정리"));
+    ASSERT_EQ(plain.status, 200U);
+    EXPECT_EQ(json::parse(plain.body)["decision"], "pass");
+    const auto protected_reply = preview(pipeline, ask("연락처 010-2345-6789, 메일 kim.demo@example.org"));
+    ASSERT_EQ(protected_reply.status, 200U);
+    const auto body = json::parse(protected_reply.body);
+    EXPECT_EQ(body["decision"], "pseudonymized");
+    EXPECT_EQ(body["outbound"]["model"], "demo-alias");
+    EXPECT_EQ(protected_reply.body.find("010-2345-6789"), std::string::npos);
+    EXPECT_EQ(protected_reply.body.find("kim.demo@example.org"), std::string::npos);
+    EXPECT_NE(body["outbound"].dump().find(core::token_open), std::string::npos);
+    EXPECT_EQ(provider_calls_, 0);
+    EXPECT_TRUE(sent_.empty());
+    EXPECT_EQ(live_scopes_.load(), 0);
+}
+
+TEST_F(GatewayPipeline, PreviewFailuresNeverReturnOutboundOrCallProvider) {
+    const auto pipeline = make(detectors_);
+    const auto blocked = preview(pipeline, ask("주민번호 900101-1234567"));
+    EXPECT_EQ(code_of(blocked), "entity_blocked");
+    EXPECT_FALSE(json::parse(blocked.body).contains("outbound"));
+    EXPECT_EQ(blocked.body.find("900101-1234567"), std::string::npos);
+    EXPECT_NE(preview(pipeline, R"({"messages":[],"unknown":true})").status, 200U);
+    vault_down_ = true;
+    EXPECT_EQ(preview(pipeline, ask("연락처 010-2345-6789")).status, 503U);
+    vault_down_ = false;
+    issuer_fails_ = true;
+    EXPECT_EQ(preview(pipeline, ask("연락처 010-2345-6789")).status, 503U);
+    const auto broken = *detect::Detectors::make({}, std::make_shared<FailingNer>());
+    const auto unavailable = preview(make(broken), ask("회의 안건 정리"));
+    EXPECT_EQ(code_of(unavailable), "detector_unavailable");
+    EXPECT_FALSE(json::parse(unavailable.body).contains("outbound"));
+    EXPECT_EQ(provider_calls_, 0);
+    EXPECT_EQ(live_scopes_.load(), 0);
+}
+
+TEST_F(GatewayPipeline, PreviewProtectsFileTextAndReportsDocumentStatistics) {
+    const std::string text = "연락처 010-2345-6789";
+    const json file = {{"type", "file"}, {"file", {{"filename", "sample.txt"},
+        {"file_data", "data:text/plain;base64," + pa_test::documents::base64(text)}}}};
+    const json request = {{"messages", json::array({{{"role", "user"}, {"content", json::array({file})}}})}};
+    const auto pipeline = make(detectors_, gw::pipeline_in_flight_limit, gw::request_time_limit, {}, nullptr, PA_EXTRACT_EXE);
+    const auto reply = preview(pipeline, request.dump());
+    ASSERT_EQ(reply.status, 200U);
+    const auto body = json::parse(reply.body);
+    EXPECT_EQ(body["decision"], "pseudonymized");
+    ASSERT_EQ(body["documents"].size(), 1U);
+    EXPECT_EQ(body["documents"][0]["format"], "txt");
+    EXPECT_EQ(body["documents"][0]["bytes"], text.size());
+    EXPECT_EQ(body["documents"][0]["omitted"],
+              (json{{"comments", 0}, {"revisions", 0}, {"hidden", 0}, {"other_parts", 0}}));
+    EXPECT_EQ(reply.body.find("010-2345-6789"), std::string::npos);
+    EXPECT_EQ(provider_calls_, 0);
+    EXPECT_EQ(live_scopes_.load(), 0);
+}
+
+TEST_F(GatewayPipeline, PreviewResidualFailureNeverReturnsOutbound) {
+    class ResidualFailure final : public detect::NerScanner {
+    public:
+        std::expected<std::vector<core::EntitySpan>, core::DetectError> scan(
+            std::string_view text, core::SegmentIndex, const detect::DetectionView&, std::stop_token) const override {
+            if (text.find(core::token_open) != std::string_view::npos) {
+                return std::unexpected(core::DetectError::Unavailable);
+            }
+            return std::vector<core::EntitySpan>{};
+        }
+    };
+    const auto detectors = *detect::Detectors::make({}, std::make_shared<ResidualFailure>());
+    const auto reply = preview(make(detectors), ask("연락처 010-2345-6789"));
+    EXPECT_EQ(reply.status, 503U);
+    EXPECT_EQ(code_of(reply), "detector_unavailable");
+    EXPECT_FALSE(json::parse(reply.body).contains("outbound"));
+    EXPECT_EQ(provider_calls_, 0);
+    EXPECT_EQ(live_scopes_.load(), 0);
+}
+
+TEST_F(GatewayPipeline, PreviewDoesNotSpendAConfirmationToken) {
+    std::atomic<int> calls{0};
+    const auto pipeline = make(detectors_, gw::pipeline_in_flight_limit, gw::request_time_limit, fake_sentence(calls));
+    const auto body = ask("동료가 정신과 진료를 받는다고 합니다.");
+    const auto first = preview(pipeline, body);
+    ASSERT_EQ(first.status, 409U);
+    const auto token = json::parse(first.body)["error"]["confirm_token"].get<std::string>();
+    EXPECT_EQ(preview(pipeline, body, token).status, 409U);
+    EXPECT_EQ(provider_calls_, 0);
+    EXPECT_EQ(run(pipeline, body, core::GradePolicy::OOnly, token).status, 200U);
+    EXPECT_EQ(run(pipeline, body, core::GradePolicy::OOnly, token).status, 409U);
+    EXPECT_EQ(provider_calls_, 1);
+}
+
+TEST_F(GatewayPipeline, PreviewTimeoutAndCancellationNeverCallProvider) {
+    const auto ner = std::make_shared<StopNer>();
+    const auto detectors = *detect::Detectors::make({}, ner);
+    const auto timed = make(detectors, gw::pipeline_in_flight_limit, std::chrono::milliseconds(50));
+    EXPECT_EQ(code_of(preview(timed, ask("회의 안건 정리"))), "timeout");
+    const auto pipeline = make(detectors);
+    asio::io_context io;
+    asio::cancellation_signal gone;
+    asio::steady_timer cancel_at(io, std::chrono::milliseconds(50));
+    cancel_at.async_wait([&](auto) { gone.emit(asio::cancellation_type::terminal); });
+    auto reply = asio::co_spawn(io, pipeline.handle(gw::AcceptedRequest{
+        nullptr, *core::resolve_grade(core::GradePolicy::OOnly, {}), ask("회의 안건 정리"), {}, {}, {},
+        gw::RequestPurpose::Preview}), asio::bind_cancellation_slot(gone.slot(), asio::use_future));
+    io.run();
+    EXPECT_EQ(code_of(reply.get()), "cancelled");
+    EXPECT_EQ(provider_calls_, 0);
+    EXPECT_EQ(live_scopes_.load(), 0);
+}
+
+TEST_F(GatewayPipeline, PreviewWritesOnlyMetadataAndFailsClosedOnAuditError) {
+    const auto root = std::filesystem::temp_directory_path();
+    const auto dir = root / ("pa-preview-audit-" + std::to_string(std::chrono::steady_clock::now().time_since_epoch().count()));
+    auto log = prompt_airlock::audit::AuditLog::open(dir, std::chrono::days(365));
+    ASSERT_TRUE(log);
+    ASSERT_TRUE(dir.is_absolute());
+    ASSERT_TRUE(std::filesystem::equivalent(std::filesystem::weakly_canonical(dir).parent_path(), root));
+    {
+        const auto pipeline = make(detectors_, gw::pipeline_in_flight_limit, gw::request_time_limit, {}, log->get());
+        ASSERT_EQ(preview(pipeline, ask("연락처 010-2345-6789")).status, 200U);
+    }
+    bool recorded = false;
+    for (const auto& file : std::filesystem::directory_iterator(dir)) {
+        if (file.path().extension() != ".jsonl") continue;
+        std::ifstream input(file.path());
+        for (std::string line; std::getline(input, line);) {
+            const auto record = json::parse(line);
+            EXPECT_NE(record["kind"], "egress");
+            EXPECT_NE(record["kind"], "egress_answer");
+            EXPECT_EQ(line.find("010-2345-6789"), std::string::npos);
+            recorded = recorded || record["kind"] == "preview";
+        }
+    }
+    EXPECT_TRUE(recorded);
+    EXPECT_EQ(provider_calls_, 0);
+    std::filesystem::remove_all(dir);
+    { std::ofstream denied(dir); denied << "not a directory"; }
+    {
+        const auto pipeline = make(detectors_, gw::pipeline_in_flight_limit, gw::request_time_limit, {}, log->get());
+        const auto unavailable = preview(pipeline, ask("연락처 010-2345-6789"));
+        EXPECT_EQ(unavailable.status, 503U);
+        EXPECT_FALSE(json::parse(unavailable.body).contains("outbound"));
+    }
+    EXPECT_EQ(provider_calls_, 0);
+    EXPECT_EQ(live_scopes_.load(), 0);
+    log->reset();
+    std::filesystem::remove(dir);
 }
 
 TEST_F(GatewayPipeline, WarnModeAsksOnceThenSendsWithTheToken) {

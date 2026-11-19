@@ -6,7 +6,7 @@
 
 요청
 
-1. 받는 endpoint는 `POST /v1/chat/completions` 하나다. 다른 경로는 거절한다.
+1. 대화는 `POST /v1/chat/completions`로 받는다. 같은 보호 단계를 사용하되 제공자는 호출하지 않는 `POST /v1/preview`를 추가한다([0029](0029-local-console-and-chat-app.md), 2026-11-19). 그 밖의 경로는 거절한다.
 2. 요청 필드는 아래만 받는다. 목록에 없는 필드가 하나라도 있으면 요청 전체를 거절한다.
 
 | 필드 | 처리 |

@@ -65,6 +65,7 @@ protected:
                                 ++handled_;
                                 last_origin_ = request.origin->name;
                                 last_body_ = request.body;
+                                last_purpose_ = request.purpose;
                                 if (retain_uploads_) uploads_.push_back(request.upload);
                             }
                             changed_.notify_all();
@@ -169,6 +170,7 @@ protected:
     int handled_ = 0;
     std::string last_origin_;
     std::string last_body_;
+    gw::RequestPurpose last_purpose_ = gw::RequestPurpose::Chat;
     std::atomic<bool> retain_uploads_{false};
     std::vector<std::shared_ptr<gw::UploadLease>> uploads_;
 };
@@ -196,6 +198,32 @@ TEST_F(GatewayServer, RejectsUnauthenticatedAndLocksAfterFailures) {
     ASSERT_TRUE(locked.has_value());
     EXPECT_EQ(locked->status, 429u);
     EXPECT_EQ(handled(), 0);
+}
+
+TEST_F(GatewayServer, RoutesAuthenticatedPreviewWithTheSameHttpGuards) {
+    auto preview = request("open-token");
+    preview.target("/v1/preview");
+    const auto reply = send(preview);
+    ASSERT_TRUE(reply);
+    EXPECT_EQ(reply->status, 200U);
+    EXPECT_EQ(handled(), 1);
+    {
+        std::scoped_lock lock(mutex_);
+        EXPECT_EQ(last_purpose_, gw::RequestPurpose::Preview);
+        EXPECT_EQ(last_body_, preview.body());
+    }
+    preview.set("X-Prompt-Airlock-Grade", "S");
+    EXPECT_EQ(send(preview)->status, 403U);
+    preview.erase("X-Prompt-Airlock-Grade");
+    preview.method(http::verb::get);
+    EXPECT_EQ(send(preview)->status, 405U);
+    preview.method(http::verb::post);
+    preview.set(http::field::content_type, "text/plain");
+    EXPECT_EQ(send(preview)->status, 415U);
+    preview.set(http::field::content_type, "application/json");
+    preview.erase(http::field::authorization);
+    EXPECT_EQ(send(preview)->status, 401U);
+    EXPECT_EQ(handled(), 1);
 }
 
 TEST_F(GatewayServer, RejectsWrongRouteMethodAndMediaType) {
