@@ -38,7 +38,7 @@ struct AcceptedRequest {
     core::OpenGrade grade;
     std::string body;
     std::string client;   // 접속 주소(감사 기록용)
-    std::string confirm;  // 경고 확인 표지(X-Prompt-Airlock-Confirm, ADR 0023). 없으면 빈 문자열
+    std::string confirm;  // 표지가 없으면 빈 문자열. 명시적인 빈 확인 헤더는 HTTP 입구에서 거절한다.
     std::shared_ptr<UploadLease> upload{};
     RequestPurpose purpose = RequestPurpose::Chat;
 };

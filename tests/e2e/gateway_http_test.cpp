@@ -143,7 +143,7 @@ protected:
     }
 
     Reply post_json(const json& body, std::string_view grade = {}, std::chrono::seconds client_timeout = 30s,
-                     std::string_view target = "/v1/chat/completions") {
+                     std::string_view target = "/v1/chat/completions", std::optional<std::string_view> confirm = std::nullopt) {
         asio::io_context io;
         beast::ssl_stream<beast::tcp_stream> stream(io, *client_tls_);
         SSL_set1_host(stream.native_handle(), "localhost");
@@ -157,6 +157,7 @@ protected:
         req.set(http::field::host, "127.0.0.1:" + std::to_string(server.port()));
         req.set(http::field::content_type, "application/json");
         req.set(http::field::authorization, "Bearer desk-token");
+        if (confirm) req.set("X-Prompt-Airlock-Confirm", *confirm);
         if (!grade.empty()) {
             req.set("X-Prompt-Airlock-Grade", grade);
         }
@@ -225,6 +226,9 @@ TEST_F(GatewayCompatHttp, PreviewAndLocalApprovalKeepEgressProtectedAndConsentSi
     const auto approved = post_json(json{{"token", token}}, "O", 30s, "/v1/confirmations/approve");
     ASSERT_EQ(approved.status, 200U) << approved.body.dump();
     EXPECT_TRUE(approved.body["approved"].get<bool>());
+    EXPECT_TRUE(mock_->received().empty());
+    const auto empty = post_json(body, {}, 30s, "/v1/chat/completions", std::string_view{});
+    EXPECT_EQ(empty.status, 400U);
     EXPECT_TRUE(mock_->received().empty());
     const auto answer = post_json(body);
     ASSERT_EQ(answer.status, 200U) << answer.body.dump();

@@ -277,7 +277,7 @@ JsonResponse Pipeline::approve(AcceptedRequest request, Trace& trace, std::stop_
         }
         return false;
     };
-    const bool approved = confirms_.approve(*token, origin, ConfirmLedger::Clock::now(), [&](std::string_view hash) {
+    const bool approved = confirms_.approve(*token, origin, [&](std::string_view hash) {
         if (stopped()) return false;
         if (audit_ != nullptr && !audit_->append("confirmation", "info", {{"request_id", trace.id},
             {"origin", origin}, {"client", request.client}, {"body_sha256", hash}, {"result", "checked"}})) {
@@ -432,15 +432,14 @@ std::optional<JsonResponse> Pipeline::confirm_sentences(const core::PolicyChecke
     if (categories.empty()) {
         return std::nullopt;
     }
-    const auto now = ConfirmLedger::Clock::now();
     const bool confirmed = purpose == RequestPurpose::Chat &&
-        (confirm.empty() ? confirms_.redeem_approved(body_sha256, origin, now)
-                         : confirms_.redeem(confirm, body_sha256, origin, now));
+        (confirm.empty() ? confirms_.redeem_approved(body_sha256, origin)
+                         : confirms_.redeem(confirm, body_sha256, origin));
     trace.sentence = {{"categories", categories}, {"confirmed", confirmed}};
     if (confirmed) {
         return std::nullopt;
     }
-    const auto token = confirms_.issue(body_sha256, origin, now);
+    const auto token = confirms_.issue(body_sha256, origin);
     if (!token) {
         return trace.fail(EntryError::Overloaded);
     }

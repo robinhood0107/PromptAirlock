@@ -224,6 +224,16 @@ TEST_F(GatewayServer, DefaultConfirmationKeepsIts409Contract) {
     EXPECT_EQ(nlohmann::json::parse(reply->body)["error"]["confirm_token"], std::string(32, 'a'));
 }
 
+TEST_F(GatewayServer, AnExplicitEmptyConfirmationHeaderIsRejectedBeforeTheHandler) {
+    auto empty = request("open-token");
+    empty.set("X-Prompt-Airlock-Confirm", "");
+    const auto reply = send(empty);
+    ASSERT_TRUE(reply);
+    EXPECT_EQ(reply->status, 400U);
+    EXPECT_EQ(code_of(*reply), "bad_request");
+    EXPECT_EQ(handled(), 0);
+}
+
 TEST_F(GatewayServer, ServesOnlyLocalBuiltInApprovalResourcesWithoutOriginCredentials) {
     auto page = request("", "");
     page.method(http::verb::get);

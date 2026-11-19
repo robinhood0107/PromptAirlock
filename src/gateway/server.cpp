@@ -264,7 +264,8 @@ std::expected<std::pair<const Origin*, core::OpenGrade>, JsonResponse> check_hea
         }
     }
     // 확인 표지는 하나만, 표지 길이를 넘으면 형식 오류다(값을 기록하거나 되돌려 주지 않는다).
-    if (head.count(confirm_header) > 1 || head[confirm_header].size() > confirm_token_chars) {
+    if (head.count(confirm_header) > 1 || head[confirm_header].size() > confirm_token_chars ||
+        (head.count(confirm_header) == 1 && head[confirm_header].empty())) {
         return std::unexpected(error_response(EntryError::BadRequest));
     }
     std::vector<std::string_view> marks;
