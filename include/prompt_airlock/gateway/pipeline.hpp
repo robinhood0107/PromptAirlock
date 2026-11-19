@@ -114,10 +114,12 @@ private:
     boost::asio::awaitable<JsonResponse> run(AcceptedRequest request, Trace& trace) const;
     // 처리 순서(위 머리말)대로 아래 단계를 부른다.
     std::expected<Outbound, JsonResponse> prepare(AcceptedRequest request, Trace& trace, std::stop_token stop) const;
+    JsonResponse approve(AcceptedRequest request, Trace& trace, std::stop_token stop) const;
     std::optional<JsonResponse> confirm_sentences(const core::PolicyCheckedPrompt& checked,
                                                   std::span<const core::EntitySpan> entities,
                                                   const std::string& confirm, const std::string& body_sha256,
-                                                  RequestPurpose purpose, Trace& trace, std::stop_token stop) const;
+                                                  std::string_view origin, RequestPurpose purpose,
+                                                  Trace& trace, std::stop_token stop) const;
     std::expected<core::VerifiedPrompt, core::Rejection> protect_and_verify(core::PolicyCheckedPrompt checked,
                                                                             PseudonymScope& scope,
                                                                             std::stop_token stop) const;

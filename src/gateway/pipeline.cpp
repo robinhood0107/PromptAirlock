@@ -104,6 +104,27 @@ std::string new_request_id() {
     return id;
 }
 
+std::optional<std::string> confirmation_token(std::string_view text) {
+    bool valid = true;
+    bool seen = false;
+    const auto body = nlohmann::json::parse(text, [&](int depth, nlohmann::json::parse_event_t event,
+                                                    nlohmann::json& value) {
+        if (event == nlohmann::json::parse_event_t::key) {
+            if (depth != 1 || seen || value != "token") valid = false;
+            seen = true;
+        }
+        return true;
+    }, false);
+    if (!valid || !body.is_object() || body.size() != 1 || !body.contains("token") || !body["token"].is_string()) {
+        return std::nullopt;
+    }
+    const auto& token = body["token"].get_ref<const std::string&>();
+    if (token.size() != confirm_token_chars || !std::ranges::all_of(token, [](char c) {
+        return (c >= '0' && c <= '9') || (c >= 'a' && c <= 'f');
+    })) return std::nullopt;
+    return token;
+}
+
 }  // namespace
 
 // 요청 하나의 감사용 정보. 원문 값은 담지 않는다(사유 코드, 종류 이름, 건수만).
@@ -114,6 +135,8 @@ struct Pipeline::Trace {
     nlohmann::json entities = nlohmann::json::object();
     nlohmann::json sentence;  // 경고 모드: 걸린 범주 이름과 사용자 확인 여부만
     nlohmann::json documents = nlohmann::json::array();
+    bool approval_recorded = false;
+    std::chrono::steady_clock::time_point deadline;
     std::optional<std::chrono::steady_clock::time_point> provider_started;
     std::optional<std::chrono::steady_clock::time_point> provider_finished;
 
@@ -154,9 +177,11 @@ Pipeline::Pipeline(const detect::Detectors& detectors, ScopeOpener open_scope, P
 asio::awaitable<JsonResponse> Pipeline::handle(AcceptedRequest request) const {
     const auto start = std::chrono::steady_clock::now();
     Trace trace;
+    trace.deadline = start + time_limit_;
     const std::string origin = request.origin != nullptr ? request.origin->name : std::string();
     const std::string client = request.client;
     const bool preview = request.purpose == RequestPurpose::Preview;
+    const bool approval = request.purpose == RequestPurpose::Approve;
     struct Slot {
         std::atomic<std::size_t>& count;
         ~Slot() { --count; }
@@ -179,7 +204,7 @@ asio::awaitable<JsonResponse> Pipeline::handle(AcceptedRequest request) const {
             reply = std::move(std::get<0>(outcome));
         }
     }
-    if (audit_ != nullptr) {
+    if (audit_ != nullptr && !trace.approval_recorded) {
         const auto finished = std::chrono::steady_clock::now();
         const auto ms = std::chrono::duration<double, std::milli>(finished - start).count();
         nlohmann::json fields = {{"request_id", trace.id}, {"origin", origin},       {"client", client},
@@ -199,7 +224,8 @@ asio::awaitable<JsonResponse> Pipeline::handle(AcceptedRequest request) const {
             // 응답 검사·복원·범위 삭제까지다. 이 request 행의 쓰기와 HTTP 반환은 호출자의 왕복에 포함된다.
             fields["after_provider_ms"] = std::chrono::duration<double, std::milli>(finished - *trace.provider_finished).count();
         }
-        if (!audit_->append(preview ? "preview" : "request", reply.status == 200 ? "info" : "warn", std::move(fields))) {
+        if (!audit_->append(approval ? "confirmation" : preview ? "preview" : "request",
+                             reply.status == 200 ? "info" : "warn", std::move(fields))) {
             co_return error_response(EntryError::Unavailable);  // 기록하지 못한 요청은 내보내지 않는다
         }
     }
@@ -212,6 +238,9 @@ asio::awaitable<JsonResponse> Pipeline::run(AcceptedRequest request, Trace& trac
     co_await asio::this_coro::throw_if_cancelled(false);  // 예외로 빠지면 범위를 io 스레드에서 지우게 된다
     std::stop_source stop;
     const auto purpose = request.purpose;
+    if (purpose == RequestPurpose::Approve) {
+        co_return co_await on_pool(work_, stop, [&] { return approve(std::move(request), trace, stop.get_token()); });
+    }
     auto outbound = co_await on_pool(work_, stop, [&] { return prepare(std::move(request), trace, stop.get_token()); });
     if (!outbound) {
         co_return std::move(outbound.error());
@@ -241,6 +270,41 @@ asio::awaitable<JsonResponse> Pipeline::run(AcceptedRequest request, Trace& trac
         outbound->scope.reset();
         return response;
     });
+}
+
+JsonResponse Pipeline::approve(AcceptedRequest request, Trace& trace, std::stop_token stop) const {
+    core::SensitiveText body(std::move(request.body));
+    if (body.size() > confirm_body_bytes) return trace.fail(EntryError::BodyTooLarge);
+    const auto token = confirmation_token(body.view());
+    if (!token) return trace.fail(EntryError::BadRequest);
+    const std::string_view origin = request.origin != nullptr ? request.origin->name : std::string_view{};
+    JsonResponse response{200, R"({"approved":true})"};
+    std::optional<EntryError> failure;
+    const auto stopped = [&] {
+        if (stop.stop_requested()) {
+            failure = EntryError::Cancelled;
+            return true;
+        }
+        if (std::chrono::steady_clock::now() >= trace.deadline) {
+            failure = EntryError::Timeout;
+            return true;
+        }
+        return false;
+    };
+    const bool approved = confirms_.approve(*token, origin, ConfirmLedger::Clock::now(), [&](std::string_view hash) {
+        if (stopped()) return false;
+        if (audit_ != nullptr && !audit_->append("confirmation", "info", {{"request_id", trace.id},
+            {"origin", origin}, {"client", request.client}, {"body_sha256", hash}, {"result", "checked"}})) {
+            failure = EntryError::Unavailable;
+            return false;
+        }
+        return !stopped();
+    });
+    if (failure) return trace.fail(*failure);
+    if (!approved) return trace.fail(EntryError::ConfirmationInvalid);
+    // 승인 전 기록이 끝났으므로 상태 변경 뒤에 새 감사 실패를 만들지 않는다.
+    trace.approval_recorded = audit_ != nullptr;
+    return response;
 }
 
 // JSON 읽기부터 전송 준비까지. 미리보기는 외부 전송 이력을 쓰지 않는다.
@@ -317,6 +381,7 @@ std::expected<Pipeline::Outbound, JsonResponse> Pipeline::prepare(AcceptedReques
         return std::unexpected(trace.reject(checked.error()));
     }
     if (auto stopped = confirm_sentences(*checked, detected->entities, request.confirm, body_sha256,
+                                         request.origin != nullptr ? request.origin->name : std::string_view{},
                                          request.purpose, trace, stop)) {
         return std::unexpected(std::move(*stopped));
     }
@@ -353,7 +418,8 @@ std::expected<Pipeline::Outbound, JsonResponse> Pipeline::prepare(AcceptedReques
 std::optional<JsonResponse> Pipeline::confirm_sentences(const core::PolicyCheckedPrompt& checked,
                                                         std::span<const core::EntitySpan> entities,
                                                         const std::string& confirm, const std::string& body_sha256,
-                                                        RequestPurpose purpose, Trace& trace, std::stop_token stop) const {
+                                                        std::string_view origin, RequestPurpose purpose,
+                                                        Trace& trace, std::stop_token stop) const {
     std::vector<std::string> categories;
     for (const auto& e : checked.entities()) {
         if (e.action == core::Action::Confirm) {
@@ -381,13 +447,14 @@ std::optional<JsonResponse> Pipeline::confirm_sentences(const core::PolicyChecke
         return std::nullopt;
     }
     const auto now = ConfirmLedger::Clock::now();
-    const bool confirmed = purpose == RequestPurpose::Chat && !confirm.empty() &&
-                           confirms_.redeem(confirm, body_sha256, now);
+    const bool confirmed = purpose == RequestPurpose::Chat &&
+        (confirm.empty() ? confirms_.redeem_approved(body_sha256, origin, now)
+                         : confirms_.redeem(confirm, body_sha256, origin, now));
     trace.sentence = {{"categories", categories}, {"confirmed", confirmed}};
     if (confirmed) {
         return std::nullopt;
     }
-    const auto token = confirms_.issue(body_sha256, now);
+    const auto token = confirms_.issue(body_sha256, origin, now);
     if (!token) {
         return trace.fail(EntryError::Overloaded);
     }

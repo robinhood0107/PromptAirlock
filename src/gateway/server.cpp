@@ -14,6 +14,7 @@
 #include <boost/none.hpp>
 
 #include <atomic>
+#include <algorithm>
 #include <array>
 
 #include "prompt_airlock/core/types.hpp"
@@ -48,6 +49,7 @@ struct Server::Shared {
            RequestHandler request_handler, ServerLimits server_limits, audit::AuditLog* audit_log)
         : tls(tls_context),
           acceptor(io, endpoint, reuse_address),
+          port(acceptor.local_endpoint().port()),
           auth(authenticator),
           handler(std::move(request_handler)),
           limits(server_limits),
@@ -55,6 +57,7 @@ struct Server::Shared {
 
     asio::ssl::context& tls;
     tcp::acceptor acceptor;
+    const std::uint16_t port;
     Authenticator& auth;
     RequestHandler handler;
     ServerLimits limits;
@@ -96,8 +99,21 @@ constexpr auto use_tuple = asio::as_tuple(asio::use_awaitable);
 
 constexpr std::string_view endpoint_path = "/v1/chat/completions";
 constexpr std::string_view preview_path = "/v1/preview";
+constexpr std::string_view approval_path = "/v1/confirmations/approve";
 constexpr std::string_view grade_header = "X-Prompt-Airlock-Grade";  // ADR 0013
 constexpr std::string_view confirm_header = "X-Prompt-Airlock-Confirm";  // ADR 0023
+
+std::string console_origin(std::uint16_t port) {
+    return "https://127.0.0.1" + (port == 443 ? std::string{} : ":" + std::to_string(port));
+}
+
+bool local_console_request(const http::request_header<>& head, std::string_view client, std::uint16_t port) {
+    const auto origin = console_origin(port);
+    return client == "127.0.0.1" && head.count(http::field::host) == 1 &&
+           head[http::field::host] == std::string_view(origin).substr(8) &&
+           head.count(http::field::origin) <= 1 &&
+           (head.count(http::field::origin) == 0 || head[http::field::origin] == std::string_view(origin));
+}
 
 bool ascii_iequal_prefix(std::string_view text, std::string_view prefix) {
     if (text.size() < prefix.size()) {
@@ -137,7 +153,8 @@ http::response<http::string_body> make_reply(JsonResponse reply, unsigned versio
 
 // 헤더만 보고 끝낼 수 있는 검사. 통과하면 등급이 확정된 출처를 돌려준다.
 std::expected<std::pair<const Origin*, core::OpenGrade>, JsonResponse> check_headers(
-    const http::request_header<>& head, Authenticator& auth, std::string_view client, audit::AuditLog* audit) {
+    const http::request_header<>& head, Authenticator& auth, std::string_view client, audit::AuditLog* audit,
+    std::uint16_t port) {
     if (head.count(http::field::authorization) > 1) {
         return std::unexpected(error_response(EntryError::BadRequest));
     }
@@ -150,7 +167,7 @@ std::expected<std::pair<const Origin*, core::OpenGrade>, JsonResponse> check_hea
         return std::unexpected(error_response(origin.error() == AuthFailure::Locked ? EntryError::TooManyFailures
                                                                                      : EntryError::Unauthorized));
     }
-    if (head.target() != endpoint_path && head.target() != preview_path) {
+    if (head.target() != endpoint_path && head.target() != preview_path && head.target() != approval_path) {
         return std::unexpected(error_response(EntryError::NotFound));
     }
     if (head.method() != http::verb::post) {
@@ -158,6 +175,18 @@ std::expected<std::pair<const Origin*, core::OpenGrade>, JsonResponse> check_hea
     }
     if (!is_json(head[http::field::content_type])) {
         return std::unexpected(error_response(EntryError::UnsupportedMediaType));
+    }
+    if (head.target() == approval_path) {
+        if (!local_console_request(head, client, port)) {
+            if (audit != nullptr) {
+                (void)audit->append("confirmation", "warn", {{"origin", (*origin)->name}, {"client", client},
+                    {"result", "reject"}, {"reason", "local_only"}});
+            }
+            return std::unexpected(error_response(EntryError::LocalOnly));
+        }
+        if (head.count(confirm_header) != 0) {
+            return std::unexpected(error_response(EntryError::BadRequest));
+        }
     }
     // 확인 표지는 하나만, 표지 길이를 넘으면 형식 오류다(값을 기록하거나 되돌려 주지 않는다).
     if (head.count(confirm_header) > 1 || head[confirm_header].size() > confirm_token_chars) {
@@ -233,18 +262,23 @@ asio::awaitable<void> session(std::shared_ptr<Server::Shared> shared, tcp::socke
         }
         const auto& head = parser.get().base();
         const unsigned version = head.version();
+        auto purpose = RequestPurpose::Chat;
+        if (head.target() == preview_path) purpose = RequestPurpose::Preview;
+        else if (head.target() == approval_path) purpose = RequestPurpose::Approve;
+        const auto body_limit = purpose == RequestPurpose::Approve
+            ? std::min(shared->limits.body_bytes, confirm_body_bytes) : shared->limits.body_bytes;
 
         std::optional<JsonResponse> reply;
         std::shared_ptr<UploadLease> upload;
         std::string request_body;
         BodyCleanup cleanup{request_body};
-        auto accepted = check_headers(head, shared->auth, client, shared->audit);
+        auto accepted = check_headers(head, shared->auth, client, shared->audit, shared->port);
         if (!accepted) {
             reply = std::move(accepted.error());
-        } else if (const auto length = parser.content_length(); length && *length > shared->limits.body_bytes) {
+        } else if (const auto length = parser.content_length(); length && *length > body_limit) {
             reply = error_response(EntryError::BodyTooLarge);
         } else {
-            parser.body_limit(shared->limits.body_bytes);
+            parser.body_limit(body_limit);
             if (const auto length = parser.content_length(); length && *length > core::max_prompt_bytes) {
                 upload = reserve_large_upload(shared);
                 if (!upload) reply = error_response(EntryError::Overloaded);
@@ -261,7 +295,7 @@ asio::awaitable<void> session(std::shared_ptr<Server::Shared> shared, tcp::socke
                 auto [body_error, body_bytes] = co_await http::async_read_some(stream, buffer, parser, use_tuple);
                 const auto consumed = chunk.size() - parser.get().body().size;
                 if (body_error == http::error::body_limit ||
-                    consumed > shared->limits.body_bytes - request_body.size()) {
+                    consumed > body_limit - request_body.size()) {
                     reply = error_response(EntryError::BodyTooLarge);
                     break;
                 }
@@ -283,8 +317,7 @@ asio::awaitable<void> session(std::shared_ptr<Server::Shared> shared, tcp::socke
                     auto outcome = co_await (shared->handler(AcceptedRequest{accepted->first, accepted->second,
                                                                              std::move(request_body), client,
                                                                              std::string(head[confirm_header]), std::move(upload),
-                                                                             head.target() == preview_path ? RequestPurpose::Preview
-                                                                                                           : RequestPurpose::Chat}) ||
+                                                                             purpose}) ||
                                              client_gone(beast::get_lowest_layer(stream).socket()));
                     if (outcome.index() == 1) {
                         co_return;  // 받을 사람이 없다

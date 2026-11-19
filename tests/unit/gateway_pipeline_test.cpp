@@ -162,7 +162,7 @@ protected:
         asio::io_context io;
         auto grade = core::resolve_grade(policy, {});
         auto future = asio::co_spawn(
-            io, pipeline.handle(gw::AcceptedRequest{nullptr, *grade, std::move(body), {}, std::move(confirm), {}, purpose}),
+            io, pipeline.handle(gw::AcceptedRequest{&origin_, *grade, std::move(body), {}, std::move(confirm), {}, purpose}),
             asio::use_future);
         io.run();
         return future.get();
@@ -170,6 +170,10 @@ protected:
 
     gw::JsonResponse preview(const gw::Pipeline& pipeline, std::string body, std::string confirm = {}) {
         return run(pipeline, std::move(body), core::GradePolicy::OOnly, std::move(confirm), gw::RequestPurpose::Preview);
+    }
+
+    gw::JsonResponse approve(const gw::Pipeline& pipeline, std::string_view token) {
+        return run(pipeline, json{{"token", token}}.dump(), core::GradePolicy::OOnly, {}, gw::RequestPurpose::Approve);
     }
 
     static std::string ask(std::string_view text) {
@@ -195,6 +199,7 @@ protected:
     std::function<std::string(const std::string&)> answer_;
     std::function<asio::awaitable<void>()> during_first_provider_call_;  // 첫 요청이 provider 를 기다리는 동안 할 일
 
+    gw::Origin origin_{"test-origin", {}, core::GradePolicy::OOnly};
     asio::thread_pool work_{2};
 
     detect::Detectors detectors_ = *detect::Detectors::make({});
@@ -397,6 +402,128 @@ TEST_F(GatewayPipeline, PreviewDoesNotSpendAConfirmationToken) {
     EXPECT_EQ(provider_calls_, 0);
     EXPECT_EQ(run(pipeline, body, core::GradePolicy::OOnly, token).status, 200U);
     EXPECT_EQ(run(pipeline, body, core::GradePolicy::OOnly, token).status, 409U);
+    EXPECT_EQ(provider_calls_, 1);
+}
+
+TEST_F(GatewayPipeline, ApprovalIsOneUseAndCannotBeSpentByAnotherBodyOriginOrPreview) {
+    std::atomic<int> calls{0};
+    const auto pipeline = make(detectors_, gw::pipeline_in_flight_limit, gw::request_time_limit, fake_sentence(calls));
+    const auto body = ask("동료가 정신과 진료를 받는다고 합니다.");
+    const auto first = preview(pipeline, body);
+    ASSERT_EQ(first.status, 409U);
+    const auto token = json::parse(first.body)["error"]["confirm_token"].get<std::string>();
+    origin_.name = "another-origin";
+    EXPECT_EQ(approve(pipeline, token).status, 409U);
+    EXPECT_EQ(run(pipeline, body, core::GradePolicy::OOnly, token).status, 409U);
+    origin_.name = "test-origin";
+    EXPECT_EQ(approve(pipeline, token).status, 200U);
+    EXPECT_EQ(approve(pipeline, token).status, 409U);
+    EXPECT_EQ(preview(pipeline, body).status, 409U);
+    EXPECT_EQ(run(pipeline, ask("동료가 정신과 진료 일정을 바꿨다고 합니다.")).status, 409U);
+    EXPECT_EQ(run(pipeline, body, core::GradePolicy::OOnly, std::string(32, '0')).status, 409U);
+    EXPECT_EQ(provider_calls_, 0);
+    EXPECT_EQ(run(pipeline, body).status, 200U);
+    EXPECT_EQ(run(pipeline, body).status, 409U);
+    EXPECT_EQ(provider_calls_, 1);
+    EXPECT_EQ(live_scopes_.load(), 0);
+}
+
+TEST_F(GatewayPipeline, ApprovalRejectsDuplicateUnknownAndOversizedControlFields) {
+    std::atomic<int> calls{0};
+    const auto pipeline = make(detectors_, gw::pipeline_in_flight_limit, gw::request_time_limit, fake_sentence(calls));
+    const auto body = ask("동료가 정신과 진료를 받는다고 합니다.");
+    const auto token = json::parse(preview(pipeline, body).body)["error"]["confirm_token"].get<std::string>();
+    auto duplicate = json{{"token", token}}.dump();
+    duplicate.insert(duplicate.size() - 1, ",\"token\":\"" + token + "\"");
+    const std::vector<std::string> invalid = {
+        duplicate, json{{"token", token}, {"extra", true}}.dump(), R"({"token":null})", R"({"token":[]})",
+        R"({"token":"bad"})", R"({"token":{"token":"bad"}})", "[]"
+    };
+    for (const auto& request : invalid) {
+        const auto rejected = run(pipeline, request, core::GradePolicy::OOnly, {}, gw::RequestPurpose::Approve);
+        EXPECT_EQ(rejected.status, 400U);
+    }
+    EXPECT_EQ(run(pipeline, std::string(gw::confirm_body_bytes + 1, ' '), core::GradePolicy::OOnly, {},
+                  gw::RequestPurpose::Approve).status, 413U);
+    EXPECT_EQ(run(pipeline, body).status, 409U);
+    EXPECT_EQ(provider_calls_, 0);
+    EXPECT_EQ(approve(pipeline, token).status, 200U);
+}
+
+TEST_F(GatewayPipeline, FailedApprovalAuditCannotAuthorizeTheBody) {
+    const auto root = std::filesystem::temp_directory_path();
+    const auto dir = root / ("pa-approval-audit-" + std::to_string(std::chrono::steady_clock::now().time_since_epoch().count()));
+    auto log = prompt_airlock::audit::AuditLog::open(dir, std::chrono::days(365));
+    ASSERT_TRUE(log);
+    ASSERT_TRUE(dir.is_absolute());
+    ASSERT_TRUE(std::filesystem::equivalent(std::filesystem::weakly_canonical(dir).parent_path(), root));
+    {
+        std::atomic<int> calls{0};
+        const auto pipeline = make(detectors_, gw::pipeline_in_flight_limit, gw::request_time_limit,
+                                   fake_sentence(calls), log->get());
+        const auto body = ask("동료가 정신과 진료를 받는다고 합니다.");
+        const auto token = json::parse(preview(pipeline, body).body)["error"]["confirm_token"].get<std::string>();
+        std::filesystem::remove_all(dir);
+        { std::ofstream denied(dir); denied << "not a directory"; }
+        EXPECT_EQ(approve(pipeline, token).status, 503U);
+        EXPECT_EQ(provider_calls_, 0);
+        ASSERT_TRUE(std::filesystem::remove(dir));
+        ASSERT_TRUE(std::filesystem::create_directory(dir));
+        EXPECT_EQ(run(pipeline, body).status, 409U);
+        EXPECT_EQ(provider_calls_, 0);
+        EXPECT_EQ(approve(pipeline, token).status, 200U);
+        EXPECT_EQ(run(pipeline, body).status, 200U);
+        EXPECT_EQ(provider_calls_, 1);
+    }
+    log->reset();
+    ASSERT_TRUE(std::filesystem::equivalent(std::filesystem::weakly_canonical(dir).parent_path(), root));
+    std::filesystem::remove_all(dir);
+}
+
+TEST_F(GatewayPipeline, QueuedApprovalCancellationAndTimeoutDoNotAuthorizeTheBody) {
+    std::atomic<int> calls{0};
+    const auto pipeline = make(detectors_, gw::pipeline_in_flight_limit, std::chrono::milliseconds(200), fake_sentence(calls));
+    const auto body = ask("동료가 정신과 진료를 받는다고 합니다.");
+    const auto token = json::parse(preview(pipeline, body).body)["error"]["confirm_token"].get<std::string>();
+    for (const bool cancel : {true, false}) {
+        std::promise<void> release;
+        const auto gate = release.get_future().share();
+        std::vector<std::future<void>> ready;
+        for (int i = 0; i < 2; ++i) {
+            auto entered = std::make_shared<std::promise<void>>();
+            ready.push_back(entered->get_future());
+            asio::post(work_, [entered, gate] {
+                entered->set_value();
+                (void)gate.wait_for(std::chrono::seconds(5));
+            });
+        }
+        for (auto& entered : ready) ASSERT_EQ(entered.wait_for(std::chrono::seconds(5)), std::future_status::ready);
+        asio::io_context io;
+        asio::cancellation_signal gone;
+        asio::steady_timer release_at(io, std::chrono::milliseconds(400));
+        if (!cancel) release_at.async_wait([&](auto) { release.set_value(); });
+        auto reply = asio::co_spawn(io, [&]() -> asio::awaitable<gw::JsonResponse> {
+            if (cancel) asio::post(io, [&] {
+                gone.emit(asio::cancellation_type::terminal);
+                release.set_value();
+            });
+            co_return co_await pipeline.handle(gw::AcceptedRequest{&origin_,
+                *core::resolve_grade(core::GradePolicy::OOnly, {}), json{{"token", token}}.dump(), {}, {}, {},
+                gw::RequestPurpose::Approve});
+        }, asio::bind_cancellation_slot(gone.slot(), asio::use_future));
+        io.run();
+        try {
+            EXPECT_EQ(code_of(reply.get()), cancel ? "cancelled" : "timeout");
+        } catch (const boost::system::system_error& error) {
+            // 실행 전 취소는 coroutine에 들어가기 전에 끝날 수 있다.
+            EXPECT_TRUE(cancel);
+            EXPECT_EQ(error.code(), asio::error::operation_aborted);
+        }
+        EXPECT_EQ(run(pipeline, body).status, 409U);
+        EXPECT_EQ(provider_calls_, 0);
+    }
+    EXPECT_EQ(approve(pipeline, token).status, 200U);
+    EXPECT_EQ(run(pipeline, body).status, 200U);
     EXPECT_EQ(provider_calls_, 1);
 }
 

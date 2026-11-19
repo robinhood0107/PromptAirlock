@@ -1,5 +1,6 @@
 // 서버 골격 시험: 루프백에 실제로 띄우고 TLS 로 붙는다. handler 는 받은 내용을 기록만 한다.
 #include "prompt_airlock/gateway/server.hpp"
+#include "prompt_airlock/gateway/confirm.hpp"
 
 #include <boost/asio/as_tuple.hpp>
 #include <boost/asio/ssl.hpp>
@@ -302,6 +303,34 @@ class GatewayLargeServer : public GatewayServer {
 protected:
     std::size_t body_limit() const override { return 44U << 20; }
 };
+
+TEST_F(GatewayLargeServer, ApprovalRequiresLocalAuthorityOriginAndItsOwnBodyLimit) {
+    auto approval = request("open-token", R"({"token":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"})");
+    approval.target("/v1/confirmations/approve");
+    EXPECT_EQ(send(approval)->status, 403U);
+    const auto host = "127.0.0.1:" + std::to_string(port_);
+    approval.set(http::field::host, host);
+    approval.set(http::field::origin, "https://example.invalid");
+    EXPECT_EQ(send(approval)->status, 403U);
+    approval.set(http::field::origin, "https://" + host);
+    approval.set("X-Prompt-Airlock-Confirm", std::string(32, 'a'));
+    EXPECT_EQ(send(approval)->status, 400U);
+    approval.erase("X-Prompt-Airlock-Confirm");
+    approval.body() = std::string(gw::confirm_body_bytes + 1, ' ');
+    EXPECT_EQ(send(approval)->status, 413U);
+    approval.body() = R"({"token":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"})";
+    approval.set("X-Prompt-Airlock-Grade", "S");
+    EXPECT_EQ(send(approval)->status, 403U);
+    approval.erase("X-Prompt-Airlock-Grade");
+    approval.erase(http::field::authorization);
+    EXPECT_EQ(send(approval)->status, 401U);
+    EXPECT_EQ(handled(), 0);
+    approval.set(http::field::authorization, "Bearer open-token");
+    EXPECT_EQ(send(approval)->status, 200U);
+    EXPECT_EQ(handled(), 1);
+    std::scoped_lock lock(mutex_);
+    EXPECT_EQ(last_purpose_, gw::RequestPurpose::Approve);
+}
 
 TEST_F(GatewayLargeServer, CountsChunkedAndFixedUploadsAndReleasesSharedBudget) {
     retain_uploads_ = true;
