@@ -1,0 +1,37 @@
+cmake_minimum_required(VERSION 3.28)
+include("${CMAKE_CURRENT_LIST_DIR}/../../cmake/DownloadVerified.cmake")
+file(MAKE_DIRECTORY "${PA_TEST_DIR}")
+file(WRITE "${PA_TEST_DIR}/source" "verified runtime fixture")
+file(SHA256 "${PA_TEST_DIR}/source" sha256)
+set(url "file:///${PA_TEST_DIR}")
+
+if(PA_BAD_HASH)
+  pa_download_verified("${url}/source" "${PA_TEST_DIR}/bad" "invalid" ok)
+  message(FATAL_ERROR "해시가 다른 파일을 받아들였다")
+endif()
+
+file(REMOVE "${PA_TEST_DIR}/download" "${PA_TEST_DIR}/bad")
+pa_download_verified("${url}/missing" "${PA_TEST_DIR}/download" "${sha256}" ok)
+if(ok OR EXISTS "${PA_TEST_DIR}/download")
+  message(FATAL_ERROR "실패한 다운로드를 남겼다")
+endif()
+pa_download_verified("${url}/source" "${PA_TEST_DIR}/download" "${sha256}" ok)
+if(NOT ok)
+  message(FATAL_ERROR "대체 다운로드가 실패했다")
+endif()
+file(SHA256 "${PA_TEST_DIR}/download" actual)
+if(NOT actual STREQUAL sha256)
+  message(FATAL_ERROR "대체 파일이 다르다")
+endif()
+
+# 해시가 맞는 캐시는 원본 주소가 없어도 재사용한다.
+pa_download_verified("${url}/missing" "${PA_TEST_DIR}/download" "${sha256}" ok)
+if(NOT ok)
+  message(FATAL_ERROR "검증된 캐시를 재사용하지 못했다")
+endif()
+
+execute_process(COMMAND "${CMAKE_COMMAND}" "-DPA_TEST_DIR=${PA_TEST_DIR}" -DPA_BAD_HASH=ON
+  -P "${CMAKE_CURRENT_LIST_FILE}" RESULT_VARIABLE code OUTPUT_VARIABLE output ERROR_VARIABLE error)
+if(code EQUAL 0 OR EXISTS "${PA_TEST_DIR}/bad" OR NOT error MATCHES "SHA-256")
+  message(FATAL_ERROR "해시 불일치를 거절하지 못했다")
+endif()
