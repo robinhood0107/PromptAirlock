@@ -52,7 +52,7 @@ jobs:
         uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9
         with:
           path: _deps
-          key: deps-ubuntu-24.04-${{ hashFiles('cmake/OnnxRuntime.cmake', 'cmake/NerModel.cmake') }}
+          key: deps-ubuntu-24.04-${{ hashFiles('cmake/OnnxRuntime.cmake', 'cmake/DownloadVerified.cmake', 'cmake/NerModel.cmake') }}
 
       - name: Configure, build and test
         shell: bash

@@ -32,6 +32,8 @@ Prompt Airlock 배포 묶음에 함께 들어가는 다른 사람의 라이브�
 | libc(Linux) | 0.2.190 | MIT OR Apache-2.0 | https://github.com/rust-lang/libc |
 | windows-link(Windows) | 0.2.1 | MIT OR Apache-2.0 | https://github.com/microsoft/windows-rs |
 
+ONNX Runtime은 공식 NuGet [Microsoft.ML.OnnxRuntime 1.30.0](https://www.nuget.org/packages/Microsoft.ML.OnnxRuntime/1.30.0)도 대체 배포처로 사용합니다. 이 경로에서도 LICENSE와 ThirdPartyNotices.txt를 함께 보관하고, 제품에는 네이티브 라이브러리만 연결합니다.
+
 ## 문서 형식 공개 문서
 
 - 본 제품은 한컴의 HWP 문서 파일(.hwp) 공개 문서를 참고하여 개발하였습니다.

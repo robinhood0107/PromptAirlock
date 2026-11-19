@@ -42,6 +42,7 @@ vcpkg 포트가 아니라 고정 주소에서 받아 SHA-256 을 확인한 뒤�
 | NER 모델 `atonlee/koelectra-ko-pii-ner`(model.onnx fp32, tokenizer.json, config.json) | 커밋 `1e75c01e707232401883cf364151bbe2e560c708` | Apache-2.0 | `src/ner`(사람·기관 이름 찾기) | 데이터 파일, 실행 파일 옆 `models/ner/`(`cmake/NerModel.cmake`) |
 
 - 배포 묶음에는 ONNX Runtime 의 ThirdPartyNotices 와 모델 출처·저작자 고지를 함께 넣습니다(`THIRD_PARTY_NOTICES.md`).
+- ONNX Runtime 1.30.0의 GitHub 배포처에 연결하지 못하면 공식 NuGet `Microsoft.ML.OnnxRuntime` 같은 판을 사용합니다. 패키지 SHA-256은 `30df119bd9164eaa187666d93147448fdd4a9a1a3caf83f1505daf7af2d1c5d2`입니다. 네이티브 라이브러리 6개는 기존 Windows·Linux 배포본과 바이트가 같고, 공통 헤더와 고지는 줄바꿈을 제외하면 같습니다. .NET 코드는 연결하거나 배포하지 않습니다.
 - 모델 학습 데이터와 바탕 모델 조건은 #198 에서 원문으로 확인했습니다. 남은 것은 바탕 모델 사전학습 자료(모두의 말뭉치)의 결과물 공개 승인 여부 하나이며, 배포 전에 문의합니다(#102).
 
 ## 배포 묶음에 넣지 않는 모델
