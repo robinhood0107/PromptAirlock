@@ -50,7 +50,8 @@ class Server {
 public:
     // tls, auth, handler, audit 는 Server 보다 오래 살아야 한다. audit 가 있으면 인증 실패를 남긴다.
     Server(boost::asio::io_context& io, boost::asio::ssl::context& tls, const boost::asio::ip::tcp::endpoint& endpoint,
-           Authenticator& auth, RequestHandler handler, ServerLimits limits = {}, audit::AuditLog* audit = nullptr);
+           Authenticator& auth, RequestHandler handler, ServerLimits limits = {}, audit::AuditLog* audit = nullptr,
+           bool chat_app_compat = false);
 
     // 연결 받기를 시작한다. 실제 처리는 io 를 돌리는 스레드에서 한다.
     void start();

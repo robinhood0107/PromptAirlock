@@ -25,6 +25,7 @@
 #include "mock_provider.hpp"
 #include "prompt_airlock/core/sha256.hpp"
 #include "prompt_airlock/gateway/pipeline.hpp"
+#include "prompt_airlock/gateway/confirm.hpp"
 #include "prompt_airlock/gateway/server.hpp"
 #include "prompt_airlock/ner/pool.hpp"
 #include "prompt_airlock/provider/https_client.hpp"
@@ -60,6 +61,8 @@ struct Reply {
 
 class GatewayHttp : public ::testing::Test {
 protected:
+    virtual bool compatibility() const { return false; }
+    virtual prompt_airlock::detect::InstitutionPolicy institution_policy() const { return {}; }
     static void SetUpTestSuite() {
         auto pool = prompt_airlock::ner::NerPool::make(PA_NER_MODEL_DIR);
         ASSERT_TRUE(pool.has_value());
@@ -76,7 +79,7 @@ protected:
         client_tls_.emplace(std::move(*client_tls));
 
         const std::string_view terms[] = {institution};
-        auto detectors = prompt_airlock::detect::Detectors::make(terms, ner_);
+        auto detectors = prompt_airlock::detect::Detectors::make(terms, ner_, institution_policy());
         ASSERT_TRUE(detectors.has_value());
         detectors_.emplace(std::move(*detectors));
 
@@ -112,7 +115,7 @@ protected:
             gw::request_time_limit, gw::SentenceCheck{}, PA_EXTRACT_EXE);
         pa_test::retry_listen([&] { server_.emplace(io_, *server_tls_, loopback, auth_,
                         [this](gw::AcceptedRequest request) { return pipeline_->handle(std::move(request)); },
-                        gw::ServerLimits{.body_bytes = gw::max_file_json_bytes}, audit_.get()); });
+                        gw::ServerLimits{.body_bytes = gw::max_file_json_bytes}, audit_.get(), compatibility()); });
         server_->start();
         thread_ = std::thread([this] { io_.run(); });
     }
@@ -139,7 +142,8 @@ protected:
         return post_json(json{{"model", "any"}, {"messages", json::array({{{"role", "user"}, {"content", text}}})}}, grade);
     }
 
-    Reply post_json(const json& body, std::string_view grade = {}, std::chrono::seconds client_timeout = 30s) {
+    Reply post_json(const json& body, std::string_view grade = {}, std::chrono::seconds client_timeout = 30s,
+                     std::string_view target = "/v1/chat/completions") {
         asio::io_context io;
         beast::ssl_stream<beast::tcp_stream> stream(io, *client_tls_);
         SSL_set1_host(stream.native_handle(), "localhost");
@@ -149,8 +153,8 @@ protected:
             throw boost::system::system_error(ec, "connect");
         }
         stream.handshake(asio::ssl::stream_base::client);
-        http::request<http::string_body> req{http::verb::post, "/v1/chat/completions", 11};
-        req.set(http::field::host, "localhost");
+        http::request<http::string_body> req{http::verb::post, target, 11};
+        req.set(http::field::host, "127.0.0.1:" + std::to_string(server.port()));
         req.set(http::field::content_type, "application/json");
         req.set(http::field::authorization, "Bearer desk-token");
         if (!grade.empty()) {
@@ -182,6 +186,58 @@ protected:
     std::optional<gw::Server> server_;
     std::thread thread_;
 };
+
+class GatewayCompatHttp : public GatewayHttp {
+protected:
+    bool compatibility() const override { return true; }
+    prompt_airlock::detect::InstitutionPolicy institution_policy() const override {
+        prompt_airlock::detect::InstitutionPolicy policy;
+        policy.industries = {prompt_airlock::detect::Industry::Bank};
+        return policy;
+    }
+};
+
+TEST_F(GatewayCompatHttp, PreviewAndLocalApprovalKeepEgressProtectedAndConsentSingleUse) {
+    const std::string text = institution + " " + person + " 주무관 연락처 " + phone;
+    const json plain = {{"model", "any"}, {"messages", json::array({{{"role", "user"}, {"content", text}}})}};
+    const auto preview = post_json(plain, {}, 30s, "/v1/preview");
+    ASSERT_EQ(preview.status, 200U) << preview.body.dump();
+    EXPECT_EQ(preview.body["decision"], "pseudonymized");
+    for (const auto& value : {person, phone, institution}) {
+        EXPECT_EQ(preview.body.dump().find(value), std::string::npos);
+    }
+    EXPECT_TRUE(mock_->received().empty());
+    const auto sensitive = post_json(plain, "S");
+    ASSERT_EQ(sensitive.status, 200U);
+    EXPECT_EQ(sensitive.body["prompt_airlock"]["decision"], "blocked");
+    EXPECT_TRUE(mock_->received().empty());
+    const json body = {{"model", "any"}, {"messages", json::array({{{"role", "user"},
+        {"content", "이 자료는 대외비입니다. 회의 안건만 정리해 줘. " + text}}})}};
+    const auto pending = post_json(body);
+    ASSERT_EQ(pending.status, 200U) << pending.body.dump();
+    ASSERT_EQ(pending.body["prompt_airlock"]["decision"], "confirmation_required");
+    const auto url = pending.body["prompt_airlock"]["approval_url"].get<std::string>();
+    const auto token_at = url.find("?token=");
+    ASSERT_NE(token_at, std::string::npos);
+    const auto token = url.substr(token_at + 7);
+    ASSERT_EQ(token.size(), gw::confirm_token_chars);
+    EXPECT_TRUE(mock_->received().empty());
+    const auto approved = post_json(json{{"token", token}}, "O", 30s, "/v1/confirmations/approve");
+    ASSERT_EQ(approved.status, 200U) << approved.body.dump();
+    EXPECT_TRUE(approved.body["approved"].get<bool>());
+    EXPECT_TRUE(mock_->received().empty());
+    const auto answer = post_json(body);
+    ASSERT_EQ(answer.status, 200U) << answer.body.dump();
+    ASSERT_TRUE(answer.body.contains("choices"));
+    const auto sent = mock_->received();
+    ASSERT_EQ(sent.size(), 1U);
+    for (const auto& value : {person, phone, institution}) {
+        EXPECT_EQ(sent.front().find(value), std::string::npos);
+    }
+    const auto again = post_json(body);
+    EXPECT_EQ(again.body["prompt_airlock"]["decision"], "confirmation_required");
+    EXPECT_EQ(mock_->received().size(), 1U);
+}
 
 // 시연 시나리오 6개(Phase 8a). 문장과 값은 모두 합성이다.
 

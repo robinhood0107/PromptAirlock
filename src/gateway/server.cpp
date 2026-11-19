@@ -12,6 +12,7 @@
 #include <boost/beast/http.hpp>
 #include <boost/beast/ssl.hpp>
 #include <boost/none.hpp>
+#include <nlohmann/json.hpp>
 
 #include <atomic>
 #include <algorithm>
@@ -27,6 +28,8 @@
 #include <vector>
 
 #include "prompt_airlock/gateway/confirm.hpp"
+#include "prompt_airlock/gateway/response_json.hpp"
+#include "console_assets.hpp"
 
 namespace prompt_airlock::gateway {
 
@@ -46,14 +49,14 @@ constexpr bool reuse_address = true;
 
 struct Server::Shared {
     Shared(asio::io_context& io, asio::ssl::context& tls_context, const tcp::endpoint& endpoint, Authenticator& authenticator,
-           RequestHandler request_handler, ServerLimits server_limits, audit::AuditLog* audit_log)
+           RequestHandler request_handler, ServerLimits server_limits, audit::AuditLog* audit_log, bool chat_compat)
         : tls(tls_context),
           acceptor(io, endpoint, reuse_address),
           port(acceptor.local_endpoint().port()),
           auth(authenticator),
           handler(std::move(request_handler)),
           limits(server_limits),
-          audit(audit_log) {}
+          audit(audit_log), chat_app_compat(chat_compat) {}
 
     asio::ssl::context& tls;
     tcp::acceptor acceptor;
@@ -62,6 +65,7 @@ struct Server::Shared {
     RequestHandler handler;
     ServerLimits limits;
     audit::AuditLog* audit;
+    const bool chat_app_compat;
     std::atomic<std::size_t> connections{0};
     std::atomic<std::size_t> large_preparations{0};
 };
@@ -115,6 +119,65 @@ bool local_console_request(const http::request_header<>& head, std::string_view 
            (head.count(http::field::origin) == 0 || head[http::field::origin] == std::string_view(origin));
 }
 
+std::optional<JsonResponse> console_resource(const http::request_header<>& head, std::string_view client,
+                                             std::uint16_t port) {
+    const std::string_view target = head.target();
+    const bool page = target == "/console/confirm" || target.starts_with("/console/confirm?");
+    if (!page && target != "/console/confirm.js" && target != "/console/confirm.css" &&
+        target != "/console/confirm.svg") return std::nullopt;
+    if (!local_console_request(head, client, port)) return error_response(EntryError::LocalOnly);
+    if (head.method() != http::verb::get) return error_response(EntryError::MethodNotAllowed);
+    if (page) {
+        constexpr std::string_view prefix = "/console/confirm?token=";
+        if (target != "/console/confirm" &&
+            (!target.starts_with(prefix) || !valid_confirmation_token(target.substr(prefix.size())))) {
+            return error_response(EntryError::BadRequest);
+        }
+        return JsonResponse{200, std::string(console_assets::confirmation_html), ResponseMedia::Html};
+    }
+    if (target == "/console/confirm.js") {
+        return JsonResponse{200, std::string(console_assets::confirmation_js), ResponseMedia::JavaScript};
+    }
+    if (target == "/console/confirm.svg") {
+        return JsonResponse{200, std::string(console_assets::confirmation_svg), ResponseMedia::Svg};
+    }
+    return JsonResponse{200, std::string(console_assets::confirmation_css), ResponseMedia::Css};
+}
+
+JsonResponse chat_notice(JsonResponse reply, std::uint16_t port) {
+    if (reply.media != ResponseMedia::Json) return reply;
+    const auto body = nlohmann::json::parse(reply.body, nullptr, false);
+    if (!body.is_object() || !body.contains("error") || !body["error"].is_object()) return reply;
+    const auto& error = body["error"];
+    if (!error.contains("code") || !error["code"].is_string()) return reply;
+    const auto code = error["code"].get<std::string>();
+    std::string content;
+    nlohmann::json protection = {{"reason", code}};
+    if (reply.status == 409 && code == "confirmation_required") {
+        if (!error.contains("confirm_token") || !error["confirm_token"].is_string()) return reply;
+        const auto& token = error["confirm_token"].get_ref<const std::string&>();
+        if (!valid_confirmation_token(token)) return reply;
+        const auto url = console_origin(port) + "/console/confirm?token=" + token;
+        content = "확인이 필요해 아직 외부로 보내지 않았습니다. [로컬 콘솔에서 확인](" + url +
+                  ")한 뒤 원래 앱에서 같은 요청을 다시 생성하세요.";
+        protection["decision"] = "confirmation_required";
+        protection["approval_url"] = url;
+    } else if ((reply.status == 400 && code == "entity_blocked") ||
+               (reply.status == 403 && (code == "grade_classified" || code == "grade_sensitive" || code == "grade_unresolved"))) {
+        content = "보호 정책에 따라 요청이 차단됐습니다. 외부로 보내지 않았으며, 확인 승인으로 전송할 수 없습니다.";
+        protection["decision"] = "blocked";
+        if (error.contains("blocked_types")) protection["blocked_types"] = error["blocked_types"];
+    } else {
+        return reply;
+    }
+    const auto created = std::chrono::duration_cast<std::chrono::seconds>(
+        std::chrono::system_clock::now().time_since_epoch()).count();
+    auto response = nlohmann::json::parse(client_response_body(new_request_id(), created, "prompt-airlock", content,
+                                                              "stop", std::nullopt));
+    response["prompt_airlock"] = std::move(protection);
+    return {200, response.dump()};
+}
+
 bool ascii_iequal_prefix(std::string_view text, std::string_view prefix) {
     if (text.size() < prefix.size()) {
         return false;
@@ -140,8 +203,20 @@ bool is_json(std::string_view content_type) {
 
 http::response<http::string_body> make_reply(JsonResponse reply, unsigned version, bool keep_alive) {
     http::response<http::string_body> res{static_cast<http::status>(reply.status), version};
-    res.set(http::field::content_type, "application/json");
+    switch (reply.media) {
+        case ResponseMedia::Json: res.set(http::field::content_type, "application/json"); break;
+        case ResponseMedia::Html: res.set(http::field::content_type, "text/html; charset=utf-8"); break;
+        case ResponseMedia::JavaScript: res.set(http::field::content_type, "text/javascript; charset=utf-8"); break;
+        case ResponseMedia::Css: res.set(http::field::content_type, "text/css; charset=utf-8"); break;
+        case ResponseMedia::Svg: res.set(http::field::content_type, "image/svg+xml"); break;
+    }
     res.set(http::field::cache_control, "no-store");
+    res.set("X-Content-Type-Options", "nosniff");
+    res.set("Referrer-Policy", "no-referrer");
+    if (reply.media == ResponseMedia::Html) {
+        res.set("Content-Security-Policy", "default-src 'none'; script-src 'self'; style-src 'self'; img-src 'self'; connect-src 'self'; base-uri 'none'; frame-ancestors 'none'; form-action 'self'");
+        res.set("X-Frame-Options", "DENY");
+    }
     if (reply.status == 401) {
         res.set(http::field::www_authenticate, "Bearer");
     }
@@ -272,12 +347,19 @@ asio::awaitable<void> session(std::shared_ptr<Server::Shared> shared, tcp::socke
         std::shared_ptr<UploadLease> upload;
         std::string request_body;
         BodyCleanup cleanup{request_body};
-        auto accepted = check_headers(head, shared->auth, client, shared->audit, shared->port);
-        if (!accepted) {
-            reply = std::move(accepted.error());
-        } else if (const auto length = parser.content_length(); length && *length > body_limit) {
-            reply = error_response(EntryError::BodyTooLarge);
+        auto resource = console_resource(head, client, shared->port);
+        std::optional<std::pair<const Origin*, core::OpenGrade>> accepted;
+        if (resource) {
+            reply = std::move(*resource);
         } else {
+            auto checked = check_headers(head, shared->auth, client, shared->audit, shared->port);
+            if (checked) accepted.emplace(*checked);
+            else reply = std::move(checked.error());
+        }
+        if (const auto length = parser.content_length(); !reply && length && *length > body_limit) {
+            reply = error_response(EntryError::BodyTooLarge);
+        }
+        if (!reply) {
             parser.body_limit(body_limit);
             if (const auto length = parser.content_length(); length && *length > core::max_prompt_bytes) {
                 upload = reserve_large_upload(shared);
@@ -329,7 +411,11 @@ asio::awaitable<void> session(std::shared_ptr<Server::Shared> shared, tcp::socke
             }
         }
         // 거절하면 연결을 닫는다(읽지 않은 본문이 남아 있을 수 있다)
-        keep_alive = reply->status < 400 && parser.get().keep_alive();
+        const bool rejected = reply->status >= 400;
+        if (shared->chat_app_compat && purpose == RequestPurpose::Chat && !resource) {
+            *reply = chat_notice(std::move(*reply), shared->port);
+        }
+        keep_alive = !resource && !rejected && parser.get().keep_alive();
         deadline();
         if (auto [write_error, written] =
                 co_await http::async_write(stream, make_reply(std::move(*reply), version, keep_alive), use_tuple);
@@ -365,8 +451,8 @@ asio::awaitable<void> accept_loop(std::shared_ptr<Server::Shared> shared) {
 }  // namespace
 
 Server::Server(asio::io_context& io, asio::ssl::context& tls, const tcp::endpoint& endpoint, Authenticator& auth,
-               RequestHandler handler, ServerLimits limits, audit::AuditLog* audit)
-    : shared_(std::make_shared<Shared>(io, tls, endpoint, auth, std::move(handler), limits, audit)) {}
+               RequestHandler handler, ServerLimits limits, audit::AuditLog* audit, bool chat_app_compat)
+    : shared_(std::make_shared<Shared>(io, tls, endpoint, auth, std::move(handler), limits, audit, chat_app_compat)) {}
 
 void Server::start() { asio::co_spawn(shared_->acceptor.get_executor(), accept_loop(shared_), asio::detached); }
 

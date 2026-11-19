@@ -23,7 +23,6 @@
 #include <algorithm>
 #include <chrono>
 #include <exception>
-#include <random>
 #include <span>
 #include <string_view>
 #include <type_traits>
@@ -77,7 +76,6 @@ bool has_active_content(std::string_view text) {
            lower.find("vbscript:") != std::string::npos;
 }
 
-// 게이트웨이 요청 ID. provider 의 id 대신 클라이언트에 준다.
 // 명시적인 기계 판독 코드만 구분한다. 모호한 400이나 제공자 메시지로 원인을 추측하지 않는다.
 bool context_limit_error(unsigned status, std::string_view text) {
     if (status != 400 && status != 413) return false;
@@ -92,16 +90,6 @@ bool context_limit_error(unsigned status, std::string_view text) {
     } catch (const nlohmann::json::exception&) {
         return false;
     }
-}
-
-std::string new_request_id() {
-    std::random_device device;
-    std::string id = "chatcmpl-pa-";
-    constexpr std::string_view hex = "0123456789abcdef";
-    for (int i = 0; i < 24; ++i) {
-        id.push_back(hex[device() % 16]);
-    }
-    return id;
 }
 
 std::optional<std::string> confirmation_token(std::string_view text) {
@@ -119,9 +107,7 @@ std::optional<std::string> confirmation_token(std::string_view text) {
         return std::nullopt;
     }
     const auto& token = body["token"].get_ref<const std::string&>();
-    if (token.size() != confirm_token_chars || !std::ranges::all_of(token, [](char c) {
-        return (c >= '0' && c <= '9') || (c >= 'a' && c <= 'f');
-    })) return std::nullopt;
+    if (!valid_confirmation_token(token)) return std::nullopt;
     return token;
 }
 

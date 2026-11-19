@@ -188,7 +188,7 @@ int serve(const std::filesystem::path& config_path) {
     const asio::ip::tcp::endpoint endpoint(asio::ip::make_address(config->listen.address), config->listen.port);
     gw::Server server(io, tls->server, endpoint, auth,
                       [&pipeline](gw::AcceptedRequest request) { return pipeline.handle(std::move(request)); },
-                      gw::ServerLimits{.body_bytes = gw::max_file_json_bytes}, audit_log->get());
+                      gw::ServerLimits{.body_bytes = gw::max_file_json_bytes}, audit_log->get(), config->compat.chat_app);
     server.start();
     asio::signal_set signals(io, SIGINT, SIGTERM);
     signals.async_wait([&](auto, auto) {

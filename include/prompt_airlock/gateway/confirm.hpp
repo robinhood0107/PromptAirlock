@@ -19,6 +19,7 @@ inline constexpr std::size_t confirm_capacity = 1024;
 // 표지 길이(16진수). 128 bit.
 inline constexpr std::size_t confirm_token_chars = 32;
 inline constexpr std::size_t confirm_body_bytes = 1024;
+[[nodiscard]] bool valid_confirmation_token(std::string_view token) noexcept;
 
 class ConfirmLedger {
 public:

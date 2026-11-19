@@ -5,6 +5,7 @@
 #include <algorithm>
 #include <array>
 #include <limits>
+#include <random>
 #include <set>
 #include <utility>
 #include <vector>
@@ -170,6 +171,15 @@ std::string clean_finish_reason(std::string_view reason) {
 }
 
 }  // namespace
+
+// provider가 정한 ID 대신 게이트웨이가 요청마다 새 ID를 만든다.
+std::string new_request_id() {
+    std::random_device device;
+    std::string id = "chatcmpl-pa-";
+    constexpr std::string_view hex = "0123456789abcdef";
+    for (int i = 0; i < 24; ++i) id.push_back(hex[device() % 16]);
+    return id;
+}
 
 std::expected<ProviderAnswer, AnswerError> parse_provider_answer(std::string_view body) {
     AnswerSax sax;

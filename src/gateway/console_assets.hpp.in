@@ -1,0 +1,9 @@
+#pragma once
+#include <string_view>
+
+namespace prompt_airlock::gateway::console_assets {
+inline constexpr std::string_view confirmation_html = R"PAHTML(@PA_CONFIRM_HTML@)PAHTML";
+inline constexpr std::string_view confirmation_js = R"PAJS(@PA_CONFIRM_JS@)PAJS";
+inline constexpr std::string_view confirmation_css = R"PACSS(@PA_CONFIRM_CSS@)PACSS";
+inline constexpr std::string_view confirmation_svg = R"PASVG(@PA_CONFIRM_SVG@)PASVG";
+}

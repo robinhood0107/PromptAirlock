@@ -6,7 +6,7 @@
 
 요청
 
-1. 대화는 `POST /v1/chat/completions`로 받는다. 같은 보호 단계를 사용하되 제공자는 호출하지 않는 `POST /v1/preview`와 로컬 확인 승인 `POST /v1/confirmations/approve`를 추가한다([0029](0029-local-console-and-chat-app.md), 2026-11-19). 확인 승인은 별도 1 KiB 제어 형식만 받으며 대화 본문을 전송하지 않는다. 그 밖의 경로는 거절한다.
+1. 대화는 `POST /v1/chat/completions`로 받는다. 같은 보호 단계를 사용하되 제공자는 호출하지 않는 `POST /v1/preview`와 로컬 확인 승인 `POST /v1/confirmations/approve`를 추가한다([0029](0029-local-console-and-chat-app.md), 2026-11-19). 확인 승인은 별도 1 KiB 제어 형식만 받으며 대화 본문을 전송하지 않는다. 로컬 승인 페이지와 고정 정적 자원은 별도 GET 경로로 제공한다. 그 밖의 경로는 거절한다.
 2. 요청 필드는 아래만 받는다. 목록에 없는 필드가 하나라도 있으면 요청 전체를 거절한다.
 
 | 필드 | 처리 |

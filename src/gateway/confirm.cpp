@@ -1,8 +1,15 @@
 #include "prompt_airlock/gateway/confirm.hpp"
 
 #include <random>
+#include <algorithm>
 
 namespace prompt_airlock::gateway {
+
+bool valid_confirmation_token(std::string_view token) noexcept {
+    return token.size() == confirm_token_chars && std::ranges::all_of(token, [](char c) {
+        return (c >= '0' && c <= '9') || (c >= 'a' && c <= 'f');
+    });
+}
 
 std::optional<std::string> ConfirmLedger::issue(std::string_view body_sha256, std::string_view origin, Clock::time_point now) {
     std::random_device device;  // 운영체제 난수(MSVC rand_s, Linux /dev/urandom)

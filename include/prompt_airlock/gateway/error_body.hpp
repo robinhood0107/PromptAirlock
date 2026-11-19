@@ -34,9 +34,12 @@ enum class EntryError : std::uint8_t {
     ContextLimit,
 };
 
+enum class ResponseMedia : std::uint8_t { Json, Html, JavaScript, Css, Svg };
+
 struct JsonResponse {
     unsigned status;
-    std::string body;  // JSON
+    std::string body;
+    ResponseMedia media = ResponseMedia::Json;
 };
 
 [[nodiscard]] JsonResponse error_response(EntryError error);

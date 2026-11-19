@@ -34,7 +34,7 @@ Shape entry_shape(EntryError error) {
         case EntryError::NotFound:
             return {404, "invalid_request_error", "not_found", "Unknown endpoint."};
         case EntryError::MethodNotAllowed:
-            return {405, "invalid_request_error", "method_not_allowed", "Only POST is accepted."};
+            return {405, "invalid_request_error", "method_not_allowed", "The HTTP method is not accepted."};
         case EntryError::BodyTooLarge:
             return {413, "invalid_request_error", "body_too_large", "Request body is too large."};
         case EntryError::UnsupportedMediaType:

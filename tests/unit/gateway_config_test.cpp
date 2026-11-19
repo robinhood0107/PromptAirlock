@@ -83,6 +83,33 @@ TEST(GatewayConfig, RejectsMalformedDocuments) {
     EXPECT_EQ(gw::parse_config(inner, "/").error().problem, ConfigProblem::Duplicate);
 }
 
+TEST(GatewayConfig, ChatAppCompatibilityIsExplicitAndRejectsUnsafeOrUnknownOptions) {
+    auto j = valid();
+    EXPECT_FALSE(parse(j)->compat.chat_app);
+    j["compat"] = {{"chat_app", true}};
+    ASSERT_TRUE(parse(j));
+    EXPECT_TRUE(parse(j)->compat.chat_app);
+    j["listen"]["address"] = "192.0.2.10";
+    expect_error(j, ConfigProblem::InvalidValue, "compat.chat_app");
+    j = valid();
+    j["compat"] = true;
+    expect_error(j, ConfigProblem::WrongType, "compat");
+    j["compat"] = {{"chat_app", "yes"}};
+    expect_error(j, ConfigProblem::WrongType, "compat.chat_app");
+    j["compat"] = {{"chat_app", true}, {"skip_checks", true}};
+    expect_error(j, ConfigProblem::UnknownKey, "compat.skip_checks");
+    j["compat"] = json::object();
+    expect_error(j, ConfigProblem::Missing, "compat.chat_app");
+    j["compat"] = {{"chat_app", true}};
+    auto duplicate = j.dump();
+    const auto offset = duplicate.find("\"chat_app\":true");
+    ASSERT_NE(offset, std::string::npos);
+    duplicate.replace(offset, 15, R"("chat_app":true,"chat_app":false)");
+    const auto rejected = gw::parse_config(duplicate, "/etc/airlock");
+    ASSERT_FALSE(rejected);
+    EXPECT_EQ(rejected.error().problem, ConfigProblem::Duplicate);
+}
+
 TEST(GatewayConfig, RejectsUnknownAndMissingKeys) {
     json j = valid();
     j["debug"] = true;
