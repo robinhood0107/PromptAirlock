@@ -54,7 +54,7 @@ export function createPolicy(pattern) {
 
   function inspectBranch(ref) {
     inspectText(ref, 'branch');
-    if (!/^(main|(feature|fix|docs|chore|spike)\/[a-z0-9]+(-[a-z0-9]+)*)$/.test(ref)) {
+    if (!/^(main|(feature|fix|docs|chore|spike|release)\/[a-z0-9]+(-[a-z0-9]+)*)$/.test(ref)) {
       throw new Error('Branch naming policy violation.');
     }
   }

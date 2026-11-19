@@ -84,7 +84,7 @@ test('text checker fails closed for missing policy, invalid configuration and mi
 
 test('neutral changes and approved branches pass', () => {
   policy.inspectText('fix: repair request validation');
-  for (const branch of ['main', 'feature/domain-core', 'fix/parser', 'docs/license', 'chore/checks', 'spike/runtime']) {
+  for (const branch of ['main', 'feature/domain-core', 'fix/parser', 'docs/license', 'chore/checks', 'spike/runtime', 'release/demo-1']) {
     policy.inspectBranch(branch);
   }
   policy.inspectTag('v1.2.3');
