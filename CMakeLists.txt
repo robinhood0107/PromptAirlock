@@ -12,6 +12,9 @@ include(OnnxRuntime)
 include(NerModel)
 
 enable_testing()
+add_test(NAME download_verified
+  COMMAND ${CMAKE_COMMAND} "-DPA_TEST_DIR=${CMAKE_BINARY_DIR}/download-test"
+    -P "${PROJECT_SOURCE_DIR}/tests/cmake/download_verified.cmake")
 include(GoogleTest)
 find_package(GTest CONFIG REQUIRED)
 
