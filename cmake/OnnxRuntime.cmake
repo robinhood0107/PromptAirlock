@@ -17,7 +17,8 @@ else()
 endif()
 
 set(PA_ORT_ROOT "${PROJECT_SOURCE_DIR}/_deps/${PA_ORT_NAME}")
-if(NOT EXISTS "${PA_ORT_ROOT}/include/onnxruntime_cxx_api.h")
+if(NOT EXISTS "${PA_ORT_ROOT}/include/onnxruntime_cxx_api.h"
+   OR (NOT WIN32 AND NOT EXISTS "${PA_ORT_ROOT}/lib/libonnxruntime.so.${PA_ORT_VERSION}"))
   include(DownloadVerified)
   file(MAKE_DIRECTORY "${PROJECT_SOURCE_DIR}/_deps")
   set(archive "${PROJECT_SOURCE_DIR}/_deps/${PA_ORT_ARCHIVE}")
@@ -38,6 +39,10 @@ if(NOT EXISTS "${PA_ORT_ROOT}/include/onnxruntime_cxx_api.h")
     endif()
     set(unpacked "${PROJECT_SOURCE_DIR}/_deps/onnxruntime-nuget-${PA_ORT_VERSION}")
     file(ARCHIVE_EXTRACT INPUT "${archive}" DESTINATION "${unpacked}")
+    if(NOT WIN32)
+      # 중단된 설치의 기존 별칭을 제거해 이름을 바꿀 때 순환 링크가 생기지 않게 한다.
+      file(REMOVE "${PA_ORT_ROOT}/lib/libonnxruntime.so")
+    endif()
     file(COPY "${unpacked}/runtimes/${PA_ORT_RID}/native/" DESTINATION "${PA_ORT_ROOT}/lib")
     if(NOT WIN32)
       file(RENAME "${PA_ORT_ROOT}/lib/libonnxruntime.so"
