@@ -466,8 +466,20 @@ std::expected<core::VerifiedPrompt, core::Rejection> Pipeline::protect_and_verif
 // provider 답 검사부터 복원한 응답까지.
 JsonResponse Pipeline::finish(const std::expected<ProviderReply, ProviderError>& reply, PseudonymScope& scope,
                               Trace& trace, std::stop_token stop) const {
-    if (!reply || reply->status != 200) {
-        if (reply && context_limit_error(reply->status, reply->body)) return trace.fail(EntryError::ContextLimit);
+    if (!reply) {
+        switch (reply.error()) {
+            case ProviderError::Unavailable: return trace.fail(EntryError::ProviderUnavailable);
+            case ProviderError::Timeout: return trace.fail(EntryError::ProviderTimeout);
+            case ProviderError::BadResponse: return trace.fail(EntryError::ProviderFailed);
+        }
+        return trace.fail(EntryError::ProviderFailed);
+    }
+    if (reply->status != 200) {
+        if (context_limit_error(reply->status, reply->body)) return trace.fail(EntryError::ContextLimit);
+        if (reply->status == 401 || reply->status == 403) return trace.fail(EntryError::ProviderAuthentication);
+        if (reply->status == 429) return trace.fail(EntryError::ProviderRateLimited);
+        if (reply->status == 408 || reply->status == 504) return trace.fail(EntryError::ProviderTimeout);
+        if (reply->status == 503) return trace.fail(EntryError::ProviderUnavailable);
         return trace.fail(EntryError::ProviderFailed);  // provider 오류 본문은 넘기지 않는다
     }
     // 복원 전 응답. provider 오류 본문은 남기지 않는다(200 일 때만)

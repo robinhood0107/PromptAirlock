@@ -29,6 +29,26 @@ TEST(GatewayErrorBody, EntryErrorsUseCompatibleShape) {
     EXPECT_EQ(json::parse(gw::error_response(gw::EntryError::Cancelled).body)["error"]["code"], "cancelled");
 }
 
+TEST(GatewayErrorBody, ProviderErrorsHaveFixedGuidanceAndKeepGatewayStatus) {
+    const auto check = [](gw::EntryError error, std::string_view code, std::string_view message) {
+        const auto reply = gw::error_response(error);
+        EXPECT_EQ(reply.status, 502u);
+        const json body = json::parse(reply.body);
+        ASSERT_TRUE(body.contains("error"));
+        EXPECT_EQ(body["error"]["code"].get<std::string>(), std::string(code));
+        EXPECT_EQ(body["error"]["type"].get<std::string>(), "api_error");
+        EXPECT_EQ(body["error"]["message"].get<std::string>(), std::string(message));
+        EXPECT_EQ(body["error"].size(), 4u);
+    };
+    check(gw::EntryError::ProviderAuthentication, "provider_auth_error",
+          "The upstream model rejected the configured credentials or permissions.");
+    check(gw::EntryError::ProviderRateLimited, "provider_rate_limited",
+          "The upstream model is temporarily limiting requests. Try again later.");
+    check(gw::EntryError::ProviderTimeout, "provider_timeout", "The upstream model did not respond in time.");
+    check(gw::EntryError::ProviderUnavailable, "provider_unavailable",
+          "The upstream model is unavailable right now.");
+}
+
 TEST(GatewayErrorBody, RejectionCarriesOnlyCodeAndTypes) {
     core::EntityTypeSet types;
     types.insert(core::EntityType::KoreanRrn);

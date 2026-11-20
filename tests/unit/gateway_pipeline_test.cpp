@@ -147,6 +147,9 @@ protected:
                     (void)co_await never.async_wait(asio::as_tuple(asio::use_awaitable));
                     co_return std::unexpected(gw::ProviderError::Unavailable);
                 }
+                if (provider_unavailable_) {
+                    co_return std::unexpected(gw::ProviderError::Unavailable);
+                }
                 if (provider_fails_) {
                     co_return std::unexpected(gw::ProviderError::Timeout);
                 }
@@ -207,6 +210,7 @@ protected:
     bool vault_down_ = false;
     bool issuer_fails_ = false;
     bool provider_fails_ = false;
+    bool provider_unavailable_ = false;
     unsigned provider_status_ = 200;
     bool provider_hangs_ = false;
     std::atomic<int> live_scopes_{0};
@@ -632,12 +636,75 @@ TEST_F(GatewayPipeline, WarnModeFailsClosedAndSkipsRuleBlockedRequests) {
     EXPECT_EQ(provider_calls_, 0);
 }
 
-TEST_F(GatewayPipeline, ProviderFailureReturnsFixedError) {
+TEST_F(GatewayPipeline, ProviderErrorsUseFixedCodesAndKeepDetailsOutOfAudit) {
+    const auto dir = std::filesystem::temp_directory_path() /
+                     ("pa-provider-error-audit-" +
+                      std::to_string(std::chrono::steady_clock::now().time_since_epoch().count()));
+    auto log = prompt_airlock::audit::AuditLog::open(dir, std::chrono::days(365));
+    ASSERT_TRUE(log);
+    const std::string private_error =
+        R"({"error":{"message":"private-upstream-detail","code":"synthetic-key-marker"}})";
+    answer_ = [&private_error](const std::string&) { return private_error; };
+    const auto pipeline = make(detectors_, gw::pipeline_in_flight_limit, gw::request_time_limit, {}, log->get());
+    struct Case {
+        unsigned provider_status;
+        const char* code;
+    };
+    const Case cases[] = {{401, "provider_auth_error"}, {403, "provider_auth_error"},
+                          {429, "provider_rate_limited"}, {408, "provider_timeout"},
+                          {504, "provider_timeout"}, {503, "provider_unavailable"},
+                          {500, "provider_error"}, {400, "provider_error"}};
+    int calls = 0;
+    std::vector<std::string> expected_audit_codes;
+    for (const auto& test_case : cases) {
+        provider_status_ = test_case.provider_status;
+        const auto reply = run(pipeline, ask("일반 업무 문의"));
+        EXPECT_EQ(reply.status, 502u) << test_case.provider_status;
+        EXPECT_EQ(code_of(reply), test_case.code) << test_case.provider_status;
+        EXPECT_EQ(reply.body.find("private-upstream-detail"), std::string::npos);
+        EXPECT_EQ(reply.body.find("synthetic-key-marker"), std::string::npos);
+        EXPECT_EQ(provider_calls_, ++calls);
+        expected_audit_codes.emplace_back(test_case.code);
+        EXPECT_EQ(live_scopes_, 0);
+    }
     provider_fails_ = true;
-    const auto pipeline = make(detectors_);
-    const auto reply = run(pipeline, ask("회의 안건 정리"));
-    EXPECT_EQ(reply.status, 502u);
-    EXPECT_EQ(code_of(reply), "provider_error");
+    const auto timed_out = run(pipeline, ask("일반 업무 문의"));
+    EXPECT_EQ(timed_out.status, 502u);
+    EXPECT_EQ(code_of(timed_out), "provider_timeout");
+    EXPECT_EQ(timed_out.body.find("private-upstream-detail"), std::string::npos);
+    EXPECT_EQ(provider_calls_, ++calls);
+    expected_audit_codes.emplace_back("provider_timeout");
+    provider_fails_ = false;
+    provider_unavailable_ = true;
+    const auto unavailable = run(pipeline, ask("일반 업무 문의"));
+    EXPECT_EQ(unavailable.status, 502u);
+    EXPECT_EQ(code_of(unavailable), "provider_unavailable");
+    EXPECT_EQ(unavailable.body.find("private-upstream-detail"), std::string::npos);
+    EXPECT_EQ(provider_calls_, ++calls);
+    expected_audit_codes.emplace_back("provider_unavailable");
+    provider_unavailable_ = false;
+    EXPECT_EQ(live_scopes_, 0);
+
+    log->reset();
+    int request_records = 0;
+    for (const auto& file : std::filesystem::directory_iterator(dir)) {
+        if (file.path().extension() != ".jsonl") continue;
+        std::ifstream input(file.path());
+        for (std::string line; std::getline(input, line);) {
+            const auto record = json::parse(line);
+            EXPECT_EQ(line.find("private-upstream-detail"), std::string::npos);
+            EXPECT_EQ(line.find("synthetic-key-marker"), std::string::npos);
+            EXPECT_NE(record["kind"], "egress_answer");
+            if (record["kind"] == "request") {
+                ASSERT_LT(static_cast<std::size_t>(request_records), expected_audit_codes.size());
+                EXPECT_EQ(record["reason"], expected_audit_codes[request_records]);
+                ++request_records;
+            }
+        }
+    }
+    EXPECT_EQ(request_records, calls);
+    EXPECT_EQ(provider_calls_, calls);
+    std::filesystem::remove_all(dir);
 }
 
 TEST_F(GatewayPipeline, RejectsOverLimitRightAwayWithoutProvider) {

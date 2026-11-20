@@ -423,7 +423,10 @@ TEST_F(GatewayCompatServer, PolicyBlocksRemainVisibleAndUnreadRequestsClose) {
 }
 
 TEST_F(GatewayCompatServer, ProviderAndInputErrorsKeepTheirOriginalFailureStatus) {
-    for (const auto error : {gw::EntryError::ProviderFailed, gw::EntryError::BadRequest, gw::EntryError::Unavailable}) {
+    for (const auto error : {gw::EntryError::ProviderFailed, gw::EntryError::ProviderAuthentication,
+                             gw::EntryError::ProviderRateLimited, gw::EntryError::ProviderTimeout,
+                             gw::EntryError::ProviderUnavailable, gw::EntryError::BadRequest,
+                             gw::EntryError::Unavailable}) {
         const auto expected = gw::error_response(error);
         {
             std::scoped_lock lock(mutex_);

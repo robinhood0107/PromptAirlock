@@ -24,7 +24,7 @@ enum class EntryError : std::uint8_t {
     ConfirmationInvalid,   // 409: 확인 표지가 없거나 만료·재사용·출처 불일치
     Unavailable,           // 503: 처리 단계를 아직 쓸 수 없음
     Overloaded,            // 503: 처리 중 요청이 상한에 닿음
-    ProviderFailed,        // 502: provider 연결 실패·시간 초과·오류 응답
+    ProviderFailed,        // 502: 분류되지 않은 provider 오류 응답
     Timeout,               // 504: 요청 전체 시간 상한을 넘김
     Cancelled,             // 499: 처리 중 클라이언트가 연결을 끊음(받을 사람이 없어 감사 기록용)
     DocumentInvalid,
@@ -32,6 +32,10 @@ enum class EntryError : std::uint8_t {
     DocumentEncrypted,
     DocumentNoText,
     ContextLimit,
+    ProviderAuthentication,  // 502: provider 자격 증명·권한 거절
+    ProviderRateLimited,     // 502: provider 사용 한도
+    ProviderTimeout,         // 502: provider 응답 시간 초과
+    ProviderUnavailable,     // 502: provider 접속 불가
 };
 
 enum class ResponseMedia : std::uint8_t { Json, Html, JavaScript, Css, Svg };

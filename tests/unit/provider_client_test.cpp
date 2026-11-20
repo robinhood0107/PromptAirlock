@@ -122,6 +122,7 @@ TEST_F(ProviderClient, RefusesUntrustedProvider) {
     auto future = asio::co_spawn(io, client.send("{}"), asio::use_future);
     io.run();
     EXPECT_FALSE(future.get().has_value());
+    EXPECT_EQ(mock_->connections(), 1u);
     EXPECT_TRUE(mock_->received().empty());
 }
 
@@ -129,6 +130,7 @@ TEST_F(ProviderClient, WrongCredentialIsAnErrorStatus) {
     const auto reply = send("127.0.0.1", "wrong", "{}");
     ASSERT_TRUE(reply.has_value());
     EXPECT_EQ(reply->status, 401u);
+    EXPECT_EQ(mock_->connections(), 1u);
     EXPECT_TRUE(mock_->received().empty());
 }
 
@@ -193,6 +195,8 @@ TEST_F(ProviderClient, SlowBodyStillTimesOut) {
     ASSERT_FALSE(result);
     EXPECT_EQ(result.error(), gw::ProviderError::Timeout);
     EXPECT_EQ(timing.last, pv::ClientPhase::Body);
+    EXPECT_EQ(mock_->connections(), 1u);
+    EXPECT_EQ(mock_->received().size(), 1u);
 }
 
 TEST_F(ProviderClient, ConcurrentTimingsStayRequestLocal) {
