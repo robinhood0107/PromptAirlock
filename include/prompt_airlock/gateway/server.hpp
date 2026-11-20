@@ -13,6 +13,7 @@
 #include <functional>
 #include <memory>
 #include <string>
+#include <string_view>
 
 #include "prompt_airlock/audit/log.hpp"
 #include "prompt_airlock/core/grade.hpp"
@@ -23,7 +24,7 @@ namespace prompt_airlock::gateway {
 
 struct UploadLease;
 
-enum class RequestPurpose { Chat, Preview, Approve };
+enum class RequestPurpose { Chat, Preview, Approve, CredentialRotation };
 
 struct ServerLimits {
     std::size_t header_bytes = 8 * 1024;
@@ -45,13 +46,17 @@ struct AcceptedRequest {
 
 // 요청 처리. 여러 연결이 함께 부르므로 스레드 안전해야 한다.
 using RequestHandler = std::function<boost::asio::awaitable<JsonResponse>(AcceptedRequest)>;
+using CredentialRotationWriter = std::function<bool(std::string_view)>;
+
+inline constexpr std::size_t credential_rotation_body_bytes = 4 * 1024;
 
 class Server {
 public:
     // tls, auth, handler, audit 는 Server 보다 오래 살아야 한다. audit 가 있으면 인증 실패를 남긴다.
     Server(boost::asio::io_context& io, boost::asio::ssl::context& tls, const boost::asio::ip::tcp::endpoint& endpoint,
            Authenticator& auth, RequestHandler handler, ServerLimits limits = {}, audit::AuditLog* audit = nullptr,
-           bool chat_app_compat = false);
+           bool chat_app_compat = false, std::string credential_rotation_origin = {},
+           CredentialRotationWriter credential_rotation_writer = {});
 
     // 연결 받기를 시작한다. 실제 처리는 io 를 돌리는 스레드에서 한다.
     void start();

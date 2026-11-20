@@ -48,6 +48,7 @@ TEST(GatewayConfig, ReadsValidConfig) {
     EXPECT_EQ(config->provider.port, 9443);
     EXPECT_EQ(config->provider.target, "/v1/chat/completions");
     EXPECT_EQ(config->provider.model, "demo-model");
+    EXPECT_TRUE(config->provider.credential_rotation_origin.empty());
     ASSERT_EQ(config->origins.size(), 2u);
     EXPECT_EQ(config->origins[0].grade_policy, prompt_airlock::core::GradePolicy::OOnly);
     EXPECT_EQ(config->origins[1].grade_policy, prompt_airlock::core::GradePolicy::Declare);
@@ -70,6 +71,19 @@ TEST(GatewayConfig, OptionalFieldsTakeDefaults) {
     EXPECT_TRUE(parse(j)->sentence_warn);
     j["sentence_warn"] = "yes";
     EXPECT_FALSE(parse(j).has_value());
+}
+
+TEST(GatewayConfig, CredentialRotationRequiresOneRegisteredOrigin) {
+    auto j = valid();
+    j["provider"]["credential_rotation_origin"] = "dept-b";
+    ASSERT_TRUE(parse(j));
+    EXPECT_EQ(parse(j)->provider.credential_rotation_origin, "dept-b");
+    j["provider"]["credential_rotation_origin"] = "missing-origin";
+    expect_error(j, ConfigProblem::InvalidValue, "provider.credential_rotation_origin");
+    j["provider"]["credential_rotation_origin"] = json::array({"dept-a", "dept-b"});
+    expect_error(j, ConfigProblem::WrongType, "provider.credential_rotation_origin");
+    j["provider"]["credential_rotation_origin"] = "";
+    expect_error(j, ConfigProblem::InvalidValue, "provider.credential_rotation_origin");
 }
 
 TEST(GatewayConfig, RejectsMalformedDocuments) {

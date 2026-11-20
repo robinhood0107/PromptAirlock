@@ -11,10 +11,17 @@
 
 #include <fstream>
 #include <array>
+#include <atomic>
+#include <chrono>
 #include <future>
+#include <iostream>
 #include <optional>
 #include <thread>
 #include <vector>
+
+#ifdef _WIN32
+#include <windows.h>
+#endif
 
 #include "mock_provider.hpp"
 #include "prompt_airlock/tls/context.hpp"
@@ -259,18 +266,130 @@ TEST_F(ProviderClient, UnreadableCredentialMakesNoCall) {
 }
 
 TEST(ProviderCredential, StoreReplacesFileAtomically) {
-    const auto path = std::filesystem::temp_directory_path() / "pa-cred-store.bin";
-    std::filesystem::remove(path);
+    const auto dir = std::filesystem::temp_directory_path() /
+                     ("pa-cred-store-" + std::to_string(std::chrono::steady_clock::now().time_since_epoch().count()));
+    std::filesystem::create_directories(dir);
+    const auto path = dir / "credential.bin";
     ASSERT_TRUE(pv::store_credential(path, "first-token\n").has_value());
     ASSERT_TRUE(pv::store_credential(path, "second-token").has_value());  // 있는 파일을 바꿔 끼운다
     const auto read = pv::load_credential(path);
     ASSERT_TRUE(read.has_value());
     EXPECT_EQ(read->view(), "second-token");
-    EXPECT_FALSE(std::filesystem::exists(path.string() + ".tmp"));
+    for (const auto& entry : std::filesystem::directory_iterator(dir)) {
+        EXPECT_FALSE(entry.path().filename().string().starts_with("credential.bin.tmp."));
+    }
 #ifndef _WIN32
     const auto perms = std::filesystem::status(path).permissions();
     EXPECT_EQ(perms & (std::filesystem::perms::group_all | std::filesystem::perms::others_all), std::filesystem::perms::none);
 #endif
+    std::filesystem::remove_all(dir);
+}
+
+TEST(ProviderCredential, ConcurrentStoresUseDistinctTemporaryFiles) {
+    const auto dir = std::filesystem::temp_directory_path() /
+                     ("pa-cred-concurrent-" + std::to_string(std::chrono::steady_clock::now().time_since_epoch().count()));
+    std::filesystem::create_directories(dir);
+    const auto path = dir / "credential.bin";
+    ASSERT_TRUE(pv::store_credential(path, "initial-token").has_value());
+    std::atomic<int> successes{0};
+    std::atomic<int> replacement_rejections{0};
+    std::atomic<int> other_failures{0};
+    std::atomic<bool> writing{true};
+    std::atomic<bool> reader_started{false};
+    std::atomic<int> complete_reads{0};
+    std::atomic<int> unreadable_reads{0};
+    std::atomic<int> partial_reads{0};
+    std::thread reader([&] {
+        reader_started = true;
+        while (writing) {
+            const auto current = pv::load_credential(path);
+            if (current) {
+                if (current->view() == "initial-token" || current->view().starts_with("credential-")) {
+                    ++complete_reads;
+                } else {
+                    ++partial_reads;
+                }
+            } else if (current.error() == pv::CredentialError::Unreadable) {
+                ++unreadable_reads;
+            } else {
+                ++partial_reads;
+            }
+            std::this_thread::yield();
+        }
+    });
+    while (!reader_started) std::this_thread::yield();
+    std::vector<std::thread> writers;
+    for (int writer = 0; writer < 8; ++writer) {
+        writers.emplace_back([&, writer] {
+            for (int replacement = 0; replacement < 10; ++replacement) {
+                const auto token = "credential-" + std::to_string(writer) + "-" + std::to_string(replacement);
+                const auto stored = pv::store_credential(path, token);
+                if (stored) {
+                    ++successes;
+                } else if (stored.error() == pv::CredentialError::ReplaceFailed) {
+                    ++replacement_rejections;
+                } else {
+                    ++other_failures;
+                }
+            }
+        });
+    }
+    for (auto& writer : writers) writer.join();
+    writing = false;
+    reader.join();
+    EXPECT_EQ(successes + replacement_rejections + other_failures, 80);
+    EXPECT_GT(successes, 0);
+    EXPECT_EQ(other_failures, 0);
+    EXPECT_GT(complete_reads, 0);
+    EXPECT_EQ(partial_reads, 0);
+    const auto read = pv::load_credential(path);
+    ASSERT_TRUE(read.has_value());
+    EXPECT_TRUE(read->view().starts_with("credential-"));
+    for (const auto& entry : std::filesystem::directory_iterator(dir)) {
+        EXPECT_FALSE(entry.path().filename().string().starts_with("credential.bin.tmp."));
+    }
+    std::cout << "credential_store_successes=" << successes.load()
+              << " replacement_rejections=" << replacement_rejections.load()
+              << " other_failures=" << other_failures.load() << " complete_reads=" << complete_reads.load()
+              << " unreadable_reads=" << unreadable_reads.load() << " partial_reads=" << partial_reads.load()
+              << " final_file=complete temp_files=0\n";
+#ifndef _WIN32
+    const auto perms = std::filesystem::status(path).permissions();
+    EXPECT_EQ(perms & (std::filesystem::perms::group_all | std::filesystem::perms::others_all), std::filesystem::perms::none);
+#endif
+    std::filesystem::remove_all(dir);
+}
+
+TEST(ProviderCredential, FailedReplacementKeepsExistingFile) {
+    const auto dir = std::filesystem::temp_directory_path() /
+                     ("pa-cred-failure-" + std::to_string(std::chrono::steady_clock::now().time_since_epoch().count()));
+    std::filesystem::create_directories(dir);
+    const auto path = dir / "credential.bin";
+    ASSERT_TRUE(pv::store_credential(path, "existing-token").has_value());
+#ifdef _WIN32
+    HANDLE opened = CreateFileW(path.c_str(), GENERIC_READ, FILE_SHARE_READ | FILE_SHARE_WRITE, nullptr,
+                                OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, nullptr);
+    ASSERT_NE(opened, INVALID_HANDLE_VALUE);
+    const auto replacement = pv::store_credential(path, "replacement-token");
+    ASSERT_FALSE(replacement.has_value());
+    EXPECT_EQ(replacement.error(), pv::CredentialError::ReplaceFailed);
+    CloseHandle(opened);
+#else
+    std::error_code ec;
+    std::filesystem::permissions(dir, std::filesystem::perms::owner_read | std::filesystem::perms::owner_exec,
+                                 std::filesystem::perm_options::replace, ec);
+    ASSERT_FALSE(ec);
+    EXPECT_FALSE(pv::store_credential(path, "replacement-token").has_value());
+    std::filesystem::permissions(dir, std::filesystem::perms::owner_all, std::filesystem::perm_options::replace, ec);
+    ASSERT_FALSE(ec);
+#endif
+    const auto read = pv::load_credential(path);
+    ASSERT_TRUE(read.has_value());
+    EXPECT_EQ(read->view(), "existing-token");
+    for (const auto& entry : std::filesystem::directory_iterator(dir)) {
+        EXPECT_FALSE(entry.path().filename().string().starts_with("credential.bin.tmp."));
+    }
+    std::filesystem::remove_all(dir);
 }
 
 TEST(ProviderCredential, ReadsOnlyProtectedFiles) {

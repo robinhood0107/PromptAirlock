@@ -152,7 +152,7 @@ Result parse_provider(const json& root, const std::filesystem::path& base, Provi
         return std::unexpected(node.error());
     }
     const json& o = **node;
-    if (auto r = only_keys(o, {"url", "credential_file", "trust_file", "model"}, at); !r) {
+    if (auto r = only_keys(o, {"url", "credential_file", "trust_file", "model", "credential_rotation_origin"}, at); !r) {
         return r;
     }
     auto url = text(o, "url", at);
@@ -173,6 +173,14 @@ Result parse_provider(const json& root, const std::filesystem::path& base, Provi
         auto trust = text(o, "trust_file", at);
         if (!trust) return std::unexpected(trust.error());
         out.trust_file = resolve(base, *trust);
+    }
+    if (o.contains("credential_rotation_origin")) {
+        auto origin = text(o, "credential_rotation_origin", at);
+        if (!origin) return std::unexpected(origin.error());
+        if (!valid_origin_name(*origin)) {
+            return fail(ConfigProblem::InvalidValue, "provider.credential_rotation_origin");
+        }
+        out.credential_rotation_origin = std::move(*origin);
     }
     return {};
 }
@@ -364,6 +372,12 @@ std::expected<Config, ConfigError> parse_config(std::string_view json_text, cons
     if (auto r = parse_listen(root, base_dir, config.listen); !r) return std::unexpected(r.error());
     if (auto r = parse_provider(root, base_dir, config.provider); !r) return std::unexpected(r.error());
     if (auto r = parse_origins(root, config.origins); !r) return std::unexpected(r.error());
+    if (!config.provider.credential_rotation_origin.empty() &&
+        std::ranges::none_of(config.origins, [&](const Origin& origin) {
+            return origin.name == config.provider.credential_rotation_origin;
+        })) {
+        return fail(ConfigProblem::InvalidValue, "provider.credential_rotation_origin");
+    }
     if (auto r = parse_terms(root, config.internal_terms); !r) return std::unexpected(r.error());
     if (auto r = parse_policy(root, config.policy); !r) return std::unexpected(r.error());
     if (root.contains("output_token_cap")) {

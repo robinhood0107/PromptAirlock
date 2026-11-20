@@ -29,6 +29,7 @@ struct ProviderConfig {
     std::filesystem::path credential_file;
     std::filesystem::path trust_file;  // 비면 운영체제 기본 신뢰 저장소
     std::string model;
+    std::string credential_rotation_origin;  // 비면 HTTP 자격 증명 교체를 끈다
 };
 
 // 허용 출처(ADR 0013, 0020). token 원문은 두지 않고 SHA-256 만 둔다.

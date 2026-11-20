@@ -103,7 +103,7 @@ foreach(name IN ITEMS
   target_link_libraries(${name} PRIVATE prompt_airlock_gateway pa_test_support pa_mock_provider nlohmann_json::nlohmann_json)
 endforeach()
 pa_add_gtest(gateway_server_test gateway_server_test.cpp)
-target_link_libraries(gateway_server_test PRIVATE prompt_airlock_gateway prompt_airlock_tls pa_test_cert
+target_link_libraries(gateway_server_test PRIVATE prompt_airlock_gateway prompt_airlock_tls prompt_airlock_provider pa_test_cert
                       nlohmann_json::nlohmann_json)
 
 # provider HTTPS 클라이언트. 같은 프로세스에 mock provider 를 띄운다.

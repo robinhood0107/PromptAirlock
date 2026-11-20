@@ -40,7 +40,7 @@ struct ClientTimings {
     std::optional<ClientPhase> last;
 };
 
-enum class CredentialError : std::uint8_t { Unreadable, Empty, InvalidCharacter, NotProtected };
+enum class CredentialError : std::uint8_t { Unreadable, Empty, InvalidCharacter, NotProtected, ReplaceFailed };
 
 // 자격 증명 파일(ADR 0021). Windows 는 DPAPI(현재 사용자)로 보호한 파일만, Linux 는 권한 0600(그룹·다른 사용자 권한 없음) 파일만 읽는다.
 // 내용은 한 줄(끝 줄바꿈은 뗀다), 보이는 ASCII 만(헤더에 그대로 들어가므로).
@@ -50,7 +50,7 @@ enum class CredentialError : std::uint8_t { Unreadable, Empty, InvalidCharacter,
 [[nodiscard]] std::expected<std::string, CredentialError> protect_credential(std::string_view plain);
 
 // 보호한 자격 증명을 path 에 쓴다. 옆 임시 파일(Linux 0600)에 다 쓴 뒤 이름을 바꿔 한 번에 갈아 끼우므로,
-// 요청마다 읽는 쪽이 반쯤 쓴 파일을 보지 않는다. 읽는 중이라 바꿔 끼우지 못하면 Unreadable(부른 쪽이 다시 시도).
+// 요청마다 읽는 쪽이 반쯤 쓴 파일을 보지 않는다. 동시 교체를 OS 가 거절하면 ReplaceFailed 를 돌려주고 기존 파일을 보존한다.
 [[nodiscard]] std::expected<void, CredentialError> store_credential(const std::filesystem::path& path,
                                                                    std::string_view plain);
 

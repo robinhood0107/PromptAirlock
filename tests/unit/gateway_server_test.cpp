@@ -2,6 +2,7 @@
 #include "prompt_airlock/gateway/server.hpp"
 #include "prompt_airlock/gateway/confirm.hpp"
 #include "prompt_airlock/gateway/response_json.hpp"
+#include "prompt_airlock/provider/https_client.hpp"
 
 #include <boost/asio/as_tuple.hpp>
 #include <boost/asio/ssl.hpp>
@@ -15,6 +16,8 @@
 #include <openssl/ssl.h>
 
 #include <atomic>
+#include <filesystem>
+#include <fstream>
 #include <condition_variable>
 #include <mutex>
 #include <optional>
@@ -56,6 +59,9 @@ class GatewayServer : public ::testing::Test {
 protected:
     virtual std::size_t body_limit() const { return 1024; }
     virtual bool compatibility() const { return false; }
+    virtual std::string credential_rotation_origin() const { return {}; }
+    virtual gw::CredentialRotationWriter credential_rotation_writer() { return {}; }
+    virtual prompt_airlock::audit::AuditLog* audit_log() { return nullptr; }
     void SetUp() override {
         cert_ = pa_test::make_test_certificate();
         auto server_tls = prompt_airlock::tls::make_server_context(cert_.certificate_pem, cert_.private_key_pem);
@@ -89,8 +95,8 @@ protected:
                             }
                             std::scoped_lock lock(mutex_);
                             co_return response_.value_or(gw::JsonResponse{200, R"({"ok":true})"});
-                        },
-                        limits, nullptr, compatibility()); });
+                        }, limits, audit_log(), compatibility(), credential_rotation_origin(),
+                        credential_rotation_writer()); });
         server_->start();
         port_ = server_->local_endpoint().port();
         thread_ = std::thread([this] { io_.run(); });
@@ -108,7 +114,8 @@ protected:
     }
 
     // 요청 하나를 보내고 응답을 받는다. 연결이나 handshake 가 실패하면 nullopt.
-    std::optional<Reply> send(http::request<http::string_body> req, SSL_CTX* tls = nullptr, bool chunked = false) {
+    std::optional<Reply> send(http::request<http::string_body> req, SSL_CTX* tls = nullptr, bool chunked = false,
+                              std::string local_address = {}) {
         asio::io_context io;
         std::optional<asio::ssl::context> owned;  // 넘겨받은 SSL_CTX 는 여기서 해제한다
         if (tls != nullptr) {
@@ -120,7 +127,20 @@ protected:
         SSL_set1_host(stream.native_handle(), "localhost");
         beast::error_code ec;
         beast::get_lowest_layer(stream).expires_after(std::chrono::seconds(5));
-        ec = pa_test::retry_connect(beast::get_lowest_layer(stream), tcp::endpoint(asio::ip::make_address("127.0.0.1"), port_));
+        auto& lowest = beast::get_lowest_layer(stream);
+        const tcp::endpoint remote(asio::ip::make_address("127.0.0.1"), port_);
+        if (local_address.empty()) {
+            ec = pa_test::retry_connect(lowest, remote);
+        } else {
+            pa_test::SocketRetry retry;
+            do {
+                lowest.close();
+                lowest.socket().open(tcp::v4(), ec);
+                if (!ec) lowest.socket().bind(tcp::endpoint(asio::ip::make_address(local_address), 0), ec);
+                if (!ec) lowest.connect(remote, ec);
+            } while (pa_test::is_environment_fault(ec) && retry.keep_going());
+            if (pa_test::is_environment_fault(ec)) retry.fail(boost::system::system_error(ec, "connect"));
+        }
         if (ec) {
             return std::nullopt;
         }
@@ -185,6 +205,53 @@ protected:
     gw::RequestPurpose last_purpose_ = gw::RequestPurpose::Chat;
     std::atomic<bool> retain_uploads_{false};
     std::vector<std::shared_ptr<gw::UploadLease>> uploads_;
+};
+
+class GatewayCredentialRotation : public GatewayServer {
+protected:
+    std::size_t body_limit() const override { return 8192; }
+
+    void SetUp() override {
+        root_ = std::filesystem::temp_directory_path() /
+                ("pa-credential-rotation-" +
+                 std::to_string(std::chrono::steady_clock::now().time_since_epoch().count()));
+        std::filesystem::create_directories(root_);
+        auto audit = prompt_airlock::audit::AuditLog::open(root_ / "audit", std::chrono::days(365));
+        ASSERT_TRUE(audit);
+        audit_ = std::move(*audit);
+        credential_file_ = root_ / "provider.cred";
+        ASSERT_TRUE(prompt_airlock::provider::store_credential(credential_file_, "old-credential").has_value());
+        GatewayServer::SetUp();
+    }
+
+    void TearDown() override {
+        GatewayServer::TearDown();
+        audit_.reset();
+        std::filesystem::remove_all(root_);
+    }
+
+    std::string credential_rotation_origin() const override { return "open-desk"; }
+    gw::CredentialRotationWriter credential_rotation_writer() override {
+        return [this](std::string_view credential) {
+            ++store_calls_;
+            return prompt_airlock::provider::store_credential(credential_file_, credential).has_value();
+        };
+    }
+    prompt_airlock::audit::AuditLog* audit_log() override { return audit_.get(); }
+
+    http::request<http::string_body> credential_request(std::string token, std::string body) const {
+        auto req = request(std::move(token), std::move(body));
+        req.target("/v1/provider/credential");
+        const auto host = "127.0.0.1:" + std::to_string(port_);
+        req.set(http::field::host, host);
+        req.set(http::field::origin, "https://" + host);
+        return req;
+    }
+
+    std::filesystem::path root_;
+    std::filesystem::path credential_file_;
+    std::unique_ptr<prompt_airlock::audit::AuditLog> audit_;
+    std::atomic<int> store_calls_{0};
 };
 
 TEST_F(GatewayServer, PassesAuthenticatedRequestToHandler) {
@@ -295,6 +362,140 @@ TEST_F(GatewayServer, RoutesAuthenticatedPreviewWithTheSameHttpGuards) {
     preview.erase(http::field::authorization);
     EXPECT_EQ(send(preview)->status, 401U);
     EXPECT_EQ(handled(), 1);
+}
+
+TEST_F(GatewayServer, CredentialRotationIsDisabledWithoutAnExplicitOrigin) {
+    auto req = request("open-token", R"({"credential":"synthetic-secret"})");
+    req.target("/v1/provider/credential");
+    const auto host = "127.0.0.1:" + std::to_string(port_);
+    req.set(http::field::host, host);
+    req.set(http::field::origin, "https://" + host);
+    const auto reply = send(req);
+    ASSERT_TRUE(reply);
+    EXPECT_EQ(reply->status, 404u);
+    EXPECT_EQ(code_of(*reply), "not_found");
+    EXPECT_EQ(handled(), 0);
+}
+
+TEST_F(GatewayCredentialRotation, ReplacesOnlyTheConfiguredCredentialAndKeepsSecretsOutOfAudit) {
+    constexpr std::string_view marker = "synthetic-new-secret";
+    const auto reply = send(credential_request("open-token", R"({"credential":"synthetic-new-secret"})"));
+    ASSERT_TRUE(reply);
+    EXPECT_EQ(reply->status, 200u);
+    EXPECT_EQ(reply->body, R"({"ok":true})");
+    EXPECT_EQ(reply->body.find(marker), std::string::npos);
+    EXPECT_EQ(reply->body.find(credential_file_.string()), std::string::npos);
+    EXPECT_EQ(handled(), 0);
+    EXPECT_EQ(store_calls_, 1);
+    const auto stored = prompt_airlock::provider::load_credential(credential_file_);
+    ASSERT_TRUE(stored);
+    EXPECT_EQ(stored->view(), marker);
+    bool recorded_attempt = false;
+    for (const auto& entry : std::filesystem::directory_iterator(audit_->dir())) {
+        if (entry.path().extension() != ".jsonl") continue;
+        std::ifstream input(entry.path());
+        for (std::string line; std::getline(input, line);) {
+            EXPECT_EQ(line.find(marker), std::string::npos);
+            EXPECT_EQ(line.find(credential_file_.string()), std::string::npos);
+            const auto record = nlohmann::json::parse(line);
+            if (record["kind"] == "credential_rotation") {
+                EXPECT_EQ(record["result"], "attempt");
+                EXPECT_EQ(record["reason"], "credential_rotation");
+                recorded_attempt = true;
+            }
+        }
+    }
+    EXPECT_TRUE(recorded_attempt);
+}
+
+TEST_F(GatewayCredentialRotation, RejectsOtherOriginsGradesHostsOriginsAndAddressesBeforeWriting) {
+    auto other_origin = credential_request("declare-token", R"({"credential":"should-not-store"})");
+    other_origin.set("X-Prompt-Airlock-Grade", "O");
+    ASSERT_EQ(send(other_origin)->status, 404u);
+
+    auto private_grade = credential_request("open-token", R"({"credential":"should-not-store"})");
+    private_grade.set("X-Prompt-Airlock-Grade", "S");
+    ASSERT_EQ(send(private_grade)->status, 403u);
+
+    auto wrong_host = credential_request("open-token", R"({"credential":"should-not-store"})");
+    wrong_host.set(http::field::host, "localhost:" + std::to_string(port_));
+    ASSERT_EQ(send(wrong_host)->status, 403u);
+
+    auto wrong_origin = credential_request("open-token", R"({"credential":"should-not-store"})");
+    wrong_origin.set(http::field::origin, "https://example.invalid");
+    ASSERT_EQ(send(wrong_origin)->status, 403u);
+
+    auto wrong_address = credential_request("open-token", R"({"credential":"should-not-store"})");
+    const auto address_reply = send(wrong_address, nullptr, false, "127.0.0.2");
+    ASSERT_TRUE(address_reply);
+    EXPECT_EQ(address_reply->status, 403u);
+    EXPECT_EQ(store_calls_, 0);
+    EXPECT_EQ(handled(), 0);
+    const auto stored = prompt_airlock::provider::load_credential(credential_file_);
+    ASSERT_TRUE(stored);
+    EXPECT_EQ(stored->view(), "old-credential");
+}
+
+TEST_F(GatewayCredentialRotation, RejectsCredentialBodiesWithExtraDuplicateOrInvalidValues) {
+    const std::vector<std::string> bodies = {
+        R"({"credential":"secret","path":"other"})",
+        R"({"credential":"first-secret","credential":"second-secret"})",
+        R"({"credential":""})",
+        R"({"credential":"not a token"})",
+        R"({"credential":12})",
+        R"([{"credential":"secret"}])",
+    };
+    for (const auto& body : bodies) {
+        const auto reply = send(credential_request("open-token", body));
+        ASSERT_TRUE(reply);
+        EXPECT_EQ(reply->status, 400u) << body;
+        EXPECT_EQ(reply->body.find("secret"), std::string::npos);
+        EXPECT_EQ(reply->body.find("other"), std::string::npos);
+    }
+    EXPECT_EQ(store_calls_, 0);
+    EXPECT_EQ(handled(), 0);
+    const auto stored = prompt_airlock::provider::load_credential(credential_file_);
+    ASSERT_TRUE(stored);
+    EXPECT_EQ(stored->view(), "old-credential");
+    for (const auto& entry : std::filesystem::directory_iterator(audit_->dir())) {
+        if (entry.path().extension() != ".jsonl") continue;
+        std::ifstream input(entry.path());
+        for (std::string line; std::getline(input, line);) {
+            EXPECT_EQ(line.find("first-secret"), std::string::npos);
+            EXPECT_EQ(line.find("second-secret"), std::string::npos);
+            EXPECT_EQ(line.find("other"), std::string::npos);
+            EXPECT_EQ(line.find(credential_file_.string()), std::string::npos);
+        }
+    }
+}
+
+TEST_F(GatewayCredentialRotation, EnforcesTheCredentialBodyLimit) {
+    const auto body = std::string("{\"credential\":\"") +
+                      std::string(gw::credential_rotation_body_bytes, 'x') + "\"}";
+    const auto reply = send(credential_request("open-token", body));
+    ASSERT_TRUE(reply);
+    EXPECT_EQ(reply->status, 413u);
+    EXPECT_EQ(store_calls_, 0);
+    EXPECT_EQ(handled(), 0);
+    const auto stored = prompt_airlock::provider::load_credential(credential_file_);
+    ASSERT_TRUE(stored);
+    EXPECT_EQ(stored->view(), "old-credential");
+}
+
+TEST_F(GatewayCredentialRotation, AuditFailureDoesNotStartReplacement) {
+    const auto audit_dir = audit_->dir();
+    std::filesystem::remove_all(audit_dir);
+    { std::ofstream blocked(audit_dir); blocked << "not a directory"; }
+    const auto reply = send(credential_request("open-token", "{\"credential\":\"synthetic-secret\"}"));
+    ASSERT_TRUE(reply);
+    EXPECT_EQ(reply->status, 503u);
+    EXPECT_EQ(code_of(*reply), "unavailable");
+    EXPECT_EQ(store_calls_, 0);
+    EXPECT_EQ(handled(), 0);
+    std::filesystem::remove(audit_dir);
+    const auto stored = prompt_airlock::provider::load_credential(credential_file_);
+    ASSERT_TRUE(stored);
+    EXPECT_EQ(stored->view(), "old-credential");
 }
 
 TEST_F(GatewayServer, RejectsWrongRouteMethodAndMediaType) {

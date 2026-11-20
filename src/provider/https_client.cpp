@@ -11,15 +11,26 @@
 #include <openssl/x509v3.h>
 
 #ifdef _WIN32
+#include <fcntl.h>
+#include <io.h>
+#include <process.h>
+#include <share.h>
+#include <sys/stat.h>
 #include <windows.h>
 #include <dpapi.h>
 #else
+#include <fcntl.h>
 #include <sys/stat.h>
+#include <unistd.h>
 #endif
 
 #include <algorithm>
+#include <atomic>
+#include <cerrno>
+#include <cstdint>
 #include <fstream>
 #include <iterator>
+#include <limits>
 #include <string_view>
 #include <utility>
 
@@ -32,6 +43,7 @@ namespace http = beast::http;
 using tcp = asio::ip::tcp;
 using Result = std::expected<gateway::ProviderReply, gateway::ProviderError>;
 constexpr auto use_tuple = asio::as_tuple(asio::use_awaitable);
+std::atomic<std::uint64_t> credential_temp_sequence{0};
 
 // 측정값의 수명은 send를 기다리는 호출자에게 있다. 오류로 먼저 돌아가도 총 시간을 남긴다.
 struct ClientTimer {
@@ -120,27 +132,84 @@ std::expected<void, CredentialError> store_credential(const std::filesystem::pat
     if (!sealed) {
         return std::unexpected(sealed.error());
     }
-    auto temp = path;
-    temp += ".tmp";
-    std::error_code ec;
-    std::filesystem::remove(temp, ec);
-    {
-        std::ofstream file(temp, std::ios::binary | std::ios::trunc);
-        // 내용을 쓰기 전에 소유자만 읽고 쓰게 한다(Linux 는 이 권한이어야 load_credential 이 읽는다).
-        std::filesystem::permissions(temp, std::filesystem::perms::owner_read | std::filesystem::perms::owner_write,
-                                     std::filesystem::perm_options::replace, ec);
-        if (!file || ec) {
-            return std::unexpected(CredentialError::Unreadable);
+    core::SensitiveText protected_credential(std::move(*sealed));
+    const auto process =
+#ifdef _WIN32
+        static_cast<std::uint64_t>(GetCurrentProcessId());
+#else
+        static_cast<std::uint64_t>(::getpid());
+#endif
+    std::filesystem::path temp;
+    int descriptor = -1;
+    for (unsigned attempt = 0; attempt < 32 && descriptor < 0; ++attempt) {
+        temp = path;
+        temp += ".tmp." + std::to_string(process) + "." +
+                std::to_string(credential_temp_sequence.fetch_add(1, std::memory_order_relaxed));
+#ifdef _WIN32
+        const int open_result = _wsopen_s(&descriptor, temp.c_str(), _O_WRONLY | _O_CREAT | _O_EXCL | _O_BINARY,
+                                          _SH_DENYNO, _S_IREAD | _S_IWRITE);
+        if (open_result != 0) {
+            errno = open_result;
+            descriptor = -1;
         }
-        file << *sealed;
-        if (!file.flush()) {
+#else
+        int flags = O_WRONLY | O_CREAT | O_EXCL | O_CLOEXEC;
+#ifdef O_NOFOLLOW
+        flags |= O_NOFOLLOW;
+#endif
+        descriptor = ::open(temp.c_str(), flags, 0600);
+#endif
+        if (descriptor < 0 && errno != EEXIST) {
             return std::unexpected(CredentialError::Unreadable);
         }
     }
-    std::filesystem::rename(temp, path, ec);
-    if (ec) {
+    if (descriptor < 0) {
+        return std::unexpected(CredentialError::Unreadable);
+    }
+    std::error_code ec;
+    bool written = true;
+#ifndef _WIN32
+    written = ::fchmod(descriptor, 0600) == 0;
+#endif
+    std::size_t offset = 0;
+    while (written && offset < protected_credential.size()) {
+        const auto remaining = protected_credential.size() - offset;
+#ifdef _WIN32
+        const auto chunk = remaining > std::numeric_limits<unsigned int>::max()
+            ? std::numeric_limits<unsigned int>::max() : static_cast<unsigned int>(remaining);
+        const int count = _write(descriptor, protected_credential.view().data() + offset, chunk);
+#else
+        const auto count = ::write(descriptor, protected_credential.view().data() + offset, remaining);
+#endif
+        if (count < 0 && errno == EINTR) continue;
+        if (count <= 0) {
+            written = false;
+            break;
+        }
+        offset += static_cast<std::size_t>(count);
+    }
+    if (written) {
+#ifdef _WIN32
+        written = _commit(descriptor) == 0;
+#else
+        written = ::fsync(descriptor) == 0;
+#endif
+    }
+#ifdef _WIN32
+    const int close_result = _close(descriptor);
+#else
+    const int close_result = ::close(descriptor);
+#endif
+    written = written && close_result == 0;
+    if (!written) {
         std::filesystem::remove(temp, ec);
         return std::unexpected(CredentialError::Unreadable);
+    }
+    std::filesystem::rename(temp, path, ec);
+    if (ec) {
+        std::error_code cleanup_error;
+        std::filesystem::remove(temp, cleanup_error);
+        return std::unexpected(CredentialError::ReplaceFailed);
     }
     return {};
 }
