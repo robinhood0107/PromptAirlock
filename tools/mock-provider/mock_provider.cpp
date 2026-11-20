@@ -97,13 +97,25 @@ asio::awaitable<void> session(std::shared_ptr<MockProvider::State> state, tcp::s
         co_return;
     }
     http::response<http::string_body> res;
-    if (req[http::field::authorization] != "Bearer " + state->options.credential) {
+    const auto& options = state->options;
+    const bool credential_ok = options.api_key_header_name.empty()
+        ? req[http::field::authorization] == "Bearer " + options.credential
+        : req.count(options.api_key_header_name) == 1 && req[options.api_key_header_name] == options.credential &&
+              req.count(http::field::authorization) == 0;
+    const bool version_ok = options.version_header_name.empty() ||
+        (req.count(options.version_header_name) == 1 && req[options.version_header_name] == options.version_header_value);
+    const bool shape_ok = (!options.require_post || req.method() == http::verb::post) &&
+        (options.expected_host.empty() || (req.count(http::field::host) == 1 && req[http::field::host] == options.expected_host)) &&
+        (!options.require_json_content_type ||
+         (req.count(http::field::content_type) == 1 && req[http::field::content_type] == "application/json")) &&
+        (!options.require_connection_close || !req.keep_alive()) &&
+        (options.expected_target.empty() || req.target() == options.expected_target);
+    if (!credential_ok || !version_ok || !shape_ok) {
         res = reply(http::status::unauthorized, R"({"error":{"message":"bad key","type":"invalid_request_error"}})");
     } else {
         state->record(req.body());
-        res = reply(http::status::ok, make_answer(req.body()));
+        res = reply(http::status::ok, options.response_body.empty() ? make_answer(req.body()) : options.response_body);
     }
-    const auto& options = state->options;
     if (options.body_mode == BodyMode::NoBody) {
         res.result(http::status::no_content);
         res.body().clear();

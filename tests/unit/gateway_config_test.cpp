@@ -73,6 +73,46 @@ TEST(GatewayConfig, OptionalFieldsTakeDefaults) {
     EXPECT_FALSE(parse(j).has_value());
 }
 
+TEST(GatewayConfig, ProviderProtocolSettingsAreNarrowAndValidated) {
+    auto j = valid();
+    auto config = parse(j);
+    ASSERT_TRUE(config);
+    EXPECT_EQ(config->provider.protocol, gw::ProviderProtocol::ChatCompletions);
+    EXPECT_EQ(config->provider.credential_mode, gw::ProviderCredentialMode::Bearer);
+
+    j["provider"]["protocol"] = "generate_content";
+    j["provider"]["credential_mode"] = "api_key_header";
+    config = parse(j);
+    ASSERT_TRUE(config);
+    EXPECT_EQ(config->provider.protocol, gw::ProviderProtocol::GenerateContent);
+    EXPECT_EQ(config->provider.credential_mode, gw::ProviderCredentialMode::ApiKeyHeader);
+
+    j["provider"]["protocol"] = "messages";
+    j["provider"].erase("credential_mode");
+    j["provider"]["api_version_header_name"] = "x-test-version";
+    j["provider"]["api_version_header_value"] = "2026-11-20";
+    config = parse(j);
+    ASSERT_TRUE(config);
+    EXPECT_EQ(config->provider.protocol, gw::ProviderProtocol::Messages);
+    EXPECT_EQ(config->provider.api_version_header_name, "x-test-version");
+
+    j["provider"]["api_version_header_name"] = "x-invalid version";
+    expect_error(j, ConfigProblem::InvalidValue, "provider.api_version_header_name");
+    j["provider"]["api_version_header_name"] = "x-test";
+    expect_error(j, ConfigProblem::InvalidValue, "provider.api_version_header_name");
+    j["provider"]["api_version_header_name"] = "x-test-version";
+    j["provider"]["api_version_header_value"] = "2026-13-20";
+    expect_error(j, ConfigProblem::InvalidValue, "provider.api_version_header_value");
+    j["provider"]["api_version_header_value"] = "2026-11-20\n";
+    expect_error(j, ConfigProblem::InvalidValue, "provider.api_version_header_value");
+
+    j["provider"]["credential_mode"] = "api_key_header";
+    expect_error(j, ConfigProblem::InvalidValue, "provider.credential_mode");
+    j = valid();
+    j["provider"]["api_version_header_name"] = "x-test-version";
+    expect_error(j, ConfigProblem::InvalidValue, "provider.api_version_header_name");
+}
+
 TEST(GatewayConfig, CredentialRotationRequiresOneRegisteredOrigin) {
     auto j = valid();
     j["provider"]["credential_rotation_origin"] = "dept-b";

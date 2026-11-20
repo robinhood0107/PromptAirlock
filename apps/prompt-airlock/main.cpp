@@ -163,7 +163,9 @@ int serve(const std::filesystem::path& config_path) {
         return fail("cannot write the audit log");
     }
     prompt_airlock::provider::HttpsClient provider(
-        tls->client, {config->provider.host, config->provider.port, config->provider.target},
+        tls->client, {config->provider.host, config->provider.port, config->provider.target,
+                      config->provider.credential_mode, config->provider.api_version_header_name,
+                      config->provider.api_version_header_value},
         config->provider.credential_file);
     asio::thread_pool work(gw::pipeline_work_threads);
     gw::Pipeline pipeline(
@@ -177,7 +179,7 @@ int serve(const std::filesystem::path& config_path) {
         },
         [&provider](std::string body) { return provider.send(std::move(body)); }, config->output_token_cap,
         config->provider.model, work.get_executor(), audit_log->get(), gw::pipeline_in_flight_limit, gw::request_time_limit,
-        std::move(*sentence));
+        std::move(*sentence), {}, config->provider.protocol);
     if (tls->cert_days && *tls->cert_days < 30) {
         std::fprintf(stderr, "prompt-airlock: warning: listen certificate expires in %d days\n", *tls->cert_days);
         (void)(*audit_log)->append("cert_expiry", "warn", {{"days_left", *tls->cert_days}});

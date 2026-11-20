@@ -126,7 +126,8 @@ class GatewayPipeline : public ::testing::Test {
 protected:
     gw::Pipeline make(const detect::Detectors& detectors, std::size_t in_flight_limit = gw::pipeline_in_flight_limit,
                       std::chrono::milliseconds time_limit = gw::request_time_limit, gw::SentenceCheck sentence = {},
-                      prompt_airlock::audit::AuditLog* audit = nullptr, std::filesystem::path extractor = {}) {
+                      prompt_airlock::audit::AuditLog* audit = nullptr, std::filesystem::path extractor = {},
+                      gw::ProviderProtocol protocol = gw::ProviderProtocol::ChatCompletions) {
         return gw::Pipeline(
             detectors,
             [this]() -> std::expected<gw::PseudonymScope, core::VaultError> {
@@ -156,7 +157,7 @@ protected:
                 co_return gw::ProviderReply{provider_status_, answer_ ? answer_(sent_.back()) : pa_mock::make_answer(sent_.back())};
             },
             *core::OutputTokenCap::make(512), "demo-alias", work_.get_executor(), audit, in_flight_limit, time_limit,
-            std::move(sentence), std::move(extractor));
+            std::move(sentence), std::move(extractor), protocol);
     }
 
     gw::JsonResponse run(const gw::Pipeline& pipeline, std::string body,
@@ -258,6 +259,106 @@ TEST_F(GatewayPipeline, KeepsContentPartsAndStop) {
     EXPECT_EQ(sent["stop"][0], "끝");
     EXPECT_EQ(sent["max_tokens"], 512);  // 상한으로 줄인다
     EXPECT_EQ(sent["temperature"], 0.2);
+}
+
+TEST_F(GatewayPipeline, GenerateContentUsesVerifiedPromptAndItsWireSchema) {
+    answer_ = [](const std::string&) {
+        return R"({"candidates":[{"content":{"role":"model","parts":[{"text":"확인"}]},"finishReason":"STOP"}]})";
+    };
+    const auto pipeline = make(detectors_, gw::pipeline_in_flight_limit, gw::request_time_limit, {}, nullptr, {},
+                               gw::ProviderProtocol::GenerateContent);
+    const auto reply = run(pipeline, ask("담당자 연락처 010-2345-6789"));
+    ASSERT_EQ(reply.status, 200u);
+    ASSERT_EQ(provider_calls_, 1);
+    const json sent = json::parse(sent_.front());
+    ASSERT_EQ(sent["contents"][0]["role"], "user");
+    ASSERT_EQ(sent["contents"][0]["parts"].size(), 1u);
+    EXPECT_EQ(sent["contents"][0]["parts"][0]["text"].get<std::string>().find("010-2345-6789"), std::string::npos);
+    EXPECT_EQ(sent["generationConfig"]["candidateCount"], 1);
+    EXPECT_EQ(sent["generationConfig"]["maxOutputTokens"], 512);
+    EXPECT_FALSE(sent.contains("model"));
+}
+
+TEST_F(GatewayPipeline, MessagesUsesSystemAndExistingRoleConversion) {
+    answer_ = [](const std::string&) {
+        return json{{"role", gw::detail::role_name(core::MessageRole::Model)},
+                    {"content", json::array({{{"type", "text"}, {"text", "확인"}}})},
+                    {"stop_reason", "end_turn"}}.dump();
+    };
+    const auto pipeline = make(detectors_, gw::pipeline_in_flight_limit, gw::request_time_limit, {}, nullptr, {},
+                               gw::ProviderProtocol::Messages);
+    const std::string request = json{{"model", "client-model"},
+                                     {"messages", json::array({{{"role", "system"}, {"content", "규칙"}},
+                                                               {{"role", "user"}, {"content", "처음"}},
+                                                               {{"role", gw::detail::role_name(core::MessageRole::Model)},
+                                                                {"content", "이전 답"}},
+                                                               {{"role", "user"},
+                                                                {"content", "담당자 연락처 010-2345-6789"}}})},
+                                     {"max_tokens", 128}, {"stop", json::array({"끝"})}}.dump();
+    const auto reply = run(pipeline, request);
+    ASSERT_EQ(reply.status, 200u);
+    ASSERT_EQ(provider_calls_, 1);
+    const json sent = json::parse(sent_.front());
+    EXPECT_EQ(sent["model"], "demo-alias");
+    EXPECT_EQ(sent["system"][0]["text"], "규칙");
+    ASSERT_EQ(sent["messages"].size(), 3u);
+    EXPECT_EQ(sent["messages"][1]["role"].get<std::string>(),
+              std::string(gw::detail::role_name(core::MessageRole::Model)));
+    EXPECT_EQ(sent["messages"][2]["content"].get<std::string>().find("010-2345-6789"), std::string::npos);
+    EXPECT_EQ(sent["max_tokens"], 128);
+    EXPECT_EQ(sent["stop_sequences"][0], "끝");
+}
+
+TEST_F(GatewayPipeline, UnsupportedAdapterSemanticsFailBeforeProviderCall) {
+    const auto pipeline = make(detectors_, gw::pipeline_in_flight_limit, gw::request_time_limit, {}, nullptr, {},
+                               gw::ProviderProtocol::Messages);
+    const std::vector<std::string> cases = {
+        R"({"messages":[{"role":"developer","content":"must not be dropped"},{"role":"user","content":"hello"}]})",
+        R"({"messages":[{"role":"user","content":"hello"}],"temperature":0.2})",
+        R"({"messages":[{"role":"user","content":"hello"}],"response_format":{"type":"json_object"}})",
+    };
+    for (const auto& request : cases) EXPECT_EQ(run(pipeline, request).status, 400u);
+    EXPECT_EQ(provider_calls_, 0);
+    EXPECT_TRUE(sent_.empty());
+}
+
+TEST_F(GatewayPipeline, AdapterAuditKeepsOnlyOutputCheckedText) {
+    const auto dir = std::filesystem::temp_directory_path() /
+                     ("pa-adapter-audit-" +
+                      std::to_string(std::chrono::steady_clock::now().time_since_epoch().count()));
+    auto log = prompt_airlock::audit::AuditLog::open(dir, std::chrono::days(365));
+    ASSERT_TRUE(log);
+    answer_ = [](const std::string&) {
+        return R"({"metadata":"private-upstream-detail","candidates":[{"content":{"role":"model","parts":[{"text":"확인"}]},"finishReason":"STOP"}]})";
+    };
+    const auto pipeline = make(detectors_, gw::pipeline_in_flight_limit, gw::request_time_limit, {}, log->get(), {},
+                               gw::ProviderProtocol::GenerateContent);
+    EXPECT_EQ(run(pipeline, ask("일반 업무 문의")).status, 200u);
+
+    answer_ = [](const std::string&) {
+        return R"({"candidates":[{"content":{"role":"model","parts":[{"text":"주민번호 900101-1234567"}]},"finishReason":"STOP"}]})";
+    };
+    const auto rejected = run(pipeline, ask("일반 업무 문의"));
+    EXPECT_EQ(rejected.status, 502u) << rejected.body;
+    EXPECT_EQ(code_of(rejected), "response_blocked_value");
+    EXPECT_EQ(provider_calls_, 2);
+
+    log->reset();
+    std::string audit_text;
+    int answer_records = 0;
+    for (const auto& file : std::filesystem::directory_iterator(dir)) {
+        if (file.path().extension() != ".jsonl") continue;
+        std::ifstream input(file.path());
+        for (std::string line; std::getline(input, line);) {
+            audit_text += line;
+            if (json::parse(line)["kind"] == "egress_answer") ++answer_records;
+        }
+    }
+    EXPECT_EQ(answer_records, 1);
+    EXPECT_NE(audit_text.find("확인"), std::string::npos);
+    EXPECT_EQ(audit_text.find("private-upstream-detail"), std::string::npos);
+    EXPECT_EQ(audit_text.find("900101-1234567"), std::string::npos);
+    std::filesystem::remove_all(dir);
 }
 
 TEST_F(GatewayPipeline, EveryRejectionMakesZeroProviderCalls) {

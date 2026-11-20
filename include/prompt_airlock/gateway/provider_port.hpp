@@ -10,6 +10,9 @@
 
 namespace prompt_airlock::gateway {
 
+enum class ProviderProtocol : std::uint8_t { ChatCompletions, GenerateContent, Messages };
+enum class ProviderCredentialMode : std::uint8_t { Bearer, ApiKeyHeader };
+
 struct ProviderReply {
     unsigned status;
     std::string body;

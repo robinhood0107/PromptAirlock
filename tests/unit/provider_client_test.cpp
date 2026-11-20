@@ -112,6 +112,66 @@ TEST_F(ProviderClient, SendsBodyAndReadsAnswer) {
     EXPECT_EQ(mock_->received().front(), body);
 }
 
+TEST_F(ProviderClient, SendsConfiguredProtocolHeadersOnlyWhenConfigured) {
+    pa_mock::MockOptions key_options{"provider-secret", {}};
+    key_options.api_key_header_name = "x-goog-api-key";
+    key_options.expected_target = "/models/demo:generateContent";
+    key_options.expected_host = "127.0.0.1";
+    key_options.require_post = true;
+    key_options.require_json_content_type = true;
+    key_options.require_connection_close = true;
+    set_options(key_options);
+    ASSERT_TRUE(pv::store_credential(credential_file_, "provider-secret"));
+    const std::string generate_body = R"({"contents":[{"role":"user","parts":[{"text":"hello"}]}]})";
+    pv::HttpsClient key_client(*client_tls_, {"127.0.0.1", mock_->local_endpoint().port(), key_options.expected_target,
+                                             gw::ProviderCredentialMode::ApiKeyHeader}, credential_file_,
+                              {std::chrono::seconds(5)});
+    asio::io_context key_io;
+    auto key_future = asio::co_spawn(key_io, key_client.send(generate_body), asio::use_future);
+    key_io.run();
+    ASSERT_TRUE(key_future.get());
+    ASSERT_EQ(mock_->received().size(), 1u);
+    EXPECT_EQ(mock_->received().front(), generate_body);
+
+    pa_mock::MockOptions version_options{"provider-secret", {}};
+    version_options.version_header_name = "x-test-version";
+    version_options.version_header_value = "2026-11-20";
+    version_options.expected_target = "/v1/messages";
+    version_options.expected_host = "127.0.0.1";
+    version_options.require_post = true;
+    version_options.require_json_content_type = true;
+    version_options.require_connection_close = true;
+    set_options(version_options);
+    const std::string messages_body = R"({"model":"demo","messages":[]})";
+    pv::HttpsClient version_client(*client_tls_, {"127.0.0.1", mock_->local_endpoint().port(), version_options.expected_target,
+                                                 gw::ProviderCredentialMode::Bearer, version_options.version_header_name,
+                                                 version_options.version_header_value}, credential_file_,
+                                  {std::chrono::seconds(5)});
+    asio::io_context version_io;
+    auto version_future = asio::co_spawn(version_io, version_client.send(messages_body), asio::use_future);
+    version_io.run();
+    ASSERT_TRUE(version_future.get());
+    ASSERT_EQ(mock_->received().size(), 1u);
+    EXPECT_EQ(mock_->received().front(), messages_body);
+}
+
+TEST_F(ProviderClient, RejectsDirectAndJsonEncodedCredentialEchoes) {
+    const std::array<std::string_view, 2> response_bodies = {
+        R"({"echo":"provider-secret"})",
+        R"({"echo":"provider\u002dsecret"})",
+    };
+    for (const auto response_body : response_bodies) {
+        pa_mock::MockOptions options{"provider-secret", {}};
+        options.response_body = response_body;
+        set_options(std::move(options));
+        const auto result = send("127.0.0.1", "provider-secret", "{}");
+        ASSERT_FALSE(result.has_value());
+        EXPECT_EQ(result.error(), gw::ProviderError::BadResponse);
+        ASSERT_EQ(mock_->received().size(), 1u);
+        EXPECT_EQ(mock_->received().front(), "{}");
+    }
+}
+
 TEST_F(ProviderClient, VerifiesServerNameAgainstCertificate) {
     // 인증서는 localhost 와 127.0.0.1 에만 맞는다
     EXPECT_TRUE(send("localhost", "provider-secret", "{}").has_value());

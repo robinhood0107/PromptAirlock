@@ -7,6 +7,7 @@
 #include <boost/beast/core.hpp>
 #include <boost/beast/http.hpp>
 #include <boost/beast/ssl.hpp>
+#include <nlohmann/json.hpp>
 #include <openssl/ssl.h>
 #include <openssl/x509v3.h>
 
@@ -34,6 +35,8 @@
 #include <span>
 #include <string_view>
 #include <utility>
+
+#include "prompt_airlock/gateway/request_json.hpp"
 
 namespace prompt_airlock::provider {
 namespace {
@@ -143,6 +146,58 @@ std::expected<core::SensitiveText, CredentialError> read_credential_file(const s
     }
 #endif
     return core::SensitiveText(std::move(bytes.value));
+}
+
+class CredentialEchoSax {
+public:
+    explicit CredentialEchoSax(std::string_view credential) : credential_(credential) {}
+
+    bool echoed = false;
+    bool too_deep = false;
+
+    bool null() { return true; }
+    bool boolean(bool) { return true; }
+    bool number_integer(nlohmann::json::number_integer_t) { return true; }
+    bool number_unsigned(nlohmann::json::number_unsigned_t) { return true; }
+    bool number_float(nlohmann::json::number_float_t, const std::string&) { return true; }
+    bool binary(nlohmann::json::binary_t&) { return false; }
+    bool string(std::string& value) { return check(value); }
+    bool key(std::string& value) { return check(value); }
+    bool start_object(std::size_t) { return open(); }
+    bool start_array(std::size_t) { return open(); }
+    bool end_object() { --depth_; return true; }
+    bool end_array() { --depth_; return true; }
+    bool parse_error(std::size_t, const std::string&, const nlohmann::detail::exception&) { return false; }
+
+private:
+    bool check(std::string& value) {
+        if (value.find(credential_) == std::string::npos) return true;
+        echoed = true;
+        core::secure_wipe(std::span<char>{value.data(), value.size()});
+        return false;
+    }
+    bool open() {
+        if (depth_ >= gateway::max_json_depth) {
+            too_deep = true;
+            return false;
+        }
+        ++depth_;
+        return true;
+    }
+
+    std::string_view credential_;
+    std::size_t depth_ = 0;
+};
+
+enum class CredentialScan { Clean, Echo, Invalid };
+
+CredentialScan scan_credential_echo(std::string_view body, std::string_view credential) {
+    if (credential.empty()) return CredentialScan::Invalid;
+    if (body.find(credential) != std::string_view::npos) return CredentialScan::Echo;
+    CredentialEchoSax sax(credential);
+    const bool valid = nlohmann::json::sax_parse(body, &sax, nlohmann::json::input_format_t::json, true);
+    if (sax.echoed) return CredentialScan::Echo;
+    return valid && !sax.too_deep ? CredentialScan::Clean : CredentialScan::Invalid;
 }
 
 }  // namespace
@@ -340,7 +395,14 @@ asio::awaitable<Result> HttpsClient::send(std::string body, ClientTimings* timin
     req.set(http::field::content_type, "application/json");
     req.set(http::field::accept, "application/json");
     req.set(http::field::user_agent, "prompt-airlock");
-    req.set(http::field::authorization, std::string("Bearer ") + std::string(credential->view()));
+    if (endpoint_.credential_mode == gateway::ProviderCredentialMode::Bearer) {
+        req.set(http::field::authorization, std::string("Bearer ") + std::string(credential->view()));
+    } else {
+        req.set("x-goog-api-key", credential->view());
+    }
+    if (!endpoint_.api_version_header_name.empty()) {
+        req.set(endpoint_.api_version_header_name, endpoint_.api_version_header_value);
+    }
     req.keep_alive(false);
     req.body() = std::move(body);
     req.prepare_payload();
@@ -368,6 +430,15 @@ asio::awaitable<Result> HttpsClient::send(std::string body, ClientTimings* timin
         }
     }
     auto& res = parser.get();
+    const CredentialScan scan = res.result_int() == 200
+        ? scan_credential_echo(res.body(), credential->view()) : CredentialScan::Clean;
+    if (scan != CredentialScan::Clean) {
+        core::secure_wipe(std::span<char>{res.body().data(), res.body().size()});
+        res.body().clear();
+        (void)co_await stream.async_shutdown(use_tuple);
+        timer.mark(ClientPhase::Shutdown);
+        co_return std::unexpected(gateway::ProviderError::BadResponse);
+    }
     gateway::ProviderReply reply{res.result_int(), std::move(res.body())};
     (void)co_await stream.async_shutdown(use_tuple);  // 응답은 이미 받았으므로 닫기 실패는 무시한다
     timer.mark(ClientPhase::Shutdown);

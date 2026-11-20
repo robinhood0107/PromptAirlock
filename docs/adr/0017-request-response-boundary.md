@@ -29,7 +29,7 @@
 
 응답
 
-5. provider 응답은 허용한 필드(첫 choice의 `message.role`, `message.content`, `finish_reason`, `usage`)만 읽고 Gateway가 응답을 새로 만든다. `model`은 Gateway 별칭, `id`는 Gateway 요청 ID로 바꾼다. `tool_calls`, 이미지·오디오, `logprobs`가 있으면 응답을 거절한다.
+5. 기본 Chat Completions 호환 방식은 첫 choice의 `message.role`, `message.content`, `finish_reason`, `usage`를 읽는다. 추가한 두 HTTPS 규격은 텍스트 결과 하나의 역할·본문·종료 상태·사용량만 읽는다. 모두 Gateway가 응답을 새로 만들며 `model`은 Gateway 별칭, `id`는 Gateway 요청 ID로 바꾼다. 기본 호환 방식의 도구 호출·이미지·오디오·logprobs 거절은 유지한다. 추가한 두 규격은 복수 결과, 도구 호출, 비텍스트 본문과 지원하지 않는 종료 상태를 거절한다. JSON 최대 깊이와 중복 키 검사는 모든 규격에 적용한다.
 6. provider 오류 본문과 응답 헤더는 클라이언트에 넘기지 않고 고정 오류 코드로 바꾼다. 오류 본문은 감사 기록에도 남기지 않는다.
 7. 응답 처리 순서: 응답 검사(Block 종류의 원문 값이 응답에 새로 나타나면 거절) → token 찾기 → token 위치 판정 → 복원.
 8. token이 다음 위치에 있으면 복원하지 않고 응답 전체를 거절한다.

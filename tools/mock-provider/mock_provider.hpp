@@ -26,6 +26,15 @@ struct MockOptions {
     std::chrono::milliseconds shutdown_delay{};
     BodyMode body_mode = BodyMode::Standard;
     ShutdownMode shutdown_mode = ShutdownMode::Notify;
+    std::string api_key_header_name;
+    std::string version_header_name;
+    std::string version_header_value;
+    std::string expected_target;
+    std::string expected_host;
+    bool require_post = false;
+    bool require_json_content_type = false;
+    bool require_connection_close = false;
+    std::string response_body;
 };
 
 class MockProvider {

@@ -148,7 +148,7 @@ struct Pipeline::Trace {
 Pipeline::Pipeline(const detect::Detectors& detectors, ScopeOpener open_scope, ProviderCall provider,
                    core::OutputTokenCap output_cap, std::string model_alias, asio::any_io_executor work,
                    audit::AuditLog* audit, std::size_t in_flight_limit, std::chrono::milliseconds time_limit,
-                   SentenceCheck sentence, std::filesystem::path extractor)
+                   SentenceCheck sentence, std::filesystem::path extractor, ProviderProtocol protocol)
     : detectors_(detectors),
       open_scope_(std::move(open_scope)),
       provider_(std::move(provider)),
@@ -158,7 +158,7 @@ Pipeline::Pipeline(const detect::Detectors& detectors, ScopeOpener open_scope, P
       audit_(audit),
       in_flight_limit_(in_flight_limit),
       time_limit_(time_limit),
-      sentence_(std::move(sentence)), extractor_(std::move(extractor)) {}
+      sentence_(std::move(sentence)), extractor_(std::move(extractor)), protocol_(protocol) {}
 
 asio::awaitable<JsonResponse> Pipeline::handle(AcceptedRequest request) const {
     const auto start = std::chrono::steady_clock::now();
@@ -389,7 +389,9 @@ std::expected<Pipeline::Outbound, JsonResponse> Pipeline::prepare(AcceptedReques
     if (stop.stop_requested()) {
         return std::unexpected(trace.fail(EntryError::Cancelled));  // 보내지 않을 본문은 외부 전송 이력에 남기지 않는다
     }
-    Outbound outbound{std::move(*scope), provider_request_body(*provider_request, model_alias_), pseudonymized};
+    auto body = provider_request_body(*provider_request, model_alias_, protocol_);
+    if (!body) return std::unexpected(trace.fail(EntryError::BadRequest));
+    Outbound outbound{std::move(*scope), std::move(*body), pseudonymized};
     // 외부 전송 이력: 실제로 보내는 가명 상태 본문(ADR 0021). 남기지 못하면 보내지 않는다.
     if (request.purpose == RequestPurpose::Chat && audit_ != nullptr && !audit_->append("egress", "info",
                                              {{"request_id", trace.id}, {"sent", nlohmann::json::parse(outbound.body)}})) {
@@ -482,14 +484,14 @@ JsonResponse Pipeline::finish(const std::expected<ProviderReply, ProviderError>&
         if (reply->status == 503) return trace.fail(EntryError::ProviderUnavailable);
         return trace.fail(EntryError::ProviderFailed);  // provider 오류 본문은 넘기지 않는다
     }
-    // 복원 전 응답. provider 오류 본문은 남기지 않는다(200 일 때만)
-    if (audit_ != nullptr &&
-        !audit_->append("egress_answer", "info", {{"request_id", trace.id}, {"answer", reply->body}})) {
-        return trace.fail(EntryError::Unavailable);
-    }
-    auto answer = parse_provider_answer(reply->body);
+    auto answer = parse_provider_answer(reply->body, protocol_);
     if (!answer) {
         return trace.fail(EntryError::ProviderFailed);
+    }
+    // 기존 규격의 감사 모양은 유지하되, 파싱 실패 본문은 기록하지 않는다.
+    if (protocol_ == ProviderProtocol::ChatCompletions && audit_ != nullptr &&
+        !audit_->append("egress_answer", "info", {{"request_id", trace.id}, {"answer", reply->body}})) {
+        return trace.fail(EntryError::Unavailable);
     }
     // 응답 검사(ADR 0017 7~9): 다시 탐지 → 차단 값·링크 속 token 이면 거절 → 같은 범위의 token 만 복원
     if (has_active_content(answer->content.view())) {
@@ -508,6 +510,18 @@ JsonResponse Pipeline::finish(const std::expected<ProviderReply, ProviderError>&
         const auto plan = core::plan_restore(*checked);
         if (!plan) {
             return trace.reject(plan.error());
+        }
+        if (protocol_ != ProviderProtocol::ChatCompletions && audit_ != nullptr) {
+            nlohmann::json event = {{"request_id", trace.id}, {"answer", checked->text()},
+                                    {"finish_reason", answer->finish_reason}};
+            if (answer->usage) {
+                event["usage"] = {{"prompt_tokens", answer->usage->prompt_tokens},
+                                  {"completion_tokens", answer->usage->completion_tokens},
+                                  {"total_tokens", answer->usage->total_tokens}};
+            }
+            if (!audit_->append("egress_answer", "info", std::move(event))) {
+                return trace.fail(EntryError::Unavailable);
+            }
         }
         auto text = core::apply_restore(std::move(*checked), *plan, scope);
         if (!text) {

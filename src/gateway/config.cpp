@@ -5,6 +5,7 @@
 
 #include <algorithm>
 #include <charconv>
+#include <chrono>
 #include <functional>
 #include <initializer_list>
 #include <set>
@@ -87,6 +88,29 @@ bool lowercase_sha256_hex(std::string_view s) {
     return s.size() == 64 && std::ranges::all_of(s, [](char c) { return (c >= '0' && c <= '9') || (c >= 'a' && c <= 'f'); });
 }
 
+bool valid_header_token(std::string_view name) {
+    constexpr std::string_view punctuation = "!#$%&'*+-.^_`|~";
+    return !name.empty() && std::ranges::all_of(name, [&](unsigned char c) {
+        return (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || (c >= '0' && c <= '9') ||
+               punctuation.find(static_cast<char>(c)) != std::string_view::npos;
+    });
+}
+
+bool valid_api_version_date(std::string_view value) {
+    if (value.size() != 10 || value[4] != '-' || value[7] != '-') return false;
+    for (std::size_t i = 0; i < value.size(); ++i) {
+        if (i != 4 && i != 7 && (value[i] < '0' || value[i] > '9')) return false;
+    }
+    const auto number = [&](std::size_t first, std::size_t count) {
+        unsigned result = 0;
+        for (std::size_t i = first; i < first + count; ++i) result = result * 10 + static_cast<unsigned>(value[i] - '0');
+        return result;
+    };
+    const std::chrono::year_month_day date{std::chrono::year{static_cast<int>(number(0, 4))},
+                                           std::chrono::month{number(5, 2)}, std::chrono::day{number(8, 2)}};
+    return date.ok();
+}
+
 // https://host[:port]/path 만 받는다. 사용자 정보·질의·조각은 거절한다(자격 증명은 별도 파일).
 Result parse_provider_url(std::string_view url, ProviderConfig& out) {
     constexpr std::string_view scheme = "https://";
@@ -152,7 +176,9 @@ Result parse_provider(const json& root, const std::filesystem::path& base, Provi
         return std::unexpected(node.error());
     }
     const json& o = **node;
-    if (auto r = only_keys(o, {"url", "credential_file", "trust_file", "model", "credential_rotation_origin"}, at); !r) {
+    if (auto r = only_keys(o, {"url", "credential_file", "trust_file", "model", "credential_rotation_origin", "protocol",
+                               "credential_mode", "api_version_header_name", "api_version_header_value"}, at);
+        !r) {
         return r;
     }
     auto url = text(o, "url", at);
@@ -181,6 +207,55 @@ Result parse_provider(const json& root, const std::filesystem::path& base, Provi
             return fail(ConfigProblem::InvalidValue, "provider.credential_rotation_origin");
         }
         out.credential_rotation_origin = std::move(*origin);
+    }
+    if (o.contains("protocol")) {
+        auto protocol = text(o, "protocol", at);
+        if (!protocol) return std::unexpected(protocol.error());
+        if (*protocol == "chat_completions") {
+            out.protocol = ProviderProtocol::ChatCompletions;
+        } else if (*protocol == "generate_content") {
+            out.protocol = ProviderProtocol::GenerateContent;
+        } else if (*protocol == "messages") {
+            out.protocol = ProviderProtocol::Messages;
+        } else {
+            return fail(ConfigProblem::InvalidValue, "provider.protocol");
+        }
+    }
+    if (o.contains("credential_mode")) {
+        auto mode = text(o, "credential_mode", at);
+        if (!mode) return std::unexpected(mode.error());
+        if (*mode == "bearer") {
+            out.credential_mode = ProviderCredentialMode::Bearer;
+        } else if (*mode == "api_key_header") {
+            out.credential_mode = ProviderCredentialMode::ApiKeyHeader;
+        } else {
+            return fail(ConfigProblem::InvalidValue, "provider.credential_mode");
+        }
+    }
+    if (out.credential_mode == ProviderCredentialMode::ApiKeyHeader &&
+        out.protocol != ProviderProtocol::GenerateContent) {
+        return fail(ConfigProblem::InvalidValue, "provider.credential_mode");
+    }
+    const bool has_version_name = o.contains("api_version_header_name");
+    const bool has_version_value = o.contains("api_version_header_value");
+    if (out.protocol == ProviderProtocol::Messages) {
+        if (!has_version_name) return fail(ConfigProblem::Missing, "provider.api_version_header_name");
+        if (!has_version_value) return fail(ConfigProblem::Missing, "provider.api_version_header_value");
+        auto name = text(o, "api_version_header_name", at);
+        auto value = text(o, "api_version_header_value", at);
+        if (!name) return std::unexpected(name.error());
+        if (!value) return std::unexpected(value.error());
+        if (!name->ends_with("-version") || !valid_header_token(*name)) {
+            return fail(ConfigProblem::InvalidValue, "provider.api_version_header_name");
+        }
+        if (!valid_api_version_date(*value)) {
+            return fail(ConfigProblem::InvalidValue, "provider.api_version_header_value");
+        }
+        out.api_version_header_name = std::move(*name);
+        out.api_version_header_value = std::move(*value);
+    } else if (has_version_name || has_version_value) {
+        return fail(ConfigProblem::InvalidValue, has_version_name ? "provider.api_version_header_name"
+                                                                  : "provider.api_version_header_value");
     }
     return {};
 }

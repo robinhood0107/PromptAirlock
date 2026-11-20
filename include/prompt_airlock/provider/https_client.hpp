@@ -24,6 +24,9 @@ struct Endpoint {
     std::string host;
     std::uint16_t port = 443;
     std::string target;
+    gateway::ProviderCredentialMode credential_mode = gateway::ProviderCredentialMode::Bearer;
+    std::string api_version_header_name;
+    std::string api_version_header_value;
 };
 
 struct ClientLimits {
