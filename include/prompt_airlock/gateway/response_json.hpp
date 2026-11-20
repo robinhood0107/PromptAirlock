@@ -30,6 +30,7 @@ enum class AnswerError : std::uint8_t {
 };
 
 [[nodiscard]] std::expected<ProviderAnswer, AnswerError> parse_provider_answer(std::string_view body);
+[[nodiscard]] std::string new_request_id();
 
 // id 는 게이트웨이 요청 ID, model 은 고정 별칭이다. provider 의 id·model·그 밖의 필드는 들어가지 않는다.
 [[nodiscard]] std::string client_response_body(std::string_view id, std::int64_t created, std::string_view model_alias,

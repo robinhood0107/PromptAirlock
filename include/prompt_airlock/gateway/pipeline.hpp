@@ -101,6 +101,7 @@ public:
     // 한 요청은 strand(또는 스레드 하나)에서 불러야 한다.
     // sentence 가 있으면 규칙을 통과한 요청의 메시지를 판별해, 걸리면 409 confirmation_required 와 확인 표지를 돌려준다.
     // 같은 본문에 그 표지를 붙여 다시 보내면 한 번 통과한다(ADR 0023).
+    // Preview는 같은 보호 단계를 거친 뒤 제공자 호출 없이 반환하고 가명 범위를 지운다.
     [[nodiscard]] boost::asio::awaitable<JsonResponse> handle(AcceptedRequest request) const;
 
 private:
@@ -108,13 +109,16 @@ private:
     struct Outbound {
         std::optional<PseudonymScope> scope;  // 응답 복원도 같은 범위에서만 한다
         std::string body;                     // provider 로 보낼 검증된 본문
+        bool pseudonymized = false;
     };
     boost::asio::awaitable<JsonResponse> run(AcceptedRequest request, Trace& trace) const;
     // 처리 순서(위 머리말)대로 아래 단계를 부른다.
     std::expected<Outbound, JsonResponse> prepare(AcceptedRequest request, Trace& trace, std::stop_token stop) const;
+    JsonResponse approve(AcceptedRequest request, Trace& trace, std::stop_token stop) const;
     std::optional<JsonResponse> confirm_sentences(const core::PolicyCheckedPrompt& checked,
                                                   std::span<const core::EntitySpan> entities,
                                                   const std::string& confirm, const std::string& body_sha256,
+                                                  std::string_view origin, RequestPurpose purpose,
                                                   Trace& trace, std::stop_token stop) const;
     std::expected<core::VerifiedPrompt, core::Rejection> protect_and_verify(core::PolicyCheckedPrompt checked,
                                                                             PseudonymScope& scope,

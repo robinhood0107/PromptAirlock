@@ -1,5 +1,7 @@
 // 서버 골격 시험: 루프백에 실제로 띄우고 TLS 로 붙는다. handler 는 받은 내용을 기록만 한다.
 #include "prompt_airlock/gateway/server.hpp"
+#include "prompt_airlock/gateway/confirm.hpp"
+#include "prompt_airlock/gateway/response_json.hpp"
 
 #include <boost/asio/as_tuple.hpp>
 #include <boost/asio/ssl.hpp>
@@ -43,11 +45,17 @@ struct Reply {
     unsigned status = 0;
     std::string body;
     std::string www_authenticate;
+    bool keep_alive = false;
+    std::string content_type;
+    std::string csp;
+    std::string referrer;
+    std::string nosniff;
 };
 
 class GatewayServer : public ::testing::Test {
 protected:
     virtual std::size_t body_limit() const { return 1024; }
+    virtual bool compatibility() const { return false; }
     void SetUp() override {
         cert_ = pa_test::make_test_certificate();
         auto server_tls = prompt_airlock::tls::make_server_context(cert_.certificate_pem, cert_.private_key_pem);
@@ -65,6 +73,7 @@ protected:
                                 ++handled_;
                                 last_origin_ = request.origin->name;
                                 last_body_ = request.body;
+                                last_purpose_ = request.purpose;
                                 if (retain_uploads_) uploads_.push_back(request.upload);
                             }
                             changed_.notify_all();
@@ -78,9 +87,10 @@ protected:
                                 }
                                 changed_.notify_all();
                             }
-                            co_return gw::JsonResponse{200, R"({"ok":true})"};
+                            std::scoped_lock lock(mutex_);
+                            co_return response_.value_or(gw::JsonResponse{200, R"({"ok":true})"});
                         },
-                        limits); });
+                        limits, nullptr, compatibility()); });
         server_->start();
         port_ = server_->local_endpoint().port();
         thread_ = std::thread([this] { io_.run(); });
@@ -130,7 +140,9 @@ protected:
         if (ec) {
             return std::nullopt;
         }
-        return Reply{res.result_int(), res.body(), std::string(res[http::field::www_authenticate])};
+        return Reply{res.result_int(), res.body(), std::string(res[http::field::www_authenticate]), res.keep_alive(),
+            std::string(res[http::field::content_type]), std::string(res["Content-Security-Policy"]),
+            std::string(res["Referrer-Policy"]), std::string(res["X-Content-Type-Options"])};
     }
 
     static http::request<http::string_body> request(std::string token, std::string body = R"({"messages":[]})") {
@@ -167,8 +179,10 @@ protected:
     std::atomic<bool> hold_{false};
     bool cancelled_ = false;
     int handled_ = 0;
+    std::optional<gw::JsonResponse> response_;
     std::string last_origin_;
     std::string last_body_;
+    gw::RequestPurpose last_purpose_ = gw::RequestPurpose::Chat;
     std::atomic<bool> retain_uploads_{false};
     std::vector<std::shared_ptr<gw::UploadLease>> uploads_;
 };
@@ -196,6 +210,91 @@ TEST_F(GatewayServer, RejectsUnauthenticatedAndLocksAfterFailures) {
     ASSERT_TRUE(locked.has_value());
     EXPECT_EQ(locked->status, 429u);
     EXPECT_EQ(handled(), 0);
+}
+
+TEST_F(GatewayServer, DefaultConfirmationKeepsIts409Contract) {
+    {
+        std::scoped_lock lock(mutex_);
+        response_ = gw::confirm_response(std::string(32, 'a'), {"CONFIDENTIAL_MARKER"});
+    }
+    const auto reply = send(request("open-token"));
+    ASSERT_TRUE(reply);
+    EXPECT_EQ(reply->status, 409U);
+    EXPECT_EQ(code_of(*reply), "confirmation_required");
+    EXPECT_EQ(nlohmann::json::parse(reply->body)["error"]["confirm_token"], std::string(32, 'a'));
+}
+
+TEST_F(GatewayServer, AnExplicitEmptyConfirmationHeaderIsRejectedBeforeTheHandler) {
+    auto empty = request("open-token");
+    empty.set("X-Prompt-Airlock-Confirm", "");
+    const auto reply = send(empty);
+    ASSERT_TRUE(reply);
+    EXPECT_EQ(reply->status, 400U);
+    EXPECT_EQ(code_of(*reply), "bad_request");
+    EXPECT_EQ(handled(), 0);
+}
+
+TEST_F(GatewayServer, ServesOnlyLocalBuiltInApprovalResourcesWithoutOriginCredentials) {
+    auto page = request("", "");
+    page.method(http::verb::get);
+    page.target("/console/confirm?token=" + std::string(32, 'a'));
+    const auto host = "127.0.0.1:" + std::to_string(port_);
+    page.set(http::field::host, host);
+    const auto html = send(page);
+    ASSERT_TRUE(html);
+    EXPECT_EQ(html->status, 200U);
+    EXPECT_EQ(html->content_type, "text/html; charset=utf-8");
+    EXPECT_NE(html->csp.find("script-src 'self'"), std::string::npos);
+    EXPECT_NE(html->csp.find("frame-ancestors 'none'"), std::string::npos);
+    EXPECT_EQ(html->csp.find("unsafe-inline"), std::string::npos);
+    EXPECT_EQ(html->referrer, "no-referrer");
+    EXPECT_EQ(html->nosniff, "nosniff");
+    EXPECT_EQ(html->body.find(std::string(32, 'a')), std::string::npos);
+    EXPECT_FALSE(html->keep_alive);
+    const std::vector<std::pair<std::string, std::string>> resources = {
+        {"/console/confirm.js", "text/javascript; charset=utf-8"},
+        {"/console/confirm.css", "text/css; charset=utf-8"},
+        {"/console/confirm.svg", "image/svg+xml"}
+    };
+    for (const auto& [path, type] : resources) {
+        page.target(path);
+        const auto resource = send(page);
+        ASSERT_TRUE(resource);
+        EXPECT_EQ(resource->status, 200U);
+        EXPECT_EQ(resource->content_type, type);
+    }
+    page.target("/console/confirm?token=" + std::string(32, 'a') + "&extra=1");
+    EXPECT_EQ(send(page)->status, 400U);
+    page.target("/console/confirm");
+    page.set(http::field::host, "example.invalid");
+    EXPECT_EQ(send(page)->status, 403U);
+    EXPECT_EQ(handled(), 0);
+}
+
+TEST_F(GatewayServer, RoutesAuthenticatedPreviewWithTheSameHttpGuards) {
+    auto preview = request("open-token");
+    preview.target("/v1/preview");
+    const auto reply = send(preview);
+    ASSERT_TRUE(reply);
+    EXPECT_EQ(reply->status, 200U);
+    EXPECT_EQ(handled(), 1);
+    {
+        std::scoped_lock lock(mutex_);
+        EXPECT_EQ(last_purpose_, gw::RequestPurpose::Preview);
+        EXPECT_EQ(last_body_, preview.body());
+    }
+    preview.set("X-Prompt-Airlock-Grade", "S");
+    EXPECT_EQ(send(preview)->status, 403U);
+    preview.erase("X-Prompt-Airlock-Grade");
+    preview.method(http::verb::get);
+    EXPECT_EQ(send(preview)->status, 405U);
+    preview.method(http::verb::post);
+    preview.set(http::field::content_type, "text/plain");
+    EXPECT_EQ(send(preview)->status, 415U);
+    preview.set(http::field::content_type, "application/json");
+    preview.erase(http::field::authorization);
+    EXPECT_EQ(send(preview)->status, 401U);
+    EXPECT_EQ(handled(), 1);
 }
 
 TEST_F(GatewayServer, RejectsWrongRouteMethodAndMediaType) {
@@ -274,6 +373,97 @@ class GatewayLargeServer : public GatewayServer {
 protected:
     std::size_t body_limit() const override { return 44U << 20; }
 };
+
+class GatewayCompatServer : public GatewayLargeServer {
+protected:
+    bool compatibility() const override { return true; }
+};
+
+TEST_F(GatewayCompatServer, ConfirmationIsARegularReplyWithACanonicalLocalApprovalLink) {
+    {
+        std::scoped_lock lock(mutex_);
+        response_ = gw::confirm_response(std::string(32, 'a'), {"CONFIDENTIAL_MARKER"});
+    }
+    const auto reply = send(request("open-token"));
+    ASSERT_TRUE(reply);
+    EXPECT_EQ(reply->status, 200U);
+    const auto body = nlohmann::json::parse(reply->body);
+    EXPECT_EQ(body["prompt_airlock"]["decision"], "confirmation_required");
+    const auto url = "https://127.0.0.1:" + std::to_string(port_) + "/console/confirm?token=" + std::string(32, 'a');
+    EXPECT_EQ(body["prompt_airlock"]["approval_url"], url);
+    const auto message = gw::parse_provider_answer(reply->body);
+    ASSERT_TRUE(message);
+    EXPECT_NE(message->content.view().find(url), std::string_view::npos);
+    EXPECT_FALSE(reply->keep_alive);
+}
+
+TEST_F(GatewayCompatServer, PolicyBlocksRemainVisibleAndUnreadRequestsClose) {
+    {
+        std::scoped_lock lock(mutex_);
+        response_ = gw::error_response(core::UserRejection{core::ReasonCode::EntityBlocked, {}});
+    }
+    auto blocked = request("open-token", R"({"canary":"private-value"})");
+    const auto rule = send(blocked);
+    ASSERT_TRUE(rule);
+    EXPECT_EQ(rule->status, 200U);
+    EXPECT_EQ(nlohmann::json::parse(rule->body)["prompt_airlock"]["decision"], "blocked");
+    EXPECT_EQ(rule->body.find("private-value"), std::string::npos);
+    EXPECT_FALSE(rule->keep_alive);
+    const auto before = handled();
+    for (const auto grade : {"C", "S", "unknown"}) {
+        blocked.set("X-Prompt-Airlock-Grade", grade);
+        const auto reply = send(blocked);
+        ASSERT_TRUE(reply);
+        EXPECT_EQ(reply->status, 200U);
+        EXPECT_EQ(nlohmann::json::parse(reply->body)["prompt_airlock"]["decision"], "blocked");
+        EXPECT_EQ(reply->body.find("private-value"), std::string::npos);
+        EXPECT_FALSE(reply->keep_alive);
+    }
+    EXPECT_EQ(handled(), before);
+}
+
+TEST_F(GatewayCompatServer, ProviderAndInputErrorsKeepTheirOriginalFailureStatus) {
+    for (const auto error : {gw::EntryError::ProviderFailed, gw::EntryError::BadRequest, gw::EntryError::Unavailable}) {
+        const auto expected = gw::error_response(error);
+        {
+            std::scoped_lock lock(mutex_);
+            response_ = expected;
+        }
+        const auto reply = send(request("open-token"));
+        ASSERT_TRUE(reply);
+        EXPECT_EQ(reply->status, expected.status);
+        EXPECT_EQ(reply->body, expected.body);
+        EXPECT_FALSE(nlohmann::json::parse(reply->body).contains("prompt_airlock"));
+    }
+}
+
+TEST_F(GatewayLargeServer, ApprovalRequiresLocalAuthorityOriginAndItsOwnBodyLimit) {
+    auto approval = request("open-token", R"({"token":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"})");
+    approval.target("/v1/confirmations/approve");
+    EXPECT_EQ(send(approval)->status, 403U);
+    const auto host = "127.0.0.1:" + std::to_string(port_);
+    approval.set(http::field::host, host);
+    approval.set(http::field::origin, "https://example.invalid");
+    EXPECT_EQ(send(approval)->status, 403U);
+    approval.set(http::field::origin, "https://" + host);
+    approval.set("X-Prompt-Airlock-Confirm", std::string(32, 'a'));
+    EXPECT_EQ(send(approval)->status, 400U);
+    approval.erase("X-Prompt-Airlock-Confirm");
+    approval.body() = std::string(gw::confirm_body_bytes + 1, ' ');
+    EXPECT_EQ(send(approval)->status, 413U);
+    approval.body() = R"({"token":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"})";
+    approval.set("X-Prompt-Airlock-Grade", "S");
+    EXPECT_EQ(send(approval)->status, 403U);
+    approval.erase("X-Prompt-Airlock-Grade");
+    approval.erase(http::field::authorization);
+    EXPECT_EQ(send(approval)->status, 401U);
+    EXPECT_EQ(handled(), 0);
+    approval.set(http::field::authorization, "Bearer open-token");
+    EXPECT_EQ(send(approval)->status, 200U);
+    EXPECT_EQ(handled(), 1);
+    std::scoped_lock lock(mutex_);
+    EXPECT_EQ(last_purpose_, gw::RequestPurpose::Approve);
+}
 
 TEST_F(GatewayLargeServer, CountsChunkedAndFixedUploadsAndReleasesSharedBudget) {
     retain_uploads_ = true;

@@ -1,0 +1,27 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>요청 확인 — Prompt Airlock</title>
+  <link rel="icon" href="/console/confirm.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="/console/confirm.css">
+  <script src="/console/confirm.js" defer></script>
+</head>
+<body>
+  <main>
+    <p class="label">Prompt Airlock · 로컬 확인</p>
+    <h1>보내기 전에 확인하세요</h1>
+    <p>확인이 필요한 표지가 있어 요청을 멈췄습니다. 원래 채팅 앱에서 내용을 다시 확인하고, 기관이 공개(O)로 분류한 자료일 때만 승인하세요.</p>
+    <p>실제 기밀이나 민감정보가 있다면 승인하지 말고 원래 요청을 수정하세요. 승인은 같은 본문과 출처에서 한 번만 사용할 수 있고, 처음 확인 요청부터 5분이 지나면 만료됩니다.</p>
+    <form id="approval-form" method="post" action="/v1/confirmations/approve">
+      <label for="origin-token">게이트웨이 출처 token</label>
+      <input id="origin-token" type="password" required maxlength="256" autocomplete="off" spellcheck="false" aria-describedby="token-help">
+      <p id="token-help" class="hint">게이트웨이의 출처 인증에 사용하는 값입니다. 외부 제공자의 API 키를 입력하지 마세요.</p>
+      <button id="approve" type="submit">확인하고 승인</button>
+    </form>
+    <p id="status" role="status" aria-live="polite">승인 뒤 원래 앱에서 같은 요청을 다시 생성하세요. 이 화면에서 외부 전송을 시작하지는 않습니다.</p>
+    <noscript>확인 승인을 처리하려면 JavaScript가 필요합니다.</noscript>
+  </main>
+</body>
+</html>

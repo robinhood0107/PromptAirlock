@@ -1,6 +1,6 @@
 # Prompt Airlock
 
-외부 LLM에 보내는 프롬프트에서 개인정보를 가명 token으로 바꾸고, 응답을 원래 값으로 되돌리는 보안 중계 Gateway입니다. 현재 core, 결정론 탐지기, Vault 와 그 클라이언트까지 구현했고 HTTP 처리는 아직 없습니다. 코드 구조는 [docs/structure.md](docs/structure.md), 외부 의존성과 라이선스는 [docs/dependencies.md](docs/dependencies.md), 설계 결정은 [docs/adr](docs/adr/README.md)에 있습니다.
+외부 LLM에 보내는 프롬프트에서 개인정보를 가명 token으로 바꾸고, 응답을 원래 값으로 되돌리는 보안 중계 Gateway입니다. HTTPS 입구, 보호 처리, Vault, 문서 입력과 미리보기를 제공하며 로컬 페이지에서 확인을 승인할 수 있습니다. 코드 구조는 [docs/structure.md](docs/structure.md), 외부 의존성과 라이선스는 [docs/dependencies.md](docs/dependencies.md), 설계 결정은 [docs/adr](docs/adr/README.md)에 있습니다.
 
 ## 구성
 
@@ -16,6 +16,7 @@
 ## 빌드와 시험
 
 문서 첨부 요청과 처리 범위는 [문서 파일 입력](docs/file-input.md)에 있습니다.
+외부 호출 없는 검사와 앱 연결의 확인 흐름은 [미리보기와 로컬 확인](docs/local-console.md)에 있습니다.
 
 필요한 도구: CMake 3.28 이상, Ninja, vcpkg(`VCPKG_ROOT`), Rust stable. Windows는 Visual Studio 2022 빌드 도구와 LLVM clang-cl, Linux는 gcc-14 또는 clang-23.
 

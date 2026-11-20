@@ -20,6 +20,8 @@ enum class EntryError : std::uint8_t {
     BodyTooLarge,          // 413: 본문 상한 초과
     UnsupportedMediaType,  // 415: application/json 이 아님
     BadRequest,            // 400: HTTP 형식 오류
+    LocalOnly,             // 403: 로컬 콘솔 입구가 아님
+    ConfirmationInvalid,   // 409: 확인 표지가 없거나 만료·재사용·출처 불일치
     Unavailable,           // 503: 처리 단계를 아직 쓸 수 없음
     Overloaded,            // 503: 처리 중 요청이 상한에 닿음
     ProviderFailed,        // 502: provider 연결 실패·시간 초과·오류 응답
@@ -32,9 +34,12 @@ enum class EntryError : std::uint8_t {
     ContextLimit,
 };
 
+enum class ResponseMedia : std::uint8_t { Json, Html, JavaScript, Css, Svg };
+
 struct JsonResponse {
     unsigned status;
-    std::string body;  // JSON
+    std::string body;
+    ResponseMedia media = ResponseMedia::Json;
 };
 
 [[nodiscard]] JsonResponse error_response(EntryError error);

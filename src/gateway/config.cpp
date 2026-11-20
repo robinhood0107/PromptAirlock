@@ -357,7 +357,7 @@ std::expected<Config, ConfigError> parse_config(std::string_view json_text, cons
     if (guard.found()) {
         return fail(ConfigProblem::Duplicate, "");
     }
-    if (auto r = only_keys(root, {"listen", "provider", "origins", "internal_terms", "policy", "output_token_cap", "history_retention_days", "sentence_warn"}, ""); !r) {
+    if (auto r = only_keys(root, {"listen", "provider", "origins", "internal_terms", "policy", "output_token_cap", "history_retention_days", "sentence_warn", "compat"}, ""); !r) {
         return std::unexpected(r.error());
     }
     Config config;
@@ -394,6 +394,17 @@ std::expected<Config, ConfigError> parse_config(std::string_view json_text, cons
             return std::unexpected(value.error());
         }
         config.sentence_warn = (*value)->get<bool>();
+    }
+    if (root.contains("compat")) {
+        auto node = member(root, "compat", "", json::value_t::object);
+        if (!node) return std::unexpected(node.error());
+        if (auto checked = only_keys(**node, {"chat_app"}, "compat"); !checked) return std::unexpected(checked.error());
+        auto enabled = member(**node, "chat_app", "compat", json::value_t::boolean);
+        if (!enabled) return std::unexpected(enabled.error());
+        config.compat.chat_app = (*enabled)->get<bool>();
+        if (config.compat.chat_app && config.listen.address != "127.0.0.1" && config.listen.address != "0.0.0.0") {
+            return fail(ConfigProblem::InvalidValue, "compat.chat_app");
+        }
     }
     return config;
 }

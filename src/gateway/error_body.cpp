@@ -34,13 +34,17 @@ Shape entry_shape(EntryError error) {
         case EntryError::NotFound:
             return {404, "invalid_request_error", "not_found", "Unknown endpoint."};
         case EntryError::MethodNotAllowed:
-            return {405, "invalid_request_error", "method_not_allowed", "Only POST is accepted."};
+            return {405, "invalid_request_error", "method_not_allowed", "The HTTP method is not accepted."};
         case EntryError::BodyTooLarge:
             return {413, "invalid_request_error", "body_too_large", "Request body is too large."};
         case EntryError::UnsupportedMediaType:
             return {415, "invalid_request_error", "unsupported_media_type", "Content-Type must be application/json."};
         case EntryError::BadRequest:
             return {400, "invalid_request_error", "bad_request", "Malformed HTTP request."};
+        case EntryError::LocalOnly:
+            return {403, "permission_error", "local_only", "This operation requires the local console."};
+        case EntryError::ConfirmationInvalid:
+            return {409, "invalid_request_error", "confirmation_invalid", "The confirmation is invalid or no longer available."};
         case EntryError::Unavailable:
             return {503, "api_error", "unavailable", "The gateway cannot process requests right now."};
         case EntryError::Overloaded:

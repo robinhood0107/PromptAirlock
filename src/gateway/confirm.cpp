@@ -1,10 +1,17 @@
 #include "prompt_airlock/gateway/confirm.hpp"
 
 #include <random>
+#include <algorithm>
 
 namespace prompt_airlock::gateway {
 
-std::optional<std::string> ConfirmLedger::issue(std::string_view body_sha256, Clock::time_point now) {
+bool valid_confirmation_token(std::string_view token) noexcept {
+    return token.size() == confirm_token_chars && std::ranges::all_of(token, [](char c) {
+        return (c >= '0' && c <= '9') || (c >= 'a' && c <= 'f');
+    });
+}
+
+std::optional<std::string> ConfirmLedger::issue(std::string_view body_sha256, std::string_view origin) {
     std::random_device device;  // 운영체제 난수(MSVC rand_s, Linux /dev/urandom)
     std::string token;
     constexpr std::string_view hex = "0123456789abcdef";
@@ -12,23 +19,50 @@ std::optional<std::string> ConfirmLedger::issue(std::string_view body_sha256, Cl
         token.push_back(hex[device() % 16]);
     }
     std::lock_guard lock(mutex_);
+    const auto now = now_();
     std::erase_if(entries_, [&](const auto& e) { return e.second.expires <= now; });
     if (entries_.size() >= confirm_capacity) {
         return std::nullopt;
     }
-    entries_.insert_or_assign(token, Entry{std::string(body_sha256), now + confirm_ttl});
+    entries_.insert_or_assign(token, Entry{std::string(body_sha256), std::string(origin), now + confirm_ttl});
     return token;
 }
 
-bool ConfirmLedger::redeem(std::string_view token, std::string_view body_sha256, Clock::time_point now) {
+bool ConfirmLedger::redeem(std::string_view token, std::string_view body_sha256, std::string_view origin) {
     std::lock_guard lock(mutex_);
+    const auto now = now_();
     const auto found = entries_.find(std::string(token));
-    if (found == entries_.end()) {
+    if (found == entries_.end() || found->second.origin != origin) {
         return false;
     }
     const bool ok = found->second.expires > now && found->second.body_sha256 == body_sha256;
     entries_.erase(found);
     return ok;
+}
+
+bool ConfirmLedger::approve(std::string_view token, std::string_view origin,
+                            const std::function<bool(std::string_view)>& check) {
+    std::lock_guard lock(mutex_);
+    const auto found = entries_.find(std::string(token));
+    if (found == entries_.end() || found->second.origin != origin ||
+        found->second.expires <= now_() || found->second.state != State::Pending) return false;
+    if (!check(found->second.body_sha256)) return false;
+    if (found->second.expires <= now_()) return false;
+    found->second.state = State::Approved;
+    return true;
+}
+
+bool ConfirmLedger::redeem_approved(std::string_view body_sha256, std::string_view origin) {
+    std::lock_guard lock(mutex_);
+    const auto now = now_();
+    for (auto entry = entries_.begin(); entry != entries_.end(); ++entry) {
+        if (entry->second.state == State::Approved && entry->second.expires > now &&
+            entry->second.origin == origin && entry->second.body_sha256 == body_sha256) {
+            entries_.erase(entry);
+            return true;
+        }
+    }
+    return false;
 }
 
 }  // namespace prompt_airlock::gateway
