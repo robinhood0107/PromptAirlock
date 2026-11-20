@@ -15,6 +15,7 @@
 #include <chrono>
 #include <future>
 #include <iostream>
+#include <iterator>
 #include <optional>
 #include <thread>
 #include <vector>
@@ -284,6 +285,48 @@ TEST(ProviderCredential, StoreReplacesFileAtomically) {
 #endif
     std::filesystem::remove_all(dir);
 }
+
+#ifdef _WIN32
+TEST(ProviderCredential, ReadHandleAllowsAtomicReplacementAndKeepsOldFileIdentity) {
+    const auto dir = std::filesystem::temp_directory_path() /
+                     ("pa-cred-open-reader-" + std::to_string(std::chrono::steady_clock::now().time_since_epoch().count()));
+    std::filesystem::create_directories(dir);
+    const auto path = dir / "credential.bin";
+    ASSERT_TRUE(pv::store_credential(path, "before-replacement").has_value());
+    std::ifstream input(path, std::ios::binary);
+    ASSERT_TRUE(input);
+    const std::vector<char> before((std::istreambuf_iterator<char>(input)), std::istreambuf_iterator<char>());
+    input.close();
+
+    HANDLE opened = CreateFileW(path.c_str(), GENERIC_READ, FILE_SHARE_READ | FILE_SHARE_DELETE, nullptr,
+                                OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, nullptr);
+    ASSERT_NE(opened, INVALID_HANDLE_VALUE);
+    struct CloseHandleOnExit {
+        HANDLE value;
+        ~CloseHandleOnExit() { CloseHandle(value); }
+    } close{opened};
+
+    const auto replacement = pv::store_credential(path, "after-replacement");
+    if (!replacement) EXPECT_EQ(replacement.error(), pv::CredentialError::ReplaceFailed);
+    std::vector<char> from_open_handle(before.size());
+    DWORD received = 0;
+    ASSERT_TRUE(ReadFile(opened, from_open_handle.data(), static_cast<DWORD>(from_open_handle.size()), &received, nullptr));
+    ASSERT_EQ(received, before.size());
+    EXPECT_EQ(from_open_handle, before);
+    const auto current = pv::load_credential(path);
+    ASSERT_TRUE(current);
+    EXPECT_EQ(current->view(), replacement ? "after-replacement" : "before-replacement");
+    std::size_t temp_files = 0;
+    for (const auto& entry : std::filesystem::directory_iterator(dir)) {
+        temp_files += entry.path().filename().string().starts_with("credential.bin.tmp.") ? 1 : 0;
+    }
+    EXPECT_EQ(temp_files, 0);
+    std::cout << "read_handle_replace=" << (replacement ? "success" : "ReplaceFailed")
+              << " open_handle=old-complete target=" << (replacement ? "new-complete" : "old-complete")
+              << " temp_files=" << temp_files << '\n';
+    std::filesystem::remove_all(dir);
+}
+#endif
 
 TEST(ProviderCredential, ConcurrentStoresUseDistinctTemporaryFiles) {
     const auto dir = std::filesystem::temp_directory_path() /

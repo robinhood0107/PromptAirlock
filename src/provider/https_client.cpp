@@ -31,6 +31,7 @@
 #include <fstream>
 #include <iterator>
 #include <limits>
+#include <span>
 #include <string_view>
 #include <utility>
 
@@ -72,31 +73,106 @@ gateway::ProviderError classify(const beast::error_code& ec) {
     return ec == beast::error::timeout ? gateway::ProviderError::Timeout : gateway::ProviderError::Unavailable;
 }
 
+struct CredentialFileBuffer {
+    std::string value;
+    ~CredentialFileBuffer() { core::secure_wipe(std::span<char>{value.data(), value.size()}); }
+};
+
+std::expected<core::SensitiveText, CredentialError> read_credential_file(const std::filesystem::path& path) {
+#ifdef _WIN32
+    HANDLE file = CreateFileW(path.c_str(), GENERIC_READ, FILE_SHARE_READ | FILE_SHARE_DELETE, nullptr, OPEN_EXISTING,
+                              FILE_ATTRIBUTE_NORMAL, nullptr);
+    if (file == INVALID_HANDLE_VALUE) {
+        return std::unexpected(CredentialError::Unreadable);
+    }
+    struct CloseHandleOnExit {
+        HANDLE value;
+        ~CloseHandleOnExit() { CloseHandle(value); }
+    } close{file};
+    LARGE_INTEGER file_size{};
+    if (!GetFileSizeEx(file, &file_size) || file_size.QuadPart < 0 ||
+        static_cast<unsigned long long>(file_size.QuadPart) > std::numeric_limits<std::size_t>::max()) {
+        return std::unexpected(CredentialError::Unreadable);
+    }
+#else
+    const int file = ::open(path.c_str(), O_RDONLY | O_CLOEXEC);
+    if (file < 0) {
+        return std::unexpected(CredentialError::Unreadable);
+    }
+    struct CloseDescriptorOnExit {
+        int value;
+        ~CloseDescriptorOnExit() { ::close(value); }
+    } close{file};
+    struct stat status {};
+    if (::fstat(file, &status) != 0) {
+        return std::unexpected(CredentialError::Unreadable);
+    }
+    if ((status.st_mode & 077) != 0) {
+        return std::unexpected(CredentialError::NotProtected);
+    }
+    if (status.st_size < 0 || static_cast<unsigned long long>(status.st_size) > std::numeric_limits<std::size_t>::max()) {
+        return std::unexpected(CredentialError::Unreadable);
+    }
+#endif
+    CredentialFileBuffer bytes;
+#ifdef _WIN32
+    bytes.value.resize(static_cast<std::size_t>(file_size.QuadPart));
+    std::size_t offset = 0;
+    while (offset < bytes.value.size()) {
+        const auto remaining = bytes.value.size() - offset;
+        const DWORD requested = remaining > MAXDWORD ? MAXDWORD : static_cast<DWORD>(remaining);
+        DWORD received = 0;
+        if (!ReadFile(file, bytes.value.data() + offset, requested, &received, nullptr) || received == 0) {
+            return std::unexpected(CredentialError::Unreadable);
+        }
+        offset += received;
+    }
+#else
+    bytes.value.resize(static_cast<std::size_t>(status.st_size));
+    std::size_t offset = 0;
+    while (offset < bytes.value.size()) {
+        const auto remaining = bytes.value.size() - offset;
+        const auto requested = remaining > static_cast<std::size_t>(std::numeric_limits<ssize_t>::max())
+            ? static_cast<std::size_t>(std::numeric_limits<ssize_t>::max()) : remaining;
+        const auto received = ::read(file, bytes.value.data() + offset, requested);
+        if (received < 0 && errno == EINTR) continue;
+        if (received <= 0) {
+            return std::unexpected(CredentialError::Unreadable);
+        }
+        offset += static_cast<std::size_t>(received);
+    }
+#endif
+    return core::SensitiveText(std::move(bytes.value));
+}
+
 }  // namespace
 
 std::expected<core::SensitiveText, CredentialError> load_credential(const std::filesystem::path& path) {
-    std::ifstream in(path, std::ios::binary);
-    if (!in) {
-        return std::unexpected(CredentialError::Unreadable);
-    }
-    std::string value((std::istreambuf_iterator<char>(in)), std::istreambuf_iterator<char>());
+    auto file_bytes = read_credential_file(path);
+    if (!file_bytes) return std::unexpected(file_bytes.error());
 #ifdef _WIN32
-    DATA_BLOB sealed{static_cast<DWORD>(value.size()), reinterpret_cast<BYTE*>(value.data())};
+    if (file_bytes->size() > std::numeric_limits<DWORD>::max()) {
+        return std::unexpected(CredentialError::NotProtected);
+    }
+    DATA_BLOB sealed{static_cast<DWORD>(file_bytes->size()),
+                     reinterpret_cast<BYTE*>(const_cast<char*>(file_bytes->view().data()))};
     DATA_BLOB opened{};
     if (CryptUnprotectData(&sealed, nullptr, nullptr, nullptr, nullptr, CRYPTPROTECT_UI_FORBIDDEN, &opened) == FALSE) {
         return std::unexpected(CredentialError::NotProtected);
     }
+    struct WipeDpapiBufferOnExit {
+        DATA_BLOB& value;
+        ~WipeDpapiBufferOnExit() {
+            if (value.pbData != nullptr) {
+                SecureZeroMemory(value.pbData, value.cbData);
+                LocalFree(value.pbData);
+            }
+        }
+    } clear{opened};
     std::string plain(reinterpret_cast<const char*>(opened.pbData), opened.cbData);
-    SecureZeroMemory(opened.pbData, opened.cbData);
-    LocalFree(opened.pbData);
     core::SensitiveText owned(std::move(plain));  // 푼 값을 넘겨 지우게 한다
 #else
-    struct stat st {};
-    if (::stat(path.c_str(), &st) != 0 || (st.st_mode & 077) != 0) {
-        core::SensitiveText discard(std::move(value));
-        return std::unexpected(CredentialError::NotProtected);
-    }
-    core::SensitiveText owned(std::move(value));  // 읽은 버퍼를 넘겨 지우게 한다
+    core::SensitiveText owned(std::move(*file_bytes));
 #endif
     std::string_view text = owned.view();
     while (!text.empty() && (text.back() == '\n' || text.back() == '\r')) {
