@@ -58,37 +58,68 @@ struct SegmentSnapshot {
     fs::path path;
     std::uintmax_t size = 0;
     std::optional<std::pair<fs::path, std::uintmax_t>> checkpoint;
+    bool active = false;
 };
 
-std::expected<std::string, AuditError> read_snapshot(const fs::path& path, std::uintmax_t size, std::size_t limit) {
-    if (size > limit || size > static_cast<std::uintmax_t>(std::numeric_limits<std::streamsize>::max())) {
-        return std::unexpected(AuditError::TooLarge);
-    }
-    std::ifstream in(path, std::ios::binary);
-    if (!in) return std::unexpected(AuditError::Io);
-    std::string data(static_cast<std::size_t>(size), '\0');
-    if (data.empty()) return std::unexpected(AuditError::Corrupt);
-    in.read(data.data(), static_cast<std::streamsize>(data.size()));
-    if (in.gcount() != static_cast<std::streamsize>(data.size())) return std::unexpected(AuditError::Corrupt);
-    if (data.back() != '\n') return std::unexpected(AuditError::Corrupt);
-    return data;
-}
+struct TailLines {
+    std::vector<std::string> newest_first;
+    std::size_t bytes_read = 0;
+    bool complete = false;
+};
 
-std::expected<std::string, AuditError> read_tail_line(const fs::path& path, std::uint64_t file_bytes,
-                                                     std::size_t line_bytes) {
-    if (line_bytes == 0 || line_bytes > recent_query_max_bytes || file_bytes < line_bytes ||
-        file_bytes > static_cast<std::uint64_t>(std::numeric_limits<std::streamoff>::max())) {
-        return std::unexpected(AuditError::TooLarge);
+std::expected<TailLines, AuditError> read_tail_lines(const fs::path& path, std::uintmax_t file_bytes,
+                                                     std::size_t byte_limit, std::size_t line_limit,
+                                                     std::size_t max_lines) {
+    TailLines result;
+    if (file_bytes == 0) return std::unexpected(AuditError::Corrupt);
+    if (file_bytes > static_cast<std::uintmax_t>(std::numeric_limits<std::streamoff>::max()) ||
+        byte_limit == 0 || max_lines == 0) {
+        return result;
     }
     std::ifstream in(path, std::ios::binary);
     if (!in) return std::unexpected(AuditError::Io);
-    in.seekg(static_cast<std::streamoff>(file_bytes - line_bytes));
-    std::string line(line_bytes, '\0');
-    in.read(line.data(), static_cast<std::streamsize>(line.size()));
-    if (in.gcount() != static_cast<std::streamsize>(line.size())) return std::unexpected(AuditError::Corrupt);
-    if (line.back() != '\n' || line.find('\n') != line.size() - 1) return std::unexpected(AuditError::Corrupt);
-    line.pop_back();
-    return line;
+
+    constexpr std::size_t chunk_bytes = 16U << 10;
+    std::uintmax_t position = file_bytes;
+    std::string reverse_line;
+    bool first_byte = true;
+    while (position != 0) {
+        if (result.bytes_read == byte_limit) return result;
+        const auto count = static_cast<std::size_t>(std::min<std::uintmax_t>(
+            std::min<std::uintmax_t>(position, chunk_bytes), byte_limit - result.bytes_read));
+        position -= count;
+        in.clear();
+        in.seekg(static_cast<std::streamoff>(position));
+        std::vector<char> chunk(count);
+        in.read(chunk.data(), static_cast<std::streamsize>(chunk.size()));
+        if (in.gcount() != static_cast<std::streamsize>(chunk.size())) {
+            return std::unexpected(AuditError::Corrupt);
+        }
+        result.bytes_read += count;
+        for (std::size_t i = chunk.size(); i != 0; --i) {
+            const auto offset = position + i - 1;
+            const char byte = chunk[i - 1];
+            if (first_byte) {
+                first_byte = false;
+                if (byte != '\n') return std::unexpected(AuditError::Corrupt);
+                continue;
+            }
+            if (byte == '\n') {
+                if (reverse_line.empty()) return std::unexpected(AuditError::Corrupt);
+                result.newest_first.emplace_back(reverse_line.rbegin(), reverse_line.rend());
+                reverse_line.clear();
+                if (result.newest_first.size() >= max_lines) return result;
+            } else {
+                if (reverse_line.size() >= line_limit) return result;
+                reverse_line.push_back(byte);
+            }
+            if (offset == 0 && !reverse_line.empty()) break;
+        }
+    }
+    if (first_byte || reverse_line.empty()) return std::unexpected(AuditError::Corrupt);
+    result.newest_first.emplace_back(reverse_line.rbegin(), reverse_line.rend());
+    result.complete = true;
+    return result;
 }
 
 bool valid_stamp(std::string_view value) {
@@ -224,7 +255,7 @@ std::expected<int, AuditError> AuditLog::expire(Clock::time_point now) {
     return expire_locked(now);
 }
 
-std::expected<std::vector<json>, AuditError> AuditLog::read_recent(Clock::time_point now) {
+std::expected<RecentRead, AuditError> AuditLog::read_recent(Clock::time_point now) {
     struct ActiveSnapshot {
         std::string day;
         std::string last_hash;
@@ -234,13 +265,12 @@ std::expected<std::vector<json>, AuditError> AuditLog::read_recent(Clock::time_p
         fs::path path;
     } active;
     std::vector<SegmentSnapshot> snapshots;
-    std::size_t total_bytes = 0;
     {
         std::scoped_lock lock(mutex_);
         active = {day_, last_hash_, lines_, bytes_, last_line_bytes_, {}};
         if (!active.day.empty()) {
             if ((active.lines == 0) != (active.bytes == 0) ||
-                (active.lines == 0) != (active.last_line_bytes == 0)) {
+                (active.lines == 0) != (active.last_line_bytes == 0) || active.last_line_bytes > active.bytes) {
                 return std::unexpected(AuditError::Truncated);
             }
             if (active.lines != 0) {
@@ -261,102 +291,149 @@ std::expected<std::vector<json>, AuditError> AuditLog::read_recent(Clock::time_p
             }
             const auto size = fs::file_size(path, ec);
             if (ec) return std::unexpected(AuditError::Io);
-            if (size > recent_query_max_bytes - total_bytes) return std::unexpected(AuditError::TooLarge);
-            total_bytes += static_cast<std::size_t>(size);
 
             std::optional<std::pair<fs::path, std::uintmax_t>> checkpoint;
             const auto cp_path = checkpoint_path(dir_, day);
             const bool has_checkpoint = fs::exists(cp_path, ec);
             if (ec) return std::unexpected(AuditError::Io);
+            const bool is_active = day == active.day;
+            if (has_checkpoint == is_active) return std::unexpected(AuditError::Truncated);
             if (has_checkpoint) {
                 const auto checkpoint_size = fs::file_size(cp_path, ec);
                 if (ec) return std::unexpected(AuditError::Io);
-                if (checkpoint_size > 256) return std::unexpected(AuditError::Truncated);
-                if (checkpoint_size > recent_query_max_bytes - total_bytes) return std::unexpected(AuditError::TooLarge);
-                total_bytes += static_cast<std::size_t>(checkpoint_size);
+                if (checkpoint_size == 0 || checkpoint_size > 256) return std::unexpected(AuditError::Truncated);
                 checkpoint.emplace(cp_path, checkpoint_size);
             }
-            snapshots.push_back({day, path, size, std::move(checkpoint)});
+            snapshots.push_back({day, path, size, std::move(checkpoint), is_active});
         }
     }
 
-    if (active.lines != 0) {
-        auto tail = read_tail_line(active.path, active.bytes, active.last_line_bytes);
-        if (!tail) {
-            return std::unexpected(tail.error() == AuditError::TooLarge ? AuditError::Corrupt : tail.error());
-        }
-        auto last = parse_line(*tail);
-        if (!last) return std::unexpected(last.error());
-        if (last->hash != active.last_hash || !valid_record(*last, active.day)) {
-            return std::unexpected(AuditError::Corrupt);
-        }
-    }
-
-    std::vector<json> recent;
-    std::optional<std::string> previous_hash;
+    RecentRead result;
+    std::vector<json> newest_first;
+    std::size_t total_bytes = 0;
     std::size_t total_lines = 0;
+    std::optional<std::string> expected_older_hash;
     const std::string earliest = stamp(now - recent_query_window);
     const std::string latest = stamp(now);
-    for (std::size_t i = 0; i < snapshots.size(); ++i) {
-        const auto& snapshot = snapshots[i];
-        auto data = read_snapshot(snapshot.path, snapshot.size, recent_query_max_bytes);
-        if (!data) return std::unexpected(data.error());
-        std::optional<std::string> checkpoint_text;
-        if (snapshot.checkpoint) {
-            auto contents = read_snapshot(snapshot.checkpoint->first, snapshot.checkpoint->second, 256);
-            if (!contents) {
-                return std::unexpected(contents.error() == AuditError::TooLarge ? AuditError::Truncated : contents.error());
-            }
-            checkpoint_text.emplace(std::move(*contents));
+    const std::string earliest_day = earliest.substr(0, 10);
+    for (auto snapshot_it = snapshots.rbegin(); snapshot_it != snapshots.rend(); ++snapshot_it) {
+        const auto& snapshot = *snapshot_it;
+        if (snapshot.day < earliest_day) break;
+        if (total_bytes == recent_query_max_bytes || total_lines == recent_query_max_lines) {
+            result.complete = false;
+            break;
         }
-        std::vector<Line> lines;
-        std::size_t start = 0;
-        while (start < data->size()) {
-            const auto end = data->find('\n', start);
-            if (end == std::string::npos || end == start) return std::unexpected(AuditError::Corrupt);
-            const std::string_view text(data->data() + start, end - start);
-            if (text.size() > recent_query_max_line_bytes) return std::unexpected(AuditError::TooLarge);
-            auto line = parse_line(text);
-            if (!line) return std::unexpected(line.error());
-            const auto& record = line->record;
-            if (!valid_record(*line, snapshot.day)) return std::unexpected(AuditError::Corrupt);
-            const auto& link = record["prev"].get_ref<const std::string&>();
-            if (previous_hash && link != *previous_hash) return std::unexpected(AuditError::BrokenChain);
-            previous_hash = line->hash;
-            lines.push_back(std::move(*line));
-            ++total_lines;
-            if (total_lines > recent_query_max_lines) return std::unexpected(AuditError::TooLarge);
-            start = end + 1;
-        }
-        if (lines.empty()) return std::unexpected(AuditError::Corrupt);
 
-        if (checkpoint_text) {
-            const std::string_view cp_text(*checkpoint_text);
+        std::optional<std::uint64_t> checkpoint_lines;
+        std::optional<std::string> checkpoint_hash;
+        if (snapshot.checkpoint) {
+            const auto checkpoint_size = snapshot.checkpoint->second;
+            if (checkpoint_size > recent_query_max_bytes - total_bytes) {
+                result.complete = false;
+                break;
+            }
+            std::error_code ec;
+            if (fs::file_size(snapshot.checkpoint->first, ec) != checkpoint_size || ec) {
+                return std::unexpected(ec ? AuditError::Io : AuditError::Truncated);
+            }
+            std::ifstream checkpoint_file(snapshot.checkpoint->first, std::ios::binary);
+            if (!checkpoint_file) return std::unexpected(AuditError::Io);
+            std::string checkpoint_text(static_cast<std::size_t>(checkpoint_size), '\0');
+            checkpoint_file.read(checkpoint_text.data(), static_cast<std::streamsize>(checkpoint_text.size()));
+            if (checkpoint_file.gcount() != static_cast<std::streamsize>(checkpoint_text.size())) {
+                return std::unexpected(AuditError::Corrupt);
+            }
+            if (fs::file_size(snapshot.checkpoint->first, ec) != checkpoint_size || ec) {
+                return std::unexpected(ec ? AuditError::Io : AuditError::Truncated);
+            }
+            const std::string_view cp_text(checkpoint_text);
             const auto cp_end = cp_text.find('\n');
-            if (cp_end == std::string_view::npos || cp_end + 1 != cp_text.size()) return std::unexpected(AuditError::Truncated);
+            if (cp_end == std::string_view::npos || cp_end + 1 != cp_text.size()) {
+                return std::unexpected(AuditError::Truncated);
+            }
             const json checkpoint = json::parse(cp_text.substr(0, cp_end), nullptr, false);
             if (!checkpoint.is_object() || checkpoint.size() != 2 || !checkpoint.contains("lines") ||
                 !checkpoint["lines"].is_number_unsigned() || !checkpoint.contains("last_hash") ||
-                !checkpoint["last_hash"].is_string() ||
-                checkpoint["lines"].get<std::uint64_t>() != lines.size() ||
-                checkpoint["last_hash"].get_ref<const std::string&>() != lines.back().hash) {
+                !checkpoint["last_hash"].is_string()) {
                 return std::unexpected(AuditError::Truncated);
             }
-        } else if (i + 1 < snapshots.size()) {
+            const auto hash = checkpoint["last_hash"].get<std::string>();
+            if (!valid_link(hash)) return std::unexpected(AuditError::Truncated);
+            checkpoint_lines = checkpoint["lines"].get<std::uint64_t>();
+            checkpoint_hash.emplace(hash);
+            total_bytes += static_cast<std::size_t>(checkpoint_size);
+        }
+
+        std::error_code ec;
+        const auto before_size = fs::file_size(snapshot.path, ec);
+        if (ec) return std::unexpected(AuditError::Io);
+        if ((snapshot.active && before_size < snapshot.size) || (!snapshot.active && before_size != snapshot.size)) {
+            return std::unexpected(AuditError::Truncated);
+        }
+        const auto remaining_lines = recent_query_max_lines - total_lines;
+        auto tail = read_tail_lines(snapshot.path, snapshot.size, recent_query_max_bytes - total_bytes,
+                                    recent_query_max_line_bytes, remaining_lines);
+        if (!tail) return std::unexpected(tail.error());
+        total_bytes += tail->bytes_read;
+
+        std::vector<Line> lines;
+        lines.reserve(tail->newest_first.size());
+        std::optional<std::string> expected_hash;
+        for (const auto& text : tail->newest_first) {
+            auto line = parse_line(text);
+            if (!line) return std::unexpected(line.error());
+            if (!valid_record(*line, snapshot.day)) return std::unexpected(AuditError::Corrupt);
+            if (expected_hash && line->hash != *expected_hash) return std::unexpected(AuditError::BrokenChain);
+            expected_hash = line->record["prev"].get_ref<const std::string&>();
+            lines.push_back(std::move(*line));
+        }
+        if (lines.empty()) {
+            if (expected_older_hash && checkpoint_hash && *checkpoint_hash != *expected_older_hash) {
+                return std::unexpected(AuditError::BrokenChain);
+            }
+            result.complete = false;
+            break;
+        }
+        total_lines += lines.size();
+
+        const std::string& end_hash = snapshot.active ? active.last_hash : *checkpoint_hash;
+        if (lines.front().hash != end_hash) return std::unexpected(AuditError::Truncated);
+        if (snapshot.active) {
+            if (lines.front().record["ts"].get_ref<const std::string&>().substr(0, 10) != active.day ||
+                tail->newest_first.front().size() + 1 != active.last_line_bytes || lines.size() > active.lines ||
+                (tail->complete && lines.size() != active.lines)) {
+                return std::unexpected(AuditError::Truncated);
+            }
+        } else if (*checkpoint_hash != end_hash || *checkpoint_lines < lines.size() ||
+                   (tail->complete && *checkpoint_lines != lines.size())) {
             return std::unexpected(AuditError::Truncated);
         }
 
-        if (snapshot.day == active.day && active.lines != 0 &&
-            (data->size() != active.bytes || lines.size() != active.lines || lines.back().hash != active.last_hash)) {
-            return std::unexpected(AuditError::Truncated);
+        if (expected_older_hash && end_hash != *expected_older_hash) {
+            return std::unexpected(AuditError::BrokenChain);
         }
 
-        for (auto& line : lines) {
-            const auto& timestamp = line.record["ts"].get_ref<const std::string&>();
-            if (timestamp >= earliest && timestamp <= latest) recent.push_back(std::move(line.record));
+        const auto after_size = fs::file_size(snapshot.path, ec);
+        if (ec) return std::unexpected(AuditError::Io);
+        if ((snapshot.active && after_size < snapshot.size) || (!snapshot.active && after_size != snapshot.size)) {
+            return std::unexpected(AuditError::Truncated);
         }
+        if (!tail->complete) {
+            result.complete = false;
+            for (auto& line : lines) newest_first.push_back(std::move(line.record));
+            break;
+        }
+
+        expected_older_hash = lines.back().record["prev"].get<std::string>();
+        for (auto& line : lines) newest_first.push_back(std::move(line.record));
     }
-    return recent;
+
+    std::ranges::reverse(newest_first);
+    for (auto& record : newest_first) {
+        const auto& timestamp = record["ts"].get_ref<const std::string&>();
+        if (timestamp >= earliest && timestamp <= latest) result.records.push_back(std::move(record));
+    }
+    return result;
 }
 
 std::expected<void, AuditError> AuditLog::write_line(std::string_view kind, std::string_view severity, json fields,

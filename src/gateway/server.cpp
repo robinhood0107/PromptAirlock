@@ -668,8 +668,12 @@ JsonResponse admin_read_response(const AdminReadRequest& request, std::string_vi
         return error_response(EntryError::Unavailable);
     }
 
+    const auto& records = read->records;
+    const bool complete = read->complete;
+    const std::string_view read_status = complete ? "available" : "partial";
+    const std::string_view verification_scope = complete ? "recent_segments" : "verified_latest_suffix";
     json response;
-    std::string_view audit_result = "read";
+    std::string_view audit_result = complete ? "read" : "range_limited";
     if (request.kind == AdminReadKind::Counts) {
         std::uint64_t requests = 0;
         std::uint64_t request_rejections = 0;
@@ -681,7 +685,7 @@ JsonResponse admin_read_response(const AdminReadRequest& request, std::string_vi
         std::uint64_t authentication_events = 0;
         std::uint64_t admin_reads = 0;
         std::uint64_t other = 0;
-        for (const auto& record : *read) {
+        for (const auto& record : records) {
             const auto kind = record["kind"].get_ref<const std::string&>();
             if (kind == "request") {
                 ++requests;
@@ -703,26 +707,26 @@ JsonResponse admin_read_response(const AdminReadRequest& request, std::string_vi
             {"previews", previews}, {"confirmations", confirmations}, {"credential_rotations", credential_rotations},
             {"egress_prepared", egress_prepared}, {"provider_response_records", provider_response_records},
             {"authentication_events", authentication_events}, {"admin_reads", admin_reads}, {"other", other}};
-        response = {{"status", "available"}, {"complete", true},
-                    {"window_hours", audit::recent_query_window.count()}, {"verified_records", read->size()},
-                    {"verification_scope", "recent_segments"}, {"counts", std::move(counts)}};
+        response = {{"status", read_status}, {"complete", complete},
+                    {"window_hours", audit::recent_query_window.count()}, {"verified_records", records.size()},
+                    {"verification_scope", verification_scope}, {"counts", std::move(counts)}};
     } else if (request.kind == AdminReadKind::Events) {
         std::vector<json> items;
-        const auto visible = std::min(read->size(), admin_max_visible_events);
-        const auto end = read->size() > visible ? visible : read->size();
-        const auto reverse_begin = read->rbegin() + static_cast<std::ptrdiff_t>(std::min(request.page * admin_page_size, end));
-        for (auto it = reverse_begin; it != read->rbegin() + static_cast<std::ptrdiff_t>(end) && items.size() < admin_page_size; ++it) {
+        const auto visible = std::min(records.size(), admin_max_visible_events);
+        const auto end = visible;
+        const auto reverse_begin = records.rbegin() + static_cast<std::ptrdiff_t>(std::min(request.page * admin_page_size, end));
+        for (auto it = reverse_begin; it != records.rbegin() + static_cast<std::ptrdiff_t>(end) && items.size() < admin_page_size; ++it) {
             items.push_back(admin_event_metadata(*it));
         }
         const auto offset = request.page * admin_page_size;
         const bool has_more = offset + items.size() < visible;
-        response = {{"status", "available"}, {"complete", true},
-                    {"window_hours", audit::recent_query_window.count()}, {"verification_scope", "recent_segments"},
+        response = {{"status", read_status}, {"complete", complete},
+                    {"window_hours", audit::recent_query_window.count()}, {"verification_scope", verification_scope},
                     {"page", request.page}, {"page_size", admin_page_size}, {"has_more", has_more},
-                    {"truncated", read->size() > admin_max_visible_events}, {"events", std::move(items)}};
+                    {"truncated", records.size() > admin_max_visible_events}, {"events", std::move(items)}};
     } else {
         const json* found = nullptr;
-        for (const auto& record : *read) {
+        for (const auto& record : records) {
             if (record["kind"] == "egress" && record.contains("request_id") && record["request_id"].is_string() &&
                 record["request_id"].get_ref<const std::string&>() == request.request_id) {
                 if (found != nullptr) return error_response(EntryError::Unavailable);
@@ -730,8 +734,15 @@ JsonResponse admin_read_response(const AdminReadRequest& request, std::string_vi
             }
         }
         if (found == nullptr || !found->contains("sent")) {
-            response = admin_egress_out_of_range(request.request_id);
-            audit_result = "out_of_range";
+            if (complete) {
+                response = admin_egress_out_of_range(request.request_id);
+                audit_result = "out_of_range";
+            } else {
+                response = {{"status", "range_limited"}, {"complete", false},
+                            {"window_hours", audit::recent_query_window.count()},
+                            {"verification_scope", verification_scope}};
+                audit_result = "range_limited";
+            }
         } else {
             const auto text = safe_egress_text((*found)["sent"]);
             if (!text) {
@@ -740,7 +751,7 @@ JsonResponse admin_read_response(const AdminReadRequest& request, std::string_vi
             } else {
                 response = {{"status", "prepared"}, {"request_id", request.request_id},
                             {"delivery_confirmed", false}, {"window_hours", audit::recent_query_window.count()},
-                            {"verification_scope", "recent_segments"},
+                            {"complete", complete}, {"verification_scope", verification_scope},
                             {"request_text", *text}};
             }
         }

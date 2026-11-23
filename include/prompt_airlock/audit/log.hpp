@@ -36,6 +36,11 @@ inline constexpr std::size_t recent_query_max_bytes = 16U << 20;
 inline constexpr std::size_t recent_query_max_lines = 8192;
 inline constexpr std::size_t recent_query_max_line_bytes = 1U << 20;
 
+struct RecentRead {
+    std::vector<nlohmann::json> records;
+    bool complete = true;
+};
+
 class AuditLog {
 public:
     // dir 이 없으면 만든다. 마지막 세그먼트의 마지막 해시에서 이어 쓴다.
@@ -50,8 +55,7 @@ public:
     [[nodiscard]] std::expected<int, AuditError> expire(Clock::time_point now = Clock::now());
 
     // 최근 구간의 세그먼트만 제한된 크기로 스냅샷을 읽고 해시 연결을 확인한다.
-    [[nodiscard]] std::expected<std::vector<nlohmann::json>, AuditError> read_recent(
-        Clock::time_point now = Clock::now());
+    [[nodiscard]] std::expected<RecentRead, AuditError> read_recent(Clock::time_point now = Clock::now());
 
     [[nodiscard]] const std::filesystem::path& dir() const noexcept { return dir_; }
 

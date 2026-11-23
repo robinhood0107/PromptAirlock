@@ -143,8 +143,8 @@ TEST_F(AuditLogTest, ReadRecentFiltersItsTimeWindowAndChecksTheCurrentSegmentSta
 
     const auto recent = (*log)->read_recent(now);
     ASSERT_TRUE(recent) << audit::audit_error_name(recent.error());
-    ASSERT_EQ(recent->size(), 1u);
-    EXPECT_EQ((*recent)[0]["n"], 2);
+    ASSERT_EQ(recent->records.size(), 1u);
+    EXPECT_EQ(recent->records[0]["n"], 2);
     EXPECT_TRUE(audit::verify(dir_));
 }
 
@@ -170,15 +170,56 @@ TEST_F(AuditLogTest, ReadRecentRejectsDeletedAndLineBoundaryTruncatedActiveSegme
     EXPECT_EQ(truncated.error(), audit::AuditError::Truncated);
 }
 
-TEST_F(AuditLogTest, ReadRecentMarksOversizedRecordsInsteadOfReturningPartialData) {
+TEST_F(AuditLogTest, ReadRecentReturnsVerifiedNewestSuffixAfterOversizedRecord) {
     auto log = audit::AuditLog::open(dir_, days(365));
     ASSERT_TRUE(log);
     const auto now = day(1);
     ASSERT_TRUE((*log)->append("egress", "info", {{"sent", std::string(audit::recent_query_max_line_bytes + 1, 'x')}}, day(0)));
-    ASSERT_TRUE((*log)->append("request", "info", {}, now));
+    ASSERT_TRUE((*log)->append("request", "info", {{"n", 2}}, now));
+    const auto recent = (*log)->read_recent(now);
+    ASSERT_TRUE(recent) << audit::audit_error_name(recent.error());
+    EXPECT_FALSE(recent->complete);
+    ASSERT_EQ(recent->records.size(), 1u);
+    EXPECT_EQ(recent->records[0]["n"], 2);
+}
+
+TEST_F(AuditLogTest, ReadRecentReturnsVerifiedNewestSuffixWithinByteBudget) {
+    auto log = audit::AuditLog::open(dir_, days(365));
+    ASSERT_TRUE(log);
+    const auto now = audit::Clock::now();
+    const std::string padding(900U << 10, 'x');
+    for (int i = 0; i < 19; ++i) {
+        ASSERT_TRUE((*log)->append("request", "info", {{"n", i}, {"padding", padding}}, now));
+    }
+
+    const auto recent = (*log)->read_recent(now);
+    ASSERT_TRUE(recent) << audit::audit_error_name(recent.error());
+    EXPECT_FALSE(recent->complete);
+    EXPECT_LT(recent->records.size(), 19u);
+    ASSERT_FALSE(recent->records.empty());
+    EXPECT_EQ(recent->records.back()["n"], 18);
+}
+
+TEST_F(AuditLogTest, ReadRecentRejectsDamagedClosedCheckpoint) {
+    auto log = audit::AuditLog::open(dir_, days(365));
+    ASSERT_TRUE(log);
+    const auto now = day(0) + hours(20);
+    ASSERT_TRUE((*log)->append("request", "info", {{"n", 1}}, day(0)));
+    ASSERT_TRUE((*log)->append("request", "info", {{"n", 2}}, day(1)));
+
+    const auto checkpoint_path = dir_ / std::format("audit-{:%F}.checkpoint", floor<days>(day(0)));
+    std::ifstream input(checkpoint_path, std::ios::binary);
+    nlohmann::json checkpoint;
+    input >> checkpoint;
+    ASSERT_TRUE(input);
+    checkpoint["last_hash"] = std::string(64, 'f');
+    std::ofstream output(checkpoint_path, std::ios::binary | std::ios::trunc);
+    output << checkpoint.dump() << '\n';
+    output.close();
+
     const auto recent = (*log)->read_recent(now);
     ASSERT_FALSE(recent);
-    EXPECT_EQ(recent.error(), audit::AuditError::TooLarge);
+    EXPECT_EQ(recent.error(), audit::AuditError::Truncated);
 }
 
 TEST_F(AuditLogTest, RecentReadsSerializeWithConcurrentAppendAndExpire) {
@@ -217,8 +258,8 @@ TEST_F(AuditLogTest, RecentReadKeepsOldRecordsOutOfItsFixedWindow) {
     ASSERT_TRUE((*log)->append("request", "info", {{"n", 2}}, now));
     const auto recent = (*log)->read_recent(now);
     ASSERT_TRUE(recent);
-    ASSERT_EQ(recent->size(), 1u);
-    EXPECT_EQ((*recent)[0]["n"], 2);
+    ASSERT_EQ(recent->records.size(), 1u);
+    EXPECT_EQ(recent->records[0]["n"], 2);
 }
 
 }  // namespace

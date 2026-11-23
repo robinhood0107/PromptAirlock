@@ -24,6 +24,38 @@ const credentialSave = document.getElementById('credential-save');
 const credentialStatus = document.getElementById('credential-status');
 const gatewayCheck = document.getElementById('gateway-check');
 const gatewayStatus = document.getElementById('gateway-status');
+const adminToken = document.getElementById('admin-token');
+const adminPanel = document.getElementById('admin-history');
+const adminOpen = document.getElementById('admin-open');
+const adminClose = document.getElementById('admin-close');
+const adminStatus = document.getElementById('admin-status');
+const adminCountsLoad = document.getElementById('admin-counts-load');
+const adminEventsLoad = document.getElementById('admin-events-load');
+const adminCountsSection = document.getElementById('admin-counts-section');
+const adminCountsScope = document.getElementById('admin-counts-scope');
+const adminEventsSection = document.getElementById('admin-events-section');
+const adminEventsScope = document.getElementById('admin-events-scope');
+const adminEvents = document.getElementById('admin-events');
+const adminEventsPrevious = document.getElementById('admin-events-previous');
+const adminEventsNext = document.getElementById('admin-events-next');
+const adminEventsPageLabel = document.getElementById('admin-events-page');
+const adminCountFields = [
+  ['requests', 'admin-count-requests'], ['request_rejections', 'admin-count-rejections'],
+  ['previews', 'admin-count-previews'], ['confirmations', 'admin-count-confirmations'],
+  ['credential_rotations', 'admin-count-rotations'], ['egress_prepared', 'admin-count-egress'],
+  ['provider_response_records', 'admin-count-provider-responses'],
+  ['authentication_events', 'admin-count-auth'], ['admin_reads', 'admin-count-admin-reads'], ['other', 'admin-count-other']
+];
+const adminEventFields = [
+  ['origin', '출처'], ['severity', '심각도'], ['status', 'HTTP 상태'], ['result', '판정'],
+  ['grade', '등급'], ['entity_count', '가명 표지 건수'], ['blocked_type_count', '차단 종류 수'],
+  ['duration_ms', '처리 시간(ms)'], ['operation', '조회 종류']
+];
+let adminBusy = false;
+let adminController = null;
+let adminGeneration = 0;
+let adminEventsPage = 0;
+let adminEventsHasMore = false;
 const maxTextBytes = 64 * 1024;
 const maxFileBytes = 32 * 1024 * 1024;
 const blockedCodes = new Set([
@@ -221,6 +253,311 @@ gatewayCheck.addEventListener('click', async () => {
     gatewayCheckBusy = false;
   }
 });
+
+function setAdminStatus(message, state = 'neutral') {
+  adminStatus.textContent = message;
+  adminStatus.dataset.state = state;
+}
+
+function updateAdminButtons() {
+  adminCountsLoad.disabled = adminBusy;
+  adminEventsLoad.disabled = adminBusy;
+  adminEventsPrevious.disabled = adminBusy || adminEventsPage === 0;
+  adminEventsNext.disabled = adminBusy || !adminEventsHasMore || adminEventsPage >= 39;
+  document.querySelectorAll('.admin-detail-load').forEach(control => { control.disabled = adminBusy; });
+}
+
+function showAdminError(reply, data) {
+  const code = data && data.error && typeof data.error.code === 'string' ? data.error.code : '';
+  if (reply.status === 401 || reply.status === 403 || reply.status === 404 || reply.status === 429 ||
+      code === 'unauthorized' || code === 'too_many_auth_failures' || code === 'too_many_failures' ||
+      code === 'local_only' || code === 'not_found') {
+    setAdminStatus('관리자 인증 또는 로컬 접속 조건에서 거절됐습니다. 지정된 관리자 출처와 접속 위치를 확인하세요.', 'denied');
+  } else if (code === 'overloaded') {
+    setAdminStatus('다른 관리자 조회가 진행 중입니다. 잠시 뒤 다시 조회하세요.', 'busy');
+  } else if (reply.status === 503 && code === 'unavailable') {
+    setAdminStatus('감사 기록 검증 또는 열람 기록에 실패해 조회 데이터를 반환하지 않았습니다.', 'audit-failure');
+  } else {
+    setAdminStatus('관리자 조회 응답을 확인하지 못했습니다. 원문 오류는 표시하지 않습니다.', 'error');
+  }
+}
+
+async function requestAdmin(path) {
+  if (adminBusy) return null;
+  if (!adminToken.value || adminToken.value.length > 256 || !/^[\x21-\x7e]+$/.test(adminToken.value)) {
+    setAdminStatus('관리자 token을 입력하세요. token을 URL에 넣지 마세요.', 'denied');
+    adminToken.focus();
+    return null;
+  }
+  const generation = adminGeneration;
+  let token = adminToken.value;
+  const headers = { Authorization: 'Bearer ' + token };
+  token = '';
+  adminToken.value = '';
+  const controller = new AbortController();
+  adminController = controller;
+  adminBusy = true;
+  updateAdminButtons();
+  setAdminStatus('로컬 관리자 조회를 진행하고 있습니다.');
+  try {
+    const reply = await fetch(path, {
+      method: 'GET', mode: 'same-origin', credentials: 'omit', redirect: 'error', cache: 'no-store',
+      referrerPolicy: 'no-referrer', headers, signal: controller.signal
+    });
+    let data;
+    try { data = await reply.json(); } catch { data = null; }
+    if (generation !== adminGeneration) return null;
+    if (!reply.ok) {
+      showAdminError(reply, data);
+      return null;
+    }
+    return { data, reply };
+  } catch {
+    if (generation === adminGeneration) {
+      setAdminStatus('로컬 관리자 조회에 연결하지 못했습니다. 결과를 확인할 수 없습니다.', 'error');
+    }
+    return null;
+  } finally {
+    if (adminController === controller) adminController = null;
+    adminBusy = false;
+    updateAdminButtons();
+  }
+}
+
+function partialAdminScope(data, kind) {
+  if (data.complete === false || data.status === 'partial' || data.status === 'range_limited') {
+    if (kind === 'counts' && Number.isSafeInteger(data.verified_records)) {
+      return `일부 최신 연속 구간만 검증했습니다. 아래 숫자는 검증된 ${data.verified_records}개 기록의 집계이며 전체 건수가 아닙니다.`;
+    }
+    return '일부 최신 연속 구간만 검증했습니다. 아래 목록은 전체 이력이 아닙니다.';
+  }
+  return '최근 24시간 조회 범위의 기록을 검증했습니다.';
+}
+
+function validAdminScope(data) {
+  return data && data.window_hours === 24 &&
+    ((data.complete === true && data.verification_scope === 'recent_segments') ||
+     (data.complete === false && data.verification_scope === 'verified_latest_suffix'));
+}
+
+function clearAdminCounts() {
+  adminCountsSection.hidden = true;
+  for (const [, id] of adminCountFields) document.getElementById(id).textContent = '—';
+}
+
+async function loadAdminCounts() {
+  clearAdminCounts();
+  const result = await requestAdmin('/v1/admin/audit/counts');
+  if (!result) return;
+  const { data } = result;
+  if (data && data.status === 'range_limited' && data.complete === false) {
+    setAdminStatus('검증 범위가 제한돼 집계 숫자를 반환하지 않았습니다. token 입력은 지웠습니다.', 'partial');
+    return;
+  }
+  const valid = data && (data.status === 'available' || data.status === 'partial') &&
+    data.complete === (data.status === 'available') && validAdminScope(data) &&
+    Number.isSafeInteger(data.verified_records) && data.verified_records >= 0 &&
+    data.counts && typeof data.counts === 'object' && !Array.isArray(data.counts) &&
+    adminCountFields.every(([key]) => Number.isSafeInteger(data.counts[key]) && data.counts[key] >= 0);
+  if (!valid) {
+    setAdminStatus('집계 응답 형식을 확인하지 못했습니다. 숫자를 표시하지 않습니다.', 'error');
+    return;
+  }
+  for (const [key, id] of adminCountFields) document.getElementById(id).textContent = String(data.counts[key]);
+  adminCountsScope.textContent = partialAdminScope(data, 'counts');
+  adminCountsSection.hidden = false;
+  setAdminStatus(data.complete ? '최근 집계 조회를 마쳤습니다. token 입력은 지웠습니다.' :
+    '부분 범위의 집계를 표시합니다. token 입력은 지웠습니다.', data.complete ? 'available' : 'partial');
+}
+
+const adminKindLabels = {
+  request: '요청 판정', preview: '미리보기', confirmation: '확인', credential_rotation: '자격 증명 교체',
+  egress: '전송 준비', egress_answer: '제공자 응답 기록', auth: '인증', admin_history_access: '관리자 열람',
+  expire: '만료 삭제', boot: '기동', shutdown: '종료', other: '기타'
+};
+
+function validAdminEvent(item) {
+  return item && typeof item.timestamp === 'string' &&
+    /^\d{4}-\d\d-\d\dT\d\d:\d\d:\d\d\.\d{3}Z$/.test(item.timestamp) &&
+    typeof item.kind === 'string' && typeof item.severity === 'string';
+}
+
+function appendAdminEventField(target, label, value) {
+  const row = document.createElement('div');
+  const term = document.createElement('dt');
+  const detail = document.createElement('dd');
+  term.textContent = label;
+  detail.textContent = String(value);
+  row.append(term, detail);
+  target.append(row);
+}
+
+function renderAdminEvent(item) {
+  const entry = document.createElement('li');
+  entry.className = 'admin-event';
+  const heading = document.createElement('h4');
+  heading.className = 'admin-event-heading';
+  heading.textContent = `${adminKindLabels[item.kind] || '기타'} · ${item.timestamp}`;
+  entry.append(heading);
+  const metadata = document.createElement('dl');
+  metadata.className = 'admin-event-meta';
+  if (['info', 'warn', 'error'].includes(item.severity)) appendAdminEventField(metadata, '심각도', item.severity);
+  for (const [key, label] of adminEventFields) {
+    const value = item[key];
+    if ((typeof value === 'string' && value.length <= 128) || Number.isSafeInteger(value) ||
+        (typeof value === 'number' && Number.isFinite(value) && value >= 0 && value <= 600000)) {
+      if ((key !== 'grade' || value === 'O') && (key !== 'result' ||
+          ['pass', 'reject', 'attempt', 'checked', 'read', 'range_limited', 'out_of_range'].includes(value))) {
+        appendAdminEventField(metadata, label, value);
+      }
+    }
+  }
+  if (typeof item.request_id === 'string' && /^chatcmpl-pa-[0-9a-f]{24}$/.test(item.request_id)) {
+    appendAdminEventField(metadata, '요청 식별자', item.request_id);
+  }
+  entry.append(metadata);
+  if (item.kind === 'egress' && typeof item.request_id === 'string' && /^chatcmpl-pa-[0-9a-f]{24}$/.test(item.request_id)) {
+    const disclosure = document.createElement('details');
+    const summary = document.createElement('summary');
+    const load = document.createElement('button');
+    const detailStatus = document.createElement('p');
+    const text = document.createElement('pre');
+    summary.textContent = '검증된 요청 상세';
+    load.className = 'admin-detail-load';
+    load.type = 'button';
+    load.textContent = '요청 내용 조회';
+    detailStatus.className = 'status';
+    detailStatus.setAttribute('role', 'status');
+    detailStatus.setAttribute('aria-live', 'polite');
+    detailStatus.textContent = '선택한 뒤 조회할 수 있습니다. 전송 준비 상태이며 전달 완료는 확인되지 않았습니다.';
+    text.className = 'admin-detail-text';
+    text.tabIndex = 0;
+    text.hidden = true;
+    load.addEventListener('click', async () => {
+      text.hidden = true;
+      text.replaceChildren();
+      detailStatus.textContent = '검증된 전송 요청을 조회하고 있습니다.';
+      const result = await requestAdmin('/v1/admin/audit/egress/' + encodeURIComponent(item.request_id));
+      if (!result) {
+        detailStatus.textContent = '접근이 거절되었거나 감사 검증에 실패해 요청 내용을 표시하지 않았습니다.';
+        return;
+      }
+      const data = result.data;
+      if (data && data.status === 'prepared' && data.request_id === item.request_id &&
+          data.delivery_confirmed === false && typeof data.request_text === 'string' &&
+          new TextEncoder().encode(data.request_text).length <= 128 * 1024 &&
+          validAdminScope(data)) {
+        appendHighlighted(text, data.request_text);
+        text.hidden = false;
+        detailStatus.textContent = data.complete === false
+          ? '검증된 최신 일부 구간의 전송 준비 요청입니다. 실제 전달 완료는 확인되지 않았습니다. token 입력은 지웠습니다.'
+          : '검증된 전송 준비 요청입니다. 실제 전달 완료는 확인되지 않았습니다. token 입력은 지웠습니다.';
+        setAdminStatus(data.complete ? '요청 상세를 검증했습니다. token 입력은 지웠습니다.' :
+          '부분 최신 구간의 요청 상세를 검증했습니다. token 입력은 지웠습니다.', data.complete ? 'available' : 'partial');
+      } else if (data && data.status === 'range_limited') {
+        detailStatus.textContent = '일부 최신 구간에서 요청을 확인하지 못해 상세를 반환하지 않았습니다. token 입력은 지웠습니다.';
+        setAdminStatus('부분 조회 범위에서 요청을 확인하지 못했습니다. token 입력은 지웠습니다.', 'partial');
+      } else if (data && data.status === 'out_of_range') {
+        detailStatus.textContent = '최근 조회 범위 밖이거나 상세 상한을 넘은 기록입니다. token 입력은 지웠습니다.';
+        setAdminStatus('요청 상세가 최근 범위 밖이거나 상세 상한을 넘습니다. token 입력은 지웠습니다.', 'partial');
+      } else {
+        detailStatus.textContent = '상세 응답을 검증하지 못해 요청 내용을 표시하지 않았습니다.';
+        setAdminStatus('상세 응답을 검증하지 못해 요청 내용을 표시하지 않았습니다.', 'error');
+      }
+    });
+    disclosure.append(summary, load, detailStatus, text);
+    entry.append(disclosure);
+  }
+  return entry;
+}
+
+async function loadAdminEvents(page) {
+  adminEventsSection.hidden = true;
+  adminEvents.replaceChildren();
+  const result = await requestAdmin(`/v1/admin/audit/events?page=${page}`);
+  if (!result) return;
+  const { data } = result;
+  if (data && data.status === 'range_limited' && data.complete === false) {
+    adminEventsSection.hidden = false;
+    const empty = document.createElement('li');
+    empty.textContent = '검증 범위가 제한돼 기록 목록을 표시하지 않았습니다.';
+    adminEvents.append(empty);
+    adminEventsPage = page;
+    adminEventsHasMore = false;
+    adminEventsScope.textContent = partialAdminScope(data, 'events');
+    adminEventsPageLabel.textContent = `${page + 1}페이지`;
+    updateAdminButtons();
+    setAdminStatus('검증 범위가 제한돼 기록 목록을 반환하지 않았습니다. token 입력은 지웠습니다.', 'partial');
+    return;
+  }
+  const valid = data && (data.status === 'available' || data.status === 'partial') &&
+    data.complete === (data.status === 'available') && validAdminScope(data) && data.page === page &&
+    Array.isArray(data.events) && data.events.length <= 25 && typeof data.has_more === 'boolean' &&
+    typeof data.truncated === 'boolean' && data.events.every(validAdminEvent);
+  if (!valid) {
+    setAdminStatus('기록 목록 응답 형식을 확인하지 못했습니다. 항목을 표시하지 않습니다.', 'error');
+    return;
+  }
+  adminEventsPage = page;
+  adminEventsHasMore = data.has_more;
+  adminEventsScope.textContent = partialAdminScope(data, 'events') +
+    (data.truncated === true ? ' 목록 표시 상한에 도달했습니다.' : '');
+  if (data.events.length === 0) {
+    const empty = document.createElement('li');
+    empty.textContent = '이 페이지에 표시할 검증 기록이 없습니다.';
+    adminEvents.append(empty);
+  } else {
+    for (const item of data.events) adminEvents.append(renderAdminEvent(item));
+  }
+  adminEventsSection.hidden = false;
+  adminEventsPageLabel.textContent = `${page + 1}페이지`;
+  updateAdminButtons();
+  setAdminStatus(data.complete ? '최근 기록 목록 조회를 마쳤습니다. token 입력은 지웠습니다.' :
+    '부분 범위의 최신 기록을 표시합니다. token 입력은 지웠습니다.',
+    data.complete ? 'available' : 'partial');
+}
+
+adminCountsLoad.addEventListener('click', loadAdminCounts);
+adminEventsLoad.addEventListener('click', () => { adminEventsHasMore = false; loadAdminEvents(0); });
+adminEventsPrevious.addEventListener('click', () => {
+  if (adminEventsPage > 0) loadAdminEvents(adminEventsPage - 1);
+});
+adminEventsNext.addEventListener('click', () => {
+  if (adminEventsHasMore && adminEventsPage < 39) loadAdminEvents(adminEventsPage + 1);
+});
+function closeAdminView(focusOpener) {
+  adminGeneration += 1;
+  if (adminController) adminController.abort();
+  adminController = null;
+  adminToken.value = '';
+  clearAdminCounts();
+  adminCountsScope.textContent = '';
+  adminEventsSection.hidden = true;
+  adminEventsScope.textContent = '';
+  adminEvents.replaceChildren();
+  const empty = document.createElement('li');
+  empty.textContent = '기록 목록을 아직 조회하지 않았습니다.';
+  adminEvents.append(empty);
+  adminEventsPage = 0;
+  adminEventsHasMore = false;
+  adminEventsPageLabel.textContent = '1페이지';
+  setAdminStatus('관리자 조회가 닫혔습니다. 집계·목록·상세 내용을 지웠습니다.');
+  adminPanel.hidden = true;
+  adminOpen.hidden = false;
+  adminOpen.setAttribute('aria-expanded', 'false');
+  updateAdminButtons();
+  if (focusOpener) adminOpen.focus();
+}
+
+adminOpen.addEventListener('click', () => {
+  adminOpen.hidden = true;
+  adminPanel.hidden = false;
+  adminOpen.setAttribute('aria-expanded', 'true');
+  adminToken.focus();
+});
+adminClose.addEventListener('click', () => closeAdminView(true));
+window.addEventListener('pagehide', () => closeAdminView(false));
+updateAdminButtons();
 
 textMode.addEventListener('change', () => { setMode(); clearGradeConfirmation(); });
 fileMode.addEventListener('change', () => { setMode(); clearGradeConfirmation(); });

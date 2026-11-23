@@ -83,6 +83,49 @@
         <p id="gateway-status" class="status" role="status" aria-live="polite">로컬 응답을 아직 확인하지 않았습니다.</p>
       </div>
     </section>
+    <button id="admin-open" type="button" aria-controls="admin-history" aria-expanded="false">관리자 감사 조회 열기</button>
+    <section id="admin-history" class="admin-panel" aria-labelledby="admin-history-title" hidden>
+      <p class="eyebrow">로컬 관리자 전용</p>
+      <h2 id="admin-history-title">감사 기록 조회</h2>
+      <p>최근 24시간의 검증 가능한 기록만 읽습니다. 요청 본문 상세는 목록에서 선택해야 열리며, 전송 준비 기록은 전달 완료를 뜻하지 않습니다.</p>
+      <button id="admin-close" type="button">관리자 조회 닫기</button>
+      <label for="admin-token">관리자 조회 token</label>
+      <input id="admin-token" type="password" maxlength="256" autocomplete="off" spellcheck="false" aria-describedby="admin-token-help">
+      <p id="admin-token-help" class="hint">각 조회 요청에만 같은 출처로 보냅니다. 요청에 복사한 뒤 입력을 지우며 URL이나 브라우저 저장소에 보관하지 않습니다.</p>
+      <div class="admin-actions" role="group" aria-label="감사 기록 조회">
+        <button id="admin-counts-load" type="button">집계 조회</button>
+        <button id="admin-events-load" type="button">기록 목록 조회</button>
+      </div>
+      <p id="admin-status" class="status" role="status" aria-live="polite">조회 요청마다 관리자 token을 입력하세요. 제공자나 Vault에는 연결하지 않습니다.</p>
+      <section id="admin-counts-section" class="admin-results" aria-labelledby="admin-counts-title" hidden>
+        <h3 id="admin-counts-title">최근 집계</h3>
+        <p id="admin-counts-scope" class="hint"></p>
+        <dl class="summary admin-counts">
+          <div><dt>요청</dt><dd id="admin-count-requests">—</dd></div>
+          <div><dt>거절</dt><dd id="admin-count-rejections">—</dd></div>
+          <div><dt>미리보기</dt><dd id="admin-count-previews">—</dd></div>
+          <div><dt>확인</dt><dd id="admin-count-confirmations">—</dd></div>
+          <div><dt>자격 증명 교체</dt><dd id="admin-count-rotations">—</dd></div>
+          <div><dt>전송 준비</dt><dd id="admin-count-egress">—</dd></div>
+          <div><dt>제공자 응답 기록</dt><dd id="admin-count-provider-responses">—</dd></div>
+          <div><dt>인증 이벤트</dt><dd id="admin-count-auth">—</dd></div>
+          <div><dt>관리자 열람</dt><dd id="admin-count-admin-reads">—</dd></div>
+          <div><dt>기타</dt><dd id="admin-count-other">—</dd></div>
+        </dl>
+      </section>
+      <section id="admin-events-section" class="admin-results" aria-labelledby="admin-events-title" hidden>
+        <h3 id="admin-events-title">최근 기록</h3>
+        <p id="admin-events-scope" class="hint"></p>
+        <div class="admin-page-controls" role="group" aria-label="기록 페이지">
+          <button id="admin-events-previous" type="button" disabled>이전</button>
+          <span id="admin-events-page" aria-live="polite">1페이지</span>
+          <button id="admin-events-next" type="button" disabled>다음</button>
+        </div>
+        <ol id="admin-events" class="admin-events">
+          <li id="admin-events-empty">기록 목록을 아직 조회하지 않았습니다.</li>
+        </ol>
+      </section>
+    </section>
     <noscript>로컬 검사를 사용하려면 JavaScript가 필요합니다.</noscript>
   </main>
 </body>

@@ -426,12 +426,28 @@ TEST_F(GatewayServer, ServesOnlyLocalBuiltInConsoleAndApprovalResources) {
         if (path == "/console/start.js") {
             EXPECT_NE(resource->body.find("/v1/preview"), std::string::npos);
             EXPECT_NE(resource->body.find("/v1/provider/credential"), std::string::npos);
+            EXPECT_NE(resource->body.find("/v1/admin/audit/counts"), std::string::npos);
+            EXPECT_NE(resource->body.find("/v1/admin/audit/events?page="), std::string::npos);
+            EXPECT_NE(resource->body.find("/v1/admin/audit/egress/"), std::string::npos);
             EXPECT_NE(resource->body.find("/console/start.css"), std::string::npos);
             EXPECT_EQ(resource->body.find("localStorage"), std::string::npos);
             EXPECT_EQ(resource->body.find("sessionStorage"), std::string::npos);
             EXPECT_EQ(resource->body.find("innerHTML"), std::string::npos);
+            EXPECT_NE(resource->body.find("Authorization: 'Bearer '"), std::string::npos);
+            EXPECT_NE(resource->body.find("adminToken.value = ''"), std::string::npos);
+            EXPECT_NE(resource->body.find("adminController.abort()"), std::string::npos);
+            EXPECT_NE(resource->body.find("adminEvents.replaceChildren()"), std::string::npos);
         }
     }
+    page.target("/console");
+    const auto admin_page = send(page);
+    ASSERT_TRUE(admin_page);
+    EXPECT_EQ(admin_page->status, 200U);
+    EXPECT_NE(admin_page->body.find("id=\"admin-history\""), std::string::npos);
+    EXPECT_NE(admin_page->body.find("id=\"admin-open\""), std::string::npos);
+    EXPECT_NE(admin_page->body.find("id=\"admin-close\""), std::string::npos);
+    EXPECT_NE(admin_page->body.find("id=\"admin-token\" type=\"password\""), std::string::npos);
+    EXPECT_NE(admin_page->body.find("admin-events"), std::string::npos);
     page.target("/console?unexpected=1");
     EXPECT_EQ(send(page)->status, 400U);
     page.target("/console/start.js?unexpected=1");
@@ -551,10 +567,48 @@ TEST_F(GatewayAdminHistory, ReturnsAggregateMetadataAndOnlyPreparedEgressText) {
     const auto records = audit_->read_recent();
     ASSERT_TRUE(records);
     int read_events = 0;
-    for (const auto& record : *records) {
+    for (const auto& record : records->records) {
         if (record["kind"] == "admin_history_access" && record["result"] == "read") ++read_events;
     }
     EXPECT_EQ(read_events, 3);
+}
+
+TEST_F(GatewayAdminHistory, PartialRecentAuditReturnsOnlyVerifiedSuffixAndMarksUnknownDetail) {
+    constexpr std::string_view large_request_id = "chatcmpl-pa-10112233445566778899aabb";
+    ASSERT_TRUE(audit_->append("egress", "info", {{"request_id", large_request_id},
+        {"sent", std::string(prompt_airlock::audit::recent_query_max_line_bytes + 1, 'x')}}));
+    ASSERT_TRUE(audit_->append("request", "info", {{"request_id", "chatcmpl-pa-00112233445566778899aabb"},
+        {"origin", "dept-a"}, {"grade", "O"}, {"status", 200}, {"result", "pass"}}));
+
+    const auto counts = send(admin_request("admin-token", "/v1/admin/audit/counts"));
+    ASSERT_TRUE(counts);
+    ASSERT_EQ(counts->status, 200U);
+    const auto count_data = nlohmann::json::parse(counts->body);
+    EXPECT_EQ(count_data["status"], "partial");
+    EXPECT_EQ(count_data["complete"], false);
+    EXPECT_EQ(count_data["verification_scope"], "verified_latest_suffix");
+    EXPECT_EQ(count_data["counts"]["requests"], 1);
+    EXPECT_EQ(count_data["counts"]["egress_prepared"], 0);
+
+    const auto events = send(admin_request("admin-token", "/v1/admin/audit/events?page=0"));
+    ASSERT_TRUE(events);
+    ASSERT_EQ(events->status, 200U);
+    const auto event_data = nlohmann::json::parse(events->body);
+    EXPECT_EQ(event_data["status"], "partial");
+    EXPECT_EQ(event_data["complete"], false);
+    ASSERT_FALSE(event_data["events"].empty());
+    EXPECT_EQ(events->body.find(std::string(prompt_airlock::audit::recent_query_max_line_bytes + 1, 'x')),
+              std::string::npos);
+
+    const auto detail = send(admin_request("admin-token", "/v1/admin/audit/egress/" + std::string(large_request_id)));
+    ASSERT_TRUE(detail);
+    ASSERT_EQ(detail->status, 200U);
+    const auto detail_data = nlohmann::json::parse(detail->body);
+    EXPECT_EQ(detail_data["status"], "range_limited");
+    EXPECT_EQ(detail_data["complete"], false);
+    EXPECT_EQ(detail->body.find(std::string(prompt_airlock::audit::recent_query_max_line_bytes + 1, 'x')),
+              std::string::npos);
+    EXPECT_EQ(handled(), 0);
 }
 
 TEST_F(GatewayAdminHistory, DedicatedAdminTokenCannotUseProtectedRequestOrCredentialRoutes) {
