@@ -2,10 +2,13 @@
 
 #include <gtest/gtest.h>
 
+#include <atomic>
+#include <format>
 #include <fstream>
 #include <random>
 #include <sstream>
 #include <string>
+#include <thread>
 #include <vector>
 
 namespace {
@@ -40,6 +43,9 @@ protected:
     }
     std::string name_of(int n) {
         return std::format("audit-{:%F}.jsonl", floor<days>(day(n)));
+    }
+    std::string name_of(audit::Clock::time_point at) {
+        return std::format("audit-{:%F}.jsonl", floor<days>(at));
     }
 
     fs::path dir_;
@@ -126,6 +132,93 @@ TEST_F(AuditLogTest, ExpiresWholeSegmentsAndKeepsChainVerifiable) {
         found = found || l.find("\"kind\":\"expire\"") != std::string::npos;
     }
     EXPECT_TRUE(found);
+}
+
+TEST_F(AuditLogTest, ReadRecentFiltersItsTimeWindowAndChecksTheCurrentSegmentState) {
+    auto log = audit::AuditLog::open(dir_, days(365));
+    ASSERT_TRUE(log);
+    const auto now = audit::Clock::now();
+    ASSERT_TRUE((*log)->append("request", "info", {{"n", 1}}, now - hours(25)));
+    ASSERT_TRUE((*log)->append("request", "info", {{"n", 2}}, now));
+
+    const auto recent = (*log)->read_recent(now);
+    ASSERT_TRUE(recent) << audit::audit_error_name(recent.error());
+    ASSERT_EQ(recent->size(), 1u);
+    EXPECT_EQ((*recent)[0]["n"], 2);
+    EXPECT_TRUE(audit::verify(dir_));
+}
+
+TEST_F(AuditLogTest, ReadRecentRejectsDeletedAndLineBoundaryTruncatedActiveSegments) {
+    auto log = audit::AuditLog::open(dir_, days(365));
+    ASSERT_TRUE(log);
+    const auto now = audit::Clock::now();
+    ASSERT_TRUE((*log)->append("request", "info", {{"n", 1}}, now));
+    ASSERT_TRUE(fs::remove(dir_ / name_of(now)));
+    const auto deleted = (*log)->read_recent(now);
+    ASSERT_FALSE(deleted);
+
+    log->reset();
+    auto again = audit::AuditLog::open(dir_, days(365));
+    ASSERT_TRUE(again);
+    ASSERT_TRUE((*again)->append("request", "info", {{"n", 1}}, now));
+    ASSERT_TRUE((*again)->append("request", "info", {{"n", 2}}, now));
+    const auto original = lines(name_of(now));
+    ASSERT_EQ(original.size(), 2u);
+    rewrite(name_of(now), {original.front()});
+    const auto truncated = (*again)->read_recent(now);
+    ASSERT_FALSE(truncated);
+    EXPECT_EQ(truncated.error(), audit::AuditError::Truncated);
+}
+
+TEST_F(AuditLogTest, ReadRecentMarksOversizedRecordsInsteadOfReturningPartialData) {
+    auto log = audit::AuditLog::open(dir_, days(365));
+    ASSERT_TRUE(log);
+    const auto now = day(1);
+    ASSERT_TRUE((*log)->append("egress", "info", {{"sent", std::string(audit::recent_query_max_line_bytes + 1, 'x')}}, day(0)));
+    ASSERT_TRUE((*log)->append("request", "info", {}, now));
+    const auto recent = (*log)->read_recent(now);
+    ASSERT_FALSE(recent);
+    EXPECT_EQ(recent.error(), audit::AuditError::TooLarge);
+}
+
+TEST_F(AuditLogTest, RecentReadsSerializeWithConcurrentAppendAndExpire) {
+    auto log = audit::AuditLog::open(dir_, days(365));
+    ASSERT_TRUE(log);
+    const auto now = audit::Clock::now();
+    ASSERT_TRUE((*log)->append("start", "info", {}, now));
+    std::atomic<bool> failed{false};
+    std::thread writer([&] {
+        for (int i = 0; i < 80; ++i) {
+            if (!(*log)->append("request", "info", {{"n", i}}, now)) failed = true;
+        }
+    });
+    std::thread reader([&] {
+        for (int i = 0; i < 80; ++i) {
+            if (!(*log)->read_recent(now)) failed = true;
+        }
+    });
+    std::thread expirer([&] {
+        for (int i = 0; i < 8; ++i) {
+            if (!(*log)->expire(now)) failed = true;
+        }
+    });
+    writer.join();
+    reader.join();
+    expirer.join();
+    EXPECT_FALSE(failed);
+    EXPECT_TRUE(audit::verify(dir_));
+}
+
+TEST_F(AuditLogTest, RecentReadKeepsOldRecordsOutOfItsFixedWindow) {
+    auto log = audit::AuditLog::open(dir_, days(365));
+    ASSERT_TRUE(log);
+    const auto now = audit::Clock::now();
+    ASSERT_TRUE((*log)->append("request", "info", {{"n", 1}}, now - hours(25)));
+    ASSERT_TRUE((*log)->append("request", "info", {{"n", 2}}, now));
+    const auto recent = (*log)->read_recent(now);
+    ASSERT_TRUE(recent);
+    ASSERT_EQ(recent->size(), 1u);
+    EXPECT_EQ((*recent)[0]["n"], 2);
 }
 
 }  // namespace

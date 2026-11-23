@@ -17,6 +17,10 @@
 #include <atomic>
 #include <algorithm>
 #include <array>
+#include <charconv>
+#include <cmath>
+#include <limits>
+#include <set>
 
 #include "prompt_airlock/core/types.hpp"
 #include "prompt_airlock/core/sensitive.hpp"
@@ -50,7 +54,7 @@ constexpr bool reuse_address = true;
 struct Server::Shared {
     Shared(asio::io_context& io, asio::ssl::context& tls_context, const tcp::endpoint& endpoint, Authenticator& authenticator,
            RequestHandler request_handler, ServerLimits server_limits, audit::AuditLog* audit_log, bool chat_compat,
-           std::string rotation_origin, CredentialRotationWriter credential_writer)
+           std::string rotation_origin, CredentialRotationWriter credential_writer, std::string admin_origin)
         : tls(tls_context),
           acceptor(io, endpoint, reuse_address),
           port(acceptor.local_endpoint().port()),
@@ -58,7 +62,7 @@ struct Server::Shared {
           handler(std::move(request_handler)),
           limits(server_limits),
           audit(audit_log), chat_app_compat(chat_compat), credential_rotation_origin(std::move(rotation_origin)),
-          credential_rotation_writer(std::move(credential_writer)) {}
+          credential_rotation_writer(std::move(credential_writer)), admin_history_origin(std::move(admin_origin)) {}
 
     asio::ssl::context& tls;
     tcp::acceptor acceptor;
@@ -70,8 +74,10 @@ struct Server::Shared {
     const bool chat_app_compat;
     const std::string credential_rotation_origin;
     const CredentialRotationWriter credential_rotation_writer;
+    const std::string admin_history_origin;
     std::atomic<std::size_t> connections{0};
     std::atomic<std::size_t> large_preparations{0};
+    std::atomic<bool> admin_read_busy{false};
 };
 
 struct UploadLease {
@@ -97,6 +103,7 @@ std::shared_ptr<UploadLease> reserve_large_upload(const std::shared_ptr<Server::
 
 namespace {
 
+using json = nlohmann::json;
 using Stream = beast::ssl_stream<beast::tcp_stream>;
 using Parser = http::request_parser<http::buffer_body>;
 struct BodyCleanup {
@@ -109,8 +116,66 @@ constexpr std::string_view endpoint_path = "/v1/chat/completions";
 constexpr std::string_view preview_path = "/v1/preview";
 constexpr std::string_view approval_path = "/v1/confirmations/approve";
 constexpr std::string_view credential_rotation_path = "/v1/provider/credential";
+constexpr std::string_view admin_path_prefix = "/v1/admin/";
+constexpr std::string_view admin_counts_path = "/v1/admin/audit/counts";
+constexpr std::string_view admin_events_path = "/v1/admin/audit/events";
+constexpr std::string_view admin_egress_prefix = "/v1/admin/audit/egress/";
 constexpr std::string_view grade_header = "X-Prompt-Airlock-Grade";  // ADR 0013
 constexpr std::string_view confirm_header = "X-Prompt-Airlock-Confirm";  // ADR 0023
+constexpr std::size_t admin_page_size = 25;
+constexpr std::size_t admin_page_count = 40;
+constexpr std::size_t admin_max_visible_events = admin_page_size * admin_page_count;
+constexpr std::size_t admin_max_detail_bytes = 128U << 10;
+constexpr std::size_t admin_max_response_bytes = 256U << 10;
+
+enum class AdminReadKind { Counts, Events, Egress };
+
+struct AdminReadRequest {
+    AdminReadKind kind;
+    std::size_t page = 0;
+    std::string request_id;
+};
+
+bool is_admin_target(std::string_view target) { return target.starts_with(admin_path_prefix); }
+
+bool valid_request_id(std::string_view value) {
+    constexpr std::string_view prefix = "chatcmpl-pa-";
+    return value.size() == prefix.size() + 24 && value.starts_with(prefix) &&
+           std::ranges::all_of(value.substr(prefix.size()), [](char c) {
+               return (c >= '0' && c <= '9') || (c >= 'a' && c <= 'f');
+           });
+}
+
+std::expected<AdminReadRequest, EntryError> parse_admin_target(std::string_view target) {
+    if (target == admin_counts_path) return AdminReadRequest{AdminReadKind::Counts, 0, {}};
+    if (target.starts_with(admin_counts_path)) return std::unexpected(EntryError::BadRequest);
+
+    if (target == admin_events_path) return AdminReadRequest{AdminReadKind::Events, 0, {}};
+    if (target.starts_with(std::string(admin_events_path) + "?")) {
+        const auto query = target.substr(admin_events_path.size() + 1);
+        constexpr std::string_view key = "page=";
+        if (!query.starts_with(key) || query.find('&') != std::string_view::npos ||
+            query.find('%') != std::string_view::npos) {
+            return std::unexpected(EntryError::BadRequest);
+        }
+        const auto value = query.substr(key.size());
+        std::size_t page = 0;
+        const auto [end, ec] = std::from_chars(value.data(), value.data() + value.size(), page);
+        if (value.empty() || ec != std::errc{} || end != value.data() + value.size() ||
+            std::to_string(page) != value || page >= admin_page_count) {
+            return std::unexpected(EntryError::BadRequest);
+        }
+        return AdminReadRequest{AdminReadKind::Events, page, {}};
+    }
+    if (target.starts_with(admin_events_path)) return std::unexpected(EntryError::BadRequest);
+
+    if (target.starts_with(admin_egress_prefix)) {
+        const auto request_id = target.substr(admin_egress_prefix.size());
+        if (!valid_request_id(request_id)) return std::unexpected(EntryError::BadRequest);
+        return AdminReadRequest{AdminReadKind::Egress, 0, std::string(request_id)};
+    }
+    return std::unexpected(EntryError::NotFound);
+}
 
 std::string console_origin(std::uint16_t port) {
     return "https://127.0.0.1" + (port == 443 ? std::string{} : ":" + std::to_string(port));
@@ -250,7 +315,8 @@ http::response<http::string_body> make_reply(JsonResponse reply, unsigned versio
 // 헤더만 보고 끝낼 수 있는 검사. 통과하면 등급이 확정된 출처를 돌려준다.
 std::expected<std::pair<const Origin*, core::OpenGrade>, JsonResponse> check_headers(
     const http::request_header<>& head, Authenticator& auth, std::string_view client, audit::AuditLog* audit,
-    std::uint16_t port, std::string_view credential_rotation_origin, bool credential_writer_available) {
+    std::uint16_t port, std::string_view credential_rotation_origin, bool credential_writer_available,
+    std::string_view admin_history_origin) {
     if (head.count(http::field::authorization) > 1) {
         return std::unexpected(error_response(EntryError::BadRequest));
     }
@@ -265,6 +331,9 @@ std::expected<std::pair<const Origin*, core::OpenGrade>, JsonResponse> check_hea
     }
     if (head.target() != endpoint_path && head.target() != preview_path && head.target() != approval_path &&
         head.target() != credential_rotation_path) {
+        return std::unexpected(error_response(EntryError::NotFound));
+    }
+    if (!admin_history_origin.empty() && (*origin)->name == admin_history_origin) {
         return std::unexpected(error_response(EntryError::NotFound));
     }
     if (head.method() != http::verb::post) {
@@ -392,6 +461,346 @@ JsonResponse replace_provider_credential(AcceptedRequest request, audit::AuditLo
     return JsonResponse{200, R"({"ok":true})"};
 }
 
+std::string_view admin_operation(AdminReadKind kind) {
+    switch (kind) {
+        case AdminReadKind::Counts: return "counts";
+        case AdminReadKind::Events: return "events";
+        case AdminReadKind::Egress: return "egress_detail";
+    }
+    return "unknown";
+}
+
+std::string_view admin_operation_for_target(std::string_view target) {
+    if (target.starts_with(admin_counts_path)) return "counts";
+    if (target.starts_with(admin_events_path)) return "events";
+    if (target.starts_with(admin_egress_prefix)) return "egress_detail";
+    return "unknown";
+}
+
+bool valid_origin_label(std::string_view value) {
+    return !value.empty() && value.size() <= 64 &&
+           std::ranges::all_of(value, [](char c) {
+               return (c >= 'a' && c <= 'z') || (c >= '0' && c <= '9') || c == '-';
+           });
+}
+
+std::string_view safe_event_kind(std::string_view kind) {
+    if (kind == "request") return "request";
+    if (kind == "preview") return "preview";
+    if (kind == "confirmation") return "confirmation";
+    if (kind == "credential_rotation") return "credential_rotation";
+    if (kind == "egress") return "egress_prepared";
+    if (kind == "egress_answer") return "provider_response_recorded";
+    if (kind == "admin_history_access") return "admin_read";
+    if (kind == "auth") return "authentication";
+    if (kind == "start") return "gateway_start";
+    if (kind == "stop") return "gateway_stop";
+    if (kind == "expire") return "retention_expiry";
+    if (kind == "cert_expiry") return "certificate_expiry";
+    if (kind == "documents") return "document_processing";
+    return "other";
+}
+
+std::uint64_t nonnegative_integer(const json& value, bool& valid) {
+    if (value.is_number_unsigned()) return value.get<std::uint64_t>();
+    if (value.is_number_integer()) {
+        const auto number = value.get<std::int64_t>();
+        if (number >= 0) return static_cast<std::uint64_t>(number);
+    }
+    valid = false;
+    return 0;
+}
+
+bool known_entity(std::string_view name) {
+    for (const auto type : core::all_entity_types()) {
+        if (core::entity_type_name(type) == name) return true;
+    }
+    return false;
+}
+
+json admin_event_metadata(const json& record) {
+    json result = {{"timestamp", record["ts"]}, {"kind", safe_event_kind(record["kind"].get_ref<const std::string&>())}};
+    const auto& severity = record["sev"].get_ref<const std::string&>();
+    result["severity"] = severity == "info" || severity == "warn" || severity == "error" ? severity : "other";
+    if (record.contains("request_id") && record["request_id"].is_string()) {
+        const auto& id = record["request_id"].get_ref<const std::string&>();
+        if (valid_request_id(id)) result["request_id"] = id;
+    }
+    if (record.contains("origin") && record["origin"].is_string()) {
+        const auto& origin = record["origin"].get_ref<const std::string&>();
+        if (valid_origin_label(origin)) result["origin"] = origin;
+    }
+    if (record.contains("status")) {
+        bool valid = true;
+        const auto status = nonnegative_integer(record["status"], valid);
+        if (valid && status >= 100 && status <= 599) result["status"] = status;
+    }
+    if (record.contains("result") && record["result"].is_string()) {
+        const auto& value = record["result"].get_ref<const std::string&>();
+        if (value == "pass" || value == "reject" || value == "attempt" || value == "checked" ||
+            value == "read" || value == "range_limited" || value == "out_of_range") {
+            result["result"] = value;
+        }
+    }
+    if (record.contains("grade") && record["grade"] == "O") result["grade"] = "O";
+    if (record.contains("ms") && record["ms"].is_number()) {
+        const auto duration = record["ms"].get<double>();
+        if (std::isfinite(duration) && duration >= 0.0 && duration <= 600000.0) result["duration_ms"] = duration;
+    }
+    if (record.contains("entities") && record["entities"].is_object()) {
+        std::uint64_t total = 0;
+        bool valid = record["entities"].size() <= core::entity_type_count;
+        for (auto it = record["entities"].begin(); valid && it != record["entities"].end(); ++it) {
+            if (!known_entity(it.key())) {
+                valid = false;
+                break;
+            }
+            const auto count = nonnegative_integer(it.value(), valid);
+            if (count > 1000000 || total > 1000000 - count) valid = false;
+            else total += count;
+        }
+        if (valid) result["entity_count"] = total;
+    }
+    if (record.contains("blocked_types") && record["blocked_types"].is_array() && record["blocked_types"].size() <= 64) {
+        bool valid = true;
+        for (const auto& type : record["blocked_types"]) {
+            if (!type.is_string() || !known_entity(type.get_ref<const std::string&>())) {
+                valid = false;
+                break;
+            }
+        }
+        if (valid) result["blocked_type_count"] = record["blocked_types"].size();
+    }
+    if (record.contains("operation") && record["operation"].is_string()) {
+        const auto& operation = record["operation"].get_ref<const std::string&>();
+        if (operation == "counts" || operation == "events" || operation == "egress_detail") {
+            result["operation"] = operation;
+        }
+    }
+    return result;
+}
+
+bool safe_provider_value(const json& value, std::size_t depth, std::size_t& nodes, std::size_t& text_bytes) {
+    static const std::set<std::string, std::less<>> allowed_keys = {
+        "model", "messages", "role", "content", "max_tokens", "max_completion_tokens", "n", "stream",
+        "temperature", "top_p", "stop", "response_format", "type", "text", "contents", "parts",
+        "generationConfig", "candidateCount", "maxOutputTokens", "topP", "responseMimeType",
+        "stopSequences", "systemInstruction", "system", "stop_sequences"
+    };
+    if (depth > 16 || ++nodes > 8192) return false;
+    if (value.is_string()) {
+        const auto size = value.get_ref<const std::string&>().size();
+        if (size > admin_max_detail_bytes - text_bytes) return false;
+        text_bytes += size;
+        return true;
+    }
+    if (value.is_object()) {
+        if (value.size() > 128) return false;
+        for (auto it = value.begin(); it != value.end(); ++it) {
+            if (!allowed_keys.contains(it.key()) || !safe_provider_value(it.value(), depth + 1, nodes, text_bytes)) {
+                return false;
+            }
+        }
+        return true;
+    }
+    if (value.is_array()) {
+        if (value.size() > 2048) return false;
+        for (const auto& child : value) {
+            if (!safe_provider_value(child, depth + 1, nodes, text_bytes)) return false;
+        }
+        return true;
+    }
+    if (value.is_number_float()) return std::isfinite(value.get<double>());
+    return value.is_number_integer() || value.is_number_unsigned() || value.is_boolean() || value.is_null();
+}
+
+std::optional<std::string> safe_egress_text(const json& sent) {
+    if (sent.is_string()) {
+        const auto& text = sent.get_ref<const std::string&>();
+        if (text.empty() || text.size() > admin_max_detail_bytes) return std::nullopt;
+        return text;
+    }
+    if (!sent.is_object() || (!sent.contains("messages") && !sent.contains("contents"))) return std::nullopt;
+    std::size_t nodes = 0;
+    std::size_t text_bytes = 0;
+    if (!safe_provider_value(sent, 0, nodes, text_bytes)) return std::nullopt;
+    const std::string text = sent.dump();
+    if (text.size() > admin_max_detail_bytes) return std::nullopt;
+    return text;
+}
+
+bool append_admin_access(audit::AuditLog* audit, std::string_view origin, std::string_view operation,
+                         std::string_view result, std::optional<std::string_view> request_id = std::nullopt,
+                         std::optional<std::size_t> page = std::nullopt) {
+    if (audit == nullptr) return false;
+    json fields = {{"origin", origin}, {"operation", operation}, {"result", result}};
+    if (request_id) fields["request_id"] = *request_id;
+    if (page) fields["page"] = *page;
+    const std::string_view severity = result == "read" ? "info" : "warn";
+    return audit->append("admin_history_access", severity, std::move(fields)).has_value();
+}
+
+json admin_range_limited(std::string_view status = "range_limited") {
+    return {{"status", status}, {"complete", false}, {"window_hours", audit::recent_query_window.count()}};
+}
+
+json admin_egress_out_of_range(std::string_view request_id) {
+    return {{"status", "out_of_range"}, {"request_id", request_id}, {"delivery_confirmed", false},
+            {"window_hours", audit::recent_query_window.count()}};
+}
+
+JsonResponse admin_read_response(const AdminReadRequest& request, std::string_view origin,
+                                 const std::shared_ptr<Server::Shared>& shared) {
+    if (shared->audit == nullptr) return error_response(EntryError::Unavailable);
+    const auto read = shared->audit->read_recent();
+    if (!read) {
+        if (read.error() == audit::AuditError::TooLarge) {
+            const auto status = request.kind == AdminReadKind::Egress ? "out_of_range" : "range_limited";
+            if (!append_admin_access(shared->audit, origin, admin_operation(request.kind), status,
+                                     request.kind == AdminReadKind::Egress ? std::optional<std::string_view>(request.request_id) : std::nullopt,
+                                     request.kind == AdminReadKind::Events ? std::optional<std::size_t>(request.page) : std::nullopt)) {
+                return error_response(EntryError::Unavailable);
+            }
+            const json response = request.kind == AdminReadKind::Egress
+                ? admin_egress_out_of_range(request.request_id) : admin_range_limited(status);
+            return JsonResponse{200, response.dump()};
+        }
+        return error_response(EntryError::Unavailable);
+    }
+
+    json response;
+    std::string_view audit_result = "read";
+    if (request.kind == AdminReadKind::Counts) {
+        std::uint64_t requests = 0;
+        std::uint64_t request_rejections = 0;
+        std::uint64_t previews = 0;
+        std::uint64_t confirmations = 0;
+        std::uint64_t credential_rotations = 0;
+        std::uint64_t egress_prepared = 0;
+        std::uint64_t provider_response_records = 0;
+        std::uint64_t authentication_events = 0;
+        std::uint64_t admin_reads = 0;
+        std::uint64_t other = 0;
+        for (const auto& record : *read) {
+            const auto kind = record["kind"].get_ref<const std::string&>();
+            if (kind == "request") {
+                ++requests;
+                if (record.contains("status")) {
+                    bool valid = true;
+                    const auto status = nonnegative_integer(record["status"], valid);
+                    if (valid && status >= 400 && status <= 599) ++request_rejections;
+                }
+            } else if (kind == "preview") ++previews;
+            else if (kind == "confirmation") ++confirmations;
+            else if (kind == "credential_rotation") ++credential_rotations;
+            else if (kind == "egress") ++egress_prepared;
+            else if (kind == "egress_answer") ++provider_response_records;
+            else if (kind == "auth") ++authentication_events;
+            else if (kind == "admin_history_access") ++admin_reads;
+            else ++other;
+        }
+        const json counts = {{"requests", requests}, {"request_rejections", request_rejections},
+            {"previews", previews}, {"confirmations", confirmations}, {"credential_rotations", credential_rotations},
+            {"egress_prepared", egress_prepared}, {"provider_response_records", provider_response_records},
+            {"authentication_events", authentication_events}, {"admin_reads", admin_reads}, {"other", other}};
+        response = {{"status", "available"}, {"complete", true},
+                    {"window_hours", audit::recent_query_window.count()}, {"verified_records", read->size()},
+                    {"verification_scope", "recent_segments"}, {"counts", std::move(counts)}};
+    } else if (request.kind == AdminReadKind::Events) {
+        std::vector<json> items;
+        const auto visible = std::min(read->size(), admin_max_visible_events);
+        const auto end = read->size() > visible ? visible : read->size();
+        const auto reverse_begin = read->rbegin() + static_cast<std::ptrdiff_t>(std::min(request.page * admin_page_size, end));
+        for (auto it = reverse_begin; it != read->rbegin() + static_cast<std::ptrdiff_t>(end) && items.size() < admin_page_size; ++it) {
+            items.push_back(admin_event_metadata(*it));
+        }
+        const auto offset = request.page * admin_page_size;
+        const bool has_more = offset + items.size() < visible;
+        response = {{"status", "available"}, {"complete", true},
+                    {"window_hours", audit::recent_query_window.count()}, {"verification_scope", "recent_segments"},
+                    {"page", request.page}, {"page_size", admin_page_size}, {"has_more", has_more},
+                    {"truncated", read->size() > admin_max_visible_events}, {"events", std::move(items)}};
+    } else {
+        const json* found = nullptr;
+        for (const auto& record : *read) {
+            if (record["kind"] == "egress" && record.contains("request_id") && record["request_id"].is_string() &&
+                record["request_id"].get_ref<const std::string&>() == request.request_id) {
+                if (found != nullptr) return error_response(EntryError::Unavailable);
+                found = &record;
+            }
+        }
+        if (found == nullptr || !found->contains("sent")) {
+            response = admin_egress_out_of_range(request.request_id);
+            audit_result = "out_of_range";
+        } else {
+            const auto text = safe_egress_text((*found)["sent"]);
+            if (!text) {
+                response = admin_egress_out_of_range(request.request_id);
+                audit_result = "out_of_range";
+            } else {
+                response = {{"status", "prepared"}, {"request_id", request.request_id},
+                            {"delivery_confirmed", false}, {"window_hours", audit::recent_query_window.count()},
+                            {"verification_scope", "recent_segments"},
+                            {"request_text", *text}};
+            }
+        }
+    }
+
+    std::string body = response.dump();
+    if (body.size() > admin_max_response_bytes) {
+        audit_result = request.kind == AdminReadKind::Egress ? "out_of_range" : "range_limited";
+        body = (request.kind == AdminReadKind::Egress
+            ? admin_egress_out_of_range(request.request_id) : admin_range_limited()).dump();
+    }
+    if (!append_admin_access(shared->audit, origin, admin_operation(request.kind), audit_result,
+                             request.kind == AdminReadKind::Egress ? std::optional<std::string_view>(request.request_id) : std::nullopt,
+                             request.kind == AdminReadKind::Events ? std::optional<std::size_t>(request.page) : std::nullopt)) {
+        return error_response(EntryError::Unavailable);
+    }
+    return JsonResponse{200, std::move(body)};
+}
+
+JsonResponse admin_api_request(const http::request_header<>& head, std::string_view client,
+                               const std::shared_ptr<Server::Shared>& shared) {
+    if (head.count(http::field::authorization) > 1) return error_response(EntryError::BadRequest);
+    const auto authenticated = shared->auth.authenticate(head[http::field::authorization], client,
+                                                         Authenticator::Clock::now());
+    if (!authenticated) {
+        if (shared->audit != nullptr) {
+            (void)shared->audit->append("auth", "warn", {{"client", client}, {"result", auth_failure_name(authenticated.error())}});
+        }
+        return error_response(authenticated.error() == AuthFailure::Locked ? EntryError::TooManyFailures
+                                                                            : EntryError::Unauthorized);
+    }
+    if (!local_console_request(head, client, shared->port)) return error_response(EntryError::LocalOnly);
+    if (shared->admin_history_origin.empty() || (*authenticated)->name != shared->admin_history_origin) {
+        return error_response(EntryError::NotFound);
+    }
+    if (head.method() != http::verb::get) return error_response(EntryError::MethodNotAllowed);
+    const auto length_count = head.count(http::field::content_length);
+    if (length_count > 1 || (length_count == 1 && head[http::field::content_length] != "0") ||
+        head.count(http::field::transfer_encoding) != 0 || head.count(grade_header) != 0 ||
+        head.count(confirm_header) != 0) {
+        (void)append_admin_access(shared->audit, (*authenticated)->name, "invalid", "reject");
+        return error_response(EntryError::BadRequest);
+    }
+    const auto request = parse_admin_target(head.target());
+    if (!request) {
+        (void)append_admin_access(shared->audit, (*authenticated)->name,
+                                  admin_operation_for_target(head.target()), "reject");
+        return error_response(request.error());
+    }
+    bool expected = false;
+    if (!shared->admin_read_busy.compare_exchange_strong(expected, true, std::memory_order_acq_rel)) {
+        return error_response(EntryError::Overloaded);
+    }
+    struct ReleaseAdminRead {
+        std::atomic<bool>& busy;
+        ~ReleaseAdminRead() { busy.store(false, std::memory_order_release); }
+    } release{shared->admin_read_busy};
+    return admin_read_response(*request, (*authenticated)->name, shared);
+}
+
 // 처리 중 연결이 끊기면 돌아온다. 읽을 것이 생겼는데 쌓인 바이트가 0 이면 상대가 닫은 것(FIN·RST)이다.
 // 바이트가 있으면(다음 요청, TLS 종료 알림) 끊김인지 알 수 없어 처리가 끝날 때까지 기다린다.
 // shortcut: TLS 종료 알림을 먼저 보내고 닫는 클라이언트는 응답을 쓸 때 끊김이 드러난다. 알림까지 읽으려면 TLS 읽기를 처리와 함께 돌려야 한다.
@@ -464,13 +873,17 @@ asio::awaitable<void> session(std::shared_ptr<Server::Shared> shared, tcp::socke
         std::string request_body;
         BodyCleanup cleanup{request_body};
         auto resource = console_resource(head, client, shared->port);
+        const bool admin_api = is_admin_target(head.target());
         std::optional<std::pair<const Origin*, core::OpenGrade>> accepted;
         if (resource) {
             reply = std::move(*resource);
+        } else if (admin_api) {
+            reply = admin_api_request(head, client, shared);
         } else {
             auto checked = check_headers(head, shared->auth, client, shared->audit, shared->port,
                                          shared->credential_rotation_origin,
-                                         static_cast<bool>(shared->credential_rotation_writer));
+                                         static_cast<bool>(shared->credential_rotation_writer),
+                                         shared->admin_history_origin);
             if (checked) accepted.emplace(*checked);
             else reply = std::move(checked.error());
         }
@@ -533,7 +946,7 @@ asio::awaitable<void> session(std::shared_ptr<Server::Shared> shared, tcp::socke
         }
         // 거절하면 연결을 닫는다(읽지 않은 본문이 남아 있을 수 있다)
         const bool rejected = reply->status >= 400;
-        if (shared->chat_app_compat && purpose == RequestPurpose::Chat && !resource) {
+        if (shared->chat_app_compat && purpose == RequestPurpose::Chat && !resource && !admin_api) {
             *reply = chat_notice(std::move(*reply), shared->port);
         }
         keep_alive = !resource && !rejected && parser.get().keep_alive();
@@ -573,9 +986,11 @@ asio::awaitable<void> accept_loop(std::shared_ptr<Server::Shared> shared) {
 
 Server::Server(asio::io_context& io, asio::ssl::context& tls, const tcp::endpoint& endpoint, Authenticator& auth,
                RequestHandler handler, ServerLimits limits, audit::AuditLog* audit, bool chat_app_compat,
-               std::string credential_rotation_origin, CredentialRotationWriter credential_rotation_writer)
+               std::string credential_rotation_origin, CredentialRotationWriter credential_rotation_writer,
+               std::string admin_history_origin)
     : shared_(std::make_shared<Shared>(io, tls, endpoint, auth, std::move(handler), limits, audit, chat_app_compat,
-                                       std::move(credential_rotation_origin), std::move(credential_rotation_writer))) {}
+                                       std::move(credential_rotation_origin), std::move(credential_rotation_writer),
+                                       std::move(admin_history_origin))) {}
 
 void Server::start() { asio::co_spawn(shared_->acceptor.get_executor(), accept_loop(shared_), asio::detached); }
 

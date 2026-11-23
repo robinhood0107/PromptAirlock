@@ -476,7 +476,8 @@ std::expected<Config, ConfigError> parse_config(std::string_view json_text, cons
     if (guard.found()) {
         return fail(ConfigProblem::Duplicate, "");
     }
-    if (auto r = only_keys(root, {"listen", "provider", "origins", "internal_terms", "policy", "output_token_cap", "history_retention_days", "sentence_warn", "compat"}, ""); !r) {
+    if (auto r = only_keys(root, {"listen", "provider", "origins", "admin_history_origin", "internal_terms", "policy",
+                                  "output_token_cap", "history_retention_days", "sentence_warn", "compat"}, ""); !r) {
         return std::unexpected(r.error());
     }
     Config config;
@@ -488,6 +489,17 @@ std::expected<Config, ConfigError> parse_config(std::string_view json_text, cons
             return origin.name == config.provider.credential_rotation_origin;
         })) {
         return fail(ConfigProblem::InvalidValue, "provider.credential_rotation_origin");
+    }
+    if (root.contains("admin_history_origin")) {
+        auto admin = member(root, "admin_history_origin", "", json::value_t::string);
+        if (!admin) return std::unexpected(admin.error());
+        const auto& admin_name = (*admin)->get_ref<const std::string&>();
+        if (!valid_origin_name(admin_name)) return fail(ConfigProblem::InvalidValue, "admin_history_origin");
+        const auto registered = std::ranges::find(config.origins, admin_name, &Origin::name);
+        if (registered == config.origins.end() || admin_name == config.provider.credential_rotation_origin) {
+            return fail(ConfigProblem::InvalidValue, "admin_history_origin");
+        }
+        config.admin_history_origin = admin_name;
     }
     if (auto r = parse_terms(root, config.internal_terms); !r) return std::unexpected(r.error());
     if (auto r = parse_policy(root, config.policy); !r) return std::unexpected(r.error());

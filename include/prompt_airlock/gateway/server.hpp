@@ -56,7 +56,7 @@ public:
     Server(boost::asio::io_context& io, boost::asio::ssl::context& tls, const boost::asio::ip::tcp::endpoint& endpoint,
            Authenticator& auth, RequestHandler handler, ServerLimits limits = {}, audit::AuditLog* audit = nullptr,
            bool chat_app_compat = false, std::string credential_rotation_origin = {},
-           CredentialRotationWriter credential_rotation_writer = {});
+           CredentialRotationWriter credential_rotation_writer = {}, std::string admin_history_origin = {});
 
     // 연결 받기를 시작한다. 실제 처리는 io 를 돌리는 스레드에서 한다.
     void start();

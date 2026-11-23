@@ -13,6 +13,7 @@ using json = nlohmann::json;
 
 const std::string hash_a(64, 'a');
 const std::string hash_b(64, 'b');
+const std::string hash_c(64, 'c');
 
 json valid() {
     return {
@@ -23,7 +24,8 @@ json valid() {
                       {"trust_file", "certs/mock-ca.pem"},
                       {"model", "demo-model"}}},
         {"origins", json::array({{{"name", "dept-a"}, {"token_sha256", hash_a}, {"grade_policy", "o-only"}},
-                                 {{"name", "dept-b"}, {"token_sha256", hash_b}, {"grade_policy", "declare"}}})},
+                                 {{"name", "dept-b"}, {"token_sha256", hash_b}, {"grade_policy", "declare"}},
+                                 {{"name", "admin-console"}, {"token_sha256", hash_c}, {"grade_policy", "declare"}}})},
         {"internal_terms", json::array({"한빛시청", "한빛데이터"})},
         {"output_token_cap", 2048},
     };
@@ -49,9 +51,11 @@ TEST(GatewayConfig, ReadsValidConfig) {
     EXPECT_EQ(config->provider.target, "/v1/chat/completions");
     EXPECT_EQ(config->provider.model, "demo-model");
     EXPECT_TRUE(config->provider.credential_rotation_origin.empty());
-    ASSERT_EQ(config->origins.size(), 2u);
+    EXPECT_TRUE(config->admin_history_origin.empty());
+    ASSERT_EQ(config->origins.size(), 3u);
     EXPECT_EQ(config->origins[0].grade_policy, prompt_airlock::core::GradePolicy::OOnly);
     EXPECT_EQ(config->origins[1].grade_policy, prompt_airlock::core::GradePolicy::Declare);
+    EXPECT_EQ(config->origins[2].grade_policy, prompt_airlock::core::GradePolicy::Declare);
     EXPECT_EQ(config->internal_terms.size(), 2u);
     EXPECT_EQ(config->output_token_cap.value(), 2048u);
 }
@@ -145,6 +149,22 @@ TEST(GatewayConfig, CredentialRotationRequiresOneRegisteredOrigin) {
     expect_error(j, ConfigProblem::WrongType, "provider.credential_rotation_origin");
     j["provider"]["credential_rotation_origin"] = "";
     expect_error(j, ConfigProblem::InvalidValue, "provider.credential_rotation_origin");
+}
+
+TEST(GatewayConfig, AdminHistoryRequiresOneDedicatedRegisteredOrigin) {
+    auto j = valid();
+    j["admin_history_origin"] = "admin-console";
+    ASSERT_TRUE(parse(j));
+    EXPECT_EQ(parse(j)->admin_history_origin, "admin-console");
+    j["admin_history_origin"] = "missing-origin";
+    expect_error(j, ConfigProblem::InvalidValue, "admin_history_origin");
+    j["admin_history_origin"] = json::array({"dept-a", "dept-b"});
+    expect_error(j, ConfigProblem::WrongType, "admin_history_origin");
+    j["admin_history_origin"] = "";
+    expect_error(j, ConfigProblem::InvalidValue, "admin_history_origin");
+    j["admin_history_origin"] = "admin-console";
+    j["provider"]["credential_rotation_origin"] = "admin-console";
+    expect_error(j, ConfigProblem::InvalidValue, "admin_history_origin");
 }
 
 TEST(GatewayConfig, RejectsMalformedDocuments) {

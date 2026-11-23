@@ -210,7 +210,7 @@ int serve(const std::filesystem::path& config_path) {
                       config->provider.credential_rotation_origin,
                       [credential_file = config->provider.credential_file](std::string_view credential) {
                           return prompt_airlock::provider::store_credential(credential_file, credential).has_value();
-                      });
+                      }, config->admin_history_origin);
     server.start();
     asio::signal_set signals(io, SIGINT, SIGTERM);
     signals.async_wait([&](auto, auto) {

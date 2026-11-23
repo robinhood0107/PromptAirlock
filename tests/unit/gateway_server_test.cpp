@@ -15,7 +15,9 @@
 #include <nlohmann/json.hpp>
 #include <openssl/ssl.h>
 
+#include <array>
 #include <atomic>
+#include <barrier>
 #include <filesystem>
 #include <fstream>
 #include <condition_variable>
@@ -61,6 +63,7 @@ protected:
     virtual bool compatibility() const { return false; }
     virtual std::string credential_rotation_origin() const { return {}; }
     virtual gw::CredentialRotationWriter credential_rotation_writer() { return {}; }
+    virtual std::string admin_history_origin() const { return {}; }
     virtual prompt_airlock::audit::AuditLog* audit_log() { return nullptr; }
     void SetUp() override {
         cert_ = pa_test::make_test_certificate();
@@ -96,7 +99,7 @@ protected:
                             std::scoped_lock lock(mutex_);
                             co_return response_.value_or(gw::JsonResponse{200, R"({"ok":true})"});
                         }, limits, audit_log(), compatibility(), credential_rotation_origin(),
-                        credential_rotation_writer()); });
+                        credential_rotation_writer(), admin_history_origin()); });
         server_->start();
         port_ = server_->local_endpoint().port();
         thread_ = std::thread([this] { io_.run(); });
@@ -189,7 +192,8 @@ protected:
     std::optional<asio::ssl::context> server_tls_;
     std::optional<asio::ssl::context> client_tls_;
     gw::Authenticator auth_{{{"open-desk", hash_of("open-token"), core::GradePolicy::OOnly},
-                             {"declare-desk", hash_of("declare-token"), core::GradePolicy::Declare}}};
+                             {"declare-desk", hash_of("declare-token"), core::GradePolicy::Declare},
+                             {"admin-console", hash_of("admin-token"), core::GradePolicy::Declare}}};
     asio::io_context io_;
     std::optional<gw::Server> server_;
     std::thread thread_;
@@ -252,6 +256,62 @@ protected:
     std::filesystem::path credential_file_;
     std::unique_ptr<prompt_airlock::audit::AuditLog> audit_;
     std::atomic<int> store_calls_{0};
+};
+
+class GatewayAdminHistory : public GatewayServer {
+protected:
+    void SetUp() override {
+        root_ = std::filesystem::temp_directory_path() /
+                ("pa-admin-history-" +
+                 std::to_string(std::chrono::steady_clock::now().time_since_epoch().count()));
+        std::filesystem::create_directories(root_);
+        auto audit = prompt_airlock::audit::AuditLog::open(root_ / "audit", std::chrono::days(365));
+        ASSERT_TRUE(audit);
+        audit_ = std::move(*audit);
+        GatewayServer::SetUp();
+        for (int i = 0; i < 3; ++i) extra_threads_.emplace_back([this] { io_.run(); });
+    }
+
+    void TearDown() override {
+        if (server_) server_->stop();
+        for (auto& thread : extra_threads_) {
+            if (thread.joinable()) thread.join();
+        }
+        GatewayServer::TearDown();
+        audit_.reset();
+        std::error_code ignored;
+        for (const auto& entry : std::filesystem::recursive_directory_iterator(root_, ignored)) {
+            std::filesystem::permissions(entry.path(), std::filesystem::perms::owner_all,
+                                         std::filesystem::perm_options::add, ignored);
+        }
+        std::filesystem::remove_all(root_, ignored);
+    }
+
+    std::string admin_history_origin() const override { return "admin-console"; }
+    std::string credential_rotation_origin() const override { return "open-desk"; }
+    gw::CredentialRotationWriter credential_rotation_writer() override {
+        return [this](std::string_view) {
+            ++credential_write_calls_;
+            return true;
+        };
+    }
+    prompt_airlock::audit::AuditLog* audit_log() override { return audit_.get(); }
+
+    http::request<http::string_body> admin_request(std::string token, std::string_view target) const {
+        auto req = request(std::move(token), "");
+        req.method(http::verb::get);
+        req.target(target);
+        req.erase(http::field::content_type);
+        const auto host = "127.0.0.1:" + std::to_string(port_);
+        req.set(http::field::host, host);
+        req.set(http::field::origin, "https://" + host);
+        return req;
+    }
+
+    std::filesystem::path root_;
+    std::unique_ptr<prompt_airlock::audit::AuditLog> audit_;
+    int credential_write_calls_ = 0;
+    std::vector<std::thread> extra_threads_;
 };
 
 TEST_F(GatewayServer, PassesAuthenticatedRequestToHandler) {
@@ -425,6 +485,233 @@ TEST_F(GatewayServer, CredentialRotationIsDisabledWithoutAnExplicitOrigin) {
     ASSERT_TRUE(reply);
     EXPECT_EQ(reply->status, 404u);
     EXPECT_EQ(code_of(*reply), "not_found");
+    EXPECT_EQ(handled(), 0);
+}
+
+TEST_F(GatewayServer, AdminHistoryReadIsDisabledByDefault) {
+    auto req = request("open-token", "");
+    req.method(http::verb::get);
+    req.target("/v1/admin/audit/counts");
+    const auto host = "127.0.0.1:" + std::to_string(port_);
+    req.set(http::field::host, host);
+    req.set(http::field::origin, "https://" + host);
+    const auto reply = send(req);
+    ASSERT_TRUE(reply);
+    EXPECT_EQ(reply->status, 404U);
+    EXPECT_EQ(code_of(*reply), "not_found");
+    EXPECT_EQ(handled(), 0);
+}
+
+TEST_F(GatewayAdminHistory, ReturnsAggregateMetadataAndOnlyPreparedEgressText) {
+    constexpr std::string_view request_id = "chatcmpl-pa-0123456789abcdef01234567";
+    ASSERT_TRUE(audit_->append("request", "info", {{"request_id", request_id}, {"origin", "open-desk"},
+        {"grade", "O"}, {"status", 200}, {"entities", {{"PERSON", 1}}}, {"ms", 3.5}, {"result", "pass"}}));
+    ASSERT_TRUE(audit_->append("egress", "info", {{"request_id", request_id},
+        {"sent", nlohmann::json{{"model", "demo-alias"}, {"max_tokens", 16},
+            {"messages", nlohmann::json::array({{{"role", "user"}, {"content", "SYNTHETIC_TOKENIZED_MARKER"}}})}}}}));
+    ASSERT_TRUE(audit_->append("egress_answer", "info", {{"request_id", request_id},
+        {"answer", "SYNTHETIC_PROVIDER_RESPONSE_MARKER"}}));
+
+    const auto counts_reply = send(admin_request("admin-token", "/v1/admin/audit/counts"));
+    ASSERT_TRUE(counts_reply);
+    ASSERT_EQ(counts_reply->status, 200U);
+    const auto counts = nlohmann::json::parse(counts_reply->body);
+    EXPECT_EQ(counts["status"], "available");
+    EXPECT_EQ(counts["complete"], true);
+    EXPECT_EQ(counts["counts"]["requests"], 1);
+    EXPECT_EQ(counts["counts"]["egress_prepared"], 1);
+    EXPECT_EQ(counts["counts"]["provider_response_records"], 1);
+    EXPECT_EQ(counts_reply->body.find("SYNTHETIC_TOKENIZED_MARKER"), std::string::npos);
+    EXPECT_EQ(counts_reply->body.find("SYNTHETIC_PROVIDER_RESPONSE_MARKER"), std::string::npos);
+
+    const auto events_reply = send(admin_request("admin-token", "/v1/admin/audit/events?page=0"));
+    ASSERT_TRUE(events_reply);
+    ASSERT_EQ(events_reply->status, 200U);
+    const auto events = nlohmann::json::parse(events_reply->body);
+    ASSERT_FALSE(events["events"].empty());
+    EXPECT_EQ(events_reply->body.find("SYNTHETIC_TOKENIZED_MARKER"), std::string::npos);
+    EXPECT_EQ(events_reply->body.find("SYNTHETIC_PROVIDER_RESPONSE_MARKER"), std::string::npos);
+    EXPECT_EQ(events_reply->body.find("\"sent\""), std::string::npos);
+    EXPECT_EQ(events_reply->body.find("\"answer\""), std::string::npos);
+    EXPECT_EQ(events_reply->body.find("\"prev\""), std::string::npos);
+    EXPECT_EQ(events_reply->body.find("\"hash\""), std::string::npos);
+
+    const auto detail_reply = send(admin_request("admin-token", "/v1/admin/audit/egress/" + std::string(request_id)));
+    ASSERT_TRUE(detail_reply);
+    ASSERT_EQ(detail_reply->status, 200U);
+    const auto detail = nlohmann::json::parse(detail_reply->body);
+    EXPECT_EQ(detail["status"], "prepared");
+    EXPECT_EQ(detail["delivery_confirmed"], false);
+    EXPECT_NE(detail["request_text"].get<std::string>().find("SYNTHETIC_TOKENIZED_MARKER"), std::string::npos);
+    EXPECT_EQ(detail_reply->body.find("SYNTHETIC_PROVIDER_RESPONSE_MARKER"), std::string::npos);
+    EXPECT_EQ(detail_reply->body.find("\"prev\""), std::string::npos);
+    EXPECT_EQ(detail_reply->body.find("\"hash\""), std::string::npos);
+    EXPECT_EQ(handled(), 0);
+    ASSERT_TRUE(prompt_airlock::audit::verify(audit_->dir()));
+    const auto records = audit_->read_recent();
+    ASSERT_TRUE(records);
+    int read_events = 0;
+    for (const auto& record : *records) {
+        if (record["kind"] == "admin_history_access" && record["result"] == "read") ++read_events;
+    }
+    EXPECT_EQ(read_events, 3);
+}
+
+TEST_F(GatewayAdminHistory, DedicatedAdminTokenCannotUseProtectedRequestOrCredentialRoutes) {
+    auto ordinary = admin_request("open-token", "/v1/admin/audit/counts");
+    ASSERT_EQ(send(ordinary)->status, 404U);
+
+    auto chat = request("admin-token");
+    chat.set("X-Prompt-Airlock-Grade", "O");
+    EXPECT_EQ(send(chat)->status, 404U);
+
+    auto preview = request("admin-token");
+    preview.target("/v1/preview");
+    preview.set("X-Prompt-Airlock-Grade", "O");
+    EXPECT_EQ(send(preview)->status, 404U);
+
+    auto rotate = request("admin-token", R"({"credential":"synthetic-admin-key"})");
+    rotate.target("/v1/provider/credential");
+    rotate.set("X-Prompt-Airlock-Grade", "O");
+    const auto host = "127.0.0.1:" + std::to_string(port_);
+    rotate.set(http::field::host, host);
+    rotate.set(http::field::origin, "https://" + host);
+    EXPECT_EQ(send(rotate)->status, 404U);
+    EXPECT_EQ(credential_write_calls_, 0);
+    EXPECT_EQ(handled(), 0);
+}
+
+TEST_F(GatewayAdminHistory, RejectsRemoteHostOriginDuplicateAuthBodyAndUnboundedPages) {
+    auto wrong_host = admin_request("admin-token", "/v1/admin/audit/counts");
+    wrong_host.set(http::field::host, "example.invalid");
+    EXPECT_EQ(send(wrong_host)->status, 403U);
+
+    auto wrong_origin = admin_request("admin-token", "/v1/admin/audit/counts");
+    wrong_origin.set(http::field::origin, "https://example.invalid");
+    EXPECT_EQ(send(wrong_origin)->status, 403U);
+
+    auto duplicate_auth = admin_request("admin-token", "/v1/admin/audit/counts");
+    duplicate_auth.insert(http::field::authorization, "Bearer admin-token");
+    EXPECT_EQ(send(duplicate_auth)->status, 400U);
+
+    auto duplicate_host = admin_request("admin-token", "/v1/admin/audit/counts");
+    duplicate_host.insert(http::field::host, "127.0.0.1:" + std::to_string(port_));
+    EXPECT_EQ(send(duplicate_host)->status, 403U);
+
+    auto duplicate_origin = admin_request("admin-token", "/v1/admin/audit/counts");
+    duplicate_origin.insert(http::field::origin, "https://127.0.0.1:" + std::to_string(port_));
+    EXPECT_EQ(send(duplicate_origin)->status, 403U);
+
+    auto remote = admin_request("admin-token", "/v1/admin/audit/counts");
+    const auto remote_reply = send(remote, nullptr, false, "127.0.0.2");
+    ASSERT_TRUE(remote_reply);
+    EXPECT_EQ(remote_reply->status, 403U);
+
+    EXPECT_EQ(send(admin_request("admin-token", "/v1/admin/audit/events?page=40"))->status, 400U);
+    EXPECT_EQ(send(admin_request("admin-token", "/v1/admin/audit/events?page=0&page=1"))->status, 400U);
+    EXPECT_EQ(send(admin_request("admin-token", "/v1/admin/audit/egress/not-an-id"))->status, 400U);
+
+    auto body = admin_request("admin-token", "/v1/admin/audit/counts");
+    body.body() = "synthetic-body-marker";
+    EXPECT_EQ(send(body)->status, 400U);
+    EXPECT_EQ(handled(), 0);
+}
+
+TEST_F(GatewayAdminHistory, AllowsOnlyOneConcurrentAdminRead) {
+    const std::string padding(1024, 'x');
+    for (int i = 0; i < 7500; ++i) {
+        ASSERT_TRUE(audit_->append("request", "info", {{"origin", "dept-a"}, {"status", 200},
+            {"result", "pass"}, {"padding", padding}, {"n", i}}));
+    }
+    std::barrier start(3);
+    std::array<std::optional<Reply>, 2> replies;
+    std::thread first([&] {
+        start.arrive_and_wait();
+        replies[0] = send(admin_request("admin-token", "/v1/admin/audit/counts"));
+    });
+    std::thread second([&] {
+        start.arrive_and_wait();
+        replies[1] = send(admin_request("admin-token", "/v1/admin/audit/counts"));
+    });
+    start.arrive_and_wait();
+    first.join();
+    second.join();
+    ASSERT_TRUE(replies[0]);
+    ASSERT_TRUE(replies[1]);
+    const auto overloads = static_cast<int>(replies[0]->status == 503U && code_of(*replies[0]) == "overloaded") +
+                           static_cast<int>(replies[1]->status == 503U && code_of(*replies[1]) == "overloaded");
+    const auto successes = static_cast<int>(replies[0]->status == 200U) + static_cast<int>(replies[1]->status == 200U);
+    EXPECT_EQ(overloads, 1);
+    EXPECT_EQ(successes, 1);
+    EXPECT_EQ(handled(), 0);
+}
+
+TEST_F(GatewayAdminHistory, LargeDetailIsOutOfRangeWhileAggregateRemainsAvailable) {
+    constexpr std::string_view request_id = "chatcmpl-pa-fedcba987654321001234567";
+    ASSERT_TRUE(audit_->append("egress", "info", {{"request_id", request_id},
+        {"sent", std::string(140U << 10, 'x')}}));
+    const auto counts = send(admin_request("admin-token", "/v1/admin/audit/counts"));
+    ASSERT_TRUE(counts);
+    ASSERT_EQ(counts->status, 200U);
+    EXPECT_EQ(nlohmann::json::parse(counts->body)["counts"]["egress_prepared"], 1);
+
+    const auto detail = send(admin_request("admin-token", "/v1/admin/audit/egress/" + std::string(request_id)));
+    ASSERT_TRUE(detail);
+    EXPECT_EQ(detail->status, 200U);
+    EXPECT_EQ(nlohmann::json::parse(detail->body)["status"], "out_of_range");
+    EXPECT_EQ(detail->body.find(std::string(140U << 10, 'x')), std::string::npos);
+}
+
+TEST_F(GatewayAdminHistory, CorruptRecentAuditDoesNotReturnStoredRequestText) {
+    constexpr std::string_view request_id = "chatcmpl-pa-abcdef0123456789abcdef01";
+    constexpr std::string_view marker = "SYNTHETIC_TOKENIZED_MARKER";
+    ASSERT_TRUE(audit_->append("egress", "info", {{"request_id", request_id},
+        {"sent", nlohmann::json{{"model", "demo-alias"}, {"messages", nlohmann::json::array({
+            {{"role", "user"}, {"content", marker}}})}}}}));
+    std::filesystem::path current_log;
+    for (const auto& entry : std::filesystem::directory_iterator(audit_->dir())) {
+        if (entry.path().extension() == ".jsonl") current_log = entry.path();
+    }
+    ASSERT_FALSE(current_log.empty());
+    std::ifstream input(current_log, std::ios::binary);
+    std::string line;
+    ASSERT_TRUE(std::getline(input, line));
+    const auto hash = line.find("\"hash\":\"");
+    ASSERT_NE(hash, std::string::npos);
+    line[hash + 8] = line[hash + 8] == '0' ? '1' : '0';
+    std::ofstream output(current_log, std::ios::binary | std::ios::trunc);
+    output << line << '\n';
+    output.close();
+
+    const auto reply = send(admin_request("admin-token", "/v1/admin/audit/egress/" + std::string(request_id)));
+    ASSERT_TRUE(reply);
+    EXPECT_EQ(reply->status, 503U);
+    EXPECT_EQ(reply->body.find(marker), std::string::npos);
+    EXPECT_EQ(handled(), 0);
+}
+
+TEST_F(GatewayAdminHistory, FailedReadAuditWriteReturnsNoDetail) {
+    constexpr std::string_view request_id = "chatcmpl-pa-00112233445566778899aabb";
+    constexpr std::string_view marker = "SYNTHETIC_TOKENIZED_MARKER";
+    ASSERT_TRUE(audit_->append("egress", "info", {{"request_id", request_id},
+        {"sent", nlohmann::json{{"model", "demo-alias"}, {"messages", nlohmann::json::array({
+            {{"role", "user"}, {"content", marker}}})}}}}));
+    std::filesystem::path current_log;
+    for (const auto& entry : std::filesystem::directory_iterator(audit_->dir())) {
+        if (entry.path().extension() == ".jsonl") current_log = entry.path();
+    }
+    ASSERT_FALSE(current_log.empty());
+    const auto original_permissions = std::filesystem::status(current_log).permissions();
+    std::error_code permission_error;
+    std::filesystem::permissions(current_log, std::filesystem::perms::owner_read,
+                                 std::filesystem::perm_options::replace, permission_error);
+    ASSERT_FALSE(permission_error);
+    const auto reply = send(admin_request("admin-token", "/v1/admin/audit/egress/" + std::string(request_id)));
+    std::filesystem::permissions(current_log, original_permissions, std::filesystem::perm_options::replace, permission_error);
+    ASSERT_FALSE(permission_error);
+    ASSERT_TRUE(reply);
+    EXPECT_EQ(reply->status, 503U);
+    EXPECT_EQ(reply->body.find(marker), std::string::npos);
     EXPECT_EQ(handled(), 0);
 }
 
