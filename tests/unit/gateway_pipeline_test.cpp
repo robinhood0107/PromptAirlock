@@ -14,6 +14,7 @@
 #include <gtest/gtest.h>
 #include <nlohmann/json.hpp>
 
+#include <algorithm>
 #include <atomic>
 #include <chrono>
 #include <condition_variable>
@@ -78,6 +79,20 @@ public:
     }
 };
 
+class CountingNer final : public detect::NerScanner {
+public:
+    std::expected<std::vector<core::EntitySpan>, core::DetectError> scan(std::string_view, core::SegmentIndex,
+                                                                        const detect::DetectionView&,
+                                                                        std::stop_token) const override {
+        ++calls_;
+        return std::vector<core::EntitySpan>{};
+    }
+    int calls() const { return calls_; }
+
+private:
+    mutable std::atomic<int> calls_{0};
+};
+
 // 취소 신호가 올 때까지(최대 5초) 기다린다. 신호를 받으면 NerPool 처럼 Timeout 을 낸다.
 class StopNer final : public detect::NerScanner {
 public:
@@ -131,6 +146,7 @@ protected:
         return gw::Pipeline(
             detectors,
             [this]() -> std::expected<gw::PseudonymScope, core::VaultError> {
+                ++scope_open_calls_;
                 if (vault_down_) {
                     return std::unexpected(core::VaultError::Unavailable);
                 }
@@ -215,6 +231,7 @@ protected:
     unsigned provider_status_ = 200;
     bool provider_hangs_ = false;
     std::atomic<int> live_scopes_{0};
+    std::atomic<int> scope_open_calls_{0};
     int provider_calls_ = 0;
     std::vector<std::string> sent_;
 };
@@ -1012,4 +1029,87 @@ TEST_F(GatewayPipeline, FileMetadataAuditFailurePreventsProviderCall) {
     EXPECT_EQ(provider_calls_, 0);
     log->reset();
     std::filesystem::remove(dir);
+}
+
+TEST_F(GatewayPipeline, ConfirmationListIsReadOnlySourceBoundAndBypassesProtectionStages) {
+    const auto root = std::filesystem::temp_directory_path() /
+        ("pa-confirm-list-" + std::to_string(std::chrono::steady_clock::now().time_since_epoch().count()));
+    auto audit = prompt_airlock::audit::AuditLog::open(root, std::chrono::days(365));
+    ASSERT_TRUE(audit);
+    auto ner = std::make_shared<CountingNer>();
+    const auto detectors = *detect::Detectors::make({}, ner);
+    std::atomic<int> sentence_calls{0};
+    gw::SentenceCheck sentence = [&](std::string_view, bool, std::stop_token)
+        -> std::expected<std::optional<std::string>, core::DetectError> {
+        ++sentence_calls;
+        return std::optional<std::string>{"synthetic-warning"};
+    };
+    const auto pipeline = make(detectors, gw::pipeline_in_flight_limit, gw::request_time_limit,
+                               std::move(sentence), audit->get());
+    const auto warning = run(pipeline, ask("A synthetic request needs confirmation"));
+    ASSERT_EQ(warning.status, 409U) << warning.body;
+    const auto mark = json::parse(warning.body)["error"]["confirm_token"].get<std::string>();
+    ASSERT_TRUE(gw::valid_confirmation_token(mark));
+    const int detector_calls = ner->calls();
+    const int sentence_calls_before_list = sentence_calls.load();
+    const int scope_opens = scope_open_calls_.load();
+    const int provider_calls = provider_calls_;
+
+    const auto list_reply = run(pipeline, {}, core::GradePolicy::OOnly, {}, gw::RequestPurpose::ConfirmationList);
+    ASSERT_EQ(list_reply.status, 200U) << list_reply.body;
+    auto list = json::parse(list_reply.body);
+    ASSERT_EQ(list["items"].size(), 1U);
+    EXPECT_EQ(list["items"][0]["state"], "pending");
+    EXPECT_EQ(list["items"][0]["approval_mark"], mark);
+    EXPECT_FALSE(list["items"][0].contains("body_sha256"));
+    EXPECT_FALSE(list["items"][0].contains("origin"));
+    EXPECT_EQ(ner->calls(), detector_calls);
+    EXPECT_EQ(sentence_calls.load(), sentence_calls_before_list);
+    EXPECT_EQ(scope_open_calls_.load(), scope_opens);
+    EXPECT_EQ(provider_calls_, provider_calls);
+
+    ASSERT_EQ(approve(pipeline, mark).status, 200U);
+    const auto approved_reply = run(pipeline, {}, core::GradePolicy::OOnly, {}, gw::RequestPurpose::ConfirmationList);
+    ASSERT_EQ(approved_reply.status, 200U);
+    list = json::parse(approved_reply.body);
+    ASSERT_EQ(list["items"].size(), 1U);
+    EXPECT_EQ(list["items"][0]["state"], "approved");
+    EXPECT_FALSE(list["items"][0].contains("approval_mark"));
+    EXPECT_EQ(approve(pipeline, mark).status, 409U);
+
+    const auto records = (*audit)->read_recent();
+    ASSERT_TRUE(records);
+    int list_reads = 0;
+    int ordinary_requests = 0;
+    for (const auto& record : records->records) {
+        if (record["kind"] == "confirmation" && record.value("operation", "") == "list") {
+            ++list_reads;
+            EXPECT_FALSE(record.contains("approval_mark"));
+            EXPECT_FALSE(record.contains("body_sha256"));
+        }
+        if (record["kind"] == "request") ++ordinary_requests;
+    }
+    EXPECT_EQ(list_reads, 2);
+    EXPECT_EQ(ordinary_requests, 1);
+    EXPECT_EQ(provider_calls_, provider_calls);
+
+    std::filesystem::path active_file;
+    for (const auto& entry : std::filesystem::directory_iterator((*audit)->dir())) {
+        if (entry.path().extension() == ".jsonl") active_file = entry.path();
+    }
+    ASSERT_FALSE(active_file.empty());
+    const auto permissions = std::filesystem::status(active_file).permissions();
+    std::error_code permission_error;
+    std::filesystem::permissions(active_file, std::filesystem::perms::owner_read,
+                                 std::filesystem::perm_options::replace, permission_error);
+    ASSERT_FALSE(permission_error);
+    const auto denied_list = run(pipeline, {}, core::GradePolicy::OOnly, {}, gw::RequestPurpose::ConfirmationList);
+    std::filesystem::permissions(active_file, permissions, std::filesystem::perm_options::replace, permission_error);
+    ASSERT_FALSE(permission_error);
+    EXPECT_EQ(denied_list.status, 503U);
+    EXPECT_EQ(denied_list.body.find("approval_mark"), std::string::npos);
+    EXPECT_EQ(denied_list.body.find("items"), std::string::npos);
+    audit->reset();
+    std::error_code ignored;
+    std::filesystem::remove_all(root, ignored);
 }

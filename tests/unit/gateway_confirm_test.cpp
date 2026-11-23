@@ -3,6 +3,7 @@
 
 #include <gtest/gtest.h>
 
+#include <algorithm>
 #include <atomic>
 #include <barrier>
 #include <future>
@@ -144,5 +145,115 @@ TEST(ConfirmLedger, RedemptionCannotUseTimeFromBeforeTheMutexWait) {
     waiter.join();
     EXPECT_TRUE(held_approved.load());
     EXPECT_FALSE(redeemed.load());
+}
+
+TEST(ConfirmLedger, ListIsSourceBoundAndDoesNotApproveOrConsumeItems) {
+    const auto now = Clock::now();
+    gw::ConfirmLedger ledger([&] { return now; });
+    const auto pending = ledger.issue("body-pending", "desk-a");
+    const auto approved = ledger.issue("body-approved", "desk-a");
+    const auto consumed = ledger.issue("body-consumed", "desk-a");
+    ASSERT_TRUE(pending);
+    ASSERT_TRUE(approved);
+    ASSERT_TRUE(consumed);
+    ASSERT_TRUE(ledger.approve(*approved, "desk-a", [](auto) { return true; }));
+    ASSERT_TRUE(ledger.redeem(*consumed, "body-consumed", "desk-a"));
+    ASSERT_TRUE(ledger.issue("body-other", "desk-b"));
+
+    const auto listed = ledger.list_for_origin("desk-a");
+    ASSERT_EQ(listed.items.size(), 2u);
+    EXPECT_FALSE(listed.truncated);
+    const auto pending_item = std::ranges::find(listed.items, *pending, &gw::ConfirmationListItem::approval_mark);
+    const auto approved_item = std::ranges::find_if(listed.items, [](const auto& item) { return item.approved; });
+    ASSERT_NE(pending_item, listed.items.end());
+    ASSERT_NE(approved_item, listed.items.end());
+    EXPECT_FALSE(pending_item->approved);
+    EXPECT_TRUE(approved_item->approved);
+    EXPECT_TRUE(approved_item->approval_mark.empty());
+    EXPECT_GT(pending_item->expires_in_seconds, 0u);
+    EXPECT_LE(pending_item->expires_in_seconds, gw::confirm_ttl.count() * 60);
+
+    EXPECT_TRUE(ledger.redeem(*pending, "body-pending", "desk-a"));
+    EXPECT_TRUE(ledger.redeem_approved("body-approved", "desk-a"));
+    EXPECT_TRUE(ledger.list_for_origin("desk-a").items.empty());
+}
+
+TEST(ConfirmLedger, ListHasAShortCapAndHidesExpiredItemsWithoutExtendingThem) {
+    auto now = Clock::now();
+    gw::ConfirmLedger ledger([&] { return now; });
+    const auto earliest = ledger.issue("first", "desk-a");
+    ASSERT_TRUE(earliest);
+    now += std::chrono::minutes(1);
+    for (std::size_t i = 0; i < gw::confirmation_list_limit + 5; ++i) {
+        ASSERT_TRUE(ledger.issue("body", "desk-a"));
+    }
+    ASSERT_TRUE(ledger.issue("body", "desk-b"));
+    auto listed = ledger.list_for_origin("desk-a");
+    ASSERT_EQ(listed.items.size(), gw::confirmation_list_limit);
+    EXPECT_TRUE(listed.truncated);
+    EXPECT_EQ(listed.items.front().approval_mark, *earliest);
+    EXPECT_LT(listed.items.front().expires_in_seconds, listed.items.back().expires_in_seconds);
+    for (const auto& item : listed.items) {
+        EXPECT_TRUE(gw::valid_confirmation_token(item.approval_mark));
+        EXPECT_GT(item.expires_in_seconds, 0u);
+        EXPECT_LE(item.expires_in_seconds, gw::confirm_ttl.count() * 60);
+    }
+
+    now += gw::confirm_ttl - std::chrono::minutes(1) - std::chrono::seconds(1);
+    listed = ledger.list_for_origin("desk-a");
+    ASSERT_EQ(listed.items.size(), gw::confirmation_list_limit);
+    EXPECT_TRUE(listed.truncated);
+    EXPECT_EQ(listed.items.front().approval_mark, *earliest);
+    EXPECT_EQ(listed.items.front().expires_in_seconds, 1u);
+    now += std::chrono::seconds(1);
+    listed = ledger.list_for_origin("desk-a");
+    ASSERT_EQ(listed.items.size(), gw::confirmation_list_limit);
+    EXPECT_TRUE(listed.truncated);
+    EXPECT_NE(listed.items.front().approval_mark, *earliest);
+    now += std::chrono::minutes(1);
+    listed = ledger.list_for_origin("desk-a");
+    EXPECT_TRUE(listed.items.empty());
+    EXPECT_FALSE(listed.truncated);
+}
+
+TEST(ConfirmLedger, ConcurrentListingWithApprovalAndConsumptionIsSafe) {
+    const auto now = Clock::now();
+    gw::ConfirmLedger ledger([&] { return now; });
+    std::vector<std::string> tokens;
+    for (int i = 0; i < 64; ++i) {
+        const auto token = ledger.issue("body", "desk-a");
+        ASSERT_TRUE(token);
+        tokens.push_back(*token);
+    }
+    ASSERT_TRUE(ledger.issue("body", "desk-b"));
+    std::barrier start(4);
+    std::atomic<bool> failed{false};
+    auto reader = [&] {
+        start.arrive_and_wait();
+        for (int i = 0; i < 100; ++i) {
+            const auto snapshot = ledger.list_for_origin("desk-a");
+            if (snapshot.items.size() > gw::confirmation_list_limit) failed = true;
+            for (const auto& item : snapshot.items) {
+                if (item.expires_in_seconds == 0 ||
+                    (item.approved ? !item.approval_mark.empty()
+                                   : std::ranges::find(tokens, item.approval_mark) == tokens.end())) failed = true;
+            }
+        }
+    };
+    std::jthread first_reader(reader);
+    std::jthread second_reader(reader);
+    std::jthread writer([&] {
+        start.arrive_and_wait();
+        for (const auto& token : tokens) {
+            if (ledger.approve(token, "desk-a", [](auto) { return true; })) {
+                (void)ledger.redeem_approved("body", "desk-a");
+            }
+        }
+    });
+    start.arrive_and_wait();
+    first_reader.join();
+    second_reader.join();
+    writer.join();
+    EXPECT_FALSE(failed.load());
 }
 }  // namespace

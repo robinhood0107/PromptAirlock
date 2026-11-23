@@ -24,6 +24,12 @@ const credentialSave = document.getElementById('credential-save');
 const credentialStatus = document.getElementById('credential-status');
 const gatewayCheck = document.getElementById('gateway-check');
 const gatewayStatus = document.getElementById('gateway-status');
+const approvalListPanel = document.getElementById('approval-list-panel');
+const approvalOriginToken = document.getElementById('approval-origin-token');
+const approvalOpenConfirm = document.getElementById('approval-open-confirm');
+const approvalListLoad = document.getElementById('approval-list-load');
+const approvalListStatus = document.getElementById('approval-list-status');
+const approvalListItems = document.getElementById('approval-list-items');
 const adminToken = document.getElementById('admin-token');
 const adminPanel = document.getElementById('admin-history');
 const adminOpen = document.getElementById('admin-open');
@@ -51,6 +57,9 @@ const adminEventFields = [
   ['grade', '등급'], ['entity_count', '가명 표지 건수'], ['blocked_type_count', '차단 종류 수'],
   ['duration_ms', '처리 시간(ms)'], ['operation', '조회 종류']
 ];
+let approvalListBusy = false;
+let approvalListController = null;
+let approvalListGeneration = 0;
 let adminBusy = false;
 let adminController = null;
 let adminGeneration = 0;
@@ -252,6 +261,150 @@ gatewayCheck.addEventListener('click', async () => {
     gatewayCheck.disabled = false;
     gatewayCheckBusy = false;
   }
+});
+
+function setApprovalListStatus(message, state = 'neutral') {
+  approvalListStatus.textContent = message;
+  approvalListStatus.dataset.state = state;
+}
+
+function clearApprovalList() {
+  approvalListGeneration += 1;
+  if (approvalListController) approvalListController.abort();
+  approvalListController = null;
+  approvalOriginToken.value = '';
+  approvalOpenConfirm.checked = false;
+  approvalListItems.replaceChildren();
+  const empty = document.createElement('li');
+  empty.textContent = '확인 요청을 아직 조회하지 않았습니다.';
+  approvalListItems.append(empty);
+  setApprovalListStatus('조회 전에 출처 token을 입력하고 공개(O) 등급을 확인하세요.');
+}
+
+function validApprovalList(data) {
+  if (!data || Object.keys(data).sort().join(',') !== 'items,status,truncated' ||
+      data.status !== 'available' || typeof data.truncated !== 'boolean' ||
+      !Array.isArray(data.items) || data.items.length > 25) return false;
+  const marks = new Set();
+  return data.items.every(item => {
+    if (!item || !Number.isSafeInteger(item.expires_in_seconds) ||
+        item.expires_in_seconds < 1 || item.expires_in_seconds > 300) return false;
+    if (item.state === 'pending') {
+      if (Object.keys(item).sort().join(',') !== 'approval_mark,expires_in_seconds,state' ||
+          typeof item.approval_mark !== 'string' || !/^[0-9a-f]{32}$/.test(item.approval_mark) ||
+          marks.has(item.approval_mark)) return false;
+      marks.add(item.approval_mark);
+      return true;
+    }
+    return item.state === 'approved' && Object.keys(item).sort().join(',') === 'expires_in_seconds,state';
+  });
+}
+
+function renderApprovalItem(item) {
+  const row = document.createElement('li');
+  const text = document.createElement('span');
+  text.textContent = item.state === 'approved'
+    ? `이미 승인됨 · ${item.expires_in_seconds}초 후 만료`
+    : `승인 대기 · ${item.expires_in_seconds}초 후 만료 `;
+  row.append(text);
+  if (item.state === 'pending') {
+    const link = document.createElement('a');
+    link.href = '/console/confirm?token=' + encodeURIComponent(item.approval_mark);
+    link.rel = 'noreferrer';
+    link.textContent = '기존 확인 화면 열기';
+    row.append(link);
+  }
+  return row;
+}
+
+async function loadApprovalList() {
+  if (approvalListBusy) return;
+  approvalListItems.replaceChildren();
+  if (!approvalOpenConfirm.checked) {
+    approvalOriginToken.value = '';
+    setApprovalListStatus('공개(O) 등급을 확인하지 않아 요청을 보내지 않았습니다.', 'denied');
+    approvalOpenConfirm.focus();
+    return;
+  }
+  let sourceToken = approvalOriginToken.value;
+  approvalOriginToken.value = '';
+  approvalOpenConfirm.checked = false;
+  if (!sourceToken || sourceToken.length > 256 || !/^[\x21-\x7e]+$/.test(sourceToken)) {
+    setApprovalListStatus('등록된 출처 token을 확인하세요. 요청은 보내지 않았습니다.', 'denied');
+    approvalOriginToken.focus();
+    return;
+  }
+  const generation = approvalListGeneration;
+  let temporaryToken = sourceToken;
+  const headers = { Authorization: 'Bearer ' + temporaryToken, 'X-Prompt-Airlock-Grade': 'O' };
+  temporaryToken = '';
+  sourceToken = '';
+  const controller = new AbortController();
+  approvalListController = controller;
+  approvalListBusy = true;
+  approvalListLoad.disabled = true;
+  setApprovalListStatus('현재 출처의 확인 요청을 조회하고 있습니다.');
+  try {
+    const reply = await fetch('/v1/confirmations/pending', {
+      method: 'GET', mode: 'same-origin', credentials: 'omit', redirect: 'error', cache: 'no-store',
+      referrerPolicy: 'no-referrer', headers, signal: controller.signal
+    });
+    let data;
+    try { data = await reply.json(); } catch { data = null; }
+    if (generation !== approvalListGeneration) return;
+    if (!reply.ok) {
+      const code = data && data.error && typeof data.error.code === 'string' ? data.error.code : '';
+      if (reply.status === 401 || reply.status === 429 || code === 'unauthorized' ||
+          code === 'too_many_failures' || code === 'too_many_auth_failures') {
+        setApprovalListStatus('출처 인증이 거절됐습니다. token을 확인하세요.', 'denied');
+      } else if (reply.status === 403 || code.startsWith('grade_') || code === 'local_only') {
+        setApprovalListStatus('로컬 접속 또는 공개(O) 등급 조건에서 거절됐습니다.', 'denied');
+      } else if (reply.status === 404 || code === 'not_found') {
+        setApprovalListStatus('이 출처에서는 확인 요청 목록을 사용할 수 없습니다.', 'denied');
+      } else if (reply.status === 503 && code === 'unavailable') {
+        setApprovalListStatus('감사 기록에 실패해 확인 요청을 반환하지 않았습니다.', 'audit-failure');
+      } else if (code === 'overloaded') {
+        setApprovalListStatus('게이트웨이가 바쁩니다. 조회 결과를 반환하지 않았습니다.', 'busy');
+      } else {
+        setApprovalListStatus('목록 조회를 완료하지 못했습니다. 오류 원문은 표시하지 않습니다.', 'error');
+      }
+      return;
+    }
+    if (!validApprovalList(data)) {
+      setApprovalListStatus('목록 응답 형식을 확인하지 못했습니다. 표지를 표시하지 않습니다.', 'error');
+      return;
+    }
+    approvalListItems.replaceChildren();
+    if (data.items.length === 0) {
+      const empty = document.createElement('li');
+      empty.textContent = '현재 이 출처의 유효한 확인 요청이 없습니다.';
+      approvalListItems.append(empty);
+    } else {
+      for (const item of data.items) approvalListItems.append(renderApprovalItem(item));
+    }
+    setApprovalListStatus(data.truncated
+      ? '먼저 만료될 요청 최대 25개를 표시했습니다. 목록 조회는 승인 상태나 만료를 바꾸지 않습니다.'
+      : '현재 출처의 유효한 확인 요청을 표시했습니다. 목록 조회는 승인 상태나 만료를 바꾸지 않습니다.',
+    data.truncated ? 'partial' : 'available');
+  } catch {
+    if (generation === approvalListGeneration) {
+      setApprovalListStatus('로컬 승인 목록 조회에 연결하지 못했습니다.', 'error');
+    }
+  } finally {
+    temporaryToken = '';
+    if (approvalListController === controller) approvalListController = null;
+    approvalListBusy = false;
+    approvalListLoad.disabled = false;
+  }
+}
+
+approvalListLoad.addEventListener('click', loadApprovalList);
+approvalListPanel.addEventListener('toggle', () => {
+  if (!approvalListPanel.open) clearApprovalList();
+});
+window.addEventListener('pagehide', () => {
+  clearApprovalList();
+  approvalListPanel.open = false;
 });
 
 function setAdminStatus(message, state = 'neutral') {

@@ -1,4 +1,4 @@
-// HTTPS 입구(ADR 0004, 0020, 0029). 대화·미리보기·로컬 확인 승인을 받는다.
+// HTTPS 입구(ADR 0004, 0020, 0029). 대화·미리보기·출처별 확인 목록·로컬 확인 승인을 받는다.
 // 순서: TLS → 헤더 읽기 → 출처 인증 → 경로·메서드·형식 → 등급 헤더 → 본문(상한) → handler.
 // 앞 단계에서 거절하면 본문은 읽지 않고, handler(그 뒤 provider)는 불리지 않는다.
 #pragma once
@@ -24,7 +24,7 @@ namespace prompt_airlock::gateway {
 
 struct UploadLease;
 
-enum class RequestPurpose { Chat, Preview, Approve, CredentialRotation };
+enum class RequestPurpose { Chat, Preview, Approve, ConfirmationList, CredentialRotation };
 
 struct ServerLimits {
     std::size_t header_bytes = 8 * 1024;

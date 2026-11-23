@@ -4,6 +4,7 @@
 
 #include <chrono>
 #include <cstddef>
+#include <cstdint>
 #include <functional>
 #include <mutex>
 #include <optional>
@@ -11,6 +12,7 @@
 #include <string_view>
 #include <unordered_map>
 #include <utility>
+#include <vector>
 
 namespace prompt_airlock::gateway {
 
@@ -20,7 +22,20 @@ inline constexpr std::size_t confirm_capacity = 1024;
 // 표지 길이(16진수). 128 bit.
 inline constexpr std::size_t confirm_token_chars = 32;
 inline constexpr std::size_t confirm_body_bytes = 1024;
+inline constexpr std::size_t confirmation_list_limit = 25;
 [[nodiscard]] bool valid_confirmation_token(std::string_view token) noexcept;
+
+struct ConfirmationListItem {
+    // 승인된 표지는 다시 열 수 없도록 비워 둔다.
+    std::string approval_mark;
+    bool approved = false;
+    std::uint32_t expires_in_seconds = 0;
+};
+
+struct ConfirmationList {
+    std::vector<ConfirmationListItem> items;
+    bool truncated = false;
+};
 
 class ConfirmLedger {
 public:
@@ -38,6 +53,7 @@ public:
     [[nodiscard]] bool approve(std::string_view token, std::string_view origin,
                                 const std::function<bool(std::string_view)>& check);
     [[nodiscard]] bool redeem_approved(std::string_view body_sha256, std::string_view origin);
+    [[nodiscard]] ConfirmationList list_for_origin(std::string_view origin);
 
 private:
     enum class State { Pending, Approved };

@@ -115,6 +115,7 @@ constexpr auto use_tuple = asio::as_tuple(asio::use_awaitable);
 constexpr std::string_view endpoint_path = "/v1/chat/completions";
 constexpr std::string_view preview_path = "/v1/preview";
 constexpr std::string_view approval_path = "/v1/confirmations/approve";
+constexpr std::string_view approval_list_path = "/v1/confirmations/pending";
 constexpr std::string_view credential_rotation_path = "/v1/provider/credential";
 constexpr std::string_view admin_path_prefix = "/v1/admin/";
 constexpr std::string_view admin_counts_path = "/v1/admin/audit/counts";
@@ -330,16 +331,18 @@ std::expected<std::pair<const Origin*, core::OpenGrade>, JsonResponse> check_hea
                                                                                      : EntryError::Unauthorized));
     }
     if (head.target() != endpoint_path && head.target() != preview_path && head.target() != approval_path &&
-        head.target() != credential_rotation_path) {
+        head.target() != approval_list_path && head.target() != credential_rotation_path) {
         return std::unexpected(error_response(EntryError::NotFound));
     }
     if (!admin_history_origin.empty() && (*origin)->name == admin_history_origin) {
         return std::unexpected(error_response(EntryError::NotFound));
     }
-    if (head.method() != http::verb::post) {
+    const bool confirmation_list = head.target() == approval_list_path;
+    if ((confirmation_list && head.method() != http::verb::get) ||
+        (!confirmation_list && head.method() != http::verb::post)) {
         return std::unexpected(error_response(EntryError::MethodNotAllowed));
     }
-    if (!is_json(head[http::field::content_type])) {
+    if (!confirmation_list && !is_json(head[http::field::content_type])) {
         return std::unexpected(error_response(EntryError::UnsupportedMediaType));
     }
     if (head.target() == credential_rotation_path && head.count(http::field::content_type) != 1) {
@@ -354,6 +357,22 @@ std::expected<std::pair<const Origin*, core::OpenGrade>, JsonResponse> check_hea
             return std::unexpected(error_response(EntryError::LocalOnly));
         }
         if (head.count(confirm_header) != 0) {
+            return std::unexpected(error_response(EntryError::BadRequest));
+        }
+    }
+    if (confirmation_list) {
+        if (!local_console_request(head, client, port)) {
+            if (audit != nullptr) {
+                (void)audit->append("confirmation", "warn", { {"origin", (*origin)->name}, {"client", client},
+                    {"result", "reject"}, {"reason", "local_only"} });
+            }
+            return std::unexpected(error_response(EntryError::LocalOnly));
+        }
+        const bool bad_length = head.count(http::field::content_length) > 1 ||
+            (head.count(http::field::content_length) == 1 && head[http::field::content_length] != "0");
+        if (bad_length || head.count(http::field::transfer_encoding) != 0 ||
+            head.count(http::field::content_type) != 0 || head.count(http::field::expect) != 0 ||
+            head.count(confirm_header) != 0) {
             return std::unexpected(error_response(EntryError::BadRequest));
         }
     }
@@ -573,7 +592,7 @@ json admin_event_metadata(const json& record) {
     }
     if (record.contains("operation") && record["operation"].is_string()) {
         const auto& operation = record["operation"].get_ref<const std::string&>();
-        if (operation == "counts" || operation == "events" || operation == "egress_detail") {
+        if (operation == "counts" || operation == "events" || operation == "egress_detail" || operation == "list") {
             result["operation"] = operation;
         }
     }
@@ -695,7 +714,11 @@ JsonResponse admin_read_response(const AdminReadRequest& request, std::string_vi
                     if (valid && status >= 400 && status <= 599) ++request_rejections;
                 }
             } else if (kind == "preview") ++previews;
-            else if (kind == "confirmation") ++confirmations;
+            else if (kind == "confirmation") {
+                if (!record.contains("operation") || !record["operation"].is_string() || record["operation"] != "list") {
+                    ++confirmations;
+                }
+            }
             else if (kind == "credential_rotation") ++credential_rotations;
             else if (kind == "egress") ++egress_prepared;
             else if (kind == "egress_answer") ++provider_response_records;
@@ -872,9 +895,11 @@ asio::awaitable<void> session(std::shared_ptr<Server::Shared> shared, tcp::socke
         auto purpose = RequestPurpose::Chat;
         if (head.target() == preview_path) purpose = RequestPurpose::Preview;
         else if (head.target() == approval_path) purpose = RequestPurpose::Approve;
+        else if (head.target() == approval_list_path) purpose = RequestPurpose::ConfirmationList;
         else if (head.target() == credential_rotation_path) purpose = RequestPurpose::CredentialRotation;
         auto body_limit = shared->limits.body_bytes;
         if (purpose == RequestPurpose::Approve) body_limit = std::min(body_limit, confirm_body_bytes);
+        if (purpose == RequestPurpose::ConfirmationList) body_limit = 0;
         if (purpose == RequestPurpose::CredentialRotation) {
             body_limit = std::min(body_limit, credential_rotation_body_bytes);
         }
@@ -960,7 +985,7 @@ asio::awaitable<void> session(std::shared_ptr<Server::Shared> shared, tcp::socke
         if (shared->chat_app_compat && purpose == RequestPurpose::Chat && !resource && !admin_api) {
             *reply = chat_notice(std::move(*reply), shared->port);
         }
-        keep_alive = !resource && !rejected && parser.get().keep_alive();
+        keep_alive = !resource && !rejected && purpose != RequestPurpose::ConfirmationList && parser.get().keep_alive();
         deadline();
         if (auto [write_error, written] =
                 co_await http::async_write(stream, make_reply(std::move(*reply), version, keep_alive), use_tuple);

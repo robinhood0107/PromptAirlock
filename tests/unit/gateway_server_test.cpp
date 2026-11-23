@@ -15,6 +15,7 @@
 #include <nlohmann/json.hpp>
 #include <openssl/ssl.h>
 
+#include <algorithm>
 #include <array>
 #include <atomic>
 #include <barrier>
@@ -308,6 +309,18 @@ protected:
         return req;
     }
 
+    http::request<http::string_body> approval_list_request(std::string token) const {
+        auto req = request(std::move(token), "");
+        req.method(http::verb::get);
+        req.target("/v1/confirmations/pending");
+        req.erase(http::field::content_type);
+        req.set("X-Prompt-Airlock-Grade", "O");
+        const auto host = "127.0.0.1:" + std::to_string(port_);
+        req.set(http::field::host, host);
+        req.set(http::field::origin, "https://" + host);
+        return req;
+    }
+
     std::filesystem::path root_;
     std::unique_ptr<prompt_airlock::audit::AuditLog> audit_;
     int credential_write_calls_ = 0;
@@ -429,11 +442,15 @@ TEST_F(GatewayServer, ServesOnlyLocalBuiltInConsoleAndApprovalResources) {
             EXPECT_NE(resource->body.find("/v1/admin/audit/counts"), std::string::npos);
             EXPECT_NE(resource->body.find("/v1/admin/audit/events?page="), std::string::npos);
             EXPECT_NE(resource->body.find("/v1/admin/audit/egress/"), std::string::npos);
+            EXPECT_NE(resource->body.find("/v1/confirmations/pending"), std::string::npos);
+            EXPECT_NE(resource->body.find("/console/confirm?token="), std::string::npos);
             EXPECT_NE(resource->body.find("/console/start.css"), std::string::npos);
             EXPECT_EQ(resource->body.find("localStorage"), std::string::npos);
             EXPECT_EQ(resource->body.find("sessionStorage"), std::string::npos);
             EXPECT_EQ(resource->body.find("innerHTML"), std::string::npos);
             EXPECT_NE(resource->body.find("Authorization: 'Bearer '"), std::string::npos);
+            EXPECT_NE(resource->body.find("/v1/confirmations/pending"), std::string::npos);
+            EXPECT_NE(resource->body.find("/console/confirm?token="), std::string::npos);
             EXPECT_NE(resource->body.find("adminToken.value = ''"), std::string::npos);
             EXPECT_NE(resource->body.find("adminController.abort()"), std::string::npos);
             EXPECT_NE(resource->body.find("adminEvents.replaceChildren()"), std::string::npos);
@@ -448,6 +465,12 @@ TEST_F(GatewayServer, ServesOnlyLocalBuiltInConsoleAndApprovalResources) {
     EXPECT_NE(admin_page->body.find("id=\"admin-close\""), std::string::npos);
     EXPECT_NE(admin_page->body.find("id=\"admin-token\" type=\"password\""), std::string::npos);
     EXPECT_NE(admin_page->body.find("admin-events"), std::string::npos);
+    EXPECT_NE(admin_page->body.find("id=\"approval-list-panel\""), std::string::npos);
+    EXPECT_NE(admin_page->body.find("id=\"approval-origin-token\" type=\"password\""), std::string::npos);
+    EXPECT_NE(admin_page->body.find("id=\"approval-open-confirm\""), std::string::npos);
+    EXPECT_NE(admin_page->body.find("id=\"approval-list-panel\""), std::string::npos);
+    EXPECT_NE(admin_page->body.find("id=\"approval-origin-token\" type=\"password\""), std::string::npos);
+    EXPECT_NE(admin_page->body.find("id=\"approval-open-confirm\""), std::string::npos);
     page.target("/console?unexpected=1");
     EXPECT_EQ(send(page)->status, 400U);
     page.target("/console/start.js?unexpected=1");
@@ -518,6 +541,60 @@ TEST_F(GatewayServer, AdminHistoryReadIsDisabledByDefault) {
     EXPECT_EQ(handled(), 0);
 }
 
+TEST_F(GatewayAdminHistory, ApprovalListUsesSourceOGradeAndLocalRequestGuards) {
+    const auto first = send(approval_list_request("open-token"));
+    ASSERT_TRUE(first);
+    EXPECT_EQ(first->status, 200U);
+    EXPECT_EQ(handled(), 1);
+    {
+        std::scoped_lock lock(mutex_);
+        EXPECT_EQ(last_origin_, "open-desk");
+        EXPECT_EQ(last_purpose_, gw::RequestPurpose::ConfirmationList);
+        EXPECT_TRUE(last_body_.empty());
+    }
+
+    auto no_origin = approval_list_request("open-token");
+    no_origin.erase(http::field::origin);
+    EXPECT_EQ(send(no_origin)->status, 200U);
+    const auto declared_source = send(approval_list_request("declare-token"));
+    ASSERT_TRUE(declared_source);
+    EXPECT_EQ(declared_source->status, 200U);
+    EXPECT_EQ(handled(), 3);
+
+    auto wrong_origin = approval_list_request("open-token");
+    wrong_origin.set(http::field::origin, "https://example.invalid");
+    EXPECT_EQ(send(wrong_origin)->status, 403U);
+    auto duplicate_origin = approval_list_request("open-token");
+    duplicate_origin.insert(http::field::origin, "https://127.0.0.1:" + std::to_string(port_));
+    EXPECT_EQ(send(duplicate_origin)->status, 403U);
+    auto wrong_host = approval_list_request("open-token");
+    wrong_host.set(http::field::host, "example.invalid");
+    EXPECT_EQ(send(wrong_host)->status, 403U);
+    EXPECT_EQ(send(approval_list_request("admin-token"))->status, 404U);
+    EXPECT_EQ(send(approval_list_request(""))->status, 401U);
+
+    auto classified = approval_list_request("declare-token");
+    classified.set("X-Prompt-Airlock-Grade", "S");
+    EXPECT_EQ(send(classified)->status, 403U);
+    auto duplicate_auth = approval_list_request("open-token");
+    duplicate_auth.insert(http::field::authorization, "Bearer open-token");
+    EXPECT_EQ(send(duplicate_auth)->status, 400U);
+    auto confirm_header = approval_list_request("open-token");
+    confirm_header.set("X-Prompt-Airlock-Confirm", std::string(32, 'a'));
+    EXPECT_EQ(send(confirm_header)->status, 400U);
+    auto content_type = approval_list_request("open-token");
+    content_type.set(http::field::content_type, "application/json");
+    EXPECT_EQ(send(content_type)->status, 400U);
+    auto body = approval_list_request("open-token");
+    body.body() = "synthetic-list-body";
+    EXPECT_EQ(send(body)->status, 400U);
+    auto remote = approval_list_request("open-token");
+    const auto remote_reply = send(remote, nullptr, false, "127.0.0.2");
+    ASSERT_TRUE(remote_reply);
+    EXPECT_EQ(remote_reply->status, 403U);
+    EXPECT_EQ(handled(), 3);
+}
+
 TEST_F(GatewayAdminHistory, ReturnsAggregateMetadataAndOnlyPreparedEgressText) {
     constexpr std::string_view request_id = "chatcmpl-pa-0123456789abcdef01234567";
     ASSERT_TRUE(audit_->append("request", "info", {{"request_id", request_id}, {"origin", "open-desk"},
@@ -571,6 +648,28 @@ TEST_F(GatewayAdminHistory, ReturnsAggregateMetadataAndOnlyPreparedEgressText) {
         if (record["kind"] == "admin_history_access" && record["result"] == "read") ++read_events;
     }
     EXPECT_EQ(read_events, 3);
+}
+
+TEST_F(GatewayAdminHistory, ConfirmationListReadAuditDoesNotCountAsRequestOrApproval) {
+    ASSERT_TRUE(audit_->append("confirmation", "info", {{"origin", "open-desk"},
+        {"operation", "list"}, {"result", "read"}, {"items", 2}, {"truncated", false}}));
+    const auto counts = send(admin_request("admin-token", "/v1/admin/audit/counts"));
+    ASSERT_TRUE(counts);
+    ASSERT_EQ(counts->status, 200U);
+    const auto values = nlohmann::json::parse(counts->body)["counts"];
+    EXPECT_EQ(values["requests"], 0);
+    EXPECT_EQ(values["confirmations"], 0);
+
+    const auto events = send(admin_request("admin-token", "/v1/admin/audit/events?page=0"));
+    ASSERT_TRUE(events);
+    const auto metadata = nlohmann::json::parse(events->body)["events"];
+    const auto item = std::ranges::find_if(metadata, [](const auto& entry) {
+        return entry.value("operation", "") == "list";
+    });
+    ASSERT_NE(item, metadata.end());
+    EXPECT_EQ((*item)["kind"], "confirmation");
+    EXPECT_FALSE((*item).contains("body_sha256"));
+    EXPECT_FALSE((*item).contains("approval_mark"));
 }
 
 TEST_F(GatewayAdminHistory, PartialRecentAuditReturnsOnlyVerifiedSuffixAndMarksUnknownDetail) {

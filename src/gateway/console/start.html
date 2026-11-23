@@ -61,6 +61,20 @@
         <pre id="outbound" tabindex="0"></pre>
       </div>
     </section>
+    <details id="approval-list-panel" class="approval-list-panel">
+      <summary>내 출처의 확인 요청</summary>
+      <p>현재 출처의 유효한 확인 요청만 표시합니다. 승인 표지는 기존 확인 화면 링크에서만 사용합니다.</p>
+      <label for="approval-origin-token">게이트웨이 출처 token</label>
+      <input id="approval-origin-token" type="password" maxlength="256" autocomplete="off" spellcheck="false" aria-describedby="approval-token-help">
+      <p id="approval-token-help" class="hint">조회할 때만 요청 Authorization 헤더에 사용하고 바로 지웁니다. 조회 목록에는 본문과 해시가 없습니다.</p>
+      <label class="grade-confirm"><input id="approval-open-confirm" type="checkbox" aria-describedby="approval-grade-help"> 기관 분류가 공개(O)임을 확인했습니다.</label>
+      <p id="approval-grade-help" class="hint">공개(O) 자료의 확인 요청만 조회할 수 있습니다. 등급을 확인할 수 없으면 진행하지 마세요.</p>
+      <button id="approval-list-load" type="button">확인 요청 조회</button>
+      <p id="approval-list-status" class="status" role="status" aria-live="polite">조회 전에 출처 token을 입력하고 공개(O) 등급을 확인하세요.</p>
+      <ol id="approval-list-items" class="approval-list-items">
+        <li>확인 요청을 아직 조회하지 않았습니다.</li>
+      </ol>
+    </details>
     <section id="connection-section" class="connection-panel" aria-labelledby="connection-title">
       <p class="eyebrow">연결 설정 및 접속 상태</p>
       <h2 id="connection-title">제공자 자격 증명</h2>
