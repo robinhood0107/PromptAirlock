@@ -255,13 +255,12 @@ std::expected<ParsedCliAnswer, gateway::ProviderError> parse_json_answer(
 
 std::expected<ParsedCliAnswer, gateway::ProviderError> parse_json_lines_answer(
     std::string_view output, std::uint32_t output_token_limit, const SensitiveEnvironment& environment) {
-    std::string text;
+    SensitiveString text;
     std::optional<gateway::Usage> usage;
     bool thread_started = false;
     bool turn_started = false;
     bool answer_seen = false;
     bool turn_completed = false;
-    bool result_seen = false;
     std::size_t start = 0;
     while (start < output.size()) {
         const auto end = output.find('\n', start);
@@ -275,7 +274,7 @@ std::expected<ParsedCliAnswer, gateway::ProviderError> parse_json_lines_answer(
             !event["type"].is_string()) {
             return std::unexpected(gateway::ProviderError::BadResponse);
         }
-        if (result_seen) return std::unexpected(gateway::ProviderError::BadResponse);
+        if (turn_completed) return std::unexpected(gateway::ProviderError::BadResponse);
         const std::string type = event["type"].get<std::string>();
         if (type == "thread.started") {
             if (thread_started || turn_started) return std::unexpected(gateway::ProviderError::BadResponse);
@@ -288,12 +287,20 @@ std::expected<ParsedCliAnswer, gateway::ProviderError> parse_json_lines_answer(
             continue;
         }
         if (type == "item.completed") {
-            if (!turn_started || turn_completed || answer_seen || !event.contains("item") || !event["item"].is_object() ||
-                !event["item"].contains("type") || event["item"]["type"] != "agent_message" ||
-                !event["item"].contains("text") || !event["item"]["text"].is_string()) {
+            if (!turn_started || !event.contains("item") || !event["item"].is_object() ||
+                !event["item"].contains("type") || !event["item"]["type"].is_string()) {
                 return std::unexpected(gateway::ProviderError::BadResponse);
             }
-            text = event["item"]["text"].get<std::string>();
+            const auto& item = event["item"];
+            const std::string item_type = item["type"].get<std::string>();
+            if (item_type == "reasoning") {
+                if (answer_seen) return std::unexpected(gateway::ProviderError::BadResponse);
+                continue;
+            }
+            if (item_type != "agent_message" || answer_seen || !item.contains("text") || !item["text"].is_string()) {
+                return std::unexpected(gateway::ProviderError::BadResponse);
+            }
+            text.value = item["text"].get<std::string>();
             answer_seen = true;
             continue;
         }
@@ -315,29 +322,12 @@ std::expected<ParsedCliAnswer, gateway::ProviderError> parse_json_lines_answer(
             turn_completed = true;
             continue;
         }
-        if (type == "result") {
-            if (!turn_completed || !usage || !event.contains("subtype") || event["subtype"] != "success" ||
-                !event.contains("is_error") || event["is_error"] != false || !event.contains("num_turns") ||
-                event["num_turns"] != 1 || !event.contains("stop_reason") || event["stop_reason"] != "end_turn" ||
-                !event.contains("result") || !event["result"].is_string() || event["result"] != text ||
-                !event.contains("usage") || !event["usage"].is_object()) {
-                return std::unexpected(gateway::ProviderError::BadResponse);
-            }
-            const auto input = nonnegative_integer(event["usage"], "input_tokens");
-            const auto completion = nonnegative_integer(event["usage"], "output_tokens");
-            if (!input || !completion || *input != usage->prompt_tokens || *completion != usage->completion_tokens) {
-                return std::unexpected(gateway::ProviderError::BadResponse);
-            }
-            result_seen = true;
-            continue;
-        }
         return std::unexpected(gateway::ProviderError::BadResponse);
     }
-    if (!result_seen || !usage || text.empty() || contains_secret(text, environment)) {
-        core::secure_wipe(std::span<char>{text.data(), text.size()});
+    if (!turn_completed || !usage || text.value.empty() || contains_secret(text.value, environment)) {
         return std::unexpected(gateway::ProviderError::BadResponse);
     }
-    return ParsedCliAnswer{std::move(text), *usage};
+    return ParsedCliAnswer{std::move(text.value), *usage};
 }
 
 std::vector<std::string> cli_arguments(gateway::CliOutputFormat format, std::string_view model) {

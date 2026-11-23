@@ -155,6 +155,7 @@ TEST(CliClient, JsonLinesUsesTheFixedToolFreeProfileAndSelectedEnvironment) {
     EXPECT_FALSE(observed["unexpected_present"]);
     EXPECT_EQ(guard.call_count(), 1U);
     EXPECT_EQ(json::parse(result->body)["usage"]["completion_tokens"], 2);
+    EXPECT_EQ(result->body.find("SYNTHETIC_REASONING_NOT_RETURNED"), std::string::npos);
     EXPECT_EQ(result->body.find("profile-a-secret"), std::string::npos);
 }
 
@@ -185,6 +186,28 @@ TEST(CliClient, RejectsOutputThatExposesCredentialsOrExceedsTheRequestedTokenLim
     const auto too_many = send_cli(gw::CliOutputFormat::JsonLines, "TOO_MANY_TOKENS", 8);
     ASSERT_FALSE(too_many);
     EXPECT_EQ(too_many.error(), gw::ProviderError::BadResponse);
+}
+
+TEST(CliClient, JsonLinesRejectsToolDuplicateAndTrailingEvents) {
+    EnvironmentGuard guard;
+    const std::vector<std::string> prompts = {"TOOL_ITEM", "DUPLICATE_ANSWER", "TRAILING_EVENT", "OUT_OF_ORDER"};
+    for (const auto& prompt : prompts) {
+        const auto result = send_cli(gw::CliOutputFormat::JsonLines, prompt, 8);
+        ASSERT_FALSE(result) << prompt;
+        EXPECT_EQ(result.error(), gw::ProviderError::BadResponse);
+    }
+    EXPECT_EQ(guard.call_count(), prompts.size());
+}
+
+TEST(CliClient, JsonLinesRequiresUsageRecognizedEventsAndExitZero) {
+    EnvironmentGuard guard;
+    const std::vector<std::string> prompts = {"MISSING_USAGE", "ERROR_EVENT", "NONZERO_EXIT"};
+    for (const auto& prompt : prompts) {
+        const auto result = send_cli(gw::CliOutputFormat::JsonLines, prompt, 8);
+        ASSERT_FALSE(result) << prompt;
+        EXPECT_EQ(result.error(), gw::ProviderError::BadResponse);
+    }
+    EXPECT_EQ(guard.call_count(), prompts.size());
 }
 
 TEST(CliClient, ProcessRunnerEnforcesExitTimeoutCancellationAndOutputLimit) {

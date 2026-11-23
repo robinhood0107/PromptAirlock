@@ -107,19 +107,45 @@ int main_cli(int argc, char** argv) {
                           {"usage", {{"input_tokens", 3}, {"output_tokens", output_tokens}}}}.dump();
         return 0;
     }
+    if (input == "OUT_OF_ORDER") {
+        std::cout << json{{"type", "turn.started"}}.dump() << '\n';
+        std::cout << json{{"type", "thread.started"}}.dump() << '\n';
+        return 0;
+    }
     std::cout << json{{"type", "thread.started"}}.dump() << '\n';
     std::cout << json{{"type", "turn.started"}}.dump() << '\n';
-    std::cout << json{{"type", "item.completed"},
-                      {"item", {{"type", "agent_message"}, {"text", answer}}}}.dump()
-              << '\n';
-    std::cout << json{{"type", "turn.completed"}, {"status", "completed"},
-                      {"usage", {{"input_tokens", 3}, {"output_tokens", output_tokens}}}}.dump()
-              << '\n';
-    std::cout << json{{"type", "result"}, {"subtype", "success"}, {"is_error", false}, {"num_turns", 1},
-                      {"stop_reason", "end_turn"}, {"result", answer},
-                      {"usage", {{"input_tokens", 3}, {"output_tokens", output_tokens}}}}.dump()
-              << '\n';
-    return 0;
+    if (input == "ERROR_EVENT") {
+        std::cout << json{{"type", "error"}, {"code", "synthetic_error"}}.dump() << '\n';
+        return 0;
+    }
+    if (input == "TOOL_ITEM") {
+        std::cout << json{{"type", "item.completed"}, {"item", {{"type", "command_execution"}}}}.dump()
+                  << '\n';
+    }
+    if (input == "SYNTHETIC_PROMPT") {
+        const json reasoning = {{"type", "item.completed"},
+                                {"item", {{"type", "reasoning"},
+                                          {"summary", json::array({json{{"type", "summary_text"},
+                                                                         {"text", "SYNTHETIC_REASONING_NOT_RETURNED"}}})}}}};
+        std::cout << reasoning.dump() << '\n';
+    }
+    const json answer_event = {{"type", "item.completed"},
+                               {"item", {{"type", "agent_message"}, {"text", answer}}}};
+    std::cout << answer_event.dump() << '\n';
+    if (input == "DUPLICATE_ANSWER") std::cout << answer_event.dump() << '\n';
+    json turn_completed = {{"type", "turn.completed"}};
+    if (input != "MISSING_USAGE") {
+        turn_completed["usage"] = {{"input_tokens", 3}, {"output_tokens", output_tokens}};
+    }
+    std::cout << turn_completed.dump() << '\n';
+    if (input == "TRAILING_EVENT") {
+        std::cout << json{{"type", "item.completed"},
+                          {"item", {{"type", "reasoning"},
+                                    {"summary", json::array({json{{"type", "summary_text"},
+                                                                   {"text", "SYNTHETIC_TRAILING_REASONING"}}})}}}}.dump()
+                  << '\n';
+    }
+    return input == "NONZERO_EXIT" ? 7 : 0;
 }
 
 }  // namespace
