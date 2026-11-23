@@ -12,6 +12,7 @@
 #include <mutex>
 #include <string>
 #include <string_view>
+#include <vector>
 
 namespace prompt_airlock::audit {
 
@@ -22,12 +23,23 @@ enum class AuditError : std::uint8_t {
     Corrupt,      // 해시가 맞지 않거나 줄을 읽을 수 없음
     Truncated,    // checkpoint 와 줄 수·마지막 해시가 다름
     BrokenChain,  // 세그먼트 사이 연결이 끊김
+    TooLarge,     // 최근 구간이 조회 상한을 넘음
 };
 
 [[nodiscard]] std::string_view audit_error_name(AuditError error) noexcept;
 
 inline constexpr int schema_version = 1;
 inline constexpr std::chrono::days minimum_retention{365};
+inline constexpr std::chrono::hours recent_query_window{24};
+inline constexpr std::size_t recent_query_lookback_days = 2;
+inline constexpr std::size_t recent_query_max_bytes = 16U << 20;
+inline constexpr std::size_t recent_query_max_lines = 8192;
+inline constexpr std::size_t recent_query_max_line_bytes = 1U << 20;
+
+struct RecentRead {
+    std::vector<nlohmann::json> records;
+    bool complete = true;
+};
 
 class AuditLog {
 public:
@@ -41,6 +53,9 @@ public:
 
     // 보존 기간이 지난 세그먼트를 지우고 삭제 이벤트를 남긴다. 지운 세그먼트 수.
     [[nodiscard]] std::expected<int, AuditError> expire(Clock::time_point now = Clock::now());
+
+    // 최근 구간의 세그먼트만 제한된 크기로 스냅샷을 읽고 해시 연결을 확인한다.
+    [[nodiscard]] std::expected<RecentRead, AuditError> read_recent(Clock::time_point now = Clock::now());
 
     [[nodiscard]] const std::filesystem::path& dir() const noexcept { return dir_; }
 
@@ -65,6 +80,8 @@ private:
     std::string day_;        // 지금 쓰는 세그먼트 날짜(YYYY-MM-DD)
     std::string last_hash_;  // 마지막으로 쓴 줄의 해시
     std::uint64_t lines_ = 0;  // 지금 세그먼트의 줄 수
+    std::uint64_t bytes_ = 0;  // 지금 쓰는 세그먼트의 바이트 수
+    std::size_t last_line_bytes_ = 0;
 };
 
 struct VerifyReport {

@@ -62,6 +62,7 @@ struct Config {
     detect::InstitutionPolicy policy;          // 기관 정책 묶음: 업종, 기관 번호 표지어·형식(ADR 0027)
     core::OutputTokenCap output_token_cap = core::OutputTokenCap::standard();
     int history_retention_days = 365;  // 감사·이력 보존 기간, 365 이상(ADR 0021)
+    std::string admin_history_origin;  // 전용 관리 token 출처. 비면 로컬 감사 조회 API를 끈다
     bool sentence_warn = false;        // 문장 판별기 경고 모드(ADR 0023). 켜면 모델을 불러오지 못할 때 기동하지 않는다
     CompatConfig compat;
 };

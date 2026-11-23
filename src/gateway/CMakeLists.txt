@@ -7,11 +7,17 @@ file(READ "${CMAKE_CURRENT_SOURCE_DIR}/console/confirm.html" PA_CONFIRM_HTML)
 file(READ "${CMAKE_CURRENT_SOURCE_DIR}/console/confirm.js" PA_CONFIRM_JS)
 file(READ "${CMAKE_CURRENT_SOURCE_DIR}/console/confirm.css" PA_CONFIRM_CSS)
 file(READ "${CMAKE_CURRENT_SOURCE_DIR}/console/confirm.svg" PA_CONFIRM_SVG)
+file(READ "${CMAKE_CURRENT_SOURCE_DIR}/console/start.html" PA_START_HTML)
+file(READ "${CMAKE_CURRENT_SOURCE_DIR}/console/start.js" PA_START_JS)
+file(READ "${CMAKE_CURRENT_SOURCE_DIR}/console/start.css" PA_START_CSS)
 set_property(DIRECTORY APPEND PROPERTY CMAKE_CONFIGURE_DEPENDS
   "${CMAKE_CURRENT_SOURCE_DIR}/console/confirm.html"
   "${CMAKE_CURRENT_SOURCE_DIR}/console/confirm.js"
   "${CMAKE_CURRENT_SOURCE_DIR}/console/confirm.css"
-  "${CMAKE_CURRENT_SOURCE_DIR}/console/confirm.svg")
+  "${CMAKE_CURRENT_SOURCE_DIR}/console/confirm.svg"
+  "${CMAKE_CURRENT_SOURCE_DIR}/console/start.html"
+  "${CMAKE_CURRENT_SOURCE_DIR}/console/start.js"
+  "${CMAKE_CURRENT_SOURCE_DIR}/console/start.css")
 file(MAKE_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/generated")
 configure_file(console_assets.hpp.in "generated/console_assets.hpp" @ONLY)
 

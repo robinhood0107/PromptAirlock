@@ -32,5 +32,6 @@
 | [0026](0026-short-lived-provider-credential.md) | 짧은 수명 provider 자격 증명: 요청마다 읽고 밖에서 갱신 | 확정 |
 | [0027](0027-institution-policy-pack.md) | 기관 정책 묶음: 업종 표지어, 형식 마스크, INSTITUTION_ID, 기밀 문장 CONFIDENTIAL_MATTER, 강한 표지어 확인 CONFIDENTIAL_MARKER | 확정 |
 | [0028](0028-document-input.md) | 문서 입력: 요청마다 띄우는 추출 프로세스, 자기 제한, zip·XML 형식 | 확정 |
+| [0031](0031-local-audit-read.md) | 전용 로컬 관리자 출처의 읽기 전용 감사 조회 | 확정 |
 
 결정을 바꿀 때는 해당 문서의 상태를 "대체됨"으로 바꾸고 새 번호로 문서를 추가한다.

@@ -117,6 +117,7 @@ private:
     // 처리 순서(위 머리말)대로 아래 단계를 부른다.
     std::expected<Outbound, JsonResponse> prepare(AcceptedRequest request, Trace& trace, std::stop_token stop) const;
     JsonResponse approve(AcceptedRequest request, Trace& trace, std::stop_token stop) const;
+    JsonResponse list_confirmations(AcceptedRequest request, Trace& trace, std::stop_token stop) const;
     std::optional<JsonResponse> confirm_sentences(const core::PolicyCheckedPrompt& checked,
                                                   std::span<const core::EntitySpan> entities,
                                                   const std::string& confirm, const std::string& body_sha256,

@@ -1,0 +1,146 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>전송 전 검사 — Prompt Airlock</title>
+  <link rel="stylesheet" href="/console/start.css">
+  <script src="/console/start.js" defer></script>
+</head>
+<body>
+  <header class="topbar">
+    <p class="brand">Prompt Airlock <span>로컬 콘솔</span></p>
+    <p class="local-only">로컬 검사 · 제공자 호출 0회</p>
+  </header>
+  <main>
+    <section class="intro" aria-labelledby="page-title">
+      <p class="eyebrow">외부 전송 전 단계</p>
+      <h1 id="page-title">보내기 전에 검사하세요</h1>
+      <p>텍스트나 파일을 보호 검사하고, 실제로 전송될 수 있는 검증된 내용만 미리 봅니다. 이 화면은 내용을 외부 제공자에게 보내지 않습니다.</p>
+    </section>
+    <form id="preview-form" novalidate>
+      <fieldset class="mode-picker">
+        <legend>검사할 입력</legend>
+        <label class="choice"><input type="radio" name="input-mode" value="text" checked> 텍스트</label>
+        <label class="choice"><input type="radio" name="input-mode" value="file"> 파일</label>
+      </fieldset>
+      <div id="text-panel">
+        <label for="prompt">검사할 텍스트</label>
+        <textarea id="prompt" rows="8" maxlength="65536" spellcheck="false" aria-describedby="prompt-help"></textarea>
+        <p id="prompt-help" class="hint">최대 64 KiB의 UTF-8 텍스트를 검사합니다.</p>
+      </div>
+      <div id="file-panel" hidden>
+        <label for="document">검사할 파일</label>
+        <input id="document" type="file" aria-describedby="file-help">
+        <p id="file-help" class="hint">최대 32 MiB의 파일 하나를 선택하세요. 파일 이름은 화면 결과에 표시하지 않습니다.</p>
+      </div>
+      <label for="origin-token">게이트웨이 출처 token</label>
+      <input id="origin-token" type="password" required maxlength="256" autocomplete="off" spellcheck="false" aria-describedby="token-help">
+      <p id="token-help" class="hint">게이트웨이 출처 인증에 쓰는 값입니다. 외부 제공자의 API 키를 입력하지 마세요.</p>
+      <p id="grade-help" class="hint">기관이 공개(O)로 분류한 자료만 검사하세요. 등급을 확인할 수 없거나 다른 등급이면 진행하지 마세요.</p>
+      <label class="grade-confirm"><input id="grade-confirm" type="checkbox" required aria-describedby="grade-help"> 기관 분류가 공개(O)임을 확인했습니다.</label>
+      <button id="preview" type="submit">로컬 검사</button>
+      <p id="status" class="status" role="status" aria-live="polite">검사를 시작하기 전입니다. 전송 전 검사는 제공자 호출 없이 수행됩니다.</p>
+    </form>
+    <section id="results" class="results" aria-labelledby="results-title" hidden>
+      <h2 id="results-title">검사 결과</h2>
+      <p id="decision" class="decision"></p>
+      <dl class="summary">
+        <div><dt>검출 건수</dt><dd id="entity-total">0</dd></div>
+        <div><dt>검사 파일</dt><dd id="document-total">0</dd></div>
+        <div><dt>제공자 호출</dt><dd>0회</dd></div>
+      </dl>
+      <ul id="entity-counts" class="entity-counts" aria-label="검출 종류별 건수" hidden></ul>
+      <div id="document-details" class="document-details" hidden>
+        <h3>파일 검사 정보</h3>
+        <ul id="document-list"></ul>
+      </div>
+      <div class="outbound-block">
+        <h3>검증된 전송 미리보기</h3>
+        <p class="hint">표시된 내용은 검사를 통과한 전송 본문입니다. 여기서는 전송하지 않습니다.</p>
+        <pre id="outbound" tabindex="0"></pre>
+      </div>
+    </section>
+    <details id="approval-list-panel" class="approval-list-panel">
+      <summary>내 출처의 확인 요청</summary>
+      <p>현재 출처의 유효한 확인 요청만 표시합니다. 승인 표지는 기존 확인 화면 링크에서만 사용합니다.</p>
+      <label for="approval-origin-token">게이트웨이 출처 token</label>
+      <input id="approval-origin-token" type="password" maxlength="256" autocomplete="off" spellcheck="false" aria-describedby="approval-token-help">
+      <p id="approval-token-help" class="hint">조회할 때만 요청 Authorization 헤더에 사용하고 바로 지웁니다. 조회 목록에는 본문과 해시가 없습니다.</p>
+      <label class="grade-confirm"><input id="approval-open-confirm" type="checkbox" aria-describedby="approval-grade-help"> 기관 분류가 공개(O)임을 확인했습니다.</label>
+      <p id="approval-grade-help" class="hint">공개(O) 자료의 확인 요청만 조회할 수 있습니다. 등급을 확인할 수 없으면 진행하지 마세요.</p>
+      <button id="approval-list-load" type="button">확인 요청 조회</button>
+      <p id="approval-list-status" class="status" role="status" aria-live="polite">조회 전에 출처 token을 입력하고 공개(O) 등급을 확인하세요.</p>
+      <ol id="approval-list-items" class="approval-list-items">
+        <li>확인 요청을 아직 조회하지 않았습니다.</li>
+      </ol>
+    </details>
+    <section id="connection-section" class="connection-panel" aria-labelledby="connection-title">
+      <p class="eyebrow">연결 설정 및 접속 상태</p>
+      <h2 id="connection-title">제공자 자격 증명</h2>
+      <p>현재 설정된 제공자의 자격 증명을 보호 저장소에서 교체합니다. 제공자 선택이나 저장된 값 조회는 하지 않습니다.</p>
+      <fieldset class="connection-fields" aria-describedby="credential-help">
+        <legend id="credential-group-title">자격 증명 교체</legend>
+        <label for="rotation-token">등록 출처 인증값</label>
+        <input id="rotation-token" type="password" required maxlength="256" autocomplete="off" spellcheck="false" aria-describedby="rotation-token-help">
+        <p id="rotation-token-help" class="hint">게이트웨이에 등록된 출처 인증값을 입력하세요. 저장하지 않고 요청 후 지웁니다.</p>
+        <label for="provider-credential">새 제공자 자격 증명</label>
+        <input id="provider-credential" type="password" required maxlength="4000" autocomplete="off" spellcheck="false" aria-describedby="credential-help">
+        <p id="credential-help" class="hint">인쇄 가능한 ASCII 값만 받습니다. 제공자 키나 입력값을 화면 결과에 표시하지 않습니다.</p>
+        <button id="credential-save" type="button">보호 저장</button>
+        <p id="credential-status" class="status" role="status" aria-live="polite">자격 증명 교체를 아직 요청하지 않았습니다.</p>
+      </fieldset>
+      <div class="connection-check" role="group" aria-labelledby="gateway-status-title">
+        <h3 id="gateway-status-title">로컬 게이트웨이 응답</h3>
+        <p class="hint">같은 출처의 내장 정적 자원 응답만 확인합니다. 제공자 연결이나 전체 구성을 검사하지 않습니다.</p>
+        <button id="gateway-check" type="button">로컬 응답 확인</button>
+        <p id="gateway-status" class="status" role="status" aria-live="polite">로컬 응답을 아직 확인하지 않았습니다.</p>
+      </div>
+    </section>
+    <button id="admin-open" type="button" aria-controls="admin-history" aria-expanded="false">관리자 감사 조회 열기</button>
+    <section id="admin-history" class="admin-panel" aria-labelledby="admin-history-title" hidden>
+      <p class="eyebrow">로컬 관리자 전용</p>
+      <h2 id="admin-history-title">감사 기록 조회</h2>
+      <p>최근 24시간의 검증 가능한 기록만 읽습니다. 요청 본문 상세는 목록에서 선택해야 열리며, 전송 준비 기록은 전달 완료를 뜻하지 않습니다.</p>
+      <button id="admin-close" type="button">관리자 조회 닫기</button>
+      <label for="admin-token">관리자 조회 token</label>
+      <input id="admin-token" type="password" maxlength="256" autocomplete="off" spellcheck="false" aria-describedby="admin-token-help">
+      <p id="admin-token-help" class="hint">각 조회 요청에만 같은 출처로 보냅니다. 요청에 복사한 뒤 입력을 지우며 URL이나 브라우저 저장소에 보관하지 않습니다.</p>
+      <div class="admin-actions" role="group" aria-label="감사 기록 조회">
+        <button id="admin-counts-load" type="button">집계 조회</button>
+        <button id="admin-events-load" type="button">기록 목록 조회</button>
+      </div>
+      <p id="admin-status" class="status" role="status" aria-live="polite">조회 요청마다 관리자 token을 입력하세요. 제공자나 Vault에는 연결하지 않습니다.</p>
+      <section id="admin-counts-section" class="admin-results" aria-labelledby="admin-counts-title" hidden>
+        <h3 id="admin-counts-title">최근 집계</h3>
+        <p id="admin-counts-scope" class="hint"></p>
+        <dl class="summary admin-counts">
+          <div><dt>요청</dt><dd id="admin-count-requests">—</dd></div>
+          <div><dt>거절</dt><dd id="admin-count-rejections">—</dd></div>
+          <div><dt>미리보기</dt><dd id="admin-count-previews">—</dd></div>
+          <div><dt>확인</dt><dd id="admin-count-confirmations">—</dd></div>
+          <div><dt>자격 증명 교체</dt><dd id="admin-count-rotations">—</dd></div>
+          <div><dt>전송 준비</dt><dd id="admin-count-egress">—</dd></div>
+          <div><dt>제공자 응답 기록</dt><dd id="admin-count-provider-responses">—</dd></div>
+          <div><dt>인증 이벤트</dt><dd id="admin-count-auth">—</dd></div>
+          <div><dt>관리자 열람</dt><dd id="admin-count-admin-reads">—</dd></div>
+          <div><dt>기타</dt><dd id="admin-count-other">—</dd></div>
+        </dl>
+      </section>
+      <section id="admin-events-section" class="admin-results" aria-labelledby="admin-events-title" hidden>
+        <h3 id="admin-events-title">최근 기록</h3>
+        <p id="admin-events-scope" class="hint"></p>
+        <div class="admin-page-controls" role="group" aria-label="기록 페이지">
+          <button id="admin-events-previous" type="button" disabled>이전</button>
+          <span id="admin-events-page" aria-live="polite">1페이지</span>
+          <button id="admin-events-next" type="button" disabled>다음</button>
+        </div>
+        <ol id="admin-events" class="admin-events">
+          <li id="admin-events-empty">기록 목록을 아직 조회하지 않았습니다.</li>
+        </ol>
+      </section>
+    </section>
+    <noscript>로컬 검사를 사용하려면 JavaScript가 필요합니다.</noscript>
+  </main>
+</body>
+</html>

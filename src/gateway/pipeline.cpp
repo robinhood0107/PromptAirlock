@@ -227,6 +227,11 @@ asio::awaitable<JsonResponse> Pipeline::run(AcceptedRequest request, Trace& trac
     if (purpose == RequestPurpose::Approve) {
         co_return co_await on_pool(work_, stop, [&] { return approve(std::move(request), trace, stop.get_token()); });
     }
+    if (purpose == RequestPurpose::ConfirmationList) {
+        co_return co_await on_pool(work_, stop, [&] {
+            return list_confirmations(std::move(request), trace, stop.get_token());
+        });
+    }
     auto outbound = co_await on_pool(work_, stop, [&] { return prepare(std::move(request), trace, stop.get_token()); });
     if (!outbound) {
         co_return std::move(outbound.error());
@@ -293,6 +298,37 @@ JsonResponse Pipeline::approve(AcceptedRequest request, Trace& trace, std::stop_
     // 승인 전 기록이 끝났으므로 상태 변경 뒤에 새 감사 실패를 만들지 않는다.
     trace.approval_recorded = audit_ != nullptr;
     return response;
+}
+
+JsonResponse Pipeline::list_confirmations(AcceptedRequest request, Trace& trace, std::stop_token stop) const {
+    if (audit_ == nullptr || request.origin == nullptr) return trace.fail(EntryError::Unavailable);
+    if (stop.stop_requested() || std::chrono::steady_clock::now() >= trace.deadline) {
+        return trace.fail(stop.stop_requested() ? EntryError::Cancelled : EntryError::Timeout);
+    }
+    const auto list = confirms_.list_for_origin(request.origin->name);
+    if (stop.stop_requested() || std::chrono::steady_clock::now() >= trace.deadline) {
+        return trace.fail(stop.stop_requested() ? EntryError::Cancelled : EntryError::Timeout);
+    }
+
+    nlohmann::json items = nlohmann::json::array();
+    for (const auto& item : list.items) {
+        if (item.expires_in_seconds == 0 ||
+            (!item.approved && !valid_confirmation_token(item.approval_mark)) ||
+            (item.approved && !item.approval_mark.empty())) {
+            return trace.fail(EntryError::Unavailable);
+        }
+        nlohmann::json entry = { {"state", item.approved ? "approved" : "pending"},
+                                 {"expires_in_seconds", item.expires_in_seconds} };
+        if (!item.approved) entry["approval_mark"] = item.approval_mark;
+        items.push_back(std::move(entry));
+    }
+    if (!audit_->append("confirmation", "info", {{"request_id", trace.id}, {"origin", request.origin->name},
+            {"operation", "list"}, {"result", "read"}, {"items", items.size()}, {"truncated", list.truncated}})) {
+        return trace.fail(EntryError::Unavailable);
+    }
+    trace.approval_recorded = true;
+    return JsonResponse{200, nlohmann::json{{"status", "available"}, {"truncated", list.truncated},
+                                            {"items", std::move(items)}}.dump()};
 }
 
 // JSON 읽기부터 전송 준비까지. 미리보기는 외부 전송 이력을 쓰지 않는다.
