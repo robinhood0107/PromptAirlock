@@ -61,6 +61,28 @@
         <pre id="outbound" tabindex="0"></pre>
       </div>
     </section>
+    <section id="connection-section" class="connection-panel" aria-labelledby="connection-title">
+      <p class="eyebrow">연결 설정 및 접속 상태</p>
+      <h2 id="connection-title">제공자 자격 증명</h2>
+      <p>현재 설정된 제공자의 자격 증명을 보호 저장소에서 교체합니다. 제공자 선택이나 저장된 값 조회는 하지 않습니다.</p>
+      <fieldset class="connection-fields" aria-describedby="credential-help">
+        <legend id="credential-group-title">자격 증명 교체</legend>
+        <label for="rotation-token">등록 출처 인증값</label>
+        <input id="rotation-token" type="password" required maxlength="256" autocomplete="off" spellcheck="false" aria-describedby="rotation-token-help">
+        <p id="rotation-token-help" class="hint">게이트웨이에 등록된 출처 인증값을 입력하세요. 저장하지 않고 요청 후 지웁니다.</p>
+        <label for="provider-credential">새 제공자 자격 증명</label>
+        <input id="provider-credential" type="password" required maxlength="4000" autocomplete="off" spellcheck="false" aria-describedby="credential-help">
+        <p id="credential-help" class="hint">인쇄 가능한 ASCII 값만 받습니다. 제공자 키나 입력값을 화면 결과에 표시하지 않습니다.</p>
+        <button id="credential-save" type="button">보호 저장</button>
+        <p id="credential-status" class="status" role="status" aria-live="polite">자격 증명 교체를 아직 요청하지 않았습니다.</p>
+      </fieldset>
+      <div class="connection-check" role="group" aria-labelledby="gateway-status-title">
+        <h3 id="gateway-status-title">로컬 게이트웨이 응답</h3>
+        <p class="hint">같은 출처의 내장 정적 자원 응답만 확인합니다. 제공자 연결이나 전체 구성을 검사하지 않습니다.</p>
+        <button id="gateway-check" type="button">로컬 응답 확인</button>
+        <p id="gateway-status" class="status" role="status" aria-live="polite">로컬 응답을 아직 확인하지 않았습니다.</p>
+      </div>
+    </section>
     <noscript>로컬 검사를 사용하려면 JavaScript가 필요합니다.</noscript>
   </main>
 </body>

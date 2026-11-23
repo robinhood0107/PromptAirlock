@@ -18,6 +18,12 @@ const documentTotal = document.getElementById('document-total');
 const documentDetails = document.getElementById('document-details');
 const documentList = document.getElementById('document-list');
 const outbound = document.getElementById('outbound');
+const rotationToken = document.getElementById('rotation-token');
+const providerCredential = document.getElementById('provider-credential');
+const credentialSave = document.getElementById('credential-save');
+const credentialStatus = document.getElementById('credential-status');
+const gatewayCheck = document.getElementById('gateway-check');
+const gatewayStatus = document.getElementById('gateway-status');
 const maxTextBytes = 64 * 1024;
 const maxFileBytes = 32 * 1024 * 1024;
 const blockedCodes = new Set([
@@ -125,6 +131,96 @@ function showError(reply, data) {
     status.textContent = '검사를 완료하지 못했습니다. 결과를 확인할 수 없어 전송 미리보기를 표시하지 않습니다.';
   }
 }
+
+let credentialBusy = false;
+credentialSave.addEventListener('click', async () => {
+  if (credentialBusy) return;
+  credentialBusy = true;
+  credentialSave.disabled = true;
+  rotationToken.disabled = true;
+  providerCredential.disabled = true;
+  let authToken = rotationToken.value;
+  let newCredential = providerCredential.value;
+  rotationToken.value = '';
+  providerCredential.value = '';
+  try {
+    if (!authToken || authToken.length > 256 || !/^[\x21-\x7e]{1,4000}$/.test(newCredential) ||
+        new TextEncoder().encode(JSON.stringify({ credential: newCredential })).length > 4096) {
+      credentialStatus.textContent = '입력값을 확인하세요. 값은 화면에서 지웠으며 요청하지 않았습니다.';
+      return;
+    }
+    const body = JSON.stringify({ credential: newCredential });
+    newCredential = '';
+    const headers = {
+      'Content-Type': 'application/json',
+      Authorization: 'Bearer ' + authToken,
+      'X-Prompt-Airlock-Grade': 'O'
+    };
+    authToken = '';
+    credentialStatus.textContent = '보호 저장 요청을 처리하고 있습니다.';
+    try {
+      const reply = await fetch('/v1/provider/credential', {
+        method: 'POST', mode: 'same-origin', credentials: 'omit', redirect: 'error', cache: 'no-store',
+        referrerPolicy: 'no-referrer', headers, body
+      });
+      const data = await reply.json();
+      const code = data && data.error && typeof data.error.code === 'string' ? data.error.code : '';
+      if (reply.ok && data && data.ok === true) {
+        credentialStatus.textContent = '보호 저장이 완료됐습니다. 다음 제공자 요청부터 새 값이 쓰입니다.';
+      } else if (reply.status === 404 && code === 'not_found') {
+        credentialStatus.textContent = '지정 출처인지, 자격 증명 교체 기능이 켜져 있는지 확인하세요.';
+      } else if (code === 'unauthorized' || code === 'too_many_auth_failures') {
+        credentialStatus.textContent = '출처 인증에 실패했거나 잠겼습니다. 입력값은 화면에서 지웠습니다.';
+      } else if (code === 'grade_classified' || code === 'grade_sensitive' || code === 'grade_unresolved') {
+        credentialStatus.textContent = '이 출처는 공개(O) 등급의 자격 증명 교체를 허용하지 않습니다.';
+      } else if (code === 'local_only') {
+        credentialStatus.textContent = '로컬 접속 경계를 통과하지 못했습니다.';
+      } else if (code === 'bad_request' || code === 'body_too_large' || code === 'unsupported_media_type') {
+        credentialStatus.textContent = '입력 형식이나 길이를 확인하세요. 입력값은 화면에서 지웠습니다.';
+      } else if (code === 'unavailable') {
+        credentialStatus.textContent = '보호 저장 또는 감사 처리에 실패해 교체를 완료하지 못했습니다.';
+      } else if (code === 'overloaded') {
+        credentialStatus.textContent = '로컬 게이트웨이가 바쁩니다. 저장 결과를 확인하지 못했습니다.';
+      } else {
+        credentialStatus.textContent = '교체 결과를 확인하지 못했습니다. 오류 원문은 표시하지 않습니다.';
+      }
+    } catch {
+      credentialStatus.textContent = '서버 응답을 확인하지 못했습니다. 저장 여부를 판정하지 않았습니다.';
+    }
+  } finally {
+    authToken = '';
+    newCredential = '';
+    rotationToken.value = '';
+    providerCredential.value = '';
+    rotationToken.disabled = false;
+    providerCredential.disabled = false;
+    credentialSave.disabled = false;
+    credentialBusy = false;
+  }
+});
+
+let gatewayCheckBusy = false;
+gatewayCheck.addEventListener('click', async () => {
+  if (gatewayCheckBusy) return;
+  gatewayCheckBusy = true;
+  gatewayCheck.disabled = true;
+  gatewayStatus.textContent = '로컬 게이트웨이 응답을 확인하고 있습니다.';
+  try {
+    const reply = await fetch('/console/start.css', {
+      method: 'GET', mode: 'same-origin', credentials: 'omit', redirect: 'error', cache: 'no-store',
+      referrerPolicy: 'no-referrer'
+    });
+    const contentType = reply.headers.get('content-type') || '';
+    gatewayStatus.textContent = reply.status === 200 && contentType.toLowerCase().startsWith('text/css')
+      ? '로컬 게이트웨이 응답을 확인했습니다. 제공자 연결과 전체 구성은 확인하지 않았습니다.'
+      : '로컬 게이트웨이 응답을 확인하지 못했습니다.';
+  } catch {
+    gatewayStatus.textContent = '로컬 게이트웨이 응답을 확인하지 못했습니다.';
+  } finally {
+    gatewayCheck.disabled = false;
+    gatewayCheckBusy = false;
+  }
+});
 
 textMode.addEventListener('change', () => { setMode(); clearGradeConfirmation(); });
 fileMode.addEventListener('change', () => { setMode(); clearGradeConfirmation(); });

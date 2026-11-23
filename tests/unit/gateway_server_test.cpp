@@ -312,6 +312,10 @@ TEST_F(GatewayServer, ServesOnlyLocalBuiltInConsoleAndApprovalResources) {
     EXPECT_EQ(start->status, 200U);
     EXPECT_EQ(start->content_type, "text/html; charset=utf-8");
     EXPECT_NE(start->body.find("/console/start.js"), std::string::npos);
+    EXPECT_NE(start->body.find("id=\"connection-section\""), std::string::npos);
+    EXPECT_NE(start->body.find("id=\"rotation-token\" type=\"password\""), std::string::npos);
+    EXPECT_NE(start->body.find("id=\"provider-credential\" type=\"password\""), std::string::npos);
+    EXPECT_NE(start->body.find("id=\"gateway-check\" type=\"button\""), std::string::npos);
     EXPECT_NE(start->body.find("제공자 호출"), std::string::npos);
     const auto grade_control = start->body.find("id=\"grade-confirm\"");
     ASSERT_NE(grade_control, std::string::npos);
@@ -361,6 +365,11 @@ TEST_F(GatewayServer, ServesOnlyLocalBuiltInConsoleAndApprovalResources) {
         EXPECT_EQ(resource->content_type, type);
         if (path == "/console/start.js") {
             EXPECT_NE(resource->body.find("/v1/preview"), std::string::npos);
+            EXPECT_NE(resource->body.find("/v1/provider/credential"), std::string::npos);
+            EXPECT_NE(resource->body.find("/console/start.css"), std::string::npos);
+            EXPECT_EQ(resource->body.find("localStorage"), std::string::npos);
+            EXPECT_EQ(resource->body.find("sessionStorage"), std::string::npos);
+            EXPECT_EQ(resource->body.find("innerHTML"), std::string::npos);
         }
     }
     page.target("/console?unexpected=1");
