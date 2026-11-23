@@ -301,12 +301,40 @@ TEST_F(GatewayServer, AnExplicitEmptyConfirmationHeaderIsRejectedBeforeTheHandle
     EXPECT_EQ(handled(), 0);
 }
 
-TEST_F(GatewayServer, ServesOnlyLocalBuiltInApprovalResourcesWithoutOriginCredentials) {
+TEST_F(GatewayServer, ServesOnlyLocalBuiltInConsoleAndApprovalResources) {
     auto page = request("", "");
     page.method(http::verb::get);
-    page.target("/console/confirm?token=" + std::string(32, 'a'));
+    page.target("/console");
     const auto host = "127.0.0.1:" + std::to_string(port_);
     page.set(http::field::host, host);
+    const auto start = send(page);
+    ASSERT_TRUE(start);
+    EXPECT_EQ(start->status, 200U);
+    EXPECT_EQ(start->content_type, "text/html; charset=utf-8");
+    EXPECT_NE(start->body.find("/console/start.js"), std::string::npos);
+    EXPECT_NE(start->body.find("제공자 호출"), std::string::npos);
+    const auto grade_control = start->body.find("id=\"grade-confirm\"");
+    ASSERT_NE(grade_control, std::string::npos);
+    const auto grade_control_end = start->body.find('>', grade_control);
+    ASSERT_NE(grade_control_end, std::string::npos);
+    EXPECT_NE(start->body.substr(grade_control, grade_control_end - grade_control).find("type=\"checkbox\""),
+              std::string::npos);
+    EXPECT_NE(start->body.substr(grade_control, grade_control_end - grade_control).find("required"), std::string::npos);
+    EXPECT_EQ(start->body.substr(grade_control, grade_control_end - grade_control).find("checked"), std::string::npos);
+    EXPECT_NE(start->csp.find("script-src 'self'"), std::string::npos);
+    EXPECT_NE(start->csp.find("connect-src 'self'"), std::string::npos);
+    EXPECT_NE(start->csp.find("frame-ancestors 'none'"), std::string::npos);
+    EXPECT_NE(start->csp.find("default-src 'none'"), std::string::npos);
+    EXPECT_EQ(start->csp.find("unsafe-inline"), std::string::npos);
+    EXPECT_EQ(start->body.find("https://"), std::string::npos);
+    EXPECT_EQ(start->referrer, "no-referrer");
+    EXPECT_EQ(start->nosniff, "nosniff");
+    EXPECT_FALSE(start->keep_alive);
+    page.set(http::field::origin, "https://" + host);
+    EXPECT_EQ(send(page)->status, 200U);
+    page.erase(http::field::origin);
+
+    page.target("/console/confirm?token=" + std::string(32, 'a'));
     const auto html = send(page);
     ASSERT_TRUE(html);
     EXPECT_EQ(html->status, 200U);
@@ -319,6 +347,8 @@ TEST_F(GatewayServer, ServesOnlyLocalBuiltInApprovalResourcesWithoutOriginCreden
     EXPECT_EQ(html->body.find(std::string(32, 'a')), std::string::npos);
     EXPECT_FALSE(html->keep_alive);
     const std::vector<std::pair<std::string, std::string>> resources = {
+        {"/console/start.js", "text/javascript; charset=utf-8"},
+        {"/console/start.css", "text/css; charset=utf-8"},
         {"/console/confirm.js", "text/javascript; charset=utf-8"},
         {"/console/confirm.css", "text/css; charset=utf-8"},
         {"/console/confirm.svg", "image/svg+xml"}
@@ -329,12 +359,24 @@ TEST_F(GatewayServer, ServesOnlyLocalBuiltInApprovalResourcesWithoutOriginCreden
         ASSERT_TRUE(resource);
         EXPECT_EQ(resource->status, 200U);
         EXPECT_EQ(resource->content_type, type);
+        if (path == "/console/start.js") {
+            EXPECT_NE(resource->body.find("/v1/preview"), std::string::npos);
+        }
     }
+    page.target("/console?unexpected=1");
+    EXPECT_EQ(send(page)->status, 400U);
+    page.target("/console/start.js?unexpected=1");
+    EXPECT_EQ(send(page)->status, 400U);
     page.target("/console/confirm?token=" + std::string(32, 'a') + "&extra=1");
     EXPECT_EQ(send(page)->status, 400U);
-    page.target("/console/confirm");
+    page.target("/console");
     page.set(http::field::host, "example.invalid");
     EXPECT_EQ(send(page)->status, 403U);
+    page.set(http::field::host, host);
+    page.set(http::field::origin, "https://example.invalid");
+    EXPECT_EQ(send(page)->status, 403U);
+    page.erase(http::field::origin);
+    EXPECT_EQ(send(page, nullptr, false, "127.0.0.2")->status, 403U);
     EXPECT_EQ(handled(), 0);
 }
 

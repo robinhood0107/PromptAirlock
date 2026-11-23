@@ -6,4 +6,7 @@ inline constexpr std::string_view confirmation_html = R"PAHTML(@PA_CONFIRM_HTML@
 inline constexpr std::string_view confirmation_js = R"PAJS(@PA_CONFIRM_JS@)PAJS";
 inline constexpr std::string_view confirmation_css = R"PACSS(@PA_CONFIRM_CSS@)PACSS";
 inline constexpr std::string_view confirmation_svg = R"PASVG(@PA_CONFIRM_SVG@)PASVG";
+inline constexpr std::string_view start_html = R"PASTARTHTML(@PA_START_HTML@)PASTARTHTML";
+inline constexpr std::string_view start_js = R"PASTARTJS(@PA_START_JS@)PASTARTJS";
+inline constexpr std::string_view start_css = R"PASTARTCSS(@PA_START_CSS@)PASTARTCSS";
 }

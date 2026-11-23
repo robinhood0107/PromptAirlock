@@ -127,18 +127,34 @@ bool local_console_request(const http::request_header<>& head, std::string_view 
 std::optional<JsonResponse> console_resource(const http::request_header<>& head, std::string_view client,
                                              std::uint16_t port) {
     const std::string_view target = head.target();
-    const bool page = target == "/console/confirm" || target.starts_with("/console/confirm?");
-    if (!page && target != "/console/confirm.js" && target != "/console/confirm.css" &&
-        target != "/console/confirm.svg") return std::nullopt;
+    const bool start_page = target == "/console" || target.starts_with("/console?");
+    const bool approval_page = target == "/console/confirm" || target.starts_with("/console/confirm?");
+    const bool start_js = target == "/console/start.js" || target.starts_with("/console/start.js?");
+    const bool start_css = target == "/console/start.css" || target.starts_with("/console/start.css?");
+    const bool approval_asset = target == "/console/confirm.js" || target == "/console/confirm.css" ||
+                                target == "/console/confirm.svg";
+    if (!start_page && !approval_page && !start_js && !start_css && !approval_asset) return std::nullopt;
     if (!local_console_request(head, client, port)) return error_response(EntryError::LocalOnly);
     if (head.method() != http::verb::get) return error_response(EntryError::MethodNotAllowed);
-    if (page) {
+    if (start_page) {
+        if (target != "/console") return error_response(EntryError::BadRequest);
+        return JsonResponse{200, std::string(console_assets::start_html), ResponseMedia::Html};
+    }
+    if (approval_page) {
         constexpr std::string_view prefix = "/console/confirm?token=";
         if (target != "/console/confirm" &&
             (!target.starts_with(prefix) || !valid_confirmation_token(target.substr(prefix.size())))) {
             return error_response(EntryError::BadRequest);
         }
         return JsonResponse{200, std::string(console_assets::confirmation_html), ResponseMedia::Html};
+    }
+    if (start_js) {
+        if (target != "/console/start.js") return error_response(EntryError::BadRequest);
+        return JsonResponse{200, std::string(console_assets::start_js), ResponseMedia::JavaScript};
+    }
+    if (start_css) {
+        if (target != "/console/start.css") return error_response(EntryError::BadRequest);
+        return JsonResponse{200, std::string(console_assets::start_css), ResponseMedia::Css};
     }
     if (target == "/console/confirm.js") {
         return JsonResponse{200, std::string(console_assets::confirmation_js), ResponseMedia::JavaScript};

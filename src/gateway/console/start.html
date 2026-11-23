@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>전송 전 검사 — Prompt Airlock</title>
+  <link rel="stylesheet" href="/console/start.css">
+  <script src="/console/start.js" defer></script>
+</head>
+<body>
+  <header class="topbar">
+    <p class="brand">Prompt Airlock <span>로컬 콘솔</span></p>
+    <p class="local-only">로컬 검사 · 제공자 호출 0회</p>
+  </header>
+  <main>
+    <section class="intro" aria-labelledby="page-title">
+      <p class="eyebrow">외부 전송 전 단계</p>
+      <h1 id="page-title">보내기 전에 검사하세요</h1>
+      <p>텍스트나 파일을 보호 검사하고, 실제로 전송될 수 있는 검증된 내용만 미리 봅니다. 이 화면은 내용을 외부 제공자에게 보내지 않습니다.</p>
+    </section>
+    <form id="preview-form" novalidate>
+      <fieldset class="mode-picker">
+        <legend>검사할 입력</legend>
+        <label class="choice"><input type="radio" name="input-mode" value="text" checked> 텍스트</label>
+        <label class="choice"><input type="radio" name="input-mode" value="file"> 파일</label>
+      </fieldset>
+      <div id="text-panel">
+        <label for="prompt">검사할 텍스트</label>
+        <textarea id="prompt" rows="8" maxlength="65536" spellcheck="false" aria-describedby="prompt-help"></textarea>
+        <p id="prompt-help" class="hint">최대 64 KiB의 UTF-8 텍스트를 검사합니다.</p>
+      </div>
+      <div id="file-panel" hidden>
+        <label for="document">검사할 파일</label>
+        <input id="document" type="file" aria-describedby="file-help">
+        <p id="file-help" class="hint">최대 32 MiB의 파일 하나를 선택하세요. 파일 이름은 화면 결과에 표시하지 않습니다.</p>
+      </div>
+      <label for="origin-token">게이트웨이 출처 token</label>
+      <input id="origin-token" type="password" required maxlength="256" autocomplete="off" spellcheck="false" aria-describedby="token-help">
+      <p id="token-help" class="hint">게이트웨이 출처 인증에 쓰는 값입니다. 외부 제공자의 API 키를 입력하지 마세요.</p>
+      <p id="grade-help" class="hint">기관이 공개(O)로 분류한 자료만 검사하세요. 등급을 확인할 수 없거나 다른 등급이면 진행하지 마세요.</p>
+      <label class="grade-confirm"><input id="grade-confirm" type="checkbox" required aria-describedby="grade-help"> 기관 분류가 공개(O)임을 확인했습니다.</label>
+      <button id="preview" type="submit">로컬 검사</button>
+      <p id="status" class="status" role="status" aria-live="polite">검사를 시작하기 전입니다. 전송 전 검사는 제공자 호출 없이 수행됩니다.</p>
+    </form>
+    <section id="results" class="results" aria-labelledby="results-title" hidden>
+      <h2 id="results-title">검사 결과</h2>
+      <p id="decision" class="decision"></p>
+      <dl class="summary">
+        <div><dt>검출 건수</dt><dd id="entity-total">0</dd></div>
+        <div><dt>검사 파일</dt><dd id="document-total">0</dd></div>
+        <div><dt>제공자 호출</dt><dd>0회</dd></div>
+      </dl>
+      <ul id="entity-counts" class="entity-counts" aria-label="검출 종류별 건수" hidden></ul>
+      <div id="document-details" class="document-details" hidden>
+        <h3>파일 검사 정보</h3>
+        <ul id="document-list"></ul>
+      </div>
+      <div class="outbound-block">
+        <h3>검증된 전송 미리보기</h3>
+        <p class="hint">표시된 내용은 검사를 통과한 전송 본문입니다. 여기서는 전송하지 않습니다.</p>
+        <pre id="outbound" tabindex="0"></pre>
+      </div>
+    </section>
+    <noscript>로컬 검사를 사용하려면 JavaScript가 필요합니다.</noscript>
+  </main>
+</body>
+</html>
