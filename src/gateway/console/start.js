@@ -525,8 +525,9 @@ async function loadAdminCounts() {
 
 const adminKindLabels = {
   request: '요청 판정', preview: '미리보기', confirmation: '확인', credential_rotation: '자격 증명 교체',
-  egress: '전송 준비', egress_answer: '제공자 응답 기록', auth: '인증', admin_history_access: '관리자 열람',
-  expire: '만료 삭제', boot: '기동', shutdown: '종료', other: '기타'
+  egress_prepared: '전송 준비', provider_response_recorded: '제공자 응답 기록', authentication: '인증',
+  admin_read: '관리자 열람', retention_expiry: '만료 삭제', gateway_start: '기동', gateway_stop: '종료',
+  certificate_expiry: '인증서 만료', document_processing: '문서 처리', other: '기타'
 };
 
 function validAdminEvent(item) {
@@ -554,7 +555,6 @@ function renderAdminEvent(item) {
   entry.append(heading);
   const metadata = document.createElement('dl');
   metadata.className = 'admin-event-meta';
-  if (['info', 'warn', 'error'].includes(item.severity)) appendAdminEventField(metadata, '심각도', item.severity);
   for (const [key, label] of adminEventFields) {
     const value = item[key];
     if ((typeof value === 'string' && value.length <= 128) || Number.isSafeInteger(value) ||
@@ -569,7 +569,7 @@ function renderAdminEvent(item) {
     appendAdminEventField(metadata, '요청 식별자', item.request_id);
   }
   entry.append(metadata);
-  if (item.kind === 'egress' && typeof item.request_id === 'string' && /^chatcmpl-pa-[0-9a-f]{24}$/.test(item.request_id)) {
+  if (item.kind === 'egress_prepared' && typeof item.request_id === 'string' && /^chatcmpl-pa-[0-9a-f]{24}$/.test(item.request_id)) {
     const disclosure = document.createElement('details');
     const summary = document.createElement('summary');
     const load = document.createElement('button');

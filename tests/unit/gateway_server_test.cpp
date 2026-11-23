@@ -622,12 +622,36 @@ TEST_F(GatewayAdminHistory, ReturnsAggregateMetadataAndOnlyPreparedEgressText) {
     ASSERT_EQ(events_reply->status, 200U);
     const auto events = nlohmann::json::parse(events_reply->body);
     ASSERT_FALSE(events["events"].empty());
+    const auto& event_items = events["events"];
+    const auto egress_event = std::find_if(event_items.begin(), event_items.end(), [](const auto& event) {
+        return event.value("kind", "") == "egress_prepared";
+    });
+    ASSERT_NE(egress_event, event_items.end());
+    EXPECT_EQ(egress_event->value("request_id", ""), request_id);
     EXPECT_EQ(events_reply->body.find("SYNTHETIC_TOKENIZED_MARKER"), std::string::npos);
     EXPECT_EQ(events_reply->body.find("SYNTHETIC_PROVIDER_RESPONSE_MARKER"), std::string::npos);
     EXPECT_EQ(events_reply->body.find("\"sent\""), std::string::npos);
     EXPECT_EQ(events_reply->body.find("\"answer\""), std::string::npos);
     EXPECT_EQ(events_reply->body.find("\"prev\""), std::string::npos);
     EXPECT_EQ(events_reply->body.find("\"hash\""), std::string::npos);
+
+    const auto start_js_reply = send(admin_request("admin-token", "/console/start.js"));
+    ASSERT_TRUE(start_js_reply);
+    ASSERT_EQ(start_js_reply->status, 200U);
+    const auto labels_begin = start_js_reply->body.find("const adminKindLabels = {");
+    ASSERT_NE(labels_begin, std::string::npos);
+    const auto labels_end = start_js_reply->body.find("\n};", labels_begin);
+    ASSERT_NE(labels_end, std::string::npos);
+    const auto labels = std::string_view(start_js_reply->body).substr(labels_begin, labels_end - labels_begin);
+    constexpr std::array<std::string_view, 13> safe_event_kinds = {
+        "request", "preview", "confirmation", "credential_rotation", "egress_prepared",
+        "provider_response_recorded", "admin_read", "authentication", "gateway_start", "gateway_stop",
+        "retention_expiry", "certificate_expiry", "document_processing"};
+    for (const auto kind : safe_event_kinds) {
+        EXPECT_NE(labels.find(std::string(kind) + ":"), std::string_view::npos) << kind;
+    }
+    EXPECT_NE(start_js_reply->body.find(R"(item.kind === 'egress_prepared')"), std::string::npos);
+    EXPECT_EQ(start_js_reply->body.find(R"(item.kind === 'egress')"), std::string::npos);
 
     const auto detail_reply = send(admin_request("admin-token", "/v1/admin/audit/egress/" + std::string(request_id)));
     ASSERT_TRUE(detail_reply);
