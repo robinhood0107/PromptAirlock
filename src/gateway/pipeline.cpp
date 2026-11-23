@@ -237,7 +237,9 @@ asio::awaitable<JsonResponse> Pipeline::run(AcceptedRequest request, Trace& trac
                 ? trace.fail(EntryError::Cancelled)
                 : JsonResponse{200, nlohmann::json{{"id", trace.id},
                     {"decision", outbound->pseudonymized ? "pseudonymized" : "pass"},
-                    {"outbound", nlohmann::json::parse(outbound->body)}, {"entities", trace.entities},
+                    {"outbound", protocol_ == ProviderProtocol::LocalCliText
+                         ? nlohmann::json(outbound->body) : nlohmann::json::parse(outbound->body)},
+                    {"entities", trace.entities},
                     {"documents", trace.documents}}.dump()};
             outbound->scope.reset();
             return response;
@@ -247,7 +249,7 @@ asio::awaitable<JsonResponse> Pipeline::run(AcceptedRequest request, Trace& trac
     bool stopped = co_await cancelled();
     if (!stopped) {
         trace.provider_started = std::chrono::steady_clock::now();
-        reply = co_await provider_(std::move(outbound->body));  // 취소되면 provider 연결을 끊고 돌아온다
+        reply = co_await provider_(std::move(outbound->body), outbound->output_token_limit);
         trace.provider_finished = std::chrono::steady_clock::now();
         stopped = co_await cancelled();
     }
@@ -391,10 +393,13 @@ std::expected<Pipeline::Outbound, JsonResponse> Pipeline::prepare(AcceptedReques
     }
     auto body = provider_request_body(*provider_request, model_alias_, protocol_);
     if (!body) return std::unexpected(trace.fail(EntryError::BadRequest));
-    Outbound outbound{std::move(*scope), std::move(*body), pseudonymized};
+    Outbound outbound{std::move(*scope), std::move(*body), pseudonymized,
+                      provider_request->params().max_output_tokens()};
     // 외부 전송 이력: 실제로 보내는 가명 상태 본문(ADR 0021). 남기지 못하면 보내지 않는다.
     if (request.purpose == RequestPurpose::Chat && audit_ != nullptr && !audit_->append("egress", "info",
-                                             {{"request_id", trace.id}, {"sent", nlohmann::json::parse(outbound.body)}})) {
+                                             {{"request_id", trace.id},
+                                              {"sent", protocol_ == ProviderProtocol::LocalCliText
+                                                   ? nlohmann::json(outbound.body) : nlohmann::json::parse(outbound.body)}})) {
         return std::unexpected(trace.fail(EntryError::Unavailable));
     }
     return outbound;
@@ -484,7 +489,9 @@ JsonResponse Pipeline::finish(const std::expected<ProviderReply, ProviderError>&
         if (reply->status == 503) return trace.fail(EntryError::ProviderUnavailable);
         return trace.fail(EntryError::ProviderFailed);  // provider 오류 본문은 넘기지 않는다
     }
-    auto answer = parse_provider_answer(reply->body, protocol_);
+    const auto response_protocol = protocol_ == ProviderProtocol::LocalCliText
+        ? ProviderProtocol::ChatCompletions : protocol_;
+    auto answer = parse_provider_answer(reply->body, response_protocol);
     if (!answer) {
         return trace.fail(EntryError::ProviderFailed);
     }

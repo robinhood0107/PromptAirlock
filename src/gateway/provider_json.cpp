@@ -56,6 +56,19 @@ std::expected<std::string, ProviderRequestError> provider_request_body(const cor
     }
 
     const auto& params = request.params();
+    if (protocol == ProviderProtocol::LocalCliText) {
+        if (params.temperature() || params.top_p() || !request.stop().empty() ||
+            (params.response_format() && *params.response_format() == core::ResponseFormat::JsonObject) ||
+            request.messages().size() != 1) {
+            return std::unexpected(ProviderRequestError::Unsupported);
+        }
+        const auto& message = request.messages().front();
+        if (message.role != core::MessageRole::User || message.parts.size() != 1 || message.parts.front().empty()) {
+            return std::unexpected(ProviderRequestError::Unsupported);
+        }
+        return std::string(message.parts.front().view());
+    }
+
     json messages = json::array();
     json system = json::array();
     bool dialogue_started = false;

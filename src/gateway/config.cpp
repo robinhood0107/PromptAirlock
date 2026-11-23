@@ -4,7 +4,9 @@
 #include <nlohmann/json.hpp>
 
 #include <algorithm>
+#include <array>
 #include <charconv>
+#include <cctype>
 #include <chrono>
 #include <functional>
 #include <initializer_list>
@@ -111,6 +113,30 @@ bool valid_api_version_date(std::string_view value) {
     return date.ok();
 }
 
+Result parse_cli_config(const json& provider, const std::string& at, CliConfig& out) {
+    auto node = member(provider, "cli", at, json::value_t::object);
+    if (!node) return std::unexpected(node.error());
+    const json& cli = **node;
+    const std::string field = at + ".cli";
+    if (auto r = only_keys(cli, {"executable", "result_format"}, field); !r) return r;
+    auto executable = text(cli, "executable", field);
+    auto format = text(cli, "result_format", field);
+    if (!executable) return std::unexpected(executable.error());
+    if (!format) return std::unexpected(format.error());
+    if (executable->size() > 4096) return fail(ConfigProblem::InvalidValue, field + ".executable");
+    out.executable = std::filesystem::path(std::u8string(executable->begin(), executable->end()));
+    if (!out.executable.is_absolute()) return fail(ConfigProblem::InvalidValue, field + ".executable");
+#ifdef _WIN32
+    std::string executable_name = out.executable.filename().string();
+    std::ranges::transform(executable_name, executable_name.begin(), [](unsigned char c) { return static_cast<char>(std::tolower(c)); });
+    if (executable_name == "wsl.exe") return fail(ConfigProblem::InvalidValue, field + ".executable");
+#endif
+    if (*format == "json") out.output_format = CliOutputFormat::Json;
+    else if (*format == "json_lines") out.output_format = CliOutputFormat::JsonLines;
+    else return fail(ConfigProblem::InvalidValue, field + ".result_format");
+    return {};
+}
+
 // https://host[:port]/path 만 받는다. 사용자 정보·질의·조각은 거절한다(자격 증명은 별도 파일).
 Result parse_provider_url(std::string_view url, ProviderConfig& out) {
     constexpr std::string_view scheme = "https://";
@@ -177,24 +203,47 @@ Result parse_provider(const json& root, const std::filesystem::path& base, Provi
     }
     const json& o = **node;
     if (auto r = only_keys(o, {"url", "credential_file", "trust_file", "model", "credential_rotation_origin", "protocol",
-                               "credential_mode", "api_version_header_name", "api_version_header_value"}, at);
+                               "credential_mode", "api_version_header_name", "api_version_header_value", "cli"}, at);
         !r) {
         return r;
     }
-    auto url = text(o, "url", at);
-    auto credential = text(o, "credential_file", at);
     auto model = text(o, "model", at);
-    if (!url) return std::unexpected(url.error());
-    if (!credential) return std::unexpected(credential.error());
     if (!model) return std::unexpected(model.error());
-    if (auto r = parse_provider_url(*url, out); !r) {
-        return r;
-    }
     if (model->size() > 128 || !printable_ascii(*model)) {
         return fail(ConfigProblem::InvalidValue, "provider.model");
     }
-    out.credential_file = resolve(base, *credential);
     out.model = std::move(*model);
+    if (o.contains("protocol")) {
+        auto protocol = text(o, "protocol", at);
+        if (!protocol) return std::unexpected(protocol.error());
+        if (*protocol == "chat_completions") {
+            out.protocol = ProviderProtocol::ChatCompletions;
+        } else if (*protocol == "generate_content") {
+            out.protocol = ProviderProtocol::GenerateContent;
+        } else if (*protocol == "messages") {
+            out.protocol = ProviderProtocol::Messages;
+        } else if (*protocol == "local_cli") {
+            out.protocol = ProviderProtocol::LocalCliText;
+        } else {
+            return fail(ConfigProblem::InvalidValue, "provider.protocol");
+        }
+    }
+    if (out.protocol == ProviderProtocol::LocalCliText) {
+        if (o.contains("url") || o.contains("credential_file") || o.contains("trust_file") ||
+            o.contains("credential_rotation_origin") || o.contains("credential_mode") ||
+            o.contains("api_version_header_name") || o.contains("api_version_header_value")) {
+            return fail(ConfigProblem::InvalidValue, "provider.cli");
+        }
+        return parse_cli_config(o, at, out.cli);
+    }
+    if (o.contains("cli")) return fail(ConfigProblem::InvalidValue, "provider.cli");
+
+    auto url = text(o, "url", at);
+    auto credential = text(o, "credential_file", at);
+    if (!url) return std::unexpected(url.error());
+    if (!credential) return std::unexpected(credential.error());
+    if (auto r = parse_provider_url(*url, out); !r) return r;
+    out.credential_file = resolve(base, *credential);
     if (o.contains("trust_file")) {
         auto trust = text(o, "trust_file", at);
         if (!trust) return std::unexpected(trust.error());
@@ -207,19 +256,6 @@ Result parse_provider(const json& root, const std::filesystem::path& base, Provi
             return fail(ConfigProblem::InvalidValue, "provider.credential_rotation_origin");
         }
         out.credential_rotation_origin = std::move(*origin);
-    }
-    if (o.contains("protocol")) {
-        auto protocol = text(o, "protocol", at);
-        if (!protocol) return std::unexpected(protocol.error());
-        if (*protocol == "chat_completions") {
-            out.protocol = ProviderProtocol::ChatCompletions;
-        } else if (*protocol == "generate_content") {
-            out.protocol = ProviderProtocol::GenerateContent;
-        } else if (*protocol == "messages") {
-            out.protocol = ProviderProtocol::Messages;
-        } else {
-            return fail(ConfigProblem::InvalidValue, "provider.protocol");
-        }
     }
     if (o.contains("credential_mode")) {
         auto mode = text(o, "credential_mode", at);

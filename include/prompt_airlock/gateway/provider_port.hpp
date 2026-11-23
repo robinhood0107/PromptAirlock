@@ -10,8 +10,9 @@
 
 namespace prompt_airlock::gateway {
 
-enum class ProviderProtocol : std::uint8_t { ChatCompletions, GenerateContent, Messages };
+enum class ProviderProtocol : std::uint8_t { ChatCompletions, GenerateContent, Messages, LocalCliText };
 enum class ProviderCredentialMode : std::uint8_t { Bearer, ApiKeyHeader };
+enum class CliOutputFormat : std::uint8_t { Json, JsonLines };
 
 struct ProviderReply {
     unsigned status;
@@ -22,6 +23,7 @@ enum class ProviderError : std::uint8_t { Unavailable, Timeout, BadResponse };
 
 // provider 호출. 검증된 요청 본문만 받는다. 주소와 자격 증명은 구현(provider 클라이언트)이 가진다.
 using ProviderCall =
-    std::function<boost::asio::awaitable<std::expected<ProviderReply, ProviderError>>(std::string body)>;
+    std::function<boost::asio::awaitable<std::expected<ProviderReply, ProviderError>>(std::string body,
+                                                                                     std::uint32_t output_token_limit)>;
 
 }  // namespace prompt_airlock::gateway

@@ -113,6 +113,27 @@ TEST(GatewayConfig, ProviderProtocolSettingsAreNarrowAndValidated) {
     expect_error(j, ConfigProblem::InvalidValue, "provider.api_version_header_name");
 }
 
+TEST(GatewayConfig, LocalCliUsesOnlyAConfiguredExecutableAndResultFormat) {
+    auto j = valid();
+    j["provider"] = {{"protocol", "local_cli"}, {"model", "demo-alias"},
+                      {"cli", {{"executable", std::filesystem::temp_directory_path().string()},
+                               {"result_format", "json_lines"}}}};
+    auto config = parse(j);
+    ASSERT_TRUE(config);
+    EXPECT_EQ(config->provider.protocol, gw::ProviderProtocol::LocalCliText);
+    EXPECT_EQ(config->provider.cli.output_format, gw::CliOutputFormat::JsonLines);
+    EXPECT_TRUE(config->provider.cli.executable.is_absolute());
+
+    j["provider"]["cli"]["arguments"] = json::array({"--unsafe"});
+    expect_error(j, ConfigProblem::UnknownKey, "provider.cli.arguments");
+
+#ifdef _WIN32
+    j["provider"]["cli"].erase("arguments");
+    j["provider"]["cli"]["executable"] = "C:\\Windows\\System32\\wsl.exe";
+    expect_error(j, ConfigProblem::InvalidValue, "provider.cli.executable");
+#endif
+}
+
 TEST(GatewayConfig, CredentialRotationRequiresOneRegisteredOrigin) {
     auto j = valid();
     j["provider"]["credential_rotation_origin"] = "dept-b";

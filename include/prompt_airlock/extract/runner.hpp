@@ -13,6 +13,7 @@
 #include <stop_token>
 #include <string>
 #include <string_view>
+#include <vector>
 
 #include "prompt_airlock/extract/document.hpp"
 
@@ -32,6 +33,12 @@ struct RunLimits {
     std::size_t output_bytes = (8U << 20) + (2U << 20);  // 글자 상한 8 MiB + JSON 여유
 };
 
+struct ChildLaunchOptions {
+    std::filesystem::path working_directory;
+    std::vector<std::string> environment;
+    bool inherit_environment = true;
+};
+
 // 자식이 해석에 실패하면(암호, 손상 등) 안쪽 expected 의 오류로 온다.
 using ChildResult = std::expected<std::expected<ExtractedDocument, ExtractError>, RunError>;
 
@@ -41,6 +48,14 @@ using ChildResult = std::expected<std::expected<ExtractedDocument, ExtractError>
 [[nodiscard]] ChildResult extract_in_child(const std::filesystem::path& exe, std::string_view name_hint,
                                            std::span<const std::byte> file, const RunLimits& limits = {},
                                            std::stop_token stop = {});
+
+// 고정 인자 실행 파일에 본문을 stdin으로 보내고, 실제 프로세스 종료까지 시간·출력 상한을 적용한다.
+[[nodiscard]] std::expected<std::string, RunError> run_process(const std::filesystem::path& exe,
+                                                               const std::vector<std::string>& args,
+                                                               std::span<const std::byte> input,
+                                                               const RunLimits& limits,
+                                                               std::stop_token stop,
+                                                               const ChildLaunchOptions& launch);
 
 // LaTeX·Typst 확장자면 pandoc 읽기 형식(결정 #239), 아니면 nullopt.
 [[nodiscard]] std::optional<std::string_view> markup_reader(std::string_view extension) noexcept;

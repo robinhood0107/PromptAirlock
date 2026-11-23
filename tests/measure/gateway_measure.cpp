@@ -163,7 +163,7 @@ public:
                 }
                 return gw::PseudonymScope(std::move(*scope));
             },
-            [this](std::string body) -> asio::awaitable<std::expected<gw::ProviderReply, gw::ProviderError>> {
+            [this](std::string body, std::uint32_t) -> asio::awaitable<std::expected<gw::ProviderReply, gw::ProviderError>> {
                 const auto start = Clock::now();
                 auto reply = co_await provider_->send(std::move(body));
                 provider_ms.add(start);

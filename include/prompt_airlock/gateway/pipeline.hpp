@@ -111,6 +111,7 @@ private:
         std::optional<PseudonymScope> scope;  // 응답 복원도 같은 범위에서만 한다
         std::string body;                     // provider 로 보낼 검증된 본문
         bool pseudonymized = false;
+        std::uint32_t output_token_limit = 0;
     };
     boost::asio::awaitable<JsonResponse> run(AcceptedRequest request, Trace& trace) const;
     // 처리 순서(위 머리말)대로 아래 단계를 부른다.

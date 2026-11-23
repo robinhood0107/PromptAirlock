@@ -5,6 +5,7 @@
 
 #include <algorithm>
 #include <condition_variable>
+#include <map>
 #include <mutex>
 #include <thread>
 #include <utility>
@@ -12,6 +13,7 @@
 
 #ifdef _WIN32
 #include <windows.h>
+#include <cwchar>
 #else
 #include <fcntl.h>
 #include <signal.h>
@@ -68,6 +70,7 @@ struct Child {
     Handle process;
     Handle in;   // 자식 stdin 쓰기 끝
     Handle out;  // 자식 stdout 읽기 끝
+    Handle job;
 
     bool write_all(std::span<const std::byte> data) {
         while (!data.empty()) {
@@ -89,27 +92,79 @@ struct Child {
         }
         return static_cast<long>(got);
     }
-    void kill() noexcept { TerminateProcess(process.h, 1); }
-    int wait() noexcept {
-        WaitForSingleObject(process.h, INFINITE);
+    void kill() noexcept {
+        if (job) TerminateJobObject(job.h, 1);
+        if (process) TerminateProcess(process.h, 1);
+    }
+    bool wait_for_exit_notification() noexcept { return WaitForSingleObject(process.h, INFINITE) == WAIT_OBJECT_0; }
+    std::expected<int, RunError> wait() noexcept {
+        if (WaitForSingleObject(process.h, INFINITE) != WAIT_OBJECT_0) {
+            return std::unexpected(RunError::Crashed);
+        }
         DWORD code = 1;
-        GetExitCodeProcess(process.h, &code);
+        if (!GetExitCodeProcess(process.h, &code)) return std::unexpected(RunError::Crashed);
         return static_cast<int>(code);
     }
 };
 
-void append_quoted(std::wstring& cmd, const std::wstring& arg) {
-    cmd += L'"';
-    for (const wchar_t c : arg) {
-        if (c == L'"') {
-            cmd += L'\\';
-        }
-        cmd += c;
+std::wstring widen(std::string_view text) {
+    if (text.empty()) return {};
+    const int size = MultiByteToWideChar(CP_UTF8, MB_ERR_INVALID_CHARS, text.data(), static_cast<int>(text.size()), nullptr, 0);
+    if (size <= 0) return {};
+    std::wstring result(static_cast<std::size_t>(size), L'\0');
+    if (MultiByteToWideChar(CP_UTF8, MB_ERR_INVALID_CHARS, text.data(), static_cast<int>(text.size()), result.data(), size) != size) {
+        return {};
     }
-    cmd += L'"';
+    return result;
 }
 
-std::expected<Child, RunError> spawn(const std::filesystem::path& exe, const std::vector<std::string>& args) {
+std::expected<std::vector<wchar_t>, RunError> make_environment_block(const std::vector<std::string>& entries) {
+    std::map<std::wstring, std::wstring, decltype([](const std::wstring& a, const std::wstring& b) {
+                 return _wcsicmp(a.c_str(), b.c_str()) < 0;
+             })> values;
+    for (const auto& entry : entries) {
+        const auto equals = entry.find('=');
+        if (equals == std::string::npos || equals == 0) return std::unexpected(RunError::StartFailed);
+        auto name = widen(std::string_view(entry).substr(0, equals));
+        auto value = widen(std::string_view(entry).substr(equals + 1));
+        if (name.empty() || !values.emplace(std::move(name), std::move(value)).second) {
+            return std::unexpected(RunError::StartFailed);
+        }
+    }
+    std::vector<wchar_t> block;
+    for (const auto& [name, value] : values) {
+        block.insert(block.end(), name.begin(), name.end());
+        block.push_back(L'=');
+        block.insert(block.end(), value.begin(), value.end());
+        block.push_back(L'\0');
+    }
+    if (block.empty()) block.push_back(L'\0');
+    block.push_back(L'\0');
+    return block;
+}
+
+void append_quoted(std::wstring& cmd, const std::wstring& arg) {
+    cmd.push_back(L'"');
+    std::size_t backslashes = 0;
+    for (const wchar_t c : arg) {
+        if (c == L'\\') {
+            ++backslashes;
+        } else if (c == L'"') {
+            cmd.append(backslashes * 2 + 1, L'\\');
+            cmd.push_back(c);
+            backslashes = 0;
+        } else {
+            cmd.append(backslashes, L'\\');
+            cmd.push_back(c);
+            backslashes = 0;
+        }
+    }
+    cmd.append(backslashes * 2, L'\\');
+    cmd.push_back(L'"');
+}
+
+std::expected<Child, RunError> spawn(const std::filesystem::path& exe, const std::vector<std::string>& args,
+                                    const ChildLaunchOptions& launch, bool contain_children) {
     SECURITY_ATTRIBUTES inherit{sizeof(SECURITY_ATTRIBUTES), nullptr, TRUE};
     HANDLE r = nullptr;
     HANDLE w = nullptr;
@@ -151,19 +206,49 @@ std::expected<Child, RunError> spawn(const std::filesystem::path& exe, const std
     si.StartupInfo.hStdOutput = out_write.h;
     si.StartupInfo.hStdError = err.h;
     si.lpAttributeList = attrs;
+    std::vector<wchar_t> environment;
+    if (!launch.inherit_environment) {
+        auto block = make_environment_block(launch.environment);
+        if (!block) return std::unexpected(block.error());
+        environment = std::move(*block);
+    }
+    Handle job;
+    if (contain_children) {
+        job = Handle(CreateJobObjectW(nullptr, nullptr));
+        if (!job) return std::unexpected(RunError::StartFailed);
+        JOBOBJECT_EXTENDED_LIMIT_INFORMATION info{};
+        info.BasicLimitInformation.LimitFlags = JOB_OBJECT_LIMIT_KILL_ON_JOB_CLOSE;
+        if (!SetInformationJobObject(job.h, JobObjectExtendedLimitInformation, &info, sizeof(info))) {
+            return std::unexpected(RunError::StartFailed);
+        }
+    }
     std::wstring cmd;
     append_quoted(cmd, exe.wstring());
     for (const auto& arg : args) {
         cmd += L' ';
-        append_quoted(cmd, std::wstring(arg.begin(), arg.end()));  // 인자는 고정 ASCII 와 영문·숫자 확장자뿐이다
+        const auto wide_arg = widen(arg);
+        if (!arg.empty() && wide_arg.empty()) return std::unexpected(RunError::StartFailed);
+        append_quoted(cmd, wide_arg);
     }
     PROCESS_INFORMATION pi{};
-    if (!CreateProcessW(exe.wstring().c_str(), cmd.data(), nullptr, nullptr, TRUE,
-                        EXTENDED_STARTUPINFO_PRESENT | CREATE_NO_WINDOW, nullptr, nullptr, &si.StartupInfo, &pi)) {
+    DWORD flags = EXTENDED_STARTUPINFO_PRESENT | CREATE_NO_WINDOW;
+    if (!launch.inherit_environment) flags |= CREATE_UNICODE_ENVIRONMENT;
+    if (contain_children) flags |= CREATE_SUSPENDED;
+    const std::wstring working_directory = launch.working_directory.empty() ? std::wstring{} : launch.working_directory.wstring();
+    if (!CreateProcessW(exe.wstring().c_str(), cmd.data(), nullptr, nullptr, TRUE, flags,
+                        launch.inherit_environment ? nullptr : environment.data(),
+                        working_directory.empty() ? nullptr : working_directory.c_str(), &si.StartupInfo, &pi)) {
         return std::unexpected(RunError::StartFailed);
     }
-    CloseHandle(pi.hThread);
-    return Child{Handle(pi.hProcess), std::move(in_write), std::move(out_read)};
+    Handle process(pi.hProcess), thread(pi.hThread);
+    if (contain_children &&
+        (!AssignProcessToJobObject(job.h, process.h) || ResumeThread(thread.h) == static_cast<DWORD>(-1))) {
+        TerminateProcess(process.h, 1);
+        WaitForSingleObject(process.h, INFINITE);
+        return std::unexpected(RunError::StartFailed);
+    }
+    thread.reset();
+    return Child{std::move(process), std::move(in_write), std::move(out_read), std::move(job)};
 }
 #else
 struct Fd {
@@ -190,6 +275,7 @@ struct Child {
     Fd in;
     Fd out;
     bool reaped = false;
+    bool contain_children = false;
 
     bool write_all(std::span<const std::byte> data) {
         // 자식이 먼저 끝나면 SIGPIPE 가 이 스레드로 온다. 이 스레드에서만 막고, 스레드가 끝나면 걸린 신호는 버려진다.
@@ -219,17 +305,30 @@ struct Child {
             return static_cast<long>(n);
         }
     }
-    void kill() noexcept { ::kill(pid, SIGKILL); }
-    int wait() noexcept {
+    void kill() noexcept { ::kill(contain_children ? -pid : pid, SIGKILL); }
+    bool wait_for_exit_notification() noexcept {
+        siginfo_t info{};
+        for (;;) {
+            if (waitid(P_PID, pid, &info, WEXITED | WNOWAIT) == 0) return info.si_pid == pid;
+            if (errno != EINTR) return false;
+        }
+    }
+    std::expected<int, RunError> wait() noexcept {
         int status = 0;
-        while (::waitpid(pid, &status, 0) < 0 && errno == EINTR) {
+        pid_t result = -1;
+        do {
+            result = ::waitpid(pid, &status, 0);
+        } while (result < 0 && errno == EINTR);
+        if (result != pid) {
+            return std::unexpected(RunError::Crashed);
         }
         reaped = true;
         return WIFEXITED(status) ? WEXITSTATUS(status) : 128 + (WIFSIGNALED(status) ? WTERMSIG(status) : 0);
     }
 };
 
-std::expected<Child, RunError> spawn(const std::filesystem::path& exe, const std::vector<std::string>& args) {
+std::expected<Child, RunError> spawn(const std::filesystem::path& exe, const std::vector<std::string>& args,
+                                    const ChildLaunchOptions& launch, bool contain_children) {
     int in_pipe[2];
     int out_pipe[2];
     if (::pipe2(in_pipe, O_CLOEXEC) != 0) {
@@ -241,41 +340,100 @@ std::expected<Child, RunError> spawn(const std::filesystem::path& exe, const std
     }
     Fd out_read(out_pipe[0]), out_write(out_pipe[1]);
     posix_spawn_file_actions_t actions;
-    posix_spawn_file_actions_init(&actions);
-    posix_spawn_file_actions_adddup2(&actions, in_read.fd, 0);
-    posix_spawn_file_actions_adddup2(&actions, out_write.fd, 1);
-    posix_spawn_file_actions_addopen(&actions, 2, "/dev/null", O_WRONLY, 0);
+    if (posix_spawn_file_actions_init(&actions) != 0) return std::unexpected(RunError::StartFailed);
+    struct FileActionsGuard {
+        posix_spawn_file_actions_t& actions;
+        ~FileActionsGuard() { posix_spawn_file_actions_destroy(&actions); }
+    } actions_guard{actions};
+    if (posix_spawn_file_actions_adddup2(&actions, in_read.fd, 0) != 0 ||
+        posix_spawn_file_actions_adddup2(&actions, out_write.fd, 1) != 0 ||
+        posix_spawn_file_actions_addopen(&actions, 2, "/dev/null", O_WRONLY, 0) != 0) {
+        return std::unexpected(RunError::StartFailed);
+    }
+    if (contain_children && posix_spawn_file_actions_addclosefrom_np(&actions, 3) != 0) {
+        return std::unexpected(RunError::StartFailed);
+    }
+    if (!launch.working_directory.empty() &&
+        posix_spawn_file_actions_addchdir_np(&actions, launch.working_directory.c_str()) != 0) {
+        return std::unexpected(RunError::StartFailed);
+    }
     const std::string path = exe.string();
     std::vector<char*> argv{const_cast<char*>(path.c_str())};
     for (const auto& arg : args) argv.push_back(const_cast<char*>(arg.c_str()));
     argv.push_back(nullptr);
+    std::vector<char*> envp;
+    if (!launch.inherit_environment) {
+        envp.reserve(launch.environment.size() + 1);
+        for (const auto& entry : launch.environment) {
+            const auto equals = entry.find('=');
+            if (equals == std::string::npos || equals == 0 || entry.find('\0') != std::string::npos) {
+                return std::unexpected(RunError::StartFailed);
+            }
+            envp.push_back(const_cast<char*>(entry.c_str()));
+        }
+        envp.push_back(nullptr);
+    }
+    posix_spawnattr_t attributes;
+    posix_spawnattr_t* attributes_ptr = nullptr;
+    if (contain_children) {
+        if (posix_spawnattr_init(&attributes) != 0) return std::unexpected(RunError::StartFailed);
+        if (posix_spawnattr_setpgroup(&attributes, 0) != 0 ||
+            posix_spawnattr_setflags(&attributes, POSIX_SPAWN_SETPGROUP) != 0) {
+            posix_spawnattr_destroy(&attributes);
+            return std::unexpected(RunError::StartFailed);
+        }
+        attributes_ptr = &attributes;
+    }
     pid_t pid = -1;
-    const int rc = posix_spawn(&pid, path.c_str(), &actions, nullptr, argv.data(), environ);
-    posix_spawn_file_actions_destroy(&actions);
+    const int rc = posix_spawn(&pid, path.c_str(), &actions, attributes_ptr, argv.data(),
+                               launch.inherit_environment ? environ : envp.data());
+    if (contain_children) posix_spawnattr_destroy(&attributes);
     if (rc != 0) {
         return std::unexpected(RunError::StartFailed);
     }
-    return Child{pid, std::move(in_write), std::move(out_read)};
+    return Child{pid, std::move(in_write), std::move(out_read), false, contain_children};
 }
 #endif
 
 // 자식을 띄워 file 을 stdin 에 넣고 stdout 전부를 받는다. 시간·출력 상한·취소·0 아닌 종료는 실패.
 std::expected<std::string, RunError> run_child(const std::filesystem::path& exe, const std::vector<std::string>& args,
                                                std::span<const std::byte> file, const RunLimits& limits,
-                                               std::stop_token stop) {
-    auto child = spawn(exe, args);
+                                               std::stop_token stop, const ChildLaunchOptions& launch = {},
+                                               bool wait_for_exit = false) {
+    if (stop.stop_requested()) return std::unexpected(RunError::Cancelled);
+    const auto before_spawn = std::chrono::steady_clock::now();
+    auto child = spawn(exe, args, launch, wait_for_exit);
     if (!child) {
         return std::unexpected(child.error());
     }
+    const auto deadline = (wait_for_exit ? before_spawn : std::chrono::steady_clock::now()) + limits.time;
     std::mutex mutex;
     std::condition_variable_any changed;
     bool read_done = false;
+    bool write_done = false;
+    bool write_failed = false;
     bool overflow = false;
+    bool process_exited = !wait_for_exit;
+    bool process_wait_failed = false;
     std::string output;
     {
+        std::jthread process_waiter;
+        if (wait_for_exit) {
+            process_waiter = std::jthread([&] {
+                const bool exited = child->wait_for_exit_notification();
+                const std::lock_guard lock(mutex);
+                process_exited = true;
+                process_wait_failed = !exited;
+                changed.notify_all();
+            });
+        }
         std::jthread writer([&] {
-            (void)child->write_all(file);
+            const bool written = child->write_all(file);
             child->close_in();
+            const std::lock_guard lock(mutex);
+            write_failed = !written;
+            write_done = true;
+            changed.notify_all();
         });
         std::jthread reader([&] {
             std::vector<char> buf(64 * 1024);
@@ -296,24 +454,33 @@ std::expected<std::string, RunError> run_child(const std::filesystem::path& exe,
             changed.notify_all();
         });
         std::unique_lock lock(mutex);
-        const bool finished = changed.wait_until(lock, stop, std::chrono::steady_clock::now() + limits.time,
-                                                 [&] { return read_done; });
+        const bool finished = changed.wait_until(lock, stop, deadline, [&] {
+            return read_done && (!wait_for_exit || (write_done && process_exited));
+        });
         const bool stopped = stop.stop_requested();
-        if (!finished || overflow) {
+        if (!finished || overflow || process_wait_failed) {
             child->kill();
         }
         lock.unlock();
         // 스레드는 여기서 합류한다. 죽였으면 파이프가 닫혀 읽기·쓰기가 곧 끝난다.
         reader.join();
         writer.join();
-        const int code = child->wait();
+        if (process_waiter.joinable()) process_waiter.join();
+        if (wait_for_exit && finished) child->kill();  // 자식이 남긴 하위 프로세스 그룹도 끝낸다.
+        const auto code = child->wait();
         if (!finished) {
             return std::unexpected(stopped ? RunError::Cancelled : RunError::Timeout);
         }
         if (overflow) {
             return std::unexpected(RunError::OutputTooLarge);
         }
-        if (code != 0) {
+        if (process_wait_failed || !code) {
+            return std::unexpected(RunError::Crashed);
+        }
+        if (wait_for_exit && write_failed) {
+            return std::unexpected(RunError::Crashed);
+        }
+        if (*code != 0) {
             return std::unexpected(RunError::Crashed);
         }
     }
@@ -331,6 +498,16 @@ ChildResult extract_in_child(const std::filesystem::path& exe, std::string_view 
     auto output = run_child(exe, {"--ext", std::string(name_hint)}, file, limits, stop);
     if (!output) return std::unexpected(output.error());
     return from_json(*output);
+}
+
+std::expected<std::string, RunError> run_process(const std::filesystem::path& exe,
+                                                const std::vector<std::string>& args,
+                                                std::span<const std::byte> input, const RunLimits& limits,
+                                                std::stop_token stop, const ChildLaunchOptions& launch) {
+    if (launch.working_directory.empty() || !std::filesystem::is_directory(launch.working_directory)) {
+        return std::unexpected(RunError::StartFailed);
+    }
+    return run_child(exe, args, input, limits, stop, launch, true);
 }
 
 std::optional<std::string_view> markup_reader(std::string_view extension) noexcept {

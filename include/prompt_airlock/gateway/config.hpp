@@ -23,6 +23,11 @@ struct ListenConfig {
     std::filesystem::path private_key;
 };
 
+struct CliConfig {
+    std::filesystem::path executable;
+    CliOutputFormat output_format = CliOutputFormat::Json;
+};
+
 struct ProviderConfig {
     std::string host;
     std::uint16_t port = 443;
@@ -35,6 +40,7 @@ struct ProviderConfig {
     ProviderCredentialMode credential_mode = ProviderCredentialMode::Bearer;
     std::string api_version_header_name;
     std::string api_version_header_value;
+    CliConfig cli;
 };
 
 // 허용 출처(ADR 0013, 0020). token 원문은 두지 않고 SHA-256 만 둔다.

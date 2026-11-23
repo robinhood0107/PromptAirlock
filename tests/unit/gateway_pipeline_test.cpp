@@ -136,7 +136,7 @@ protected:
                 }
                 return gw::PseudonymScope(TestScope(vault_, issuer_fails_, live_scopes_));
             },
-            [this](std::string body) -> asio::awaitable<std::expected<gw::ProviderReply, gw::ProviderError>> {
+            [this](std::string body, std::uint32_t) -> asio::awaitable<std::expected<gw::ProviderReply, gw::ProviderError>> {
                 ++provider_calls_;
                 sent_.push_back(std::move(body));
                 if (during_first_provider_call_ && provider_calls_ == 1) {
