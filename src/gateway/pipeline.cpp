@@ -148,7 +148,7 @@ struct Pipeline::Trace {
 Pipeline::Pipeline(const detect::Detectors& detectors, ScopeOpener open_scope, ProviderCall provider,
                    core::OutputTokenCap output_cap, std::string model_alias, asio::any_io_executor work,
                    audit::AuditLog* audit, std::size_t in_flight_limit, std::chrono::milliseconds time_limit,
-                   SentenceCheck sentence, std::filesystem::path extractor)
+                   SentenceCheck sentence, std::filesystem::path extractor, ProviderProtocol protocol)
     : detectors_(detectors),
       open_scope_(std::move(open_scope)),
       provider_(std::move(provider)),
@@ -158,7 +158,7 @@ Pipeline::Pipeline(const detect::Detectors& detectors, ScopeOpener open_scope, P
       audit_(audit),
       in_flight_limit_(in_flight_limit),
       time_limit_(time_limit),
-      sentence_(std::move(sentence)), extractor_(std::move(extractor)) {}
+      sentence_(std::move(sentence)), extractor_(std::move(extractor)), protocol_(protocol) {}
 
 asio::awaitable<JsonResponse> Pipeline::handle(AcceptedRequest request) const {
     const auto start = std::chrono::steady_clock::now();
@@ -237,7 +237,9 @@ asio::awaitable<JsonResponse> Pipeline::run(AcceptedRequest request, Trace& trac
                 ? trace.fail(EntryError::Cancelled)
                 : JsonResponse{200, nlohmann::json{{"id", trace.id},
                     {"decision", outbound->pseudonymized ? "pseudonymized" : "pass"},
-                    {"outbound", nlohmann::json::parse(outbound->body)}, {"entities", trace.entities},
+                    {"outbound", protocol_ == ProviderProtocol::LocalCliText
+                         ? nlohmann::json(outbound->body) : nlohmann::json::parse(outbound->body)},
+                    {"entities", trace.entities},
                     {"documents", trace.documents}}.dump()};
             outbound->scope.reset();
             return response;
@@ -247,7 +249,7 @@ asio::awaitable<JsonResponse> Pipeline::run(AcceptedRequest request, Trace& trac
     bool stopped = co_await cancelled();
     if (!stopped) {
         trace.provider_started = std::chrono::steady_clock::now();
-        reply = co_await provider_(std::move(outbound->body));  // 취소되면 provider 연결을 끊고 돌아온다
+        reply = co_await provider_(std::move(outbound->body), outbound->output_token_limit);
         trace.provider_finished = std::chrono::steady_clock::now();
         stopped = co_await cancelled();
     }
@@ -389,10 +391,15 @@ std::expected<Pipeline::Outbound, JsonResponse> Pipeline::prepare(AcceptedReques
     if (stop.stop_requested()) {
         return std::unexpected(trace.fail(EntryError::Cancelled));  // 보내지 않을 본문은 외부 전송 이력에 남기지 않는다
     }
-    Outbound outbound{std::move(*scope), provider_request_body(*provider_request, model_alias_), pseudonymized};
+    auto body = provider_request_body(*provider_request, model_alias_, protocol_);
+    if (!body) return std::unexpected(trace.fail(EntryError::BadRequest));
+    Outbound outbound{std::move(*scope), std::move(*body), pseudonymized,
+                      provider_request->params().max_output_tokens()};
     // 외부 전송 이력: 실제로 보내는 가명 상태 본문(ADR 0021). 남기지 못하면 보내지 않는다.
     if (request.purpose == RequestPurpose::Chat && audit_ != nullptr && !audit_->append("egress", "info",
-                                             {{"request_id", trace.id}, {"sent", nlohmann::json::parse(outbound.body)}})) {
+                                             {{"request_id", trace.id},
+                                              {"sent", protocol_ == ProviderProtocol::LocalCliText
+                                                   ? nlohmann::json(outbound.body) : nlohmann::json::parse(outbound.body)}})) {
         return std::unexpected(trace.fail(EntryError::Unavailable));
     }
     return outbound;
@@ -466,18 +473,32 @@ std::expected<core::VerifiedPrompt, core::Rejection> Pipeline::protect_and_verif
 // provider 답 검사부터 복원한 응답까지.
 JsonResponse Pipeline::finish(const std::expected<ProviderReply, ProviderError>& reply, PseudonymScope& scope,
                               Trace& trace, std::stop_token stop) const {
-    if (!reply || reply->status != 200) {
-        if (reply && context_limit_error(reply->status, reply->body)) return trace.fail(EntryError::ContextLimit);
+    if (!reply) {
+        switch (reply.error()) {
+            case ProviderError::Unavailable: return trace.fail(EntryError::ProviderUnavailable);
+            case ProviderError::Timeout: return trace.fail(EntryError::ProviderTimeout);
+            case ProviderError::BadResponse: return trace.fail(EntryError::ProviderFailed);
+        }
+        return trace.fail(EntryError::ProviderFailed);
+    }
+    if (reply->status != 200) {
+        if (context_limit_error(reply->status, reply->body)) return trace.fail(EntryError::ContextLimit);
+        if (reply->status == 401 || reply->status == 403) return trace.fail(EntryError::ProviderAuthentication);
+        if (reply->status == 429) return trace.fail(EntryError::ProviderRateLimited);
+        if (reply->status == 408 || reply->status == 504) return trace.fail(EntryError::ProviderTimeout);
+        if (reply->status == 503) return trace.fail(EntryError::ProviderUnavailable);
         return trace.fail(EntryError::ProviderFailed);  // provider 오류 본문은 넘기지 않는다
     }
-    // 복원 전 응답. provider 오류 본문은 남기지 않는다(200 일 때만)
-    if (audit_ != nullptr &&
-        !audit_->append("egress_answer", "info", {{"request_id", trace.id}, {"answer", reply->body}})) {
-        return trace.fail(EntryError::Unavailable);
-    }
-    auto answer = parse_provider_answer(reply->body);
+    const auto response_protocol = protocol_ == ProviderProtocol::LocalCliText
+        ? ProviderProtocol::ChatCompletions : protocol_;
+    auto answer = parse_provider_answer(reply->body, response_protocol);
     if (!answer) {
         return trace.fail(EntryError::ProviderFailed);
+    }
+    // 기존 규격의 감사 모양은 유지하되, 파싱 실패 본문은 기록하지 않는다.
+    if (protocol_ == ProviderProtocol::ChatCompletions && audit_ != nullptr &&
+        !audit_->append("egress_answer", "info", {{"request_id", trace.id}, {"answer", reply->body}})) {
+        return trace.fail(EntryError::Unavailable);
     }
     // 응답 검사(ADR 0017 7~9): 다시 탐지 → 차단 값·링크 속 token 이면 거절 → 같은 범위의 token 만 복원
     if (has_active_content(answer->content.view())) {
@@ -496,6 +517,18 @@ JsonResponse Pipeline::finish(const std::expected<ProviderReply, ProviderError>&
         const auto plan = core::plan_restore(*checked);
         if (!plan) {
             return trace.reject(plan.error());
+        }
+        if (protocol_ != ProviderProtocol::ChatCompletions && audit_ != nullptr) {
+            nlohmann::json event = {{"request_id", trace.id}, {"answer", checked->text()},
+                                    {"finish_reason", answer->finish_reason}};
+            if (answer->usage) {
+                event["usage"] = {{"prompt_tokens", answer->usage->prompt_tokens},
+                                  {"completion_tokens", answer->usage->completion_tokens},
+                                  {"total_tokens", answer->usage->total_tokens}};
+            }
+            if (!audit_->append("egress_answer", "info", std::move(event))) {
+                return trace.fail(EntryError::Unavailable);
+            }
         }
         auto text = core::apply_restore(std::move(*checked), *plan, scope);
         if (!text) {

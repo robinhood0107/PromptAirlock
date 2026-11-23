@@ -27,9 +27,11 @@
 3. 모든 역할의 메시지와 `stop` 문자열을 하나의 검사 대상으로 묶어 검사한다. 크기 한도(64 KiB, [0015](0015-default-actions.md))는 이 전체에 적용한다.
 4. provider 요청은 검증을 통과한 내용만으로 Gateway가 새로 만든다. 클라이언트 요청 헤더는 넘기지 않는다. provider 쪽 보관·상태 저장 플래그는 보내지 않는다.
 
+로컬 CLI 중계는 운영자가 지정한 현재 OS의 절대 실행 파일을 직접 띄운다. 설정이나 사용자 요청에서 shell 명령 문자열·실행 인자·중첩 런처 선택을 받지 않는다. VerifiedPrompt에서 만든 단일 user 텍스트는 stdin으로 보내고, 도구·MCP를 끈 고정 프로필만 쓴다. 작업 폴더는 요청마다 새로 만들고, 빈 환경을 기반으로 선택된 CLI 인증값과 필요한 OS 항목만 전달한다. 표준 오류는 버리고 표준 출력의 크기·기한·종료 상태·출력 token 사용량을 검사한다. 취소·시간 초과·출력 초과에는 해당 OS의 자식 프로세스 묶음을 종료한다. Gateway는 재시도하지 않으며 CLI 내부 재시도 수는 별도로 보장하지 않는다. 결과는 일반 텍스트 하나만 기존 응답 검사·복원 경계에 넣는다.
+
 응답
 
-5. provider 응답은 허용한 필드(첫 choice의 `message.role`, `message.content`, `finish_reason`, `usage`)만 읽고 Gateway가 응답을 새로 만든다. `model`은 Gateway 별칭, `id`는 Gateway 요청 ID로 바꾼다. `tool_calls`, 이미지·오디오, `logprobs`가 있으면 응답을 거절한다.
+5. 기본 Chat Completions 호환 방식은 첫 choice의 `message.role`, `message.content`, `finish_reason`, `usage`를 읽는다. 추가한 두 HTTPS 규격은 텍스트 결과 하나의 역할·본문·종료 상태·사용량만 읽는다. 모두 Gateway가 응답을 새로 만들며 `model`은 Gateway 별칭, `id`는 Gateway 요청 ID로 바꾼다. 기본 호환 방식의 도구 호출·이미지·오디오·logprobs 거절은 유지한다. 추가한 두 규격은 복수 결과, 도구 호출, 비텍스트 본문과 지원하지 않는 종료 상태를 거절한다. JSON 최대 깊이와 중복 키 검사는 모든 규격에 적용한다.
 6. provider 오류 본문과 응답 헤더는 클라이언트에 넘기지 않고 고정 오류 코드로 바꾼다. 오류 본문은 감사 기록에도 남기지 않는다.
 7. 응답 처리 순서: 응답 검사(Block 종류의 원문 값이 응답에 새로 나타나면 거절) → token 찾기 → token 위치 판정 → 복원.
 8. token이 다음 위치에 있으면 복원하지 않고 응답 전체를 거절한다.

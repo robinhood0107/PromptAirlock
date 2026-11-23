@@ -4,7 +4,10 @@
 #include <nlohmann/json.hpp>
 
 #include <algorithm>
+#include <array>
 #include <charconv>
+#include <cctype>
+#include <chrono>
 #include <functional>
 #include <initializer_list>
 #include <set>
@@ -87,6 +90,53 @@ bool lowercase_sha256_hex(std::string_view s) {
     return s.size() == 64 && std::ranges::all_of(s, [](char c) { return (c >= '0' && c <= '9') || (c >= 'a' && c <= 'f'); });
 }
 
+bool valid_header_token(std::string_view name) {
+    constexpr std::string_view punctuation = "!#$%&'*+-.^_`|~";
+    return !name.empty() && std::ranges::all_of(name, [&](unsigned char c) {
+        return (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || (c >= '0' && c <= '9') ||
+               punctuation.find(static_cast<char>(c)) != std::string_view::npos;
+    });
+}
+
+bool valid_api_version_date(std::string_view value) {
+    if (value.size() != 10 || value[4] != '-' || value[7] != '-') return false;
+    for (std::size_t i = 0; i < value.size(); ++i) {
+        if (i != 4 && i != 7 && (value[i] < '0' || value[i] > '9')) return false;
+    }
+    const auto number = [&](std::size_t first, std::size_t count) {
+        unsigned result = 0;
+        for (std::size_t i = first; i < first + count; ++i) result = result * 10 + static_cast<unsigned>(value[i] - '0');
+        return result;
+    };
+    const std::chrono::year_month_day date{std::chrono::year{static_cast<int>(number(0, 4))},
+                                           std::chrono::month{number(5, 2)}, std::chrono::day{number(8, 2)}};
+    return date.ok();
+}
+
+Result parse_cli_config(const json& provider, const std::string& at, CliConfig& out) {
+    auto node = member(provider, "cli", at, json::value_t::object);
+    if (!node) return std::unexpected(node.error());
+    const json& cli = **node;
+    const std::string field = at + ".cli";
+    if (auto r = only_keys(cli, {"executable", "result_format"}, field); !r) return r;
+    auto executable = text(cli, "executable", field);
+    auto format = text(cli, "result_format", field);
+    if (!executable) return std::unexpected(executable.error());
+    if (!format) return std::unexpected(format.error());
+    if (executable->size() > 4096) return fail(ConfigProblem::InvalidValue, field + ".executable");
+    out.executable = std::filesystem::path(std::u8string(executable->begin(), executable->end()));
+    if (!out.executable.is_absolute()) return fail(ConfigProblem::InvalidValue, field + ".executable");
+#ifdef _WIN32
+    std::string executable_name = out.executable.filename().string();
+    std::ranges::transform(executable_name, executable_name.begin(), [](unsigned char c) { return static_cast<char>(std::tolower(c)); });
+    if (executable_name == "wsl.exe") return fail(ConfigProblem::InvalidValue, field + ".executable");
+#endif
+    if (*format == "json") out.output_format = CliOutputFormat::Json;
+    else if (*format == "json_lines") out.output_format = CliOutputFormat::JsonLines;
+    else return fail(ConfigProblem::InvalidValue, field + ".result_format");
+    return {};
+}
+
 // https://host[:port]/path 만 받는다. 사용자 정보·질의·조각은 거절한다(자격 증명은 별도 파일).
 Result parse_provider_url(std::string_view url, ProviderConfig& out) {
     constexpr std::string_view scheme = "https://";
@@ -152,27 +202,96 @@ Result parse_provider(const json& root, const std::filesystem::path& base, Provi
         return std::unexpected(node.error());
     }
     const json& o = **node;
-    if (auto r = only_keys(o, {"url", "credential_file", "trust_file", "model"}, at); !r) {
+    if (auto r = only_keys(o, {"url", "credential_file", "trust_file", "model", "credential_rotation_origin", "protocol",
+                               "credential_mode", "api_version_header_name", "api_version_header_value", "cli"}, at);
+        !r) {
         return r;
     }
-    auto url = text(o, "url", at);
-    auto credential = text(o, "credential_file", at);
     auto model = text(o, "model", at);
-    if (!url) return std::unexpected(url.error());
-    if (!credential) return std::unexpected(credential.error());
     if (!model) return std::unexpected(model.error());
-    if (auto r = parse_provider_url(*url, out); !r) {
-        return r;
-    }
     if (model->size() > 128 || !printable_ascii(*model)) {
         return fail(ConfigProblem::InvalidValue, "provider.model");
     }
-    out.credential_file = resolve(base, *credential);
     out.model = std::move(*model);
+    if (o.contains("protocol")) {
+        auto protocol = text(o, "protocol", at);
+        if (!protocol) return std::unexpected(protocol.error());
+        if (*protocol == "chat_completions") {
+            out.protocol = ProviderProtocol::ChatCompletions;
+        } else if (*protocol == "generate_content") {
+            out.protocol = ProviderProtocol::GenerateContent;
+        } else if (*protocol == "messages") {
+            out.protocol = ProviderProtocol::Messages;
+        } else if (*protocol == "local_cli") {
+            out.protocol = ProviderProtocol::LocalCliText;
+        } else {
+            return fail(ConfigProblem::InvalidValue, "provider.protocol");
+        }
+    }
+    if (out.protocol == ProviderProtocol::LocalCliText) {
+        if (o.contains("url") || o.contains("credential_file") || o.contains("trust_file") ||
+            o.contains("credential_rotation_origin") || o.contains("credential_mode") ||
+            o.contains("api_version_header_name") || o.contains("api_version_header_value")) {
+            return fail(ConfigProblem::InvalidValue, "provider.cli");
+        }
+        return parse_cli_config(o, at, out.cli);
+    }
+    if (o.contains("cli")) return fail(ConfigProblem::InvalidValue, "provider.cli");
+
+    auto url = text(o, "url", at);
+    auto credential = text(o, "credential_file", at);
+    if (!url) return std::unexpected(url.error());
+    if (!credential) return std::unexpected(credential.error());
+    if (auto r = parse_provider_url(*url, out); !r) return r;
+    out.credential_file = resolve(base, *credential);
     if (o.contains("trust_file")) {
         auto trust = text(o, "trust_file", at);
         if (!trust) return std::unexpected(trust.error());
         out.trust_file = resolve(base, *trust);
+    }
+    if (o.contains("credential_rotation_origin")) {
+        auto origin = text(o, "credential_rotation_origin", at);
+        if (!origin) return std::unexpected(origin.error());
+        if (!valid_origin_name(*origin)) {
+            return fail(ConfigProblem::InvalidValue, "provider.credential_rotation_origin");
+        }
+        out.credential_rotation_origin = std::move(*origin);
+    }
+    if (o.contains("credential_mode")) {
+        auto mode = text(o, "credential_mode", at);
+        if (!mode) return std::unexpected(mode.error());
+        if (*mode == "bearer") {
+            out.credential_mode = ProviderCredentialMode::Bearer;
+        } else if (*mode == "api_key_header") {
+            out.credential_mode = ProviderCredentialMode::ApiKeyHeader;
+        } else {
+            return fail(ConfigProblem::InvalidValue, "provider.credential_mode");
+        }
+    }
+    if (out.credential_mode == ProviderCredentialMode::ApiKeyHeader &&
+        out.protocol != ProviderProtocol::GenerateContent) {
+        return fail(ConfigProblem::InvalidValue, "provider.credential_mode");
+    }
+    const bool has_version_name = o.contains("api_version_header_name");
+    const bool has_version_value = o.contains("api_version_header_value");
+    if (out.protocol == ProviderProtocol::Messages) {
+        if (!has_version_name) return fail(ConfigProblem::Missing, "provider.api_version_header_name");
+        if (!has_version_value) return fail(ConfigProblem::Missing, "provider.api_version_header_value");
+        auto name = text(o, "api_version_header_name", at);
+        auto value = text(o, "api_version_header_value", at);
+        if (!name) return std::unexpected(name.error());
+        if (!value) return std::unexpected(value.error());
+        if (!name->ends_with("-version") || !valid_header_token(*name)) {
+            return fail(ConfigProblem::InvalidValue, "provider.api_version_header_name");
+        }
+        if (!valid_api_version_date(*value)) {
+            return fail(ConfigProblem::InvalidValue, "provider.api_version_header_value");
+        }
+        out.api_version_header_name = std::move(*name);
+        out.api_version_header_value = std::move(*value);
+    } else if (has_version_name || has_version_value) {
+        return fail(ConfigProblem::InvalidValue, has_version_name ? "provider.api_version_header_name"
+                                                                  : "provider.api_version_header_value");
     }
     return {};
 }
@@ -364,6 +483,12 @@ std::expected<Config, ConfigError> parse_config(std::string_view json_text, cons
     if (auto r = parse_listen(root, base_dir, config.listen); !r) return std::unexpected(r.error());
     if (auto r = parse_provider(root, base_dir, config.provider); !r) return std::unexpected(r.error());
     if (auto r = parse_origins(root, config.origins); !r) return std::unexpected(r.error());
+    if (!config.provider.credential_rotation_origin.empty() &&
+        std::ranges::none_of(config.origins, [&](const Origin& origin) {
+            return origin.name == config.provider.credential_rotation_origin;
+        })) {
+        return fail(ConfigProblem::InvalidValue, "provider.credential_rotation_origin");
+    }
     if (auto r = parse_terms(root, config.internal_terms); !r) return std::unexpected(r.error());
     if (auto r = parse_policy(root, config.policy); !r) return std::unexpected(r.error());
     if (root.contains("output_token_cap")) {

@@ -11,10 +11,18 @@
 
 #include <fstream>
 #include <array>
+#include <atomic>
+#include <chrono>
 #include <future>
+#include <iostream>
+#include <iterator>
 #include <optional>
 #include <thread>
 #include <vector>
+
+#ifdef _WIN32
+#include <windows.h>
+#endif
 
 #include "mock_provider.hpp"
 #include "prompt_airlock/tls/context.hpp"
@@ -104,6 +112,66 @@ TEST_F(ProviderClient, SendsBodyAndReadsAnswer) {
     EXPECT_EQ(mock_->received().front(), body);
 }
 
+TEST_F(ProviderClient, SendsConfiguredProtocolHeadersOnlyWhenConfigured) {
+    pa_mock::MockOptions key_options{"provider-secret", {}};
+    key_options.api_key_header_name = "x-goog-api-key";
+    key_options.expected_target = "/models/demo:generateContent";
+    key_options.expected_host = "127.0.0.1";
+    key_options.require_post = true;
+    key_options.require_json_content_type = true;
+    key_options.require_connection_close = true;
+    set_options(key_options);
+    ASSERT_TRUE(pv::store_credential(credential_file_, "provider-secret"));
+    const std::string generate_body = R"({"contents":[{"role":"user","parts":[{"text":"hello"}]}]})";
+    pv::HttpsClient key_client(*client_tls_, {"127.0.0.1", mock_->local_endpoint().port(), key_options.expected_target,
+                                             gw::ProviderCredentialMode::ApiKeyHeader}, credential_file_,
+                              {std::chrono::seconds(5)});
+    asio::io_context key_io;
+    auto key_future = asio::co_spawn(key_io, key_client.send(generate_body), asio::use_future);
+    key_io.run();
+    ASSERT_TRUE(key_future.get());
+    ASSERT_EQ(mock_->received().size(), 1u);
+    EXPECT_EQ(mock_->received().front(), generate_body);
+
+    pa_mock::MockOptions version_options{"provider-secret", {}};
+    version_options.version_header_name = "x-test-version";
+    version_options.version_header_value = "2026-11-20";
+    version_options.expected_target = "/v1/messages";
+    version_options.expected_host = "127.0.0.1";
+    version_options.require_post = true;
+    version_options.require_json_content_type = true;
+    version_options.require_connection_close = true;
+    set_options(version_options);
+    const std::string messages_body = R"({"model":"demo","messages":[]})";
+    pv::HttpsClient version_client(*client_tls_, {"127.0.0.1", mock_->local_endpoint().port(), version_options.expected_target,
+                                                 gw::ProviderCredentialMode::Bearer, version_options.version_header_name,
+                                                 version_options.version_header_value}, credential_file_,
+                                  {std::chrono::seconds(5)});
+    asio::io_context version_io;
+    auto version_future = asio::co_spawn(version_io, version_client.send(messages_body), asio::use_future);
+    version_io.run();
+    ASSERT_TRUE(version_future.get());
+    ASSERT_EQ(mock_->received().size(), 1u);
+    EXPECT_EQ(mock_->received().front(), messages_body);
+}
+
+TEST_F(ProviderClient, RejectsDirectAndJsonEncodedCredentialEchoes) {
+    const std::array<std::string_view, 2> response_bodies = {
+        R"({"echo":"provider-secret"})",
+        R"({"echo":"provider\u002dsecret"})",
+    };
+    for (const auto response_body : response_bodies) {
+        pa_mock::MockOptions options{"provider-secret", {}};
+        options.response_body = response_body;
+        set_options(std::move(options));
+        const auto result = send("127.0.0.1", "provider-secret", "{}");
+        ASSERT_FALSE(result.has_value());
+        EXPECT_EQ(result.error(), gw::ProviderError::BadResponse);
+        ASSERT_EQ(mock_->received().size(), 1u);
+        EXPECT_EQ(mock_->received().front(), "{}");
+    }
+}
+
 TEST_F(ProviderClient, VerifiesServerNameAgainstCertificate) {
     // 인증서는 localhost 와 127.0.0.1 에만 맞는다
     EXPECT_TRUE(send("localhost", "provider-secret", "{}").has_value());
@@ -122,6 +190,7 @@ TEST_F(ProviderClient, RefusesUntrustedProvider) {
     auto future = asio::co_spawn(io, client.send("{}"), asio::use_future);
     io.run();
     EXPECT_FALSE(future.get().has_value());
+    EXPECT_EQ(mock_->connections(), 1u);
     EXPECT_TRUE(mock_->received().empty());
 }
 
@@ -129,6 +198,7 @@ TEST_F(ProviderClient, WrongCredentialIsAnErrorStatus) {
     const auto reply = send("127.0.0.1", "wrong", "{}");
     ASSERT_TRUE(reply.has_value());
     EXPECT_EQ(reply->status, 401u);
+    EXPECT_EQ(mock_->connections(), 1u);
     EXPECT_TRUE(mock_->received().empty());
 }
 
@@ -193,6 +263,8 @@ TEST_F(ProviderClient, SlowBodyStillTimesOut) {
     ASSERT_FALSE(result);
     EXPECT_EQ(result.error(), gw::ProviderError::Timeout);
     EXPECT_EQ(timing.last, pv::ClientPhase::Body);
+    EXPECT_EQ(mock_->connections(), 1u);
+    EXPECT_EQ(mock_->received().size(), 1u);
 }
 
 TEST_F(ProviderClient, ConcurrentTimingsStayRequestLocal) {
@@ -255,18 +327,172 @@ TEST_F(ProviderClient, UnreadableCredentialMakesNoCall) {
 }
 
 TEST(ProviderCredential, StoreReplacesFileAtomically) {
-    const auto path = std::filesystem::temp_directory_path() / "pa-cred-store.bin";
-    std::filesystem::remove(path);
+    const auto dir = std::filesystem::temp_directory_path() /
+                     ("pa-cred-store-" + std::to_string(std::chrono::steady_clock::now().time_since_epoch().count()));
+    std::filesystem::create_directories(dir);
+    const auto path = dir / "credential.bin";
     ASSERT_TRUE(pv::store_credential(path, "first-token\n").has_value());
     ASSERT_TRUE(pv::store_credential(path, "second-token").has_value());  // 있는 파일을 바꿔 끼운다
     const auto read = pv::load_credential(path);
     ASSERT_TRUE(read.has_value());
     EXPECT_EQ(read->view(), "second-token");
-    EXPECT_FALSE(std::filesystem::exists(path.string() + ".tmp"));
+    for (const auto& entry : std::filesystem::directory_iterator(dir)) {
+        EXPECT_FALSE(entry.path().filename().string().starts_with("credential.bin.tmp."));
+    }
 #ifndef _WIN32
     const auto perms = std::filesystem::status(path).permissions();
     EXPECT_EQ(perms & (std::filesystem::perms::group_all | std::filesystem::perms::others_all), std::filesystem::perms::none);
 #endif
+    std::filesystem::remove_all(dir);
+}
+
+#ifdef _WIN32
+TEST(ProviderCredential, ReadHandleAllowsAtomicReplacementAndKeepsOldFileIdentity) {
+    const auto dir = std::filesystem::temp_directory_path() /
+                     ("pa-cred-open-reader-" + std::to_string(std::chrono::steady_clock::now().time_since_epoch().count()));
+    std::filesystem::create_directories(dir);
+    const auto path = dir / "credential.bin";
+    ASSERT_TRUE(pv::store_credential(path, "before-replacement").has_value());
+    std::ifstream input(path, std::ios::binary);
+    ASSERT_TRUE(input);
+    const std::vector<char> before((std::istreambuf_iterator<char>(input)), std::istreambuf_iterator<char>());
+    input.close();
+
+    HANDLE opened = CreateFileW(path.c_str(), GENERIC_READ, FILE_SHARE_READ | FILE_SHARE_DELETE, nullptr,
+                                OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, nullptr);
+    ASSERT_NE(opened, INVALID_HANDLE_VALUE);
+    struct CloseHandleOnExit {
+        HANDLE value;
+        ~CloseHandleOnExit() { CloseHandle(value); }
+    } close{opened};
+
+    const auto replacement = pv::store_credential(path, "after-replacement");
+    if (!replacement) EXPECT_EQ(replacement.error(), pv::CredentialError::ReplaceFailed);
+    std::vector<char> from_open_handle(before.size());
+    DWORD received = 0;
+    ASSERT_TRUE(ReadFile(opened, from_open_handle.data(), static_cast<DWORD>(from_open_handle.size()), &received, nullptr));
+    ASSERT_EQ(received, before.size());
+    EXPECT_EQ(from_open_handle, before);
+    const auto current = pv::load_credential(path);
+    ASSERT_TRUE(current);
+    EXPECT_EQ(current->view(), replacement ? "after-replacement" : "before-replacement");
+    std::size_t temp_files = 0;
+    for (const auto& entry : std::filesystem::directory_iterator(dir)) {
+        temp_files += entry.path().filename().string().starts_with("credential.bin.tmp.") ? 1 : 0;
+    }
+    EXPECT_EQ(temp_files, 0);
+    std::cout << "read_handle_replace=" << (replacement ? "success" : "ReplaceFailed")
+              << " open_handle=old-complete target=" << (replacement ? "new-complete" : "old-complete")
+              << " temp_files=" << temp_files << '\n';
+    std::filesystem::remove_all(dir);
+}
+#endif
+
+TEST(ProviderCredential, ConcurrentStoresUseDistinctTemporaryFiles) {
+    const auto dir = std::filesystem::temp_directory_path() /
+                     ("pa-cred-concurrent-" + std::to_string(std::chrono::steady_clock::now().time_since_epoch().count()));
+    std::filesystem::create_directories(dir);
+    const auto path = dir / "credential.bin";
+    ASSERT_TRUE(pv::store_credential(path, "initial-token").has_value());
+    std::atomic<int> successes{0};
+    std::atomic<int> replacement_rejections{0};
+    std::atomic<int> other_failures{0};
+    std::atomic<bool> writing{true};
+    std::atomic<bool> reader_started{false};
+    std::atomic<int> complete_reads{0};
+    std::atomic<int> unreadable_reads{0};
+    std::atomic<int> partial_reads{0};
+    std::thread reader([&] {
+        reader_started = true;
+        while (writing) {
+            const auto current = pv::load_credential(path);
+            if (current) {
+                if (current->view() == "initial-token" || current->view().starts_with("credential-")) {
+                    ++complete_reads;
+                } else {
+                    ++partial_reads;
+                }
+            } else if (current.error() == pv::CredentialError::Unreadable) {
+                ++unreadable_reads;
+            } else {
+                ++partial_reads;
+            }
+            std::this_thread::yield();
+        }
+    });
+    while (!reader_started) std::this_thread::yield();
+    std::vector<std::thread> writers;
+    for (int writer = 0; writer < 8; ++writer) {
+        writers.emplace_back([&, writer] {
+            for (int replacement = 0; replacement < 10; ++replacement) {
+                const auto token = "credential-" + std::to_string(writer) + "-" + std::to_string(replacement);
+                const auto stored = pv::store_credential(path, token);
+                if (stored) {
+                    ++successes;
+                } else if (stored.error() == pv::CredentialError::ReplaceFailed) {
+                    ++replacement_rejections;
+                } else {
+                    ++other_failures;
+                }
+            }
+        });
+    }
+    for (auto& writer : writers) writer.join();
+    writing = false;
+    reader.join();
+    EXPECT_EQ(successes + replacement_rejections + other_failures, 80);
+    EXPECT_GT(successes, 0);
+    EXPECT_EQ(other_failures, 0);
+    EXPECT_GT(complete_reads, 0);
+    EXPECT_EQ(partial_reads, 0);
+    const auto read = pv::load_credential(path);
+    ASSERT_TRUE(read.has_value());
+    EXPECT_TRUE(read->view().starts_with("credential-"));
+    for (const auto& entry : std::filesystem::directory_iterator(dir)) {
+        EXPECT_FALSE(entry.path().filename().string().starts_with("credential.bin.tmp."));
+    }
+    std::cout << "credential_store_successes=" << successes.load()
+              << " replacement_rejections=" << replacement_rejections.load()
+              << " other_failures=" << other_failures.load() << " complete_reads=" << complete_reads.load()
+              << " unreadable_reads=" << unreadable_reads.load() << " partial_reads=" << partial_reads.load()
+              << " final_file=complete temp_files=0\n";
+#ifndef _WIN32
+    const auto perms = std::filesystem::status(path).permissions();
+    EXPECT_EQ(perms & (std::filesystem::perms::group_all | std::filesystem::perms::others_all), std::filesystem::perms::none);
+#endif
+    std::filesystem::remove_all(dir);
+}
+
+TEST(ProviderCredential, FailedReplacementKeepsExistingFile) {
+    const auto dir = std::filesystem::temp_directory_path() /
+                     ("pa-cred-failure-" + std::to_string(std::chrono::steady_clock::now().time_since_epoch().count()));
+    std::filesystem::create_directories(dir);
+    const auto path = dir / "credential.bin";
+    ASSERT_TRUE(pv::store_credential(path, "existing-token").has_value());
+#ifdef _WIN32
+    HANDLE opened = CreateFileW(path.c_str(), GENERIC_READ, FILE_SHARE_READ | FILE_SHARE_WRITE, nullptr,
+                                OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, nullptr);
+    ASSERT_NE(opened, INVALID_HANDLE_VALUE);
+    const auto replacement = pv::store_credential(path, "replacement-token");
+    ASSERT_FALSE(replacement.has_value());
+    EXPECT_EQ(replacement.error(), pv::CredentialError::ReplaceFailed);
+    CloseHandle(opened);
+#else
+    std::error_code ec;
+    std::filesystem::permissions(dir, std::filesystem::perms::owner_read | std::filesystem::perms::owner_exec,
+                                 std::filesystem::perm_options::replace, ec);
+    ASSERT_FALSE(ec);
+    EXPECT_FALSE(pv::store_credential(path, "replacement-token").has_value());
+    std::filesystem::permissions(dir, std::filesystem::perms::owner_all, std::filesystem::perm_options::replace, ec);
+    ASSERT_FALSE(ec);
+#endif
+    const auto read = pv::load_credential(path);
+    ASSERT_TRUE(read.has_value());
+    EXPECT_EQ(read->view(), "existing-token");
+    for (const auto& entry : std::filesystem::directory_iterator(dir)) {
+        EXPECT_FALSE(entry.path().filename().string().starts_with("credential.bin.tmp."));
+    }
+    std::filesystem::remove_all(dir);
 }
 
 TEST(ProviderCredential, ReadsOnlyProtectedFiles) {

@@ -103,13 +103,22 @@ foreach(name IN ITEMS
   target_link_libraries(${name} PRIVATE prompt_airlock_gateway pa_test_support pa_mock_provider nlohmann_json::nlohmann_json)
 endforeach()
 pa_add_gtest(gateway_server_test gateway_server_test.cpp)
-target_link_libraries(gateway_server_test PRIVATE prompt_airlock_gateway prompt_airlock_tls pa_test_cert
+target_link_libraries(gateway_server_test PRIVATE prompt_airlock_gateway prompt_airlock_tls prompt_airlock_provider pa_test_cert
                       nlohmann_json::nlohmann_json)
 
 # provider HTTPS 클라이언트. 같은 프로세스에 mock provider 를 띄운다.
 pa_add_gtest(provider_client_test provider_client_test.cpp)
 target_link_libraries(provider_client_test PRIVATE prompt_airlock_provider prompt_airlock_tls pa_mock_provider pa_test_cert
                       nlohmann_json::nlohmann_json)
+
+# 로컬 CLI 중계: 합성 실행 파일로 고정 인자·환경·입력 경계와 프로세스 정리를 확인한다.
+add_executable(cli_test_child cli_test_child.cpp)
+target_link_libraries(cli_test_child PRIVATE nlohmann_json::nlohmann_json pa_test_cert pa_options)
+pa_add_gtest(cli_client_test cli_client_test.cpp)
+target_link_libraries(cli_client_test PRIVATE prompt_airlock_gateway prompt_airlock_provider prompt_airlock_extract_client
+                      nlohmann_json::nlohmann_json)
+target_compile_definitions(cli_client_test PRIVATE "PA_CLI_TEST_CHILD=\"$<TARGET_FILE:cli_test_child>\"")
+add_dependencies(cli_client_test cli_test_child)
 
 # 감사 기록(ADR 0021).
 pa_add_gtest(audit_log_test audit_log_test.cpp)

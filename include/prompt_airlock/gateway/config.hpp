@@ -12,6 +12,7 @@
 #include "prompt_airlock/core/request_params.hpp"
 #include "prompt_airlock/core/types.hpp"
 #include "prompt_airlock/detect/institution.hpp"
+#include "prompt_airlock/gateway/provider_port.hpp"
 
 namespace prompt_airlock::gateway {
 
@@ -22,6 +23,11 @@ struct ListenConfig {
     std::filesystem::path private_key;
 };
 
+struct CliConfig {
+    std::filesystem::path executable;
+    CliOutputFormat output_format = CliOutputFormat::Json;
+};
+
 struct ProviderConfig {
     std::string host;
     std::uint16_t port = 443;
@@ -29,6 +35,12 @@ struct ProviderConfig {
     std::filesystem::path credential_file;
     std::filesystem::path trust_file;  // 비면 운영체제 기본 신뢰 저장소
     std::string model;
+    std::string credential_rotation_origin;  // 비면 HTTP 자격 증명 교체를 끈다
+    ProviderProtocol protocol = ProviderProtocol::ChatCompletions;
+    ProviderCredentialMode credential_mode = ProviderCredentialMode::Bearer;
+    std::string api_version_header_name;
+    std::string api_version_header_value;
+    CliConfig cli;
 };
 
 // 허용 출처(ADR 0013, 0020). token 원문은 두지 않고 SHA-256 만 둔다.

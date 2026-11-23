@@ -48,6 +48,7 @@ TEST(GatewayConfig, ReadsValidConfig) {
     EXPECT_EQ(config->provider.port, 9443);
     EXPECT_EQ(config->provider.target, "/v1/chat/completions");
     EXPECT_EQ(config->provider.model, "demo-model");
+    EXPECT_TRUE(config->provider.credential_rotation_origin.empty());
     ASSERT_EQ(config->origins.size(), 2u);
     EXPECT_EQ(config->origins[0].grade_policy, prompt_airlock::core::GradePolicy::OOnly);
     EXPECT_EQ(config->origins[1].grade_policy, prompt_airlock::core::GradePolicy::Declare);
@@ -70,6 +71,80 @@ TEST(GatewayConfig, OptionalFieldsTakeDefaults) {
     EXPECT_TRUE(parse(j)->sentence_warn);
     j["sentence_warn"] = "yes";
     EXPECT_FALSE(parse(j).has_value());
+}
+
+TEST(GatewayConfig, ProviderProtocolSettingsAreNarrowAndValidated) {
+    auto j = valid();
+    auto config = parse(j);
+    ASSERT_TRUE(config);
+    EXPECT_EQ(config->provider.protocol, gw::ProviderProtocol::ChatCompletions);
+    EXPECT_EQ(config->provider.credential_mode, gw::ProviderCredentialMode::Bearer);
+
+    j["provider"]["protocol"] = "generate_content";
+    j["provider"]["credential_mode"] = "api_key_header";
+    config = parse(j);
+    ASSERT_TRUE(config);
+    EXPECT_EQ(config->provider.protocol, gw::ProviderProtocol::GenerateContent);
+    EXPECT_EQ(config->provider.credential_mode, gw::ProviderCredentialMode::ApiKeyHeader);
+
+    j["provider"]["protocol"] = "messages";
+    j["provider"].erase("credential_mode");
+    j["provider"]["api_version_header_name"] = "x-test-version";
+    j["provider"]["api_version_header_value"] = "2026-11-20";
+    config = parse(j);
+    ASSERT_TRUE(config);
+    EXPECT_EQ(config->provider.protocol, gw::ProviderProtocol::Messages);
+    EXPECT_EQ(config->provider.api_version_header_name, "x-test-version");
+
+    j["provider"]["api_version_header_name"] = "x-invalid version";
+    expect_error(j, ConfigProblem::InvalidValue, "provider.api_version_header_name");
+    j["provider"]["api_version_header_name"] = "x-test";
+    expect_error(j, ConfigProblem::InvalidValue, "provider.api_version_header_name");
+    j["provider"]["api_version_header_name"] = "x-test-version";
+    j["provider"]["api_version_header_value"] = "2026-13-20";
+    expect_error(j, ConfigProblem::InvalidValue, "provider.api_version_header_value");
+    j["provider"]["api_version_header_value"] = "2026-11-20\n";
+    expect_error(j, ConfigProblem::InvalidValue, "provider.api_version_header_value");
+
+    j["provider"]["credential_mode"] = "api_key_header";
+    expect_error(j, ConfigProblem::InvalidValue, "provider.credential_mode");
+    j = valid();
+    j["provider"]["api_version_header_name"] = "x-test-version";
+    expect_error(j, ConfigProblem::InvalidValue, "provider.api_version_header_name");
+}
+
+TEST(GatewayConfig, LocalCliUsesOnlyAConfiguredExecutableAndResultFormat) {
+    auto j = valid();
+    j["provider"] = {{"protocol", "local_cli"}, {"model", "demo-alias"},
+                      {"cli", {{"executable", std::filesystem::temp_directory_path().string()},
+                               {"result_format", "json_lines"}}}};
+    auto config = parse(j);
+    ASSERT_TRUE(config);
+    EXPECT_EQ(config->provider.protocol, gw::ProviderProtocol::LocalCliText);
+    EXPECT_EQ(config->provider.cli.output_format, gw::CliOutputFormat::JsonLines);
+    EXPECT_TRUE(config->provider.cli.executable.is_absolute());
+
+    j["provider"]["cli"]["arguments"] = json::array({"--unsafe"});
+    expect_error(j, ConfigProblem::UnknownKey, "provider.cli.arguments");
+
+#ifdef _WIN32
+    j["provider"]["cli"].erase("arguments");
+    j["provider"]["cli"]["executable"] = "C:\\Windows\\System32\\wsl.exe";
+    expect_error(j, ConfigProblem::InvalidValue, "provider.cli.executable");
+#endif
+}
+
+TEST(GatewayConfig, CredentialRotationRequiresOneRegisteredOrigin) {
+    auto j = valid();
+    j["provider"]["credential_rotation_origin"] = "dept-b";
+    ASSERT_TRUE(parse(j));
+    EXPECT_EQ(parse(j)->provider.credential_rotation_origin, "dept-b");
+    j["provider"]["credential_rotation_origin"] = "missing-origin";
+    expect_error(j, ConfigProblem::InvalidValue, "provider.credential_rotation_origin");
+    j["provider"]["credential_rotation_origin"] = json::array({"dept-a", "dept-b"});
+    expect_error(j, ConfigProblem::WrongType, "provider.credential_rotation_origin");
+    j["provider"]["credential_rotation_origin"] = "";
+    expect_error(j, ConfigProblem::InvalidValue, "provider.credential_rotation_origin");
 }
 
 TEST(GatewayConfig, RejectsMalformedDocuments) {

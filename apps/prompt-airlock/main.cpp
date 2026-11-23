@@ -17,6 +17,7 @@
 #include <fstream>
 #include <iostream>
 #include <iterator>
+#include <memory>
 #include <optional>
 #include <random>
 #include <span>
@@ -34,6 +35,7 @@
 #include "prompt_airlock/gateway/server.hpp"
 #include "prompt_airlock/ner/pool.hpp"
 #include "prompt_airlock/ner/sentence_classifier.hpp"
+#include "prompt_airlock/provider/cli_client.hpp"
 #include "prompt_airlock/provider/https_client.hpp"
 #include "prompt_airlock/tls/context.hpp"
 #include "prompt_airlock/vault_client/service.hpp"
@@ -130,7 +132,8 @@ int serve(const std::filesystem::path& config_path) {
         return fail(tls.error());
     }
     // 기동 때 한 번 읽어 설정 실수를 바로 알린다. 실행 중에는 요청마다 다시 읽는다(ADR 0026).
-    if (!prompt_airlock::provider::load_credential(config->provider.credential_file)) {
+    if (config->provider.protocol != gw::ProviderProtocol::LocalCliText &&
+        !prompt_airlock::provider::load_credential(config->provider.credential_file)) {
         return fail("provider credential file is missing, empty or has invalid characters");
     }
 
@@ -162,10 +165,25 @@ int serve(const std::filesystem::path& config_path) {
     if (!(*audit_log)->append("start", "info", {{"config_sha256", config_hash}, {"origins", config->origins.size()}})) {
         return fail("cannot write the audit log");
     }
-    prompt_airlock::provider::HttpsClient provider(
-        tls->client, {config->provider.host, config->provider.port, config->provider.target},
-        config->provider.credential_file);
     asio::thread_pool work(gw::pipeline_work_threads);
+    std::unique_ptr<prompt_airlock::provider::HttpsClient> https_provider;
+    std::unique_ptr<prompt_airlock::provider::CliClient> cli_provider;
+    gw::ProviderCall provider_call;
+    if (config->provider.protocol == gw::ProviderProtocol::LocalCliText) {
+        cli_provider = std::make_unique<prompt_airlock::provider::CliClient>(config->provider.cli, config->provider.model,
+                                                                             work.get_executor());
+        provider_call = [&cli_provider](std::string body, std::uint32_t output_token_limit) {
+            return cli_provider->send(std::move(body), output_token_limit);
+        };
+    } else {
+        https_provider = std::make_unique<prompt_airlock::provider::HttpsClient>(
+            tls->client, prompt_airlock::provider::Endpoint{config->provider.host, config->provider.port,
+                config->provider.target, config->provider.credential_mode, config->provider.api_version_header_name,
+                config->provider.api_version_header_value}, config->provider.credential_file);
+        provider_call = [&https_provider](std::string body, std::uint32_t) {
+            return https_provider->send(std::move(body));
+        };
+    }
     gw::Pipeline pipeline(
         *detectors,
         [&vault]() -> std::expected<gw::PseudonymScope, core::VaultError> {
@@ -175,9 +193,9 @@ int serve(const std::filesystem::path& config_path) {
             }
             return gw::PseudonymScope(std::move(*scope));
         },
-        [&provider](std::string body) { return provider.send(std::move(body)); }, config->output_token_cap,
+        std::move(provider_call), config->output_token_cap,
         config->provider.model, work.get_executor(), audit_log->get(), gw::pipeline_in_flight_limit, gw::request_time_limit,
-        std::move(*sentence));
+        std::move(*sentence), {}, config->provider.protocol);
     if (tls->cert_days && *tls->cert_days < 30) {
         std::fprintf(stderr, "prompt-airlock: warning: listen certificate expires in %d days\n", *tls->cert_days);
         (void)(*audit_log)->append("cert_expiry", "warn", {{"days_left", *tls->cert_days}});
@@ -188,7 +206,11 @@ int serve(const std::filesystem::path& config_path) {
     const asio::ip::tcp::endpoint endpoint(asio::ip::make_address(config->listen.address), config->listen.port);
     gw::Server server(io, tls->server, endpoint, auth,
                       [&pipeline](gw::AcceptedRequest request) { return pipeline.handle(std::move(request)); },
-                      gw::ServerLimits{.body_bytes = gw::max_file_json_bytes}, audit_log->get(), config->compat.chat_app);
+                      gw::ServerLimits{.body_bytes = gw::max_file_json_bytes}, audit_log->get(), config->compat.chat_app,
+                      config->provider.credential_rotation_origin,
+                      [credential_file = config->provider.credential_file](std::string_view credential) {
+                          return prompt_airlock::provider::store_credential(credential_file, credential).has_value();
+                      });
     server.start();
     asio::signal_set signals(io, SIGINT, SIGTERM);
     signals.async_wait([&](auto, auto) {

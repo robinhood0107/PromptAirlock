@@ -49,14 +49,16 @@ constexpr bool reuse_address = true;
 
 struct Server::Shared {
     Shared(asio::io_context& io, asio::ssl::context& tls_context, const tcp::endpoint& endpoint, Authenticator& authenticator,
-           RequestHandler request_handler, ServerLimits server_limits, audit::AuditLog* audit_log, bool chat_compat)
+           RequestHandler request_handler, ServerLimits server_limits, audit::AuditLog* audit_log, bool chat_compat,
+           std::string rotation_origin, CredentialRotationWriter credential_writer)
         : tls(tls_context),
           acceptor(io, endpoint, reuse_address),
           port(acceptor.local_endpoint().port()),
           auth(authenticator),
           handler(std::move(request_handler)),
           limits(server_limits),
-          audit(audit_log), chat_app_compat(chat_compat) {}
+          audit(audit_log), chat_app_compat(chat_compat), credential_rotation_origin(std::move(rotation_origin)),
+          credential_rotation_writer(std::move(credential_writer)) {}
 
     asio::ssl::context& tls;
     tcp::acceptor acceptor;
@@ -66,6 +68,8 @@ struct Server::Shared {
     ServerLimits limits;
     audit::AuditLog* audit;
     const bool chat_app_compat;
+    const std::string credential_rotation_origin;
+    const CredentialRotationWriter credential_rotation_writer;
     std::atomic<std::size_t> connections{0};
     std::atomic<std::size_t> large_preparations{0};
 };
@@ -104,6 +108,7 @@ constexpr auto use_tuple = asio::as_tuple(asio::use_awaitable);
 constexpr std::string_view endpoint_path = "/v1/chat/completions";
 constexpr std::string_view preview_path = "/v1/preview";
 constexpr std::string_view approval_path = "/v1/confirmations/approve";
+constexpr std::string_view credential_rotation_path = "/v1/provider/credential";
 constexpr std::string_view grade_header = "X-Prompt-Airlock-Grade";  // ADR 0013
 constexpr std::string_view confirm_header = "X-Prompt-Airlock-Confirm";  // ADR 0023
 
@@ -229,7 +234,7 @@ http::response<http::string_body> make_reply(JsonResponse reply, unsigned versio
 // 헤더만 보고 끝낼 수 있는 검사. 통과하면 등급이 확정된 출처를 돌려준다.
 std::expected<std::pair<const Origin*, core::OpenGrade>, JsonResponse> check_headers(
     const http::request_header<>& head, Authenticator& auth, std::string_view client, audit::AuditLog* audit,
-    std::uint16_t port) {
+    std::uint16_t port, std::string_view credential_rotation_origin, bool credential_writer_available) {
     if (head.count(http::field::authorization) > 1) {
         return std::unexpected(error_response(EntryError::BadRequest));
     }
@@ -242,7 +247,8 @@ std::expected<std::pair<const Origin*, core::OpenGrade>, JsonResponse> check_hea
         return std::unexpected(error_response(origin.error() == AuthFailure::Locked ? EntryError::TooManyFailures
                                                                                      : EntryError::Unauthorized));
     }
-    if (head.target() != endpoint_path && head.target() != preview_path && head.target() != approval_path) {
+    if (head.target() != endpoint_path && head.target() != preview_path && head.target() != approval_path &&
+        head.target() != credential_rotation_path) {
         return std::unexpected(error_response(EntryError::NotFound));
     }
     if (head.method() != http::verb::post) {
@@ -251,6 +257,9 @@ std::expected<std::pair<const Origin*, core::OpenGrade>, JsonResponse> check_hea
     if (!is_json(head[http::field::content_type])) {
         return std::unexpected(error_response(EntryError::UnsupportedMediaType));
     }
+    if (head.target() == credential_rotation_path && head.count(http::field::content_type) != 1) {
+        return std::unexpected(error_response(EntryError::BadRequest));
+    }
     if (head.target() == approval_path) {
         if (!local_console_request(head, client, port)) {
             if (audit != nullptr) {
@@ -258,6 +267,22 @@ std::expected<std::pair<const Origin*, core::OpenGrade>, JsonResponse> check_hea
                     {"result", "reject"}, {"reason", "local_only"}});
             }
             return std::unexpected(error_response(EntryError::LocalOnly));
+        }
+        if (head.count(confirm_header) != 0) {
+            return std::unexpected(error_response(EntryError::BadRequest));
+        }
+    }
+    if (head.target() == credential_rotation_path) {
+        if (!local_console_request(head, client, port)) {
+            if (audit != nullptr) {
+                (void)audit->append("credential_rotation", "warn", {{"origin", (*origin)->name}, {"client", client},
+                    {"result", "reject"}, {"reason", "local_only"}});
+            }
+            return std::unexpected(error_response(EntryError::LocalOnly));
+        }
+        if (credential_rotation_origin.empty() || (*origin)->name != credential_rotation_origin ||
+            !credential_writer_available) {
+            return std::unexpected(error_response(EntryError::NotFound));
         }
         if (head.count(confirm_header) != 0) {
             return std::unexpected(error_response(EntryError::BadRequest));
@@ -285,6 +310,72 @@ std::expected<std::pair<const Origin*, core::OpenGrade>, JsonResponse> check_hea
     return std::pair{*origin, *grade};
 }
 
+std::expected<core::SensitiveText, EntryError> credential_from_json(std::string body) {
+    core::SensitiveText raw(std::move(body));
+    if (raw.size() > credential_rotation_body_bytes) {
+        return std::unexpected(EntryError::BadRequest);
+    }
+    bool valid_keys = true;
+    bool saw_credential = false;
+    auto parsed = nlohmann::json::parse(raw.view(), [&](int depth, nlohmann::json::parse_event_t event,
+                                                        nlohmann::json& value) {
+        if (event == nlohmann::json::parse_event_t::key) {
+            if (depth != 1 || saw_credential || !value.is_string() || value.get_ref<const std::string&>() != "credential") {
+                valid_keys = false;
+            }
+            saw_credential = true;
+        }
+        return true;
+    }, false);
+    if (!parsed.is_object() || !parsed.contains("credential") || !parsed["credential"].is_string()) {
+        return std::unexpected(EntryError::BadRequest);
+    }
+    auto& credential = parsed["credential"].get_ref<std::string&>();
+    if (!valid_keys || parsed.size() != 1 || credential.empty() ||
+        !std::ranges::all_of(credential, [](char c) { return c > 0x20 && c < 0x7f; })) {
+        core::SensitiveText discarded(std::move(credential));
+        return std::unexpected(EntryError::BadRequest);
+    }
+    return core::SensitiveText(std::move(credential));
+}
+
+JsonResponse replace_provider_credential(AcceptedRequest request, audit::AuditLog* audit,
+                                         const CredentialRotationWriter& writer) {
+    auto credential = credential_from_json(std::move(request.body));
+    if (audit == nullptr) {
+        return error_response(EntryError::Unavailable);
+    }
+    const auto fields = [&] {
+        return nlohmann::json{{"origin", request.origin != nullptr ? request.origin->name : std::string{}},
+                              {"client", request.client}};
+    };
+    if (!credential) {
+        auto event = fields();
+        event["result"] = "reject";
+        event["reason"] = "bad_request";
+        if (!audit->append("credential_rotation", "warn", std::move(event))) {
+            return error_response(EntryError::Unavailable);
+        }
+        return error_response(credential.error());
+    }
+    auto event = fields();
+    event["result"] = "attempt";
+    event["reason"] = "credential_rotation";
+    if (!audit->append("credential_rotation", "info", std::move(event))) {
+        return error_response(EntryError::Unavailable);
+    }
+    bool stored = false;
+    try {
+        stored = writer && writer(credential->view());
+    } catch (const std::exception&) {
+        stored = false;
+    }
+    if (!stored) {
+        return error_response(EntryError::Unavailable);
+    }
+    return JsonResponse{200, R"({"ok":true})"};
+}
+
 // 처리 중 연결이 끊기면 돌아온다. 읽을 것이 생겼는데 쌓인 바이트가 0 이면 상대가 닫은 것(FIN·RST)이다.
 // 바이트가 있으면(다음 요청, TLS 종료 알림) 끊김인지 알 수 없어 처리가 끝날 때까지 기다린다.
 // shortcut: TLS 종료 알림을 먼저 보내고 닫는 클라이언트는 응답을 쓸 때 끊김이 드러난다. 알림까지 읽으려면 TLS 읽기를 처리와 함께 돌려야 한다.
@@ -298,6 +389,10 @@ asio::awaitable<void> client_gone(tcp::socket& socket) {
     }
     asio::steady_timer until_done(co_await asio::this_coro::executor, asio::steady_timer::time_point::max());
     (void)co_await until_done.async_wait(use_tuple);
+}
+
+asio::awaitable<JsonResponse> rotate_credential(std::shared_ptr<Server::Shared> shared, AcceptedRequest request) {
+    co_return replace_provider_credential(std::move(request), shared->audit, shared->credential_rotation_writer);
 }
 
 asio::awaitable<void> session(std::shared_ptr<Server::Shared> shared, tcp::socket socket) {
@@ -341,8 +436,12 @@ asio::awaitable<void> session(std::shared_ptr<Server::Shared> shared, tcp::socke
         auto purpose = RequestPurpose::Chat;
         if (head.target() == preview_path) purpose = RequestPurpose::Preview;
         else if (head.target() == approval_path) purpose = RequestPurpose::Approve;
-        const auto body_limit = purpose == RequestPurpose::Approve
-            ? std::min(shared->limits.body_bytes, confirm_body_bytes) : shared->limits.body_bytes;
+        else if (head.target() == credential_rotation_path) purpose = RequestPurpose::CredentialRotation;
+        auto body_limit = shared->limits.body_bytes;
+        if (purpose == RequestPurpose::Approve) body_limit = std::min(body_limit, confirm_body_bytes);
+        if (purpose == RequestPurpose::CredentialRotation) {
+            body_limit = std::min(body_limit, credential_rotation_body_bytes);
+        }
 
         std::optional<JsonResponse> reply;
         std::shared_ptr<UploadLease> upload;
@@ -353,7 +452,9 @@ asio::awaitable<void> session(std::shared_ptr<Server::Shared> shared, tcp::socke
         if (resource) {
             reply = std::move(*resource);
         } else {
-            auto checked = check_headers(head, shared->auth, client, shared->audit, shared->port);
+            auto checked = check_headers(head, shared->auth, client, shared->audit, shared->port,
+                                         shared->credential_rotation_origin,
+                                         static_cast<bool>(shared->credential_rotation_writer));
             if (checked) accepted.emplace(*checked);
             else reply = std::move(checked.error());
         }
@@ -397,10 +498,13 @@ asio::awaitable<void> session(std::shared_ptr<Server::Shared> shared, tcp::socke
                 using namespace asio::experimental::awaitable_operators;
                 try {
                     // 처리 중 연결이 끊기면 처리 단계에 asio 취소를 보내 남은 단계를 멈추고 가명 범위를 지우게 한다
-                    auto outcome = co_await (shared->handler(AcceptedRequest{accepted->first, accepted->second,
-                                                                             std::move(request_body), client,
-                                                                             std::string(head[confirm_header]), std::move(upload),
-                                                                             purpose}) ||
+                    auto accepted_request = AcceptedRequest{accepted->first, accepted->second,
+                                                            std::move(request_body), client,
+                                                            std::string(head[confirm_header]), std::move(upload), purpose};
+                    auto operation = purpose == RequestPurpose::CredentialRotation
+                        ? rotate_credential(shared, std::move(accepted_request))
+                        : shared->handler(std::move(accepted_request));
+                    auto outcome = co_await (std::move(operation) ||
                                              client_gone(beast::get_lowest_layer(stream).socket()));
                     if (outcome.index() == 1) {
                         co_return;  // 받을 사람이 없다
@@ -452,8 +556,10 @@ asio::awaitable<void> accept_loop(std::shared_ptr<Server::Shared> shared) {
 }  // namespace
 
 Server::Server(asio::io_context& io, asio::ssl::context& tls, const tcp::endpoint& endpoint, Authenticator& auth,
-               RequestHandler handler, ServerLimits limits, audit::AuditLog* audit, bool chat_app_compat)
-    : shared_(std::make_shared<Shared>(io, tls, endpoint, auth, std::move(handler), limits, audit, chat_app_compat)) {}
+               RequestHandler handler, ServerLimits limits, audit::AuditLog* audit, bool chat_app_compat,
+               std::string credential_rotation_origin, CredentialRotationWriter credential_rotation_writer)
+    : shared_(std::make_shared<Shared>(io, tls, endpoint, auth, std::move(handler), limits, audit, chat_app_compat,
+                                       std::move(credential_rotation_origin), std::move(credential_rotation_writer))) {}
 
 void Server::start() { asio::co_spawn(shared_->acceptor.get_executor(), accept_loop(shared_), asio::detached); }
 

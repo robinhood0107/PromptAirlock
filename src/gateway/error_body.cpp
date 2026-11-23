@@ -66,6 +66,17 @@ Shape entry_shape(EntryError error) {
             return {422, "invalid_request_error", "document_no_text", "The document has no readable text."};
         case EntryError::ContextLimit:
             return {400, "invalid_request_error", "model_context_exceeded", "The request exceeds the model context."};
+        case EntryError::ProviderAuthentication:
+            return {502, "api_error", "provider_auth_error",
+                    "The upstream model rejected the configured credentials or permissions."};
+        case EntryError::ProviderRateLimited:
+            return {502, "api_error", "provider_rate_limited",
+                    "The upstream model is temporarily limiting requests. Try again later."};
+        case EntryError::ProviderTimeout:
+            return {502, "api_error", "provider_timeout", "The upstream model did not respond in time."};
+        case EntryError::ProviderUnavailable:
+            return {502, "api_error", "provider_unavailable",
+                    "The upstream model is unavailable right now."};
     }
     return {500, "api_error", "internal_error", "Internal error."};
 }

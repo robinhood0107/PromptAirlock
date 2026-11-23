@@ -126,7 +126,8 @@ class GatewayPipeline : public ::testing::Test {
 protected:
     gw::Pipeline make(const detect::Detectors& detectors, std::size_t in_flight_limit = gw::pipeline_in_flight_limit,
                       std::chrono::milliseconds time_limit = gw::request_time_limit, gw::SentenceCheck sentence = {},
-                      prompt_airlock::audit::AuditLog* audit = nullptr, std::filesystem::path extractor = {}) {
+                      prompt_airlock::audit::AuditLog* audit = nullptr, std::filesystem::path extractor = {},
+                      gw::ProviderProtocol protocol = gw::ProviderProtocol::ChatCompletions) {
         return gw::Pipeline(
             detectors,
             [this]() -> std::expected<gw::PseudonymScope, core::VaultError> {
@@ -135,7 +136,7 @@ protected:
                 }
                 return gw::PseudonymScope(TestScope(vault_, issuer_fails_, live_scopes_));
             },
-            [this](std::string body) -> asio::awaitable<std::expected<gw::ProviderReply, gw::ProviderError>> {
+            [this](std::string body, std::uint32_t) -> asio::awaitable<std::expected<gw::ProviderReply, gw::ProviderError>> {
                 ++provider_calls_;
                 sent_.push_back(std::move(body));
                 if (during_first_provider_call_ && provider_calls_ == 1) {
@@ -147,13 +148,16 @@ protected:
                     (void)co_await never.async_wait(asio::as_tuple(asio::use_awaitable));
                     co_return std::unexpected(gw::ProviderError::Unavailable);
                 }
+                if (provider_unavailable_) {
+                    co_return std::unexpected(gw::ProviderError::Unavailable);
+                }
                 if (provider_fails_) {
                     co_return std::unexpected(gw::ProviderError::Timeout);
                 }
                 co_return gw::ProviderReply{provider_status_, answer_ ? answer_(sent_.back()) : pa_mock::make_answer(sent_.back())};
             },
             *core::OutputTokenCap::make(512), "demo-alias", work_.get_executor(), audit, in_flight_limit, time_limit,
-            std::move(sentence), std::move(extractor));
+            std::move(sentence), std::move(extractor), protocol);
     }
 
     gw::JsonResponse run(const gw::Pipeline& pipeline, std::string body,
@@ -207,6 +211,7 @@ protected:
     bool vault_down_ = false;
     bool issuer_fails_ = false;
     bool provider_fails_ = false;
+    bool provider_unavailable_ = false;
     unsigned provider_status_ = 200;
     bool provider_hangs_ = false;
     std::atomic<int> live_scopes_{0};
@@ -254,6 +259,106 @@ TEST_F(GatewayPipeline, KeepsContentPartsAndStop) {
     EXPECT_EQ(sent["stop"][0], "끝");
     EXPECT_EQ(sent["max_tokens"], 512);  // 상한으로 줄인다
     EXPECT_EQ(sent["temperature"], 0.2);
+}
+
+TEST_F(GatewayPipeline, GenerateContentUsesVerifiedPromptAndItsWireSchema) {
+    answer_ = [](const std::string&) {
+        return R"({"candidates":[{"content":{"role":"model","parts":[{"text":"확인"}]},"finishReason":"STOP"}]})";
+    };
+    const auto pipeline = make(detectors_, gw::pipeline_in_flight_limit, gw::request_time_limit, {}, nullptr, {},
+                               gw::ProviderProtocol::GenerateContent);
+    const auto reply = run(pipeline, ask("담당자 연락처 010-2345-6789"));
+    ASSERT_EQ(reply.status, 200u);
+    ASSERT_EQ(provider_calls_, 1);
+    const json sent = json::parse(sent_.front());
+    ASSERT_EQ(sent["contents"][0]["role"], "user");
+    ASSERT_EQ(sent["contents"][0]["parts"].size(), 1u);
+    EXPECT_EQ(sent["contents"][0]["parts"][0]["text"].get<std::string>().find("010-2345-6789"), std::string::npos);
+    EXPECT_EQ(sent["generationConfig"]["candidateCount"], 1);
+    EXPECT_EQ(sent["generationConfig"]["maxOutputTokens"], 512);
+    EXPECT_FALSE(sent.contains("model"));
+}
+
+TEST_F(GatewayPipeline, MessagesUsesSystemAndExistingRoleConversion) {
+    answer_ = [](const std::string&) {
+        return json{{"role", gw::detail::role_name(core::MessageRole::Model)},
+                    {"content", json::array({{{"type", "text"}, {"text", "확인"}}})},
+                    {"stop_reason", "end_turn"}}.dump();
+    };
+    const auto pipeline = make(detectors_, gw::pipeline_in_flight_limit, gw::request_time_limit, {}, nullptr, {},
+                               gw::ProviderProtocol::Messages);
+    const std::string request = json{{"model", "client-model"},
+                                     {"messages", json::array({{{"role", "system"}, {"content", "규칙"}},
+                                                               {{"role", "user"}, {"content", "처음"}},
+                                                               {{"role", gw::detail::role_name(core::MessageRole::Model)},
+                                                                {"content", "이전 답"}},
+                                                               {{"role", "user"},
+                                                                {"content", "담당자 연락처 010-2345-6789"}}})},
+                                     {"max_tokens", 128}, {"stop", json::array({"끝"})}}.dump();
+    const auto reply = run(pipeline, request);
+    ASSERT_EQ(reply.status, 200u);
+    ASSERT_EQ(provider_calls_, 1);
+    const json sent = json::parse(sent_.front());
+    EXPECT_EQ(sent["model"], "demo-alias");
+    EXPECT_EQ(sent["system"][0]["text"], "규칙");
+    ASSERT_EQ(sent["messages"].size(), 3u);
+    EXPECT_EQ(sent["messages"][1]["role"].get<std::string>(),
+              std::string(gw::detail::role_name(core::MessageRole::Model)));
+    EXPECT_EQ(sent["messages"][2]["content"].get<std::string>().find("010-2345-6789"), std::string::npos);
+    EXPECT_EQ(sent["max_tokens"], 128);
+    EXPECT_EQ(sent["stop_sequences"][0], "끝");
+}
+
+TEST_F(GatewayPipeline, UnsupportedAdapterSemanticsFailBeforeProviderCall) {
+    const auto pipeline = make(detectors_, gw::pipeline_in_flight_limit, gw::request_time_limit, {}, nullptr, {},
+                               gw::ProviderProtocol::Messages);
+    const std::vector<std::string> cases = {
+        R"({"messages":[{"role":"developer","content":"must not be dropped"},{"role":"user","content":"hello"}]})",
+        R"({"messages":[{"role":"user","content":"hello"}],"temperature":0.2})",
+        R"({"messages":[{"role":"user","content":"hello"}],"response_format":{"type":"json_object"}})",
+    };
+    for (const auto& request : cases) EXPECT_EQ(run(pipeline, request).status, 400u);
+    EXPECT_EQ(provider_calls_, 0);
+    EXPECT_TRUE(sent_.empty());
+}
+
+TEST_F(GatewayPipeline, AdapterAuditKeepsOnlyOutputCheckedText) {
+    const auto dir = std::filesystem::temp_directory_path() /
+                     ("pa-adapter-audit-" +
+                      std::to_string(std::chrono::steady_clock::now().time_since_epoch().count()));
+    auto log = prompt_airlock::audit::AuditLog::open(dir, std::chrono::days(365));
+    ASSERT_TRUE(log);
+    answer_ = [](const std::string&) {
+        return R"({"metadata":"private-upstream-detail","candidates":[{"content":{"role":"model","parts":[{"text":"확인"}]},"finishReason":"STOP"}]})";
+    };
+    const auto pipeline = make(detectors_, gw::pipeline_in_flight_limit, gw::request_time_limit, {}, log->get(), {},
+                               gw::ProviderProtocol::GenerateContent);
+    EXPECT_EQ(run(pipeline, ask("일반 업무 문의")).status, 200u);
+
+    answer_ = [](const std::string&) {
+        return R"({"candidates":[{"content":{"role":"model","parts":[{"text":"주민번호 900101-1234567"}]},"finishReason":"STOP"}]})";
+    };
+    const auto rejected = run(pipeline, ask("일반 업무 문의"));
+    EXPECT_EQ(rejected.status, 502u) << rejected.body;
+    EXPECT_EQ(code_of(rejected), "response_blocked_value");
+    EXPECT_EQ(provider_calls_, 2);
+
+    log->reset();
+    std::string audit_text;
+    int answer_records = 0;
+    for (const auto& file : std::filesystem::directory_iterator(dir)) {
+        if (file.path().extension() != ".jsonl") continue;
+        std::ifstream input(file.path());
+        for (std::string line; std::getline(input, line);) {
+            audit_text += line;
+            if (json::parse(line)["kind"] == "egress_answer") ++answer_records;
+        }
+    }
+    EXPECT_EQ(answer_records, 1);
+    EXPECT_NE(audit_text.find("확인"), std::string::npos);
+    EXPECT_EQ(audit_text.find("private-upstream-detail"), std::string::npos);
+    EXPECT_EQ(audit_text.find("900101-1234567"), std::string::npos);
+    std::filesystem::remove_all(dir);
 }
 
 TEST_F(GatewayPipeline, EveryRejectionMakesZeroProviderCalls) {
@@ -632,12 +737,75 @@ TEST_F(GatewayPipeline, WarnModeFailsClosedAndSkipsRuleBlockedRequests) {
     EXPECT_EQ(provider_calls_, 0);
 }
 
-TEST_F(GatewayPipeline, ProviderFailureReturnsFixedError) {
+TEST_F(GatewayPipeline, ProviderErrorsUseFixedCodesAndKeepDetailsOutOfAudit) {
+    const auto dir = std::filesystem::temp_directory_path() /
+                     ("pa-provider-error-audit-" +
+                      std::to_string(std::chrono::steady_clock::now().time_since_epoch().count()));
+    auto log = prompt_airlock::audit::AuditLog::open(dir, std::chrono::days(365));
+    ASSERT_TRUE(log);
+    const std::string private_error =
+        R"({"error":{"message":"private-upstream-detail","code":"synthetic-key-marker"}})";
+    answer_ = [&private_error](const std::string&) { return private_error; };
+    const auto pipeline = make(detectors_, gw::pipeline_in_flight_limit, gw::request_time_limit, {}, log->get());
+    struct Case {
+        unsigned provider_status;
+        const char* code;
+    };
+    const Case cases[] = {{401, "provider_auth_error"}, {403, "provider_auth_error"},
+                          {429, "provider_rate_limited"}, {408, "provider_timeout"},
+                          {504, "provider_timeout"}, {503, "provider_unavailable"},
+                          {500, "provider_error"}, {400, "provider_error"}};
+    int calls = 0;
+    std::vector<std::string> expected_audit_codes;
+    for (const auto& test_case : cases) {
+        provider_status_ = test_case.provider_status;
+        const auto reply = run(pipeline, ask("일반 업무 문의"));
+        EXPECT_EQ(reply.status, 502u) << test_case.provider_status;
+        EXPECT_EQ(code_of(reply), test_case.code) << test_case.provider_status;
+        EXPECT_EQ(reply.body.find("private-upstream-detail"), std::string::npos);
+        EXPECT_EQ(reply.body.find("synthetic-key-marker"), std::string::npos);
+        EXPECT_EQ(provider_calls_, ++calls);
+        expected_audit_codes.emplace_back(test_case.code);
+        EXPECT_EQ(live_scopes_, 0);
+    }
     provider_fails_ = true;
-    const auto pipeline = make(detectors_);
-    const auto reply = run(pipeline, ask("회의 안건 정리"));
-    EXPECT_EQ(reply.status, 502u);
-    EXPECT_EQ(code_of(reply), "provider_error");
+    const auto timed_out = run(pipeline, ask("일반 업무 문의"));
+    EXPECT_EQ(timed_out.status, 502u);
+    EXPECT_EQ(code_of(timed_out), "provider_timeout");
+    EXPECT_EQ(timed_out.body.find("private-upstream-detail"), std::string::npos);
+    EXPECT_EQ(provider_calls_, ++calls);
+    expected_audit_codes.emplace_back("provider_timeout");
+    provider_fails_ = false;
+    provider_unavailable_ = true;
+    const auto unavailable = run(pipeline, ask("일반 업무 문의"));
+    EXPECT_EQ(unavailable.status, 502u);
+    EXPECT_EQ(code_of(unavailable), "provider_unavailable");
+    EXPECT_EQ(unavailable.body.find("private-upstream-detail"), std::string::npos);
+    EXPECT_EQ(provider_calls_, ++calls);
+    expected_audit_codes.emplace_back("provider_unavailable");
+    provider_unavailable_ = false;
+    EXPECT_EQ(live_scopes_, 0);
+
+    log->reset();
+    int request_records = 0;
+    for (const auto& file : std::filesystem::directory_iterator(dir)) {
+        if (file.path().extension() != ".jsonl") continue;
+        std::ifstream input(file.path());
+        for (std::string line; std::getline(input, line);) {
+            const auto record = json::parse(line);
+            EXPECT_EQ(line.find("private-upstream-detail"), std::string::npos);
+            EXPECT_EQ(line.find("synthetic-key-marker"), std::string::npos);
+            EXPECT_NE(record["kind"], "egress_answer");
+            if (record["kind"] == "request") {
+                ASSERT_LT(static_cast<std::size_t>(request_records), expected_audit_codes.size());
+                EXPECT_EQ(record["reason"], expected_audit_codes[request_records]);
+                ++request_records;
+            }
+        }
+    }
+    EXPECT_EQ(request_records, calls);
+    EXPECT_EQ(provider_calls_, calls);
+    std::filesystem::remove_all(dir);
 }
 
 TEST_F(GatewayPipeline, RejectsOverLimitRightAwayWithoutProvider) {

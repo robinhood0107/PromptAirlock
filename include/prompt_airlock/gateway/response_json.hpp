@@ -1,5 +1,5 @@
 // provider 응답 읽기와 클라이언트 응답 만들기(ADR 0017, 0020).
-// 첫 choice 의 role·content·finish_reason 과 usage 만 읽고, 나머지는 버린다. 클라이언트 응답은 새로 만든다.
+// 설정된 규격의 한 텍스트 결과·종료 상태·usage 만 읽고, 클라이언트 응답은 새로 만든다.
 #pragma once
 
 #include <cstdint>
@@ -9,6 +9,7 @@
 #include <string_view>
 
 #include "prompt_airlock/core/sensitive.hpp"
+#include "prompt_airlock/gateway/provider_port.hpp"
 
 namespace prompt_airlock::gateway {
 
@@ -29,7 +30,8 @@ enum class AnswerError : std::uint8_t {
     Forbidden,  // tool_calls·function_call·audio·images·logprobs 가 값을 가짐
 };
 
-[[nodiscard]] std::expected<ProviderAnswer, AnswerError> parse_provider_answer(std::string_view body);
+[[nodiscard]] std::expected<ProviderAnswer, AnswerError> parse_provider_answer(
+    std::string_view body, ProviderProtocol protocol = ProviderProtocol::ChatCompletions);
 [[nodiscard]] std::string new_request_id();
 
 // id 는 게이트웨이 요청 ID, model 은 고정 별칭이다. provider 의 id·model·그 밖의 필드는 들어가지 않는다.

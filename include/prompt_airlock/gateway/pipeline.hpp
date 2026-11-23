@@ -93,7 +93,8 @@ public:
              core::OutputTokenCap output_cap, std::string model_alias, boost::asio::any_io_executor work,
              audit::AuditLog* audit = nullptr, std::size_t in_flight_limit = pipeline_in_flight_limit,
              std::chrono::milliseconds time_limit = request_time_limit, SentenceCheck sentence = {},
-             std::filesystem::path extractor = {});
+             std::filesystem::path extractor = {},
+             ProviderProtocol protocol = ProviderProtocol::ChatCompletions);
 
     // audit 가 있으면 요청 결과와 외부 전송 이력을 남긴다. 기록하지 못하면 거절한다(ADR 0021).
     // 처리 중 요청이 in_flight_limit 에 닿아 있으면 아무 단계도 거치지 않고 503 overloaded 로 끝낸다.
@@ -110,6 +111,7 @@ private:
         std::optional<PseudonymScope> scope;  // 응답 복원도 같은 범위에서만 한다
         std::string body;                     // provider 로 보낼 검증된 본문
         bool pseudonymized = false;
+        std::uint32_t output_token_limit = 0;
     };
     boost::asio::awaitable<JsonResponse> run(AcceptedRequest request, Trace& trace) const;
     // 처리 순서(위 머리말)대로 아래 단계를 부른다.
@@ -137,6 +139,7 @@ private:
     std::chrono::milliseconds time_limit_;
     SentenceCheck sentence_;        // 비어 있으면 경고 모드를 쓰지 않는다
     std::filesystem::path extractor_;
+    ProviderProtocol protocol_;
     mutable ConfirmLedger confirms_;
     mutable std::atomic<std::size_t> in_flight_{0};
 };

@@ -7,21 +7,36 @@
 #include <boost/beast/core.hpp>
 #include <boost/beast/http.hpp>
 #include <boost/beast/ssl.hpp>
+#include <nlohmann/json.hpp>
 #include <openssl/ssl.h>
 #include <openssl/x509v3.h>
 
 #ifdef _WIN32
+#include <fcntl.h>
+#include <io.h>
+#include <process.h>
+#include <share.h>
+#include <sys/stat.h>
 #include <windows.h>
 #include <dpapi.h>
 #else
+#include <fcntl.h>
 #include <sys/stat.h>
+#include <unistd.h>
 #endif
 
 #include <algorithm>
+#include <atomic>
+#include <cerrno>
+#include <cstdint>
 #include <fstream>
 #include <iterator>
+#include <limits>
+#include <span>
 #include <string_view>
 #include <utility>
+
+#include "prompt_airlock/gateway/request_json.hpp"
 
 namespace prompt_airlock::provider {
 namespace {
@@ -32,6 +47,7 @@ namespace http = beast::http;
 using tcp = asio::ip::tcp;
 using Result = std::expected<gateway::ProviderReply, gateway::ProviderError>;
 constexpr auto use_tuple = asio::as_tuple(asio::use_awaitable);
+std::atomic<std::uint64_t> credential_temp_sequence{0};
 
 // 측정값의 수명은 send를 기다리는 호출자에게 있다. 오류로 먼저 돌아가도 총 시간을 남긴다.
 struct ClientTimer {
@@ -60,31 +76,158 @@ gateway::ProviderError classify(const beast::error_code& ec) {
     return ec == beast::error::timeout ? gateway::ProviderError::Timeout : gateway::ProviderError::Unavailable;
 }
 
+struct CredentialFileBuffer {
+    std::string value;
+    ~CredentialFileBuffer() { core::secure_wipe(std::span<char>{value.data(), value.size()}); }
+};
+
+std::expected<core::SensitiveText, CredentialError> read_credential_file(const std::filesystem::path& path) {
+#ifdef _WIN32
+    HANDLE file = CreateFileW(path.c_str(), GENERIC_READ, FILE_SHARE_READ | FILE_SHARE_DELETE, nullptr, OPEN_EXISTING,
+                              FILE_ATTRIBUTE_NORMAL, nullptr);
+    if (file == INVALID_HANDLE_VALUE) {
+        return std::unexpected(CredentialError::Unreadable);
+    }
+    struct CloseHandleOnExit {
+        HANDLE value;
+        ~CloseHandleOnExit() { CloseHandle(value); }
+    } close{file};
+    LARGE_INTEGER file_size{};
+    if (!GetFileSizeEx(file, &file_size) || file_size.QuadPart < 0 ||
+        static_cast<unsigned long long>(file_size.QuadPart) > std::numeric_limits<std::size_t>::max()) {
+        return std::unexpected(CredentialError::Unreadable);
+    }
+#else
+    const int file = ::open(path.c_str(), O_RDONLY | O_CLOEXEC);
+    if (file < 0) {
+        return std::unexpected(CredentialError::Unreadable);
+    }
+    struct CloseDescriptorOnExit {
+        int value;
+        ~CloseDescriptorOnExit() { ::close(value); }
+    } close{file};
+    struct stat status {};
+    if (::fstat(file, &status) != 0) {
+        return std::unexpected(CredentialError::Unreadable);
+    }
+    if ((status.st_mode & 077) != 0) {
+        return std::unexpected(CredentialError::NotProtected);
+    }
+    if (status.st_size < 0 || static_cast<unsigned long long>(status.st_size) > std::numeric_limits<std::size_t>::max()) {
+        return std::unexpected(CredentialError::Unreadable);
+    }
+#endif
+    CredentialFileBuffer bytes;
+#ifdef _WIN32
+    bytes.value.resize(static_cast<std::size_t>(file_size.QuadPart));
+    std::size_t offset = 0;
+    while (offset < bytes.value.size()) {
+        const auto remaining = bytes.value.size() - offset;
+        const DWORD requested = remaining > MAXDWORD ? MAXDWORD : static_cast<DWORD>(remaining);
+        DWORD received = 0;
+        if (!ReadFile(file, bytes.value.data() + offset, requested, &received, nullptr) || received == 0) {
+            return std::unexpected(CredentialError::Unreadable);
+        }
+        offset += received;
+    }
+#else
+    bytes.value.resize(static_cast<std::size_t>(status.st_size));
+    std::size_t offset = 0;
+    while (offset < bytes.value.size()) {
+        const auto remaining = bytes.value.size() - offset;
+        const auto requested = remaining > static_cast<std::size_t>(std::numeric_limits<ssize_t>::max())
+            ? static_cast<std::size_t>(std::numeric_limits<ssize_t>::max()) : remaining;
+        const auto received = ::read(file, bytes.value.data() + offset, requested);
+        if (received < 0 && errno == EINTR) continue;
+        if (received <= 0) {
+            return std::unexpected(CredentialError::Unreadable);
+        }
+        offset += static_cast<std::size_t>(received);
+    }
+#endif
+    return core::SensitiveText(std::move(bytes.value));
+}
+
+class CredentialEchoSax {
+public:
+    explicit CredentialEchoSax(std::string_view credential) : credential_(credential) {}
+
+    bool echoed = false;
+    bool too_deep = false;
+
+    bool null() { return true; }
+    bool boolean(bool) { return true; }
+    bool number_integer(nlohmann::json::number_integer_t) { return true; }
+    bool number_unsigned(nlohmann::json::number_unsigned_t) { return true; }
+    bool number_float(nlohmann::json::number_float_t, const std::string&) { return true; }
+    bool binary(nlohmann::json::binary_t&) { return false; }
+    bool string(std::string& value) { return check(value); }
+    bool key(std::string& value) { return check(value); }
+    bool start_object(std::size_t) { return open(); }
+    bool start_array(std::size_t) { return open(); }
+    bool end_object() { --depth_; return true; }
+    bool end_array() { --depth_; return true; }
+    bool parse_error(std::size_t, const std::string&, const nlohmann::detail::exception&) { return false; }
+
+private:
+    bool check(std::string& value) {
+        if (value.find(credential_) == std::string::npos) return true;
+        echoed = true;
+        core::secure_wipe(std::span<char>{value.data(), value.size()});
+        return false;
+    }
+    bool open() {
+        if (depth_ >= gateway::max_json_depth) {
+            too_deep = true;
+            return false;
+        }
+        ++depth_;
+        return true;
+    }
+
+    std::string_view credential_;
+    std::size_t depth_ = 0;
+};
+
+enum class CredentialScan { Clean, Echo, Invalid };
+
+CredentialScan scan_credential_echo(std::string_view body, std::string_view credential) {
+    if (credential.empty()) return CredentialScan::Invalid;
+    if (body.find(credential) != std::string_view::npos) return CredentialScan::Echo;
+    CredentialEchoSax sax(credential);
+    const bool valid = nlohmann::json::sax_parse(body, &sax, nlohmann::json::input_format_t::json, true);
+    if (sax.echoed) return CredentialScan::Echo;
+    return valid && !sax.too_deep ? CredentialScan::Clean : CredentialScan::Invalid;
+}
+
 }  // namespace
 
 std::expected<core::SensitiveText, CredentialError> load_credential(const std::filesystem::path& path) {
-    std::ifstream in(path, std::ios::binary);
-    if (!in) {
-        return std::unexpected(CredentialError::Unreadable);
-    }
-    std::string value((std::istreambuf_iterator<char>(in)), std::istreambuf_iterator<char>());
+    auto file_bytes = read_credential_file(path);
+    if (!file_bytes) return std::unexpected(file_bytes.error());
 #ifdef _WIN32
-    DATA_BLOB sealed{static_cast<DWORD>(value.size()), reinterpret_cast<BYTE*>(value.data())};
+    if (file_bytes->size() > std::numeric_limits<DWORD>::max()) {
+        return std::unexpected(CredentialError::NotProtected);
+    }
+    DATA_BLOB sealed{static_cast<DWORD>(file_bytes->size()),
+                     reinterpret_cast<BYTE*>(const_cast<char*>(file_bytes->view().data()))};
     DATA_BLOB opened{};
     if (CryptUnprotectData(&sealed, nullptr, nullptr, nullptr, nullptr, CRYPTPROTECT_UI_FORBIDDEN, &opened) == FALSE) {
         return std::unexpected(CredentialError::NotProtected);
     }
+    struct WipeDpapiBufferOnExit {
+        DATA_BLOB& value;
+        ~WipeDpapiBufferOnExit() {
+            if (value.pbData != nullptr) {
+                SecureZeroMemory(value.pbData, value.cbData);
+                LocalFree(value.pbData);
+            }
+        }
+    } clear{opened};
     std::string plain(reinterpret_cast<const char*>(opened.pbData), opened.cbData);
-    SecureZeroMemory(opened.pbData, opened.cbData);
-    LocalFree(opened.pbData);
     core::SensitiveText owned(std::move(plain));  // 푼 값을 넘겨 지우게 한다
 #else
-    struct stat st {};
-    if (::stat(path.c_str(), &st) != 0 || (st.st_mode & 077) != 0) {
-        core::SensitiveText discard(std::move(value));
-        return std::unexpected(CredentialError::NotProtected);
-    }
-    core::SensitiveText owned(std::move(value));  // 읽은 버퍼를 넘겨 지우게 한다
+    core::SensitiveText owned(std::move(*file_bytes));
 #endif
     std::string_view text = owned.view();
     while (!text.empty() && (text.back() == '\n' || text.back() == '\r')) {
@@ -120,27 +263,84 @@ std::expected<void, CredentialError> store_credential(const std::filesystem::pat
     if (!sealed) {
         return std::unexpected(sealed.error());
     }
-    auto temp = path;
-    temp += ".tmp";
-    std::error_code ec;
-    std::filesystem::remove(temp, ec);
-    {
-        std::ofstream file(temp, std::ios::binary | std::ios::trunc);
-        // 내용을 쓰기 전에 소유자만 읽고 쓰게 한다(Linux 는 이 권한이어야 load_credential 이 읽는다).
-        std::filesystem::permissions(temp, std::filesystem::perms::owner_read | std::filesystem::perms::owner_write,
-                                     std::filesystem::perm_options::replace, ec);
-        if (!file || ec) {
-            return std::unexpected(CredentialError::Unreadable);
+    core::SensitiveText protected_credential(std::move(*sealed));
+    const auto process =
+#ifdef _WIN32
+        static_cast<std::uint64_t>(GetCurrentProcessId());
+#else
+        static_cast<std::uint64_t>(::getpid());
+#endif
+    std::filesystem::path temp;
+    int descriptor = -1;
+    for (unsigned attempt = 0; attempt < 32 && descriptor < 0; ++attempt) {
+        temp = path;
+        temp += ".tmp." + std::to_string(process) + "." +
+                std::to_string(credential_temp_sequence.fetch_add(1, std::memory_order_relaxed));
+#ifdef _WIN32
+        const int open_result = _wsopen_s(&descriptor, temp.c_str(), _O_WRONLY | _O_CREAT | _O_EXCL | _O_BINARY,
+                                          _SH_DENYNO, _S_IREAD | _S_IWRITE);
+        if (open_result != 0) {
+            errno = open_result;
+            descriptor = -1;
         }
-        file << *sealed;
-        if (!file.flush()) {
+#else
+        int flags = O_WRONLY | O_CREAT | O_EXCL | O_CLOEXEC;
+#ifdef O_NOFOLLOW
+        flags |= O_NOFOLLOW;
+#endif
+        descriptor = ::open(temp.c_str(), flags, 0600);
+#endif
+        if (descriptor < 0 && errno != EEXIST) {
             return std::unexpected(CredentialError::Unreadable);
         }
     }
-    std::filesystem::rename(temp, path, ec);
-    if (ec) {
+    if (descriptor < 0) {
+        return std::unexpected(CredentialError::Unreadable);
+    }
+    std::error_code ec;
+    bool written = true;
+#ifndef _WIN32
+    written = ::fchmod(descriptor, 0600) == 0;
+#endif
+    std::size_t offset = 0;
+    while (written && offset < protected_credential.size()) {
+        const auto remaining = protected_credential.size() - offset;
+#ifdef _WIN32
+        const auto chunk = remaining > std::numeric_limits<unsigned int>::max()
+            ? std::numeric_limits<unsigned int>::max() : static_cast<unsigned int>(remaining);
+        const int count = _write(descriptor, protected_credential.view().data() + offset, chunk);
+#else
+        const auto count = ::write(descriptor, protected_credential.view().data() + offset, remaining);
+#endif
+        if (count < 0 && errno == EINTR) continue;
+        if (count <= 0) {
+            written = false;
+            break;
+        }
+        offset += static_cast<std::size_t>(count);
+    }
+    if (written) {
+#ifdef _WIN32
+        written = _commit(descriptor) == 0;
+#else
+        written = ::fsync(descriptor) == 0;
+#endif
+    }
+#ifdef _WIN32
+    const int close_result = _close(descriptor);
+#else
+    const int close_result = ::close(descriptor);
+#endif
+    written = written && close_result == 0;
+    if (!written) {
         std::filesystem::remove(temp, ec);
         return std::unexpected(CredentialError::Unreadable);
+    }
+    std::filesystem::rename(temp, path, ec);
+    if (ec) {
+        std::error_code cleanup_error;
+        std::filesystem::remove(temp, cleanup_error);
+        return std::unexpected(CredentialError::ReplaceFailed);
     }
     return {};
 }
@@ -195,7 +395,14 @@ asio::awaitable<Result> HttpsClient::send(std::string body, ClientTimings* timin
     req.set(http::field::content_type, "application/json");
     req.set(http::field::accept, "application/json");
     req.set(http::field::user_agent, "prompt-airlock");
-    req.set(http::field::authorization, std::string("Bearer ") + std::string(credential->view()));
+    if (endpoint_.credential_mode == gateway::ProviderCredentialMode::Bearer) {
+        req.set(http::field::authorization, std::string("Bearer ") + std::string(credential->view()));
+    } else {
+        req.set("x-goog-api-key", credential->view());
+    }
+    if (!endpoint_.api_version_header_name.empty()) {
+        req.set(endpoint_.api_version_header_name, endpoint_.api_version_header_value);
+    }
     req.keep_alive(false);
     req.body() = std::move(body);
     req.prepare_payload();
@@ -223,6 +430,15 @@ asio::awaitable<Result> HttpsClient::send(std::string body, ClientTimings* timin
         }
     }
     auto& res = parser.get();
+    const CredentialScan scan = res.result_int() == 200
+        ? scan_credential_echo(res.body(), credential->view()) : CredentialScan::Clean;
+    if (scan != CredentialScan::Clean) {
+        core::secure_wipe(std::span<char>{res.body().data(), res.body().size()});
+        res.body().clear();
+        (void)co_await stream.async_shutdown(use_tuple);
+        timer.mark(ClientPhase::Shutdown);
+        co_return std::unexpected(gateway::ProviderError::BadResponse);
+    }
     gateway::ProviderReply reply{res.result_int(), std::move(res.body())};
     (void)co_await stream.async_shutdown(use_tuple);  // 응답은 이미 받았으므로 닫기 실패는 무시한다
     timer.mark(ClientPhase::Shutdown);

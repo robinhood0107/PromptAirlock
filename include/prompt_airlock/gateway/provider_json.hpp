@@ -2,13 +2,19 @@
 // 클라이언트가 보낸 model, 보관·상태 저장 플래그, 헤더는 들어갈 자리가 없다.
 #pragma once
 
+#include <expected>
 #include <string>
 #include <string_view>
 
 #include "prompt_airlock/core/provider_boundary.hpp"
+#include "prompt_airlock/gateway/provider_port.hpp"
 
 namespace prompt_airlock::gateway {
 
 [[nodiscard]] std::string provider_request_body(const core::ProviderRequest& request, std::string_view model_alias);
+
+enum class ProviderRequestError { Unsupported };
+[[nodiscard]] std::expected<std::string, ProviderRequestError> provider_request_body(
+    const core::ProviderRequest& request, std::string_view model_alias, ProviderProtocol protocol);
 
 }  // namespace prompt_airlock::gateway

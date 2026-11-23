@@ -110,7 +110,7 @@ protected:
                 }
                 return gw::PseudonymScope(std::move(*scope));
             },
-            [this](std::string body) { return provider_->send(std::move(body)); }, core::OutputTokenCap::standard(),
+            [this](std::string body, std::uint32_t) { return provider_->send(std::move(body)); }, core::OutputTokenCap::standard(),
             "demo-alias", work_.get_executor(), audit_.get(), gw::pipeline_in_flight_limit,
             gw::request_time_limit, gw::SentenceCheck{}, PA_EXTRACT_EXE);
         pa_test::retry_listen([&] { server_.emplace(io_, *server_tls_, loopback, auth_,

@@ -24,6 +24,7 @@ add_library(prompt_airlock_gateway
   error_body.cpp
   pipeline.cpp
   provider_json.cpp
+  "${PROJECT_SOURCE_DIR}/src/provider/cli_client.cpp"
   response_json.cpp
   request_json.cpp
   server.cpp)
