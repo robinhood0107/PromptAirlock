@@ -1,8 +1,33 @@
+import { createHash } from 'node:crypto';
+
 const textKeys = new Set([
   'name', 'full_name', 'title', 'body', 'message', 'description', 'email',
   'login', 'ref', 'tag', 'tag_name', 'path', 'text', 'summary', 'display_name',
   'display_title', 'head_branch', 'slug', 'homepage', 'label',
 ]);
+
+const approvedComposePath = 'deploy/librechat/compose.yaml';
+const approvedImageLineSha256 = '6d0760c1766ec2c5f799ad27057bfe46f63fc5ba7b6a46a9e421a9bd764d16ad';
+
+function fileLine(text, start) {
+  const newline = text.indexOf('\n', start);
+  const rawEnd = newline === -1 ? text.length : newline;
+  const end = rawEnd > start && text.charCodeAt(rawEnd - 1) === 13 ? rawEnd - 1 : rawEnd;
+  return { value: text.slice(start, end), start, end, next: newline === -1 ? -1 : newline + 1 };
+}
+
+function omitApprovedImageLine(filePath, text) {
+  if (filePath !== approvedComposePath) return text;
+  const services = fileLine(text, 0);
+  if (services.value !== 'services:' || services.next === -1) return text;
+  const api = fileLine(text, services.next);
+  if (api.value !== '  api:' || api.next === -1) return text;
+  const line = fileLine(text, api.next);
+  if (!line.value.startsWith('    image:')) return text;
+  const hash = createHash('sha256').update(line.value, 'utf8').digest('hex');
+  if (hash !== approvedImageLineSha256) return text;
+  return text.slice(0, line.start) + text.slice(line.end);
+}
 
 export function createPolicy(pattern) {
   if (typeof pattern !== 'string' || pattern.length === 0) {
@@ -36,6 +61,8 @@ export function createPolicy(pattern) {
       const match = header.exec(body);
       if (match) body = body.slice(match[0].length);
     }
+    // #279은 지정 파일의 api 이미지 필드 한 줄 지문만 예외로 둔다.
+    body = omitApprovedImageLine(filePath, body);
     inspectText(body, 'file content');
   }
 

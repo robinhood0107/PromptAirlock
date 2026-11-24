@@ -9,7 +9,13 @@ export function checkFiles(files, root = fileURLToPath(new URL('../../', import.
   const config = path.join(root, '.publication-policy.local.json');
   const pattern = existsSync(config) ? JSON.parse(readFileSync(config, 'utf8')).pattern : env.PUBLICATION_DENY_PATTERN;
   const policy = createPolicy(pattern);
-  for (const file of files) policy.inspectText(readFileSync(file, 'utf8'), 'text');
+  for (const file of files) {
+    const absoluteFile = path.resolve(file);
+    const text = readFileSync(absoluteFile, 'utf8');
+    if (absoluteFile === path.resolve(root, 'deploy', 'librechat', 'compose.yaml')) {
+      policy.inspectFile('deploy/librechat/compose.yaml', text);
+    } else policy.inspectText(text, 'text');
+  }
 }
 
 export function runCheck(files = process.argv.slice(2)) {
