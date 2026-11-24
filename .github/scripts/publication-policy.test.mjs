@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { mkdtempSync, writeFileSync, rmSync, copyFileSync } from 'node:fs';
+import { mkdtempSync, writeFileSync, rmSync, copyFileSync, mkdirSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -126,6 +126,59 @@ test('only the standard Cargo lockfile header is exempt', () => {
   assert.throws(() => policy.inspectFile('vault/notes.md', lock), /violation/);
   assert.throws(() => policy.inspectFile('vault/Cargo.lock', `${lock}# SampleTool\n`), /violation/);
   assert.throws(() => policy.inspectFile('vault/Cargo.lock', `version = 4\n${header}\n`), /violation/);
+});
+
+test('the deployment image path does not bypass altered text or path aliases', () => {
+  const guarded = createPolicy('blocked');
+  const text = 'services:\n  api:\n    image: blocked\n';
+  for (const file of ['deploy/librechat/compose.yaml', 'deploy\\librechat\\compose.yaml',
+    './deploy/librechat/compose.yaml', 'deploy/../deploy/librechat/compose.yaml',
+    'deploy/librechat/copy.yaml', 'C:\\repo\\deploy\\librechat\\compose.yaml']) {
+    assert.throws(() => guarded.inspectFile(file, text), /violation/);
+  }
+  assert.throws(() => guarded.inspectMetadata({ body: text }), /violation/);
+});
+
+test('local checker keeps aliased and nondeployment files under ordinary text inspection', () => {
+  const root = mkdtempSync(path.join(tmpdir(), 'approved-image-policy-'));
+  const previousDirectory = process.cwd();
+  try {
+    writeFileSync(path.join(root, '.publication-policy.local.json'), JSON.stringify({ pattern: 'blocked' }));
+    const directory = path.join(root, 'deploy', 'librechat');
+    mkdirSync(directory, { recursive: true });
+    writeFileSync(path.join(directory, 'compose.yaml'), 'services:\n  api:\n    image: blocked\n');
+    writeFileSync(path.join(directory, 'copy.yaml'), 'services:\n  api:\n    image: blocked\n');
+    process.chdir(root);
+    for (const file of ['deploy/librechat/compose.yaml', './deploy/librechat/compose.yaml',
+      'deploy/librechat/copy.yaml', path.join(root, 'deploy', 'librechat', 'compose.yaml')]) {
+      assert.throws(() => checkFiles([file], root, {}), /violation/);
+    }
+  } finally {
+    process.chdir(previousDirectory);
+    rmSync(root, { recursive: true, force: true });
+  }
+});
+
+test('local checker does not authorize the same relative name from another working directory', () => {
+  const root = mkdtempSync(path.join(tmpdir(), 'approved-image-root-'));
+  const otherDirectory = mkdtempSync(path.join(tmpdir(), 'approved-image-cwd-'));
+  const previousDirectory = process.cwd();
+  try {
+    writeFileSync(path.join(root, '.publication-policy.local.json'), JSON.stringify({ pattern: 'blocked' }));
+    const relative = path.join('deploy', 'librechat', 'compose.yaml');
+    const rootFile = path.join(root, relative);
+    const otherFile = path.join(otherDirectory, relative);
+    mkdirSync(path.dirname(rootFile), { recursive: true });
+    mkdirSync(path.dirname(otherFile), { recursive: true });
+    writeFileSync(rootFile, 'neutral');
+    writeFileSync(otherFile, 'blocked');
+    process.chdir(otherDirectory);
+    assert.throws(() => checkFiles([relative], root, {}), /violation/);
+  } finally {
+    process.chdir(previousDirectory);
+    rmSync(root, { recursive: true, force: true });
+    rmSync(otherDirectory, { recursive: true, force: true });
+  }
 });
 
 test('metadata is data and shell-like text never executes', () => {
