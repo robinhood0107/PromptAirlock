@@ -89,3 +89,13 @@ vcpkg 포트가 아니라 고정 주소에서 받아 SHA-256 을 확인한 뒤�
 
 - 위 라이선스(MIT, BSD-3-Clause, BSL-1.0, Apache-2.0, Zlib, Unicode-3.0)는 모두 AGPL-3.0 프로젝트와 함께 배포할 수 있는 허용형 라이선스입니다.
 - 강한 copyleft 라이선스(GPL, LGPL 단독)를 요구하는 의존성은 없습니다. 선택지에 LGPL 이 들어 있는 crate(r-efi)는 지원 대상 플랫폼에서 컴파일되지 않아 lock 에만 있습니다.
+## 외부에서 직접 가져오는 선택적 컨테이너
+
+아래 컨테이너는 개발·운영자가 compose 실행 때 공식 registry에서 직접 가져옵니다. 저장소, Gateway 실행 파일, 제품 배포 묶음에는 포함되지 않으며 이미지는 수정하지 않습니다.
+
+| 이름 | 판 | manifest digest | 라이선스 | 경계 |
+|---|---|---|---|---|
+| LibreChat 공식 OCI 이미지 | v0.8.9 (upstream prerelease) | `sha256:4a3967a47031c1fdba8302a6a341be7671101e40b617f7934ba25aac69fcea2b` | MIT | 선택적 로컬 웹 앱, 운영자가 직접 pull |
+| MongoDB Community 공식 OCI 이미지 | 8.0.20 | `sha256:098862b1339f031900ca66cf8fef799e616d6324fa41b9a263f2ec899552c1ef` | SSPL-1.0 | 선택적 DB, 운영자가 직접 pull, 제품 배포에 포함하지 않음 |
+
+LibreChat의 이미지 digest는 승인된 `deploy/librechat/compose.yaml` API 필드와 공식 registry manifest를 대조했습니다. MongoDB digest도 공식 8.0.20 manifest와 대조했습니다. 두 컨테이너는 Prompt Airlock 코드에 링크되지 않습니다. MongoDB의 SSPL 배포물은 제품 배포에 복제하지 않으며, 운영자는 이미지를 별도로 받아 해당 라이선스 조건을 확인해야 합니다.

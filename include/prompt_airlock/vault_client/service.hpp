@@ -29,6 +29,16 @@
 
 namespace prompt_airlock::vault_client {
 
+namespace detail {
+// Vault 유휴 연결 종료 300초보다 먼저 풀에서 연결을 교체한다.
+inline constexpr auto idle_connection_max_age = std::chrono::minutes(4);
+
+[[nodiscard]] inline bool idle_connection_expired(std::chrono::steady_clock::time_point returned_at,
+                                                  std::chrono::steady_clock::time_point now) noexcept {
+    return now - returned_at >= idle_connection_max_age;
+}
+}  // namespace detail
+
 struct ServiceOptions {
     std::filesystem::path exe;              // prompt-airlock-vault 실행 파일
     std::vector<std::string> args;          // 한도 등 추가 인자
