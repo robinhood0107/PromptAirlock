@@ -1,0 +1,55 @@
+services:
+  api:
+    image: ghcr.io/librechat-ai/librechat:v0.8.9@sha256:4a3967a47031c1fdba8302a6a341be7671101e40b617f7934ba25aac69fcea2b
+    restart: unless-stopped
+    network_mode: host
+    depends_on:
+      mongodb:
+        condition: service_healthy
+    environment:
+      ALLOW_REGISTRATION: ${ALLOW_REGISTRATION:-false}
+      CREDS_IV: ${CREDS_IV:?set CREDS_IV in .env}
+      CREDS_KEY: ${CREDS_KEY:?set CREDS_KEY in .env}
+      DOMAIN_CLIENT: http://127.0.0.1:3080
+      DOMAIN_SERVER: http://127.0.0.1:3080
+      ENDPOINTS: custom
+      HOST: 127.0.0.1
+      JWT_REFRESH_SECRET: ${JWT_REFRESH_SECRET:?set JWT_REFRESH_SECRET in .env}
+      JWT_SECRET: ${JWT_SECRET:?set JWT_SECRET in .env}
+      MONGO_URI: mongodb://${MONGO_APP_USER:?set MONGO_APP_USER in .env}:${MONGO_APP_PASSWORD:?set MONGO_APP_PASSWORD in .env}@127.0.0.1:27017/LibreChat?authSource=LibreChat
+      NODE_ENV: production
+      NODE_EXTRA_CA_CERTS: /run/librechat/gateway-ca.pem
+      PORT: "3080"
+      PROMPT_AIRLOCK_TOKEN: ${PROMPT_AIRLOCK_TOKEN:?set PROMPT_AIRLOCK_TOKEN in .env}
+      RUM_ENABLED: "false"
+      SCARF_ANALYTICS: "false"
+    volumes:
+      - ./gateway-ca.pem:/run/librechat/gateway-ca.pem:ro
+      - ./librechat.yaml:/app/librechat.yaml:ro
+      - librechat_uploads:/app/uploads
+  mongodb:
+    image: mongo:8.0.20@sha256:098862b1339f031900ca66cf8fef799e616d6324fa41b9a263f2ec899552c1ef
+    restart: unless-stopped
+    network_mode: host
+    command: ["mongod", "--bind_ip", "127.0.0.1", "--port", "27017", "--auth"]
+    environment:
+      LIBRECHAT_DB_PASSWORD: ${MONGO_APP_PASSWORD:?set MONGO_APP_PASSWORD in .env}
+      LIBRECHAT_DB_USER: ${MONGO_APP_USER:?set MONGO_APP_USER in .env}
+      MONGO_INITDB_DATABASE: LibreChat
+      MONGO_INITDB_ROOT_PASSWORD: ${MONGO_ROOT_PASSWORD:?set MONGO_ROOT_PASSWORD in .env}
+      MONGO_INITDB_ROOT_USERNAME: ${MONGO_ROOT_USER:?set MONGO_ROOT_USER in .env}
+    healthcheck:
+      test:
+        - CMD-SHELL
+        - >-
+          mongosh --quiet --eval 'quit(db.adminCommand({ping: 1}).ok ? 0 : 1)'
+      interval: 5s
+      timeout: 5s
+      retries: 24
+      start_period: 10s
+    volumes:
+      - ./mongo-init.js:/docker-entrypoint-initdb.d/10-create-app-user.js:ro
+      - mongodb_data:/data/db
+volumes:
+  librechat_uploads:
+  mongodb_data:

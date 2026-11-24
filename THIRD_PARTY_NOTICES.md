@@ -80,3 +80,13 @@ PDFium 을 공식 소스(커밋 b75764a1def138ff0f308c637865f195774ccdc4)에서 
 
 - 문장 판별기 모델(ADR 0022, 0023)은 기본 꺼짐이고(ADR 0025) 배포 묶음에 넣지 않습니다. 설치하는 쪽이 따로 둔 파일을 설정으로 켤 때만 씁니다.
 - 판별기 학습과 평가에 쓴 데이터셋은 저장소와 배포 묶음 어디에도 넣지 않습니다.
+## 운영자가 별도로 가져오는 컨테이너
+
+이 항목들은 Prompt Airlock 제품 배포 묶음에 들어가지 않습니다. 선택형 compose 경로를 쓰는 운영자가 공식 이미지와 아래 manifest digest를 직접 확인해 가져옵니다. 이미지는 수정·복제하지 않습니다.
+
+| 이미지 | 판 | manifest digest | 라이선스 | 배포 경계 |
+|---|---|---|---|---|
+| LibreChat | v0.8.9 (upstream prerelease) | `sha256:4a3967a47031c1fdba8302a6a341be7671101e40b617f7934ba25aac69fcea2b` | MIT | 별도 pull; 제품 묶음에 포함하지 않음 |
+| MongoDB Community Server | 8.0.20 | `sha256:098862b1339f031900ca66cf8fef799e616d6324fa41b9a263f2ec899552c1ef` | SSPL-1.0 | 별도 pull; 제품 묶음에 포함하지 않음 |
+
+재현 구성과 운영 경계는 [LibreChat 배포 안내](deploy/librechat/README.md)에 있습니다. 위 이미지의 소스 주소는 승인된 Compose image 필드와 공식 manifest 기록에서 확인합니다.
