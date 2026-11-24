@@ -28,6 +28,11 @@ core::RestoreError to_restore_error(ErrorCode c) noexcept {
 
 // Vault 프로세스 하나와 그 연결 풀.
 struct VaultScope::Generation {
+    struct IdleConnection {
+        VaultConnection connection;
+        std::chrono::steady_clock::time_point returned_at;
+    };
+
     Generation(VaultProcess p, const ServiceOptions& o)
         : process(std::move(p)), options(o.connection), pool_size(std::max<std::size_t>(o.pool_size, 1)),
           lease_timeout(o.lease_timeout) {
@@ -63,17 +68,44 @@ struct VaultScope::Generation {
     }
 
     Result<VaultConnection> lease() {
+        const auto deadline = std::chrono::steady_clock::now() + lease_timeout;
+        std::optional<IdleConnection> expired;
         std::unique_lock lock(mutex);
-        if (!available.wait_for(lock, lease_timeout, [&] { return is_dead() || !idle.empty() || open < pool_size; })) {
+        if (!available.wait_until(lock, deadline, [&] { return is_dead() || !idle.empty() || open < pool_size; })) {
             return fail(ErrorCode::PoolExhausted);
         }
         if (is_dead()) {
             return fail(ErrorCode::Disconnected);
         }
         if (!idle.empty()) {
-            auto conn = std::move(idle.back());
+            auto candidate = std::move(idle.back());
             idle.pop_back();
+            if (!detail::idle_connection_expired(candidate.returned_at, std::chrono::steady_clock::now())) {
+                return std::move(candidate.connection);
+            }
+            expired.emplace(std::move(candidate));
+        } else {
+            ++open;
+            lock.unlock();
+            auto conn = VaultConnection::connect(process.ready().endpoint, process.ready().secret, options);
+            if (!conn) {
+                lock.lock();
+                --open;
+                lock.unlock();
+                check_exited();
+                available.notify_all();
+            }
             return conn;
+        }
+
+        lock.unlock();
+        expired.reset();
+        lock.lock();
+        --open;
+        if (is_dead()) {
+            lock.unlock();
+            available.notify_all();
+            return fail(ErrorCode::Disconnected);
         }
         ++open;
         lock.unlock();
@@ -95,7 +127,7 @@ struct VaultScope::Generation {
             if (broken) {
                 --open;
             } else {
-                idle.push_back(std::move(conn));
+                idle.push_back(IdleConnection{std::move(conn), std::chrono::steady_clock::now()});
             }
         }
         if (broken) {
@@ -128,7 +160,7 @@ struct VaultScope::Generation {
     std::mutex mutex;
     std::mutex process_mutex;  // VaultProcess 는 스레드 안전하지 않으므로 종료 확인을 한 번에 하나만
     std::condition_variable available;
-    std::vector<VaultConnection> idle;
+    std::vector<IdleConnection> idle;
     std::size_t open = 0;
     std::atomic<bool> dead{false};
 };

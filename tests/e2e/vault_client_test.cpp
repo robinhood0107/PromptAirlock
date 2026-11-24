@@ -83,6 +83,15 @@ TEST(VaultClientE2E, ScopesAreIsolated) {
     EXPECT_EQ(second->last_error(), pv::ErrorCode::TokenNotFound);
 }
 
+TEST(VaultClientE2E, IdleConnectionAgeBoundaryUsesSteadyClock) {
+    using Clock = std::chrono::steady_clock;
+    const auto returned_at = Clock::time_point{};
+    EXPECT_FALSE(pv::detail::idle_connection_expired(
+        returned_at, returned_at + pv::detail::idle_connection_max_age - 1ms));
+    EXPECT_TRUE(pv::detail::idle_connection_expired(
+        returned_at, returned_at + pv::detail::idle_connection_max_age));
+}
+
 TEST(VaultClientE2E, BlockTypesAreNeverSentToVault) {
     pv::VaultService service(options());
     auto scope = service.open_scope();
