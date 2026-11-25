@@ -117,9 +117,10 @@ void find_secrets(std::u32string_view text, std::vector<Hit>& out);
 // (Phase 7-3). 꼬리 목록은 organization.hpp.
 void find_organizations(const DetectionView& view, std::u32string_view text, std::vector<Hit>& out);
 
-// 기관 번호(ADR 0027): labels 표지어 뒤 번호와 formats 형식 마스크. 둘 다 INSTITUTION_ID.
+// 기관 번호(ADR 0027): 표지어, 설정 마스크와 선택 업종의 고정 형식을 INSTITUTION_ID 로 낸다.
 void find_institution_ids(const DetectionView& view, std::u32string_view text, const TermMatcher& labels,
-                          std::span<const IdFormat> formats, std::vector<Hit>& out);
+                          std::span<const IdFormat> formats, std::span<const Industry> industries,
+                          std::vector<Hit>& out);
 
 // 기밀 문장(ADR 0027): markers 와 subjects 가 같은 창에 있으면 CONFIDENTIAL_MATTER. subjects 가 비면 아무것도 안 한다.
 // strong 표지어는 대상어가 없어도 그 자리를 CONFIDENTIAL_MARKER(확인 처리)로 낸다(결정 #224).

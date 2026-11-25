@@ -19,7 +19,7 @@ enum class Industry : std::uint8_t {
     Bank,
     Card,
     Insurance,
-    Defense,  // 아래는 이름만 받고 표지어는 아직 없다(Phase 11 5절)
+    Defense,  // 명시적 군번 표지 뒤에서만 번호를 찾는다.
     Legal,
     School,
     Telecom,

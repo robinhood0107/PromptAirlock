@@ -105,11 +105,13 @@ namespace {
 }  // namespace
 
 Detectors::Detectors(TermMatcher internal_terms, TermMatcher institution_labels, std::vector<IdFormat> id_formats,
+                     std::vector<Industry> industries,
                      TermMatcher confidential_markers, TermMatcher confidential_subjects,
                      std::shared_ptr<const NerScanner> ner)
     : internal_terms_(std::move(internal_terms)),
       institution_labels_(std::move(institution_labels)),
       id_formats_(std::move(id_formats)),
+      industries_(std::move(industries)),
       confidential_markers_(std::move(confidential_markers)),
       confidential_subjects_(std::move(confidential_subjects)),
       ner_(std::move(ner)),
@@ -141,8 +143,17 @@ std::expected<Detectors, core::InputError> Detectors::make(std::span<const std::
     if (!labels || !markers || !subjects) {
         return std::unexpected(!labels ? labels.error() : !markers ? markers.error() : subjects.error());
     }
+    auto id_formats = policy.id_formats;
+    if (std::ranges::find(policy.industries, Industry::Research) != policy.industries.end()) {
+        const auto research_format = IdFormat::parse("RS-####-########");
+        if (!research_format) {
+            return std::unexpected(core::InputError::ValueOutOfRange);
+        }
+        id_formats.push_back(*research_format);
+    }
     const std::vector<std::u32string_view> term_views(terms->begin(), terms->end());
-    return Detectors(TermMatcher::make(term_views), std::move(*labels), policy.id_formats, std::move(*markers),
+    return Detectors(TermMatcher::make(term_views), std::move(*labels), std::move(id_formats), policy.industries,
+                     std::move(*markers),
                      std::move(*subjects), std::move(ner));
 }
 
@@ -203,7 +214,7 @@ std::expected<std::vector<core::EntitySpan>, core::DetectError> Detectors::scan(
         hits.push_back({hit.first_unit, hit.last_unit, core::EntityType::InternalTerm, core::DetectorKind::InternalTerm});
     }
     rules::find_organizations(*view, chars, hits);
-    rules::find_institution_ids(*view, chars, institution_labels_, id_formats_, hits);
+    rules::find_institution_ids(*view, chars, institution_labels_, id_formats_, industries_, hits);
     rules::find_confidential(*view, chars, confidential_markers_, confidential_subjects_, strong_markers_, hits);
     if (ner_) {
         const auto names = kind == core::DocumentKind::ExtractedFiles

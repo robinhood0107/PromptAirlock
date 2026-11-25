@@ -18,7 +18,7 @@
 
 | 항목 | 내용 | 상한 |
 |---|---|---|
-| `industries` | 업종 이름. `public-admin`, `public-enterprise`, `hospital`, `human-resources`, `bank`, `card`, `insurance` 은 표지어가 있고, `defense`, `legal`, `school`, `telecom`, `research`, `police` 는 이름만 받는다 | 13개, 중복 거부 |
+| `industries` | 업종 이름. 기존 7개 업종의 표지어는 그대로 두고, 11.6-2에서 `legal` 사건부호·`telecom` IMEI·`research` RS 과제번호·`defense` 명시 `군번` 표지 번호 규칙만 더한다. `school`·`police`의 고정 번호는 지원하지 않는다 | 13개, 중복 거부 |
 | `id_labels` | 기관이 더하는 표지어 | 256개, 각 32자 |
 | `id_formats` | 형식 마스크 | 16개, 각 40자 |
 | `confidential_markers` | 기관이 더하는 기밀 표지어 | 256개, 각 32자 |
@@ -78,7 +78,7 @@
 - 탐지 시간은 마스크 상한으로 묶인다. 표지어는 기존 단어 일치기(Aho-Corasick)를 써서 글 길이에 비례한다.
 - 기밀 문장은 사전에 있는 대상어로만 잡는다. 대상을 바꿔 말하면 못 잡는다(#218 의 바꿔 말한 문장 0/42). 판별기는 미채택이다(ADR 0025).
 - 공개 공공 문서 160개(#221)에서 기밀 문장으로 막힌 문서는 2개(1.2%)였고 둘 다 "비공개" 가 분류 표기·발언으로 쓰인 오차단이었다. 기관 번호 281개는 모두 실제 신청·접수번호였다.
-- 업종 표지어는 공공·금융만 있다. 다른 업종을 골라도 표지어는 켜지지 않으니, 그 업종 기관은 `id_labels` 와 `id_formats` 로 채워야 한다.
+- 업종별 고정 번호 판정은 선택된 `legal`, `telecom`, `research`의 공식 형식과 `defense`의 명시 `군번` 표지 뒤 기존 값 경계에만 있다. 그 밖의 기관 번호는 업종 선택만으로 탐지하지 않으며 기관 `id_labels` 또는 `id_formats`가 필요하다.
 
 ## 변경 조건
 
@@ -86,3 +86,18 @@
 
 - 공문서 측정(Phase 11-3)에서 기밀 문장 오차단이나 업종 표지어 오가명이 높으면 표지어를 줄이거나 구분 규칙을 좁힌다.
 - 기관이 종류별 처리 변경을 요구하면 ADR 0015 와 함께 다시 정한다.
+
+## 갱신: 확인된 업종 번호 규칙 분리(2026-11-25, #292·#293)
+
+- 업종별 번호 규칙은 선택된 업종에서만 켠다. 설정의 표지어 뒤 번호와 형식 마스크 한도는 그대로 둔다.
+- `legal`은 4자리 연도 + 사법부 사건부호 15개 + 1자리 이상의 진행번호만 `INSTITUTION_ID`로 가명화한다. 같은 부호를 `police`에 적용하지 않는다.
+- `telecom`은 15자리 IMEI의 Luhn 검증을 한다. 기존 `CardNumber`와 겹치면 ADR 0015의 차단 우선순위를 유지한다. 카드 규칙은 0으로 시작하는 번호를 제외하므로, 시험용 선두 0 Luhn 값은 `InstitutionId`로만 가명화된다. 이는 탐지 경계 시험이며 이 값이 공식 IMEI로 할당된다는 근거는 아니다.
+- `research`는 공식 예시로 확인된 `RS-####-########`만 추가한다.
+- `defense`는 명시적인 `군번` 표지 뒤 기존 4~30자 번호 경계만 사용한다. 단독 군번 형식은 공식 공통 규격이 확인되지 않아 추정하지 않는다(#288).
+
+| 형식·표지 | 공식 출처와 위치 | 확인일·SHA-256 | 시험 |
+|---|---|---|---|
+| 법원 사건부호 | [법원재판사무 처리규칙](https://www.law.go.kr/LSW/lsLawLinkInfo.do?chrClsCd=010202&lsJoLnkSeq=900105597) 대법원규칙 제3279호(2026-10-12 시행) 제19조 제2항; [사건별 부호문자 예규](https://www.law.go.kr/admRulLsInfoP.do?admRulSeq=2200000102523) 제1812호 제2조; [사법부 사건검색 부호표](https://scourt.go.kr/portal/information/event/guide/index14.html) | 2026-11-25; 규칙 HTML `8edf77999d80dfdf4ab13bc5ea83a60b9f60ecb079ab7a95a500337148f01394`, 예규 HTML `2c60d6757f1ade7eb9719365b9858ef292ec345dc7dca46d532039cfe5d40700`, 부호표 HTML `4d72476c01ce52888a48bdc2cfeb118e9cd8f0bf4dd406e19486f9626933ec6f` | `DetectInstitution.OfficialIndustryFormats` |
+| IMEI | [ETSI TS 123 003 V19.5.0](https://www.etsi.org/deliver/etsi_ts/123000_123099/123003/19.05.00_60/ts_123003v190500p.pdf) §6.2.1, Annex B 인쇄 p.154 | 2026-11-25; PDF `cd5e44434b1ad9e79e3403e16c719202667e78bd5b2eb08ac949d6d7a7e43753` | `DetectInstitution.OfficialIndustryFormats` |
+| 연구과제번호 | [과기정통부고시 제2026-47호](https://www.msit.go.kr/bbs/view.do?bbsSeqNo=83&mId=108&mPid=103&nttSeqNo=3186414&sCode=user) 별표 2(2-4-8); [공식 사업단 공고 제2025-01호](https://kddf.org/ko/board/business_notice/download/?bc_no=2498&file=1736919459_e83f9647af35f55e0574.pdf) p.46의 `RS` 예시 | 2026-11-25; HWPX `2537789caf602d253fbad5fbcfae80ec999830e145fd24b64e1e973cfe5f30ba`, 보조 PDF `e4f0b9d85eda78455c06cc9b89a2540ef7578403dd08e7e7a99ff75f70fe5df8` | `DetectInstitution.OfficialIndustryFormats` |
+| 군번 표지 | [병무청 군번 조회 안내](https://www.mma.go.kr/minwon/contents.do?mc=mma0003365)(조회 경로만 확인, 고정 형식 근거 아님) | 2026-11-25; HTML `0dc66263a8798afed648e09f9d46731ee9e2352840ce7775c02ec061f01c108d` | `DetectInstitution.IndustryOffMeansNoLabels` |

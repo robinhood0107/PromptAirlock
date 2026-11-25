@@ -1,5 +1,5 @@
 // 업종별 기관 번호 표지어(ADR 0027). 이 말 뒤에 구분과 번호가 오면 번호를 기관 번호(가명화)로 본다.
-// 원천: 업무에서 쓰는 번호 이름을 직접 모은 사전(결정 #210 의 공공·금융 우선 업종). 확인일 2026-11-02.
+// 원천: 기존 공공·금융 표지는 결정 #210, 2026-11-02. 군번 표지는 조회 안내에서 확인했다(2026-11-25).
 // 규칙마다 출처와 시험은 Phase 11 규칙 원장에 적는다. 계좌·카드·주민등록·사업자등록 번호는 다른 종류가 잡으므로 넣지 않는다.
 // 바꾸는 절차: 단어를 더하고 tests/unit/detect_institution_test.cpp 를 돌린 뒤 공문서 측정(Phase 11-3)으로 오차단을 다시 잰다.
 #pragma once
@@ -35,8 +35,9 @@ inline constexpr auto card_labels = std::to_array<std::u32string_view>({
 inline constexpr auto insurance_labels = std::to_array<std::u32string_view>({
     U"증권번호", U"보험증권번호", U"계약번호", U"청구번호", U"사고접수번호", U"사고번호", U"접수번호",
 });
+inline constexpr auto defense_labels = std::to_array<std::u32string_view>({U"군번"});
 
-// 업종의 표지어. 아직 표지어가 없는 업종은 빈 목록이다.
+// 업종을 고를 때만 해당 번호 표지어를 켠다.
 [[nodiscard]] constexpr std::span<const std::u32string_view> institution_labels(Industry industry) noexcept {
     switch (industry) {
         case Industry::PublicAdmin: return public_admin_labels;
@@ -46,7 +47,7 @@ inline constexpr auto insurance_labels = std::to_array<std::u32string_view>({
         case Industry::Bank: return bank_labels;
         case Industry::Card: return card_labels;
         case Industry::Insurance: return insurance_labels;
-        case Industry::Defense:
+        case Industry::Defense: return defense_labels;
         case Industry::Legal:
         case Industry::School:
         case Industry::Telecom:
