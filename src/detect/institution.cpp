@@ -3,6 +3,7 @@
 
 #include <algorithm>
 #include <array>
+#include <span>
 #include <utility>
 
 #include "rules.hpp"
@@ -35,6 +36,61 @@ constexpr std::array<std::pair<Industry, std::string_view>, industry_count> indu
 constexpr std::size_t min_id_value = 4;
 constexpr std::size_t max_id_value = 30;
 constexpr std::size_t min_id_digits = 3;
+constexpr auto legal_case_codes = std::to_array<std::u32string_view>({
+    U"준재가단", U"준재가합", U"준재가소", U"재가단", U"재가합", U"재가소", U"가단", U"가합", U"가소",
+    U"재고합", U"재고단", U"고합", U"고단", U"재고정", U"고정",
+});
+
+[[nodiscard]] constexpr bool has_industry(std::span<const Industry> industries, Industry selected) noexcept {
+    return std::ranges::find(industries, selected) != industries.end();
+}
+
+[[nodiscard]] bool is_imei(std::u32string_view text, std::size_t at) noexcept {
+    if (at + 15 > text.size()) {
+        return false;
+    }
+    int sum = 0;
+    for (std::size_t i = 0; i < 15; ++i) {
+        if (!is_ascii_digit(text[at + i])) {
+            return false;
+        }
+        int digit = static_cast<int>(text[at + i] - U'0');
+        if (i % 2 == 1) {
+            digit *= 2;
+            if (digit > 9) {
+                digit -= 9;
+            }
+        }
+        sum += digit;
+    }
+    return sum % 10 == 0;
+}
+
+void find_legal_case_ids(std::u32string_view text, std::vector<rules::Hit>& out) {
+    for (std::size_t at = 0; at + 4 <= text.size(); ++at) {
+        if ((at > 0 && is_id_neighbor(text[at - 1])) ||
+            !std::ranges::all_of(text.substr(at, 4), is_ascii_digit)) {
+            continue;
+        }
+        const auto code_at = at + 4;
+        const auto code = std::ranges::find_if(legal_case_codes, [&](std::u32string_view candidate) {
+            return text.substr(code_at, candidate.size()) == candidate;
+        });
+        if (code == legal_case_codes.end()) {
+            continue;
+        }
+        std::size_t end = code_at + code->size();
+        const auto progress_first = end;
+        while (end < text.size() && is_ascii_digit(text[end])) {
+            ++end;
+        }
+        if (end == progress_first || (end < text.size() && is_id_neighbor(text[end]))) {
+            continue;
+        }
+        out.push_back({static_cast<std::uint32_t>(at), static_cast<std::uint32_t>(end - 1),
+                       core::EntityType::InstitutionId, core::DetectorKind::Pattern});
+    }
+}
 
 // 표지어 끝(label_end 는 표지어 다음 위치) 뒤의 번호. 구분은 ':' '=' '#' '(' 또는 바로 붙은 은/는/이/가 또는 공백이다.
 // 번호는 영문·숫자·'-'·'/' 로 4~30자, 숫자 3개 이상, 영문이나 숫자로 시작한다. 더 길면 번호가 아닌 것으로 본다.
@@ -147,7 +203,8 @@ bool IdFormat::matches_at(std::u32string_view text, std::size_t at) const noexce
 namespace rules {
 
 void find_institution_ids(const DetectionView& view, std::u32string_view text, const TermMatcher& labels,
-                          std::span<const IdFormat> formats, std::vector<Hit>& out) {
+                          std::span<const IdFormat> formats, std::span<const Industry> industries,
+                          std::vector<Hit>& out) {
     for (const auto& hit : labels.find(view)) {
         // 표지어 앞이 한글이면 더 긴 말의 일부다(검사번호 안의 사번).
         if (hit.first_unit > 0 && is_hangul_syllable(text[hit.first_unit - 1])) {
@@ -168,6 +225,20 @@ void find_institution_ids(const DetectionView& view, std::u32string_view text, c
             out.push_back({static_cast<std::uint32_t>(at), static_cast<std::uint32_t>(end - 1),
                            core::EntityType::InstitutionId, core::DetectorKind::Pattern});
         }
+    }
+    if (has_industry(industries, Industry::Telecom)) {
+        for (std::size_t at = 0; at + 15 <= text.size(); ++at) {
+            const auto end = at + 15;
+            if ((at > 0 && is_id_neighbor(text[at - 1])) || (end < text.size() && is_id_neighbor(text[end])) ||
+                !is_imei(text, at)) {
+                continue;
+            }
+            out.push_back({static_cast<std::uint32_t>(at), static_cast<std::uint32_t>(end - 1),
+                           core::EntityType::InstitutionId, core::DetectorKind::Checksum});
+        }
+    }
+    if (has_industry(industries, Industry::Legal)) {
+        find_legal_case_ids(text, out);
     }
 }
 

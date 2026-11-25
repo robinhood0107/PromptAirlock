@@ -85,9 +85,57 @@ TEST(DetectInstitution, IndustryOffMeansNoLabels) {
     const auto bank = make({pd::Industry::Bank});
     EXPECT_TRUE(ids(bank, "차트번호: 20231234").empty());
     EXPECT_EQ(ids(bank, "여신번호 LN-2024-00123"), std::vector<std::string>{"LN-2024-00123"});
-    // 아직 표지어가 없는 업종은 받기만 하고 아무것도 켜지 않는다.
     const auto defense = make({pd::Industry::Defense});
-    EXPECT_TRUE(ids(defense, "군번 12-34567890").empty());
+    EXPECT_EQ(ids(defense, "군번 12-34567890"), std::vector<std::string>{"12-34567890"});
+    EXPECT_EQ(ids(defense, "군번 12345678"), std::vector<std::string>{"12345678"});
+    EXPECT_TRUE(ids(none, "군번 12345678").empty());
+    EXPECT_TRUE(ids(defense, "일반 12345678").empty());
+    EXPECT_TRUE(ids(defense, "12345678").empty());
+}
+
+TEST(DetectInstitution, OfficialIndustryFormats) {
+    const auto research = make({pd::Industry::Research});
+    EXPECT_EQ(ids(research, "연구 과제 번호 RS-2026-12345678"), std::vector<std::string>{"RS-2026-12345678"});
+    EXPECT_EQ(ids(research, "연구 과제 번호 rs-2026-12345678"), std::vector<std::string>{"rs-2026-12345678"});
+    EXPECT_TRUE(ids(research, "XY-2026-12345678").empty());
+    EXPECT_TRUE(ids(research, "XRS-2026-12345678").empty());
+    EXPECT_TRUE(ids(research, "RS-2026-123456789").empty());
+    EXPECT_TRUE(ids(make({}), "RS-2026-12345678").empty());
+
+    const auto legal = make({pd::Industry::Legal});
+    for (const std::string_view code : {"가단", "가합", "가소", "재가단", "재가합", "재가소", "준재가단",
+                                        "준재가합", "준재가소", "고합", "고단", "재고합", "재고단", "고정", "재고정"}) {
+        const auto value = std::string("2024") + std::string(code) + "123";
+        EXPECT_EQ(ids(legal, value), std::vector<std::string>{value}) << code;
+    }
+    EXPECT_TRUE(ids(legal, "202가단123").empty());
+    EXPECT_TRUE(ids(legal, "2024가망123").empty());
+    EXPECT_TRUE(ids(legal, "x2024가단123").empty());
+    EXPECT_TRUE(ids(legal, "2024가단123X").empty());
+    EXPECT_TRUE(ids(make({pd::Industry::Police}), "2024가단123").empty());
+
+    const auto telecom = make({pd::Industry::Telecom});
+    constexpr std::string_view imei = "123456789012347";
+    EXPECT_EQ(ids(telecom, imei), std::vector<std::string>{std::string(imei)});
+    const auto imei_entities = telecom.detect_segment(imei, pc::SegmentIndex{0});
+    ASSERT_TRUE(imei_entities);
+    EXPECT_TRUE(std::ranges::any_of(*imei_entities, [](const auto& entity) {
+        return entity.type() == pc::EntityType::CardNumber;
+    }));
+    constexpr std::string_view leading_zero_imei = "012345678901237";
+    EXPECT_EQ(ids(telecom, leading_zero_imei), std::vector<std::string>{std::string(leading_zero_imei)});
+    const auto leading_zero_entities = telecom.detect_segment(leading_zero_imei, pc::SegmentIndex{0});
+    ASSERT_TRUE(leading_zero_entities);
+    EXPECT_TRUE(std::ranges::any_of(*leading_zero_entities, [](const auto& entity) {
+        return entity.type() == pc::EntityType::InstitutionId;
+    }));
+    EXPECT_FALSE(std::ranges::any_of(*leading_zero_entities, [](const auto& entity) {
+        return entity.type() == pc::EntityType::CardNumber;
+    }));
+    EXPECT_TRUE(ids(telecom, "123456789012346").empty());
+    EXPECT_TRUE(ids(telecom, "X123456789012347").empty());
+    EXPECT_TRUE(ids(telecom, "123456789012347X").empty());
+    EXPECT_TRUE(ids(make({}), imei).empty());
 }
 
 TEST(DetectInstitution, InstitutionLabels) {
