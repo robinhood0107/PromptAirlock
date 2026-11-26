@@ -262,4 +262,103 @@ TEST_F(AuditLogTest, RecentReadKeepsOldRecordsOutOfItsFixedWindow) {
     EXPECT_EQ(recent->records[0]["n"], 2);
 }
 
+TEST_F(AuditLogTest, StatsCountsOnlyFinalRequestsAndLeavesFilesUnchanged) {
+    auto log = audit::AuditLog::open(dir_, days(365));
+    ASSERT_TRUE(log);
+    const auto now = audit::Clock::now();
+    ASSERT_TRUE((*log)->append("start", "info", {}, now));
+    ASSERT_TRUE((*log)->append("request", "info", {{"result", "pass"}, {"status", 200U}}, now));
+    ASSERT_TRUE((*log)->append("egress", "info", {{"sent", "SYNTHETIC_EGRESS_BODY"}}, now));
+    ASSERT_TRUE((*log)->append("request", "warn", {{"result", "reject"}, {"reason", "grade_sensitive"}}, now));
+    ASSERT_TRUE((*log)->append("request", "warn", {{"result", "reject"}, {"reason", "entity_blocked"}, {"status", 400U}}, now));
+    ASSERT_TRUE((*log)->append("confirmation", "info", {{"result", "checked"}}, now));
+    ASSERT_TRUE((*log)->append("request", "warn", {{"result", "reject"}, {"reason", "confirmation_required"}, {"status", 409U}}, now));
+    ASSERT_TRUE((*log)->append("egress_answer", "info", {{"answer", "SYNTHETIC_RESPONSE"}}, now));
+    ASSERT_TRUE((*log)->append("request", "warn", {{"result", "reject"}, {"reason", "provider_error"}, {"status", 502U}}, now));
+    ASSERT_TRUE((*log)->append("preview", "info", {{"result", "pass"}, {"status", 200U}}, now));
+    log->reset();
+
+    const auto path = dir_ / name_of(now);
+    const auto before = lines(name_of(now));
+    const auto modified_before = fs::last_write_time(path);
+    const auto stats = audit::AuditLog::stats_recent_readonly(dir_, now);
+    ASSERT_TRUE(stats.has_value()) << audit::audit_error_name(stats.error().error);
+    EXPECT_EQ(stats->state, audit::StatsState::Ready);
+    EXPECT_TRUE(stats->complete);
+    EXPECT_EQ(stats->records, 10U);
+    EXPECT_EQ(stats->requests, 5U);
+    EXPECT_EQ(stats->normal, 1U);
+    EXPECT_EQ(stats->blocked, 2U);
+    EXPECT_EQ(stats->confirmation, 1U);
+    EXPECT_EQ(stats->failure, 1U);
+    EXPECT_EQ(lines(name_of(now)), before);
+    EXPECT_EQ(fs::last_write_time(path), modified_before);
+    EXPECT_FALSE(fs::exists(dir_ / "admin"));
+}
+
+TEST_F(AuditLogTest, StatsDistinguishesMissingAndEmptyDirectories) {
+    ASSERT_TRUE(fs::create_directory(dir_));
+    const auto missing = dir_ / "missing";
+    const auto absent = audit::AuditLog::stats_recent_readonly(missing);
+    ASSERT_TRUE(absent.has_value());
+    EXPECT_EQ(absent->state, audit::StatsState::Missing);
+    EXPECT_FALSE(fs::exists(missing));
+
+    const auto empty = dir_ / "empty";
+    ASSERT_TRUE(fs::create_directory(empty));
+    const auto no_records = audit::AuditLog::stats_recent_readonly(empty);
+    ASSERT_TRUE(no_records.has_value());
+    EXPECT_EQ(no_records->state, audit::StatsState::Empty);
+    EXPECT_EQ(no_records->records, 0U);
+    EXPECT_EQ(no_records->requests, 0U);
+    EXPECT_TRUE(fs::is_empty(empty));
+}
+
+TEST_F(AuditLogTest, StatsRejectsPartialCorruptAndMalformedRequestRecords) {
+    const auto partial_dir = dir_ / "partial";
+    auto partial_log = audit::AuditLog::open(partial_dir, days(365));
+    ASSERT_TRUE(partial_log);
+    const auto now = day(1);
+    ASSERT_TRUE((*partial_log)->append(
+        "egress", "info", {{"sent", std::string(audit::recent_query_max_line_bytes + 1, 'x')}}, day(0)));
+    ASSERT_TRUE((*partial_log)->append("request", "info", {{"result", "pass"}, {"status", 200U}}, now));
+    partial_log->reset();
+    const auto partial = audit::AuditLog::stats_recent_readonly(partial_dir, now);
+    ASSERT_TRUE(partial.has_value());
+    EXPECT_EQ(partial->state, audit::StatsState::Partial);
+    EXPECT_FALSE(partial->complete);
+    EXPECT_EQ(partial->requests, 0U);
+    EXPECT_EQ(partial->normal, 0U);
+
+    const auto corrupt_dir = dir_ / "corrupt";
+    auto corrupt_log = audit::AuditLog::open(corrupt_dir, days(365));
+    ASSERT_TRUE(corrupt_log);
+    ASSERT_TRUE((*corrupt_log)->append("request", "info", {{"result", "pass"}, {"status", 200U}}, now));
+    corrupt_log->reset();
+    const auto corrupt_path = corrupt_dir / std::format("audit-{:%F}.jsonl", floor<days>(now));
+    std::ifstream input(corrupt_path, std::ios::binary);
+    std::string line;
+    ASSERT_TRUE(std::getline(input, line));
+    const auto pass = line.find("\"result\":\"pass\"");
+    ASSERT_NE(pass, std::string::npos);
+    line.replace(pass, std::string("\"result\":\"pass\"").size(), "\"result\":\"reject\"");
+    std::ofstream output(corrupt_path, std::ios::binary | std::ios::trunc);
+    output << line << '\n';
+    output.close();
+    const auto corrupt = audit::AuditLog::stats_recent_readonly(corrupt_dir, now);
+    ASSERT_FALSE(corrupt.has_value());
+    EXPECT_EQ(corrupt.error().stage, audit::StatsStage::Verify);
+    EXPECT_EQ(corrupt.error().error, audit::AuditError::Corrupt);
+
+    const auto fields_dir = dir_ / "fields";
+    auto fields_log = audit::AuditLog::open(fields_dir, days(365));
+    ASSERT_TRUE(fields_log);
+    ASSERT_TRUE((*fields_log)->append("request", "info", {{"result", "pass"}}, now));
+    fields_log->reset();
+    const auto invalid_fields = audit::AuditLog::stats_recent_readonly(fields_dir, now);
+    ASSERT_FALSE(invalid_fields.has_value());
+    EXPECT_EQ(invalid_fields.error().stage, audit::StatsStage::Fields);
+    EXPECT_EQ(invalid_fields.error().error, audit::AuditError::Corrupt);
+}
+
 }  // namespace

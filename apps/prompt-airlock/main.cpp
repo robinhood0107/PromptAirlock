@@ -28,6 +28,7 @@
 #include <thread>
 #include <vector>
 
+#include "prompt_airlock/audit/log.hpp"
 #include "prompt_airlock/core/sha256.hpp"
 #include "prompt_airlock/detect/detectors.hpp"
 #include "prompt_airlock/gateway/auth.hpp"
@@ -45,6 +46,7 @@
 namespace {
 
 namespace asio = boost::asio;
+namespace audit = prompt_airlock::audit;
 namespace core = prompt_airlock::core;
 namespace gw = prompt_airlock::gateway;
 
@@ -201,6 +203,48 @@ int check_command(std::string_view config_arg) noexcept {
         return 0;
     } catch (...) {
         return check_failure("internal", "check_failed");
+    }
+}
+
+int stats_failure(audit::StatsStage stage, audit::AuditError error) noexcept {
+    const auto stage_name = audit::stats_stage_name(stage);
+    const auto code = audit::audit_error_name(error);
+    std::fprintf(stderr, "stats: failed stage=%.*s code=%.*s\n",
+                 static_cast<int>(stage_name.size()), stage_name.data(),
+                 static_cast<int>(code.size()), code.data());
+    return 1;
+}
+
+int stats_command(std::string_view audit_dir_arg) noexcept {
+    try {
+        const std::filesystem::path audit_dir(audit_dir_arg);
+        const auto report = audit::AuditLog::stats_recent_readonly(audit_dir);
+        if (!report) {
+            return stats_failure(report.error().stage, report.error().error);
+        }
+        if (report->state == audit::StatsState::Missing) {
+            std::puts("stats: state=missing scope=none");
+            return 0;
+        }
+        if (report->state == audit::StatsState::Empty) {
+            std::puts("stats: state=empty scope=none requests=0 normal=0 blocked=0 confirmation=0 failure=0");
+            return 0;
+        }
+        if (report->state == audit::StatsState::Partial || !report->complete) {
+            std::fputs("stats: failed state=partial scope=recent_24h_limited stage=read code=range_limited\n", stderr);
+            return 1;
+        }
+        std::printf("stats: state=ok scope=recent_24h coverage=complete requests=%llu normal=%llu "
+                    "blocked=%llu confirmation=%llu failure=%llu\n",
+                    static_cast<unsigned long long>(report->requests),
+                    static_cast<unsigned long long>(report->normal),
+                    static_cast<unsigned long long>(report->blocked),
+                    static_cast<unsigned long long>(report->confirmation),
+                    static_cast<unsigned long long>(report->failure));
+        return 0;
+    } catch (...) {
+        std::fputs("stats: failed stage=read code=internal_error\n", stderr);
+        return 1;
     }
 }
 
@@ -433,6 +477,9 @@ int main(int argc, char** argv) try {
     if (command == "check" && argc == 3) {
         return check_command(argv[2]);
     }
+    if (command == "stats" && argc == 3) {
+        return stats_command(argv[2]);
+    }
     if (command == "issue-token" && argc == 3) {
         return issue_token(argv[2]);
     }
@@ -443,6 +490,7 @@ int main(int argc, char** argv) try {
         return audit_command(argv[2], argv[3], argc == 5 ? std::atoi(argv[4]) : 20);
     }
     std::fputs("usage: prompt-airlock serve <config.json>\n       prompt-airlock check <config.json>\n"
+               "       prompt-airlock stats <audit-dir>\n"
                "       prompt-airlock issue-token <origin-name>\n"
                "       prompt-airlock protect-credential <plain-file|-> <out-file>\n"
                "       prompt-airlock audit verify|list <audit-dir> [lines]\n",

@@ -14,6 +14,12 @@ add_test(NAME prompt_airlock_check_cli_contract
     "-DPA_APP=$<TARGET_FILE:prompt-airlock>"
     "-DPA_TEST_DIR=${CMAKE_CURRENT_BINARY_DIR}/check-cli-contract"
     -P "${PROJECT_SOURCE_DIR}/tests/cmake/check_cli_command.cmake")
+add_test(NAME prompt_airlock_stats_cli_contract
+  COMMAND ${CMAKE_COMMAND}
+    "-DPA_APP=$<TARGET_FILE:prompt-airlock>"
+    "-DPA_STATS_FIXTURE=$<TARGET_FILE:audit_stats_fixture>"
+    "-DPA_TEST_DIR=${CMAKE_CURRENT_BINARY_DIR}/stats-cli-contract"
+    -P "${PROJECT_SOURCE_DIR}/tests/cmake/stats_cli_command.cmake")
 if(MSVC)
   target_compile_options(prompt-airlock PRIVATE /WX)
 else()

@@ -123,6 +123,9 @@ add_dependencies(cli_client_test cli_test_child)
 # 감사 기록(ADR 0021).
 pa_add_gtest(audit_log_test audit_log_test.cpp)
 target_link_libraries(audit_log_test PRIVATE prompt_airlock_audit)
+add_executable(audit_stats_fixture audit_stats_fixture.cpp)
+target_link_libraries(audit_stats_fixture PRIVATE prompt_airlock_audit pa_options)
+pa_copy_runtime_dlls(audit_stats_fixture)
 
 # 문서 추출(ADR 0028). 해석 시험은 시험 안에서 libzip 으로 문서를 만든다.
 find_package(libzip CONFIG REQUIRED)

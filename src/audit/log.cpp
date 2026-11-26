@@ -1,6 +1,7 @@
 #include "prompt_airlock/audit/log.hpp"
 
 #include <algorithm>
+#include <array>
 #include <format>
 #include <fstream>
 #include <limits>
@@ -180,6 +181,15 @@ std::string_view audit_error_name(AuditError error) noexcept {
     return "unknown";
 }
 
+std::string_view stats_stage_name(StatsStage stage) noexcept {
+    switch (stage) {
+        case StatsStage::Verify: return "verify";
+        case StatsStage::Read: return "read";
+        case StatsStage::Fields: return "fields";
+    }
+    return "unknown";
+}
+
 std::expected<std::unique_ptr<AuditLog>, AuditError> AuditLog::open(fs::path dir, std::chrono::days retention) {
     std::error_code ec;
     fs::create_directories(dir, ec);
@@ -187,11 +197,22 @@ std::expected<std::unique_ptr<AuditLog>, AuditError> AuditLog::open(fs::path dir
         return std::unexpected(AuditError::Io);
     }
     auto log = std::make_unique<AuditLog>(Key{}, std::move(dir), std::max(retention, minimum_retention));
-    log->last_hash_ = genesis;
-    const auto days = segment_days(log->dir_);
+    if (auto loaded = log->load_existing_state(); !loaded) {
+        return std::unexpected(loaded.error());
+    }
+    return log;
+}
+
+std::expected<void, AuditError> AuditLog::load_existing_state() {
+    day_.clear();
+    last_hash_ = genesis;
+    lines_ = 0;
+    bytes_ = 0;
+    last_line_bytes_ = 0;
+    const auto days = segment_days(dir_);
     if (!days.empty()) {
         // 마지막 세그먼트의 마지막 줄에서 이어 쓴다
-        const auto path = segment_path(log->dir_, days.back());
+        const auto path = segment_path(dir_, days.back());
         std::ifstream in(path, std::ios::binary);
         std::string text;
         std::string last;
@@ -200,12 +221,12 @@ std::expected<std::unique_ptr<AuditLog>, AuditError> AuditLog::open(fs::path dir
             if (in.eof() || text.empty()) return std::unexpected(AuditError::Corrupt);
             last = text;
             ++count;
-            log->bytes_ += text.size() + 1;
-            log->last_line_bytes_ = text.size() + 1;
+            bytes_ += text.size() + 1;
+            last_line_bytes_ = text.size() + 1;
         }
         if (in.bad()) return std::unexpected(AuditError::Io);
         std::error_code size_error;
-        if (fs::file_size(path, size_error) != log->bytes_ || size_error) {
+        if (fs::file_size(path, size_error) != bytes_ || size_error) {
             return std::unexpected(size_error ? AuditError::Io : AuditError::Truncated);
         }
         if (!last.empty()) {
@@ -213,14 +234,14 @@ std::expected<std::unique_ptr<AuditLog>, AuditError> AuditLog::open(fs::path dir
             if (!line) {
                 return std::unexpected(line.error());
             }
-            log->last_hash_ = line->hash;
+            last_hash_ = line->hash;
         }
-        if (!fs::exists(checkpoint_path(log->dir_, days.back()))) {
-            log->day_ = days.back();
-            log->lines_ = count;
+        if (!fs::exists(checkpoint_path(dir_, days.back()))) {
+            day_ = days.back();
+            lines_ = count;
         }
     }
-    return log;
+    return {};
 }
 
 std::expected<void, AuditError> AuditLog::append(std::string_view kind, std::string_view severity, json fields,
@@ -434,6 +455,171 @@ std::expected<RecentRead, AuditError> AuditLog::read_recent(Clock::time_point no
         if (timestamp >= earliest && timestamp <= latest) result.records.push_back(std::move(record));
     }
     return result;
+}
+
+std::expected<StatsReport, StatsFailure> AuditLog::stats_recent_readonly(const fs::path& dir, Clock::time_point now) {
+    std::error_code ec;
+    if (!fs::exists(dir, ec)) {
+        if (ec) return std::unexpected(StatsFailure{StatsStage::Read, AuditError::Io});
+        return StatsReport{.state = StatsState::Missing};
+    }
+    if (ec || !fs::is_directory(dir, ec) || ec) {
+        return std::unexpected(StatsFailure{StatsStage::Read, AuditError::Io});
+    }
+
+    std::set<std::string> segment_names;
+    std::set<std::string> checkpoint_names;
+    for (fs::directory_iterator it(dir, ec), end; it != end && !ec; it.increment(ec)) {
+        const auto name = it->path().filename().string();
+        if (!name.starts_with(prefix)) continue;
+        const bool segment = name.ends_with(".jsonl");
+        const bool checkpoint = name.ends_with(".checkpoint");
+        if (!segment && !checkpoint) {
+            return std::unexpected(StatsFailure{StatsStage::Verify, AuditError::Corrupt});
+        }
+        const auto suffix = segment ? std::string_view{".jsonl"} : std::string_view{".checkpoint"};
+        if (name.size() != prefix.size() + 10 + suffix.size()) {
+            return std::unexpected(StatsFailure{StatsStage::Verify, AuditError::Corrupt});
+        }
+        const std::string day = name.substr(prefix.size(), 10);
+        if (!valid_stamp(day + "T00:00:00.000Z")) {
+            return std::unexpected(StatsFailure{StatsStage::Verify, AuditError::Corrupt});
+        }
+        if (segment) {
+            std::error_code file_error;
+            if (!it->is_regular_file(file_error) || file_error) {
+                return std::unexpected(StatsFailure{StatsStage::Read, AuditError::Io});
+            }
+            if (fs::file_size(it->path(), file_error) == 0 && !file_error) {
+                return std::unexpected(StatsFailure{StatsStage::Verify, AuditError::Truncated});
+            }
+            if (file_error) return std::unexpected(StatsFailure{StatsStage::Read, AuditError::Io});
+            segment_names.insert(day);
+        } else {
+            checkpoint_names.insert(day);
+        }
+    }
+    if (ec) return std::unexpected(StatsFailure{StatsStage::Read, AuditError::Io});
+    for (const auto& day : checkpoint_names) {
+        if (!segment_names.contains(day)) {
+            return std::unexpected(StatsFailure{StatsStage::Verify, AuditError::Truncated});
+        }
+    }
+
+    const auto verified = verify(dir);
+    if (!verified) {
+        return std::unexpected(StatsFailure{StatsStage::Verify, verified.error()});
+    }
+    if (verified->segments == 0 && verified->lines == 0) {
+        return StatsReport{.state = StatsState::Empty};
+    }
+
+    AuditLog snapshot(Key{}, dir, minimum_retention);
+    if (auto loaded = snapshot.load_existing_state(); !loaded) {
+        return std::unexpected(StatsFailure{StatsStage::Read, loaded.error()});
+    }
+    const auto recent = snapshot.read_recent(now);
+    if (!recent) {
+        return std::unexpected(StatsFailure{StatsStage::Read, recent.error()});
+    }
+    if (!recent->complete) {
+        return StatsReport{.state = StatsState::Partial, .complete = false};
+    }
+    if (!snapshot.day_.empty() && snapshot.lines_ != 0) {
+        const auto active_path = segment_path(dir, snapshot.day_);
+        const auto active_size = fs::file_size(active_path, ec);
+        if (ec) return std::unexpected(StatsFailure{StatsStage::Read, AuditError::Io});
+        const bool checkpoint_added = fs::exists(checkpoint_path(dir, snapshot.day_), ec);
+        if (ec) return std::unexpected(StatsFailure{StatsStage::Read, AuditError::Io});
+        if (active_size != snapshot.bytes_ || checkpoint_added) {
+            return std::unexpected(StatsFailure{StatsStage::Read, AuditError::Truncated});
+        }
+    }
+
+    constexpr std::array known_kinds{
+        std::string_view{"start"},           std::string_view{"stop"},
+        std::string_view{"expire"},          std::string_view{"cert_expiry"},
+        std::string_view{"audit_verify"},    std::string_view{"audit_view"},
+        std::string_view{"request"},         std::string_view{"preview"},
+        std::string_view{"confirmation"},    std::string_view{"documents"},
+        std::string_view{"egress"},          std::string_view{"egress_answer"},
+        std::string_view{"auth"},            std::string_view{"credential_rotation"},
+        std::string_view{"admin_history_access"}};
+    constexpr std::array blocked_reasons{
+        std::string_view{"grade_classified"}, std::string_view{"grade_sensitive"},
+        std::string_view{"grade_unresolved"}, std::string_view{"entity_blocked"},
+        std::string_view{"encoded_target"}, std::string_view{"opaque_encoded_blob"},
+        std::string_view{"residual_found"}};
+
+    StatsReport report{.state = StatsState::Ready, .complete = true,
+                       .records = static_cast<std::uint64_t>(recent->records.size())};
+    for (const auto& record : recent->records) {
+        if (!record.is_object() || !record.contains("kind") || !record["kind"].is_string()) {
+            return std::unexpected(StatsFailure{StatsStage::Fields, AuditError::Corrupt});
+        }
+        const auto& kind = record["kind"].get_ref<const std::string&>();
+        if (std::ranges::find(known_kinds, kind) == known_kinds.end()) {
+            return std::unexpected(StatsFailure{StatsStage::Fields, AuditError::Corrupt});
+        }
+        if (kind != "request") continue;
+        if (!record.contains("result") || !record["result"].is_string()) {
+            return std::unexpected(StatsFailure{StatsStage::Fields, AuditError::Corrupt});
+        }
+        std::optional<unsigned> status;
+        if (record.contains("status")) {
+            if (record["status"].is_number_unsigned()) {
+                const auto value = record["status"].get<std::uint64_t>();
+                if (value < 100 || value > 599) {
+                    return std::unexpected(StatsFailure{StatsStage::Fields, AuditError::Corrupt});
+                }
+                status = static_cast<unsigned>(value);
+            } else if (record["status"].is_number_integer()) {
+                const auto value = record["status"].get<std::int64_t>();
+                if (value < 100 || value > 599) {
+                    return std::unexpected(StatsFailure{StatsStage::Fields, AuditError::Corrupt});
+                }
+                status = static_cast<unsigned>(value);
+            } else {
+                return std::unexpected(StatsFailure{StatsStage::Fields, AuditError::Corrupt});
+            }
+        }
+        const auto& result = record["result"].get_ref<const std::string&>();
+        std::string_view reason;
+        if (record.contains("reason")) {
+            if (!record["reason"].is_string()) {
+                return std::unexpected(StatsFailure{StatsStage::Fields, AuditError::Corrupt});
+            }
+            reason = record["reason"].get_ref<const std::string&>();
+        }
+        ++report.requests;
+        if (result == "pass") {
+            if (!status || *status != 200) {
+                return std::unexpected(StatsFailure{StatsStage::Fields, AuditError::Corrupt});
+            }
+            ++report.normal;
+            continue;
+        }
+        if (result != "reject" || (status && *status == 200)) {
+            return std::unexpected(StatsFailure{StatsStage::Fields, AuditError::Corrupt});
+        }
+        if (reason == "confirmation_required") {
+            if (!status || *status != 409) {
+                return std::unexpected(StatsFailure{StatsStage::Fields, AuditError::Corrupt});
+            }
+            ++report.confirmation;
+        } else if (std::ranges::find(blocked_reasons, reason) != blocked_reasons.end()) {
+            if (status && (*status < 400 || *status >= 500)) {
+                return std::unexpected(StatsFailure{StatsStage::Fields, AuditError::Corrupt});
+            }
+            ++report.blocked;
+        } else {
+            if (!status) {
+                return std::unexpected(StatsFailure{StatsStage::Fields, AuditError::Corrupt});
+            }
+            ++report.failure;
+        }
+    }
+    return report;
 }
 
 std::expected<void, AuditError> AuditLog::write_line(std::string_view kind, std::string_view severity, json fields,
