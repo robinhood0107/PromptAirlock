@@ -2,6 +2,7 @@
 //   prompt-airlock serve <config.json>      설정 하나로 Vault, NER pool, HTTPS 서버를 띄운다
 //   prompt-airlock issue-token <origin>      출처 token 을 발급한다(원문은 이때 한 번만 출력, 설정에는 해시만)
 //   prompt-airlock keys add|list|revoke <config.json> ...  설정 파일의 출처 키를 관리한다
+//   prompt-airlock policy suggest <폴더>         기관 대상어 후보를 로컬에서 제안한다
 //   prompt-airlock protect-credential <평문 파일|-> <출력 파일>   provider 자격 증명을 보호 저장한다(Windows DPAPI, Linux 0600).
 //                                       - 는 표준 입력. 실행 중인 게이트웨이는 다음 요청부터 새 값을 쓴다(ADR 0026)
 //   prompt-airlock audit verify|list <감사 폴더> [줄 수]       감사 기록을 로컬에서 검증·열람한다(관리 기록은 admin/ 에)
@@ -11,6 +12,8 @@
 
 #include <algorithm>
 #include <array>
+#include <chrono>
+#include <cstdint>
 #include <cstdlib>
 #include <cstdio>
 #include <exception>
@@ -19,9 +22,11 @@
 #include <fstream>
 #include <iostream>
 #include <iterator>
+#include <limits>
 #include <memory>
 #include <optional>
 #include <random>
+#include <ranges>
 #include <span>
 #include <string>
 #include <string_view>
@@ -29,11 +34,32 @@
 #include <thread>
 #include <vector>
 
+#ifdef _WIN32
+#ifndef WIN32_LEAN_AND_MEAN
+#define WIN32_LEAN_AND_MEAN
+#endif
+#ifndef NOMINMAX
+#define NOMINMAX
+#endif
+#include <windows.h>
+#else
+#include <cerrno>
+#include <fcntl.h>
+#include <sys/stat.h>
+#include <sys/types.h>
+#include <unistd.h>
+#endif
+
 #include "prompt_airlock/audit/log.hpp"
+#include "prompt_airlock/core/document.hpp"
 #include "prompt_airlock/core/sha256.hpp"
+#include "prompt_airlock/core/sensitive.hpp"
+#include "prompt_airlock/core/utf8.hpp"
 #include "prompt_airlock/detect/detectors.hpp"
+#include "prompt_airlock/extract/runner.hpp"
 #include "prompt_airlock/gateway/auth.hpp"
 #include "prompt_airlock/gateway/config.hpp"
+#include "prompt_airlock/gateway/documents.hpp"
 #include "prompt_airlock/gateway/pipeline.hpp"
 #include "prompt_airlock/gateway/request_json.hpp"
 #include "prompt_airlock/gateway/server.hpp"
@@ -49,6 +75,8 @@ namespace {
 namespace asio = boost::asio;
 namespace audit = prompt_airlock::audit;
 namespace core = prompt_airlock::core;
+namespace detect = prompt_airlock::detect;
+namespace extract = prompt_airlock::extract;
 namespace gw = prompt_airlock::gateway;
 
 // 요청을 처리하는 io 스레드 수. 탐지·Vault 호출이 동기라 동시 처리 수의 상한이기도 하다.
@@ -471,6 +499,545 @@ int keys_revoke(std::string_view config_path, std::string_view name) {
     }
 }
 
+struct SuggestFailure {
+    std::string_view stage;
+    std::string_view code;
+    std::optional<std::size_t> file_index;
+};
+
+struct SuggestFile {
+    std::filesystem::path path;
+    std::string extension;
+};
+
+struct SuggestDirectoryAnchor {
+#ifdef _WIN32
+    HANDLE handle = INVALID_HANDLE_VALUE;
+    ~SuggestDirectoryAnchor() {
+        if (handle != INVALID_HANDLE_VALUE) (void)CloseHandle(handle);
+    }
+#else
+    int descriptor = -1;
+    ~SuggestDirectoryAnchor() {
+        if (descriptor >= 0) (void)::close(descriptor);
+    }
+#endif
+};
+
+struct SuggestFolder {
+    std::unique_ptr<SuggestDirectoryAnchor> anchor;
+    std::vector<SuggestFile> files;
+    std::size_t directories_skipped = 0;
+    std::size_t other_entries_skipped = 0;
+    std::size_t bytes = 0;
+};
+
+struct SuggestCounters {
+    std::size_t extracted = 0;
+    std::size_t unsupported = 0;
+    std::size_t no_text = 0;
+    std::size_t duplicates = 0;
+    std::size_t too_long = 0;
+    std::size_t invalid_values = 0;
+    std::size_t sensitive = 0;
+};
+
+struct SensitiveStringsWiper {
+    std::vector<std::string>& values;
+    ~SensitiveStringsWiper() {
+        for (auto& value : values) {
+            core::secure_wipe(std::span<char>(value.data(), value.size()));
+        }
+    }
+};
+
+int policy_suggest_failure(const SuggestFailure& failure) noexcept {
+    if (failure.file_index) {
+        std::fprintf(stderr, "policy-suggest: failed stage=%.*s code=%.*s file_index=%llu\n",
+                     static_cast<int>(failure.stage.size()), failure.stage.data(),
+                     static_cast<int>(failure.code.size()), failure.code.data(),
+                     static_cast<unsigned long long>(*failure.file_index));
+    } else {
+        std::fprintf(stderr, "policy-suggest: failed stage=%.*s code=%.*s\n",
+                     static_cast<int>(failure.stage.size()), failure.stage.data(),
+                     static_cast<int>(failure.code.size()), failure.code.data());
+    }
+    return 1;
+}
+
+std::string extension_hint(const std::filesystem::path& path) {
+    std::string extension = path.extension().string();
+    if (!extension.empty() && extension.front() == '.') extension.erase(extension.begin());
+    if (extension.size() > 10) return {};
+    for (char& c : extension) {
+        const auto byte = static_cast<unsigned char>(c);
+        if (!((byte >= 'a' && byte <= 'z') || (byte >= 'A' && byte <= 'Z') || (byte >= '0' && byte <= '9'))) {
+            return {};
+        }
+        if (byte >= 'A' && byte <= 'Z') c = static_cast<char>(byte + ('a' - 'A'));
+    }
+    return extension;
+}
+
+#ifdef _WIN32
+std::optional<std::wstring> final_path_for_handle(HANDLE handle) {
+    constexpr DWORD path_limit = 32768;
+    const DWORD required = GetFinalPathNameByHandleW(handle, nullptr, 0, FILE_NAME_NORMALIZED | VOLUME_NAME_DOS);
+    if (required == 0 || required > path_limit) return std::nullopt;
+    std::wstring path(required, L'\0');
+    const DWORD length = GetFinalPathNameByHandleW(handle, path.data(), required, FILE_NAME_NORMALIZED | VOLUME_NAME_DOS);
+    if (length == 0 || length >= required) return std::nullopt;
+    path.resize(length);
+    return path;
+}
+
+bool is_in_anchored_directory(HANDLE file, HANDLE directory) {
+    const auto file_path = final_path_for_handle(file);
+    const auto directory_path = final_path_for_handle(directory);
+    if (!file_path || !directory_path) return false;
+    const auto parent = std::filesystem::path(*file_path).parent_path().native();
+    return CompareStringOrdinal(parent.data(), static_cast<int>(parent.size()), directory_path->data(),
+                               static_cast<int>(directory_path->size()), TRUE) == CSTR_EQUAL;
+}
+#endif
+
+std::expected<SuggestFolder, SuggestFailure> list_suggest_files(const std::filesystem::path& folder) {
+    constexpr std::size_t max_entries = gw::max_file_parts;
+    std::error_code ec;
+    auto folder_entry = folder;
+    while (folder_entry != folder_entry.root_path() &&
+           (folder_entry.filename().empty() || folder_entry.filename() == ".")) {
+        const auto parent = folder_entry.parent_path();
+        if (parent.empty() || parent == folder_entry) break;
+        folder_entry = parent;
+    }
+    auto anchor = std::make_unique<SuggestDirectoryAnchor>();
+#ifdef _WIN32
+    anchor->handle = CreateFileW(folder_entry.c_str(), FILE_READ_ATTRIBUTES,
+                                 FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE,
+                                 nullptr, OPEN_EXISTING,
+                                 FILE_FLAG_BACKUP_SEMANTICS | FILE_FLAG_OPEN_REPARSE_POINT, nullptr);
+    if (anchor->handle == INVALID_HANDLE_VALUE) {
+        return std::unexpected(SuggestFailure{"folder", "unavailable", std::nullopt});
+    }
+    BY_HANDLE_FILE_INFORMATION folder_info{};
+    if (!GetFileInformationByHandle(anchor->handle, &folder_info)) {
+        return std::unexpected(SuggestFailure{"folder", "unavailable", std::nullopt});
+    }
+    if ((folder_info.dwFileAttributes & FILE_ATTRIBUTE_REPARSE_POINT) != 0) {
+        return std::unexpected(SuggestFailure{"folder", "path_boundary", std::nullopt});
+    }
+    if ((folder_info.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) == 0 || GetFileType(anchor->handle) != FILE_TYPE_DISK) {
+        return std::unexpected(SuggestFailure{"folder", "invalid_directory", std::nullopt});
+    }
+#else
+    int folder_flags = O_RDONLY | O_CLOEXEC | O_NONBLOCK;
+#ifdef O_NOFOLLOW
+    folder_flags |= O_NOFOLLOW;
+#else
+    return std::unexpected(SuggestFailure{"folder", "nofollow_unavailable", std::nullopt});
+#endif
+#ifdef O_DIRECTORY
+    folder_flags |= O_DIRECTORY;
+#else
+    return std::unexpected(SuggestFailure{"folder", "directory_open_unavailable", std::nullopt});
+#endif
+    anchor->descriptor = ::open(folder_entry.c_str(), folder_flags);
+    if (anchor->descriptor < 0) {
+        if (errno == ELOOP) return std::unexpected(SuggestFailure{"folder", "path_boundary", std::nullopt});
+        if (errno == ENOTDIR) return std::unexpected(SuggestFailure{"folder", "invalid_directory", std::nullopt});
+        return std::unexpected(SuggestFailure{"folder", "unavailable", std::nullopt});
+    }
+    struct stat folder_info{};
+    if (::fstat(anchor->descriptor, &folder_info) != 0) {
+        return std::unexpected(SuggestFailure{"folder", "unavailable", std::nullopt});
+    }
+    if (!S_ISDIR(folder_info.st_mode)) {
+        return std::unexpected(SuggestFailure{"folder", "invalid_directory", std::nullopt});
+    }
+#endif
+    const auto root = std::filesystem::canonical(folder, ec);
+    if (ec) return std::unexpected(SuggestFailure{"folder", "unavailable", std::nullopt});
+
+    SuggestFolder result;
+    result.anchor = std::move(anchor);
+    auto current = std::filesystem::directory_iterator(root, ec);
+    if (ec) return std::unexpected(SuggestFailure{"folder", "unavailable", std::nullopt});
+    const std::filesystem::directory_iterator end;
+    std::size_t entries = 0;
+    while (current != end) {
+        if (++entries > max_entries) {
+            return std::unexpected(SuggestFailure{"limit", "entry_limit", std::nullopt});
+        }
+        const auto entry = current->path();
+        const auto status = current->symlink_status(ec);
+        if (ec) return std::unexpected(SuggestFailure{"folder", "entry_unavailable", std::nullopt});
+        if (std::filesystem::is_symlink(status)) {
+            return std::unexpected(SuggestFailure{"folder", "path_boundary", std::nullopt});
+        }
+#ifdef _WIN32
+        const DWORD attributes = GetFileAttributesW(entry.c_str());
+        if (attributes == INVALID_FILE_ATTRIBUTES) {
+            return std::unexpected(SuggestFailure{"folder", "entry_unavailable", std::nullopt});
+        }
+        if ((attributes & FILE_ATTRIBUTE_REPARSE_POINT) != 0) {
+            return std::unexpected(SuggestFailure{"folder", "path_boundary", std::nullopt});
+        }
+#endif
+        if (std::filesystem::is_directory(status)) {
+            ++result.directories_skipped;
+        } else if (!std::filesystem::is_regular_file(status)) {
+            ++result.other_entries_skipped;
+        } else {
+            if (result.files.size() >= gw::max_file_parts) {
+                return std::unexpected(SuggestFailure{"limit", "file_limit", std::nullopt});
+            }
+            const auto resolved = std::filesystem::canonical(entry, ec);
+            if (ec || resolved.parent_path() != root) {
+                return std::unexpected(SuggestFailure{"folder", "path_boundary", std::nullopt});
+            }
+            const auto size = std::filesystem::file_size(entry, ec);
+            if (ec) return std::unexpected(SuggestFailure{"folder", "entry_unavailable", std::nullopt});
+            if (size > gw::max_file_bytes || size > gw::max_file_bytes - result.bytes) {
+                return std::unexpected(SuggestFailure{"limit", "input_limit", std::nullopt});
+            }
+            result.bytes += static_cast<std::size_t>(size);
+            result.files.push_back({entry, extension_hint(entry)});
+        }
+        current.increment(ec);
+        if (ec) return std::unexpected(SuggestFailure{"folder", "enumeration_failed", std::nullopt});
+    }
+    std::ranges::sort(result.files, {}, &SuggestFile::path);
+    return result;
+}
+
+std::expected<core::SensitiveText, SuggestFailure> read_suggest_file(const SuggestFolder& folder,
+                                                                     const SuggestFile& file,
+                                                                     std::size_t limit,
+                                                                     std::size_t index) {
+#ifdef _WIN32
+    HANDLE input = CreateFileW(file.path.c_str(), GENERIC_READ, FILE_SHARE_READ, nullptr, OPEN_EXISTING,
+                               FILE_FLAG_OPEN_REPARSE_POINT | FILE_FLAG_SEQUENTIAL_SCAN, nullptr);
+    if (input == INVALID_HANDLE_VALUE) {
+        return std::unexpected(SuggestFailure{"read", "unavailable", index});
+    }
+    BY_HANDLE_FILE_INFORMATION info{};
+    LARGE_INTEGER size{};
+    if (!GetFileInformationByHandle(input, &info) || (info.dwFileAttributes & FILE_ATTRIBUTE_REPARSE_POINT) != 0 ||
+        (info.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) != 0 || GetFileType(input) != FILE_TYPE_DISK ||
+        !is_in_anchored_directory(input, folder.anchor->handle) || !GetFileSizeEx(input, &size) || size.QuadPart < 0) {
+        (void)CloseHandle(input);
+        return std::unexpected(SuggestFailure{"read", "path_boundary", index});
+    }
+    if (static_cast<unsigned long long>(size.QuadPart) > limit) {
+        (void)CloseHandle(input);
+        return std::unexpected(SuggestFailure{"limit", "input_limit", index});
+    }
+    std::string bytes(static_cast<std::size_t>(size.QuadPart), '\0');
+    std::size_t offset = 0;
+    while (offset < bytes.size()) {
+        const auto remaining = bytes.size() - offset;
+        const DWORD chunk = remaining > std::numeric_limits<DWORD>::max()
+            ? std::numeric_limits<DWORD>::max() : static_cast<DWORD>(remaining);
+        DWORD count = 0;
+        if (!ReadFile(input, bytes.data() + offset, chunk, &count, nullptr) || count == 0) {
+            (void)CloseHandle(input);
+            return std::unexpected(SuggestFailure{"read", "read_failed", index});
+        }
+        offset += count;
+    }
+    if (!CloseHandle(input)) return std::unexpected(SuggestFailure{"read", "read_failed", index});
+    return core::SensitiveText(std::move(bytes));
+#else
+    int flags = O_RDONLY | O_CLOEXEC | O_NONBLOCK;
+#ifdef O_NOFOLLOW
+    flags |= O_NOFOLLOW;
+#else
+    return std::unexpected(SuggestFailure{"read", "nofollow_unavailable", index});
+#endif
+    const auto filename = file.path.filename();
+    if (filename.empty() || filename == "." || filename == "..") {
+        return std::unexpected(SuggestFailure{"read", "path_boundary", index});
+    }
+    const int input = ::openat(folder.anchor->descriptor, filename.c_str(), flags);
+    if (input < 0) {
+        return std::unexpected(SuggestFailure{"read", errno == ELOOP ? "path_boundary" : "unavailable", index});
+    }
+    struct stat before{};
+    if (::fstat(input, &before) != 0 || !S_ISREG(before.st_mode) || before.st_size < 0) {
+        (void)::close(input);
+        return std::unexpected(SuggestFailure{"read", "path_boundary", index});
+    }
+    if (static_cast<std::uintmax_t>(before.st_size) > limit) {
+        (void)::close(input);
+        return std::unexpected(SuggestFailure{"limit", "input_limit", index});
+    }
+    std::string bytes(static_cast<std::size_t>(before.st_size), '\0');
+    std::size_t offset = 0;
+    while (offset < bytes.size()) {
+        const auto count = ::read(input, bytes.data() + offset, bytes.size() - offset);
+        if (count < 0 && errno == EINTR) continue;
+        if (count <= 0) {
+            (void)::close(input);
+            return std::unexpected(SuggestFailure{"read", "read_failed", index});
+        }
+        offset += static_cast<std::size_t>(count);
+    }
+    char extra = 0;
+    const auto extra_count = ::read(input, &extra, 1);
+    struct stat after{};
+    const bool stable = extra_count == 0 && ::fstat(input, &after) == 0 && before.st_dev == after.st_dev &&
+                        before.st_ino == after.st_ino && before.st_size == after.st_size &&
+                        before.st_mtim.tv_sec == after.st_mtim.tv_sec && before.st_mtim.tv_nsec == after.st_mtim.tv_nsec &&
+                        before.st_ctim.tv_sec == after.st_ctim.tv_sec && before.st_ctim.tv_nsec == after.st_ctim.tv_nsec;
+    (void)::close(input);
+    if (!stable) return std::unexpected(SuggestFailure{"read", "file_changed", index});
+    return core::SensitiveText(std::move(bytes));
+#endif
+}
+
+std::optional<std::string_view> labeled_policy_value(std::string_view line) noexcept {
+    const auto trim = [](std::string_view value) {
+        while (!value.empty() && (value.front() == ' ' || value.front() == '\t' || value.front() == '\r')) {
+            value.remove_prefix(1);
+        }
+        while (!value.empty() && (value.back() == ' ' || value.back() == '\t' || value.back() == '\r')) {
+            value.remove_suffix(1);
+        }
+        return value;
+    };
+    line = trim(line);
+    static constexpr std::array<std::string_view, 4> labels = {"연구과제명", "프로젝트명", "사업명", "과제명"};
+    for (const auto label : labels) {
+        if (!line.starts_with(label)) continue;
+        auto value = line.substr(label.size());
+        while (!value.empty() && (value.front() == ' ' || value.front() == '\t')) value.remove_prefix(1);
+        if (value.empty() || (value.front() != ':' && value.front() != '=' && !value.starts_with("："))) {
+            return std::nullopt;
+        }
+        value.remove_prefix(value.starts_with("：") ? std::string_view("：").size() : 1);
+        value = trim(value);
+        static constexpr std::array<std::pair<std::string_view, std::string_view>, 5> quotes = {{{"\"", "\""},
+            {"'", "'"}, {"“", "”"}, {"‘", "’"}, {"「", "」"}}};
+        for (const auto& [open, close] : quotes) {
+            if (value.starts_with(open) && value.ends_with(close) && value.size() >= open.size() + close.size()) {
+                value.remove_prefix(open.size());
+                value.remove_suffix(close.size());
+                value = trim(value);
+                break;
+            }
+        }
+        return value.empty() ? std::nullopt : std::optional(value);
+    }
+    return std::nullopt;
+}
+
+enum class CandidateCheck { Valid, InvalidUtf8, TooLong, Control, Invisible };
+
+CandidateCheck check_policy_candidate(std::string_view value) {
+    if (!core::validate_utf8(value)) return CandidateCheck::InvalidUtf8;
+    if (value.empty() || value.size() > detect::max_id_label_length * 4) return CandidateCheck::TooLong;
+    const auto decoded = core::decode_utf8(value);
+    if (!decoded) return CandidateCheck::InvalidUtf8;
+    if (decoded->empty() || decoded->size() > detect::max_id_label_length) return CandidateCheck::TooLong;
+    for (const auto& point : *decoded) {
+        if (point.value < 0x20 || (point.value >= 0x7F && point.value < 0xA0) || point.value == 0x2028 ||
+            point.value == 0x2029 || point.value == 0xFFFE || point.value == 0xFFFF) {
+            return CandidateCheck::Control;
+        }
+    }
+    const auto view = detect::make_view(value);
+    if (!view || view->units.empty()) return CandidateCheck::Invisible;
+    std::size_t covered = 0;
+    for (const auto& unit : view->units) {
+        const auto begin = unit.source.begin().value();
+        const auto end = unit.source.end().value();
+        if (begin > covered) return CandidateCheck::Invisible;
+        covered = std::max(covered, end);
+    }
+    return covered == value.size() ? CandidateCheck::Valid : CandidateCheck::Invisible;
+}
+
+void wipe_strings(std::vector<std::string>& values) noexcept {
+    for (auto& value : values) core::secure_wipe(std::span<char>(value.data(), value.size()));
+}
+
+std::optional<SuggestFailure> collect_policy_candidates(gw::ResolvedDocuments& documents,
+                                                        std::vector<std::string>& candidates,
+                                                        SuggestCounters& counters,
+                                                        std::size_t& candidate_bytes) {
+    constexpr std::size_t max_candidates = detect::max_confidential_terms;
+    constexpr std::size_t max_candidate_bytes = detect::max_confidential_terms * detect::max_id_label_length * 4;
+    for (const auto& segment : documents.document.segments()) {
+        const auto text = segment.text();
+        std::size_t start = 0;
+        while (start <= text.size()) {
+            const auto end = text.find('\n', start);
+            auto line = text.substr(start, end == std::string_view::npos ? text.size() - start : end - start);
+            if (const auto value = labeled_policy_value(line)) {
+                switch (check_policy_candidate(*value)) {
+                    case CandidateCheck::InvalidUtf8:
+                    case CandidateCheck::Control:
+                    case CandidateCheck::Invisible:
+                        ++counters.invalid_values;
+                        break;
+                    case CandidateCheck::TooLong:
+                        ++counters.too_long;
+                        break;
+                    case CandidateCheck::Valid:
+                        if (std::ranges::find(candidates, *value) != candidates.end()) {
+                            ++counters.duplicates;
+                        } else {
+                            if (candidates.size() >= max_candidates || value->size() > max_candidate_bytes - candidate_bytes) {
+                                return SuggestFailure{"limit", "candidate_limit", std::nullopt};
+                            }
+                            candidates.emplace_back(*value);
+                            candidate_bytes += value->size();
+                        }
+                        break;
+                }
+            }
+            if (end == std::string_view::npos) break;
+            start = end + 1;
+        }
+    }
+    return std::nullopt;
+}
+
+int policy_suggest(std::string_view folder_arg) noexcept {
+    constexpr std::size_t total_input_limit = gw::max_file_bytes;
+    try {
+        const auto folder = std::filesystem::path(folder_arg);
+        auto inventory = list_suggest_files(folder);
+        if (!inventory) return policy_suggest_failure(inventory.error());
+        if (inventory->files.empty()) {
+            std::printf("policy-suggest: state=empty files=0 directories_skipped=%llu\n",
+                        static_cast<unsigned long long>(inventory->directories_skipped));
+            return 0;
+        }
+
+        std::vector<std::string> candidates;
+        SensitiveStringsWiper candidates_wiper{candidates};
+        SuggestCounters counters;
+        std::size_t input_bytes = 0;
+        std::size_t extracted_bytes = 0;
+        std::size_t candidate_bytes = 0;
+        for (std::size_t index = 0; index < inventory->files.size(); ++index) {
+            const auto& file = inventory->files[index];
+            const auto remaining = total_input_limit - input_bytes;
+            auto bytes = read_suggest_file(*inventory, file, remaining, index + 1);
+            if (!bytes) return policy_suggest_failure(bytes.error());
+            input_bytes += bytes->size();
+
+            core::PromptDocumentBuilder builder;
+            std::vector<core::SensitiveText> placeholder;
+            placeholder.emplace_back(std::string("policy-suggest-placeholder"));
+            builder.add_message(core::MessageRole::User, core::ContentForm::TextParts, std::move(placeholder));
+            auto prompt = std::move(builder).build();
+            if (!prompt) return policy_suggest_failure({"request", "invalid_placeholder", index + 1});
+            std::vector<gw::FilePart> files;
+            files.push_back({0, 0, file.extension, std::move(*bytes)});
+            gw::ParsedRequest request{std::move(*prompt), {}, std::move(files)};
+            std::vector<gw::FileStatistics> statistics;
+            auto resolved = gw::resolve_documents(request, extract::default_executable(), statistics, {});
+            if (!resolved) {
+                if (const auto* extraction = std::get_if<extract::ExtractError>(&resolved.error())) {
+                    if (*extraction == extract::ExtractError::Unsupported || *extraction == extract::ExtractError::LegacyFormat ||
+                        *extraction == extract::ExtractError::UnknownFormat) {
+                        ++counters.unsupported;
+                        continue;
+                    }
+                    if (*extraction == extract::ExtractError::NoText) {
+                        ++counters.no_text;
+                        continue;
+                    }
+                    const auto code = extract::error_name(*extraction);
+                    return policy_suggest_failure({"extract", code, index + 1});
+                }
+                if (const auto* runner = std::get_if<extract::RunError>(&resolved.error())) {
+                    const auto code = extract::run_error_name(*runner);
+                    return policy_suggest_failure({"runner", code, index + 1});
+                }
+                return policy_suggest_failure({"extract", "invalid_text", index + 1});
+            }
+            const auto text_bytes = resolved->document.total_bytes();
+            if (text_bytes > core::max_document_text_bytes - extracted_bytes) {
+                return policy_suggest_failure({"limit", "text_limit", index + 1});
+            }
+            extracted_bytes += text_bytes;
+            ++counters.extracted;
+            if (auto error = collect_policy_candidates(*resolved, candidates, counters, candidate_bytes)) {
+                return policy_suggest_failure(*error);
+            }
+        }
+
+        if (!candidates.empty()) {
+            detect::InstitutionPolicy candidate_policy;
+            candidate_policy.confidential_subjects = candidates;
+            {
+                const std::span<const std::string_view> no_terms;
+                const auto validated = detect::Detectors::make(no_terms, {}, candidate_policy);
+                wipe_strings(candidate_policy.confidential_subjects);
+                if (!validated) return policy_suggest_failure({"policy", "invalid_candidate", std::nullopt});
+            }
+
+            auto ner = prompt_airlock::ner::NerPool::make(PA_NER_MODEL_DIR);
+            if (!ner) return policy_suggest_failure({"detector", "unavailable", std::nullopt});
+            const std::span<const std::string_view> no_terms;
+            const auto detectors = detect::Detectors::make(no_terms, *ner);
+            if (!detectors) return policy_suggest_failure({"detector", "unavailable", std::nullopt});
+            std::vector<std::string> safe_candidates;
+            SensitiveStringsWiper safe_candidates_wiper{safe_candidates};
+            for (auto& candidate : candidates) {
+                const auto entities = detectors->detect_segment(candidate, core::SegmentIndex{0});
+                if (!entities) return policy_suggest_failure({"detector", "scan_failed", std::nullopt});
+                const bool sensitive = std::ranges::any_of(*entities, [](const core::EntitySpan& entity) {
+                    return entity.type() != core::EntityType::Organization;
+                });
+                if (sensitive) {
+                    ++counters.sensitive;
+                    core::secure_wipe(std::span<char>(candidate.data(), candidate.size()));
+                } else {
+                    safe_candidates.push_back(std::move(candidate));
+                }
+            }
+            candidates = std::move(safe_candidates);
+            safe_candidates_wiper.values.clear();
+        }
+
+        std::ranges::sort(candidates);
+        const bool partial = counters.unsupported != 0 || counters.no_text != 0 || inventory->other_entries_skipped != 0;
+        const std::string_view state = inventory->files.empty() ? "empty"
+                                    : counters.extracted == 0 ? "no_supported_documents"
+                                    : partial ? "partial_unsupported"
+                                              : "complete";
+        std::printf("policy-suggest: state=%.*s files=%llu extracted=%llu unsupported=%llu no_text=%llu "
+                    "directories_skipped=%llu other_entries_skipped=%llu duplicates=%llu too_long=%llu "
+                     "invalid_rejected=%llu sensitive_rejected=%llu candidates=%llu review_required=true applied=false\n",
+                    static_cast<int>(state.size()), state.data(),
+                    static_cast<unsigned long long>(inventory->files.size()),
+                    static_cast<unsigned long long>(counters.extracted),
+                    static_cast<unsigned long long>(counters.unsupported),
+                    static_cast<unsigned long long>(counters.no_text),
+                    static_cast<unsigned long long>(inventory->directories_skipped),
+                    static_cast<unsigned long long>(inventory->other_entries_skipped),
+                    static_cast<unsigned long long>(counters.duplicates),
+                    static_cast<unsigned long long>(counters.too_long),
+                     static_cast<unsigned long long>(counters.invalid_values),
+                    static_cast<unsigned long long>(counters.sensitive),
+                    static_cast<unsigned long long>(candidates.size()));
+        for (const auto& candidate : candidates) {
+            std::fputs("candidate: ", stdout);
+            (void)std::fwrite(candidate.data(), 1, candidate.size(), stdout);
+            std::fputc('\n', stdout);
+        }
+        if (std::fflush(stdout) != 0) return fail("policy-suggest: output_failed");
+        return 0;
+    } catch (...) {
+        return fail("policy-suggest: failed stage=internal code=operation_failed");
+    }
+}
+
 int protect_credential_file(std::string_view in, const std::filesystem::path& out) {
     // 갱신 작업이 평문을 디스크에 남기지 않도록 - 면 표준 입력에서 읽는다.
     auto plain = in == "-" ? std::optional<std::string>(std::string(std::istreambuf_iterator<char>(std::cin), {}))
@@ -561,6 +1128,9 @@ int main(int argc, char** argv) try {
     if (command == "keys" && (argc == 5 || argc == 6) && std::string_view(argv[2]) == "add") {
         return keys_add(argv[3], argv[4], argc == 6 ? std::string_view(argv[5]) : std::string_view{});
     }
+    if (command == "policy" && argc == 4 && std::string_view(argv[2]) == "suggest") {
+        return policy_suggest(argv[3]);
+    }
     if (command == "protect-credential" && argc == 4) {
         return protect_credential_file(argv[2], argv[3]);
     }
@@ -573,6 +1143,7 @@ int main(int argc, char** argv) try {
                "       prompt-airlock keys list <config.json>\n"
                "       prompt-airlock keys add <config.json> <origin-name> [o-only|declare]\n"
                "       prompt-airlock keys revoke <config.json> <origin-name>\n"
+               "       prompt-airlock policy suggest <institution-document-dir>\n"
                "       prompt-airlock protect-credential <plain-file|-> <out-file>\n"
                "       prompt-airlock audit verify|list <audit-dir> [lines]\n",
                stderr);

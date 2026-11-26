@@ -25,6 +25,11 @@ add_test(NAME prompt_airlock_keys_cli_contract
     "-DPA_APP=$<TARGET_FILE:prompt-airlock>"
     "-DPA_TEST_DIR=${CMAKE_CURRENT_BINARY_DIR}/keys-cli-contract"
     -P "${PROJECT_SOURCE_DIR}/tests/cmake/keys_cli_command.cmake")
+add_test(NAME prompt_airlock_policy_suggest_cli_contract
+  COMMAND ${CMAKE_COMMAND}
+    "-DPA_APP=$<TARGET_FILE:prompt-airlock>"
+    "-DPA_TEST_DIR=${CMAKE_CURRENT_BINARY_DIR}/policy-suggest-cli-contract"
+    -P "${PROJECT_SOURCE_DIR}/tests/cmake/policy_suggest_cli_command.cmake")
 if(MSVC)
   target_compile_options(prompt-airlock PRIVATE /WX)
 else()
