@@ -39,6 +39,9 @@ target_include_directories(prompt_airlock_gateway PRIVATE "${CMAKE_CURRENT_BINAR
 target_link_libraries(prompt_airlock_gateway
   PUBLIC prompt_airlock_core prompt_airlock_detect prompt_airlock_audit Boost::asio OpenSSL::SSL
   PRIVATE prompt_airlock_extract_client nlohmann_json::nlohmann_json Boost::beast pa_options)
+if(WIN32)
+  target_link_libraries(prompt_airlock_gateway PRIVATE Advapi32)
+endif()
 if(MSVC)
   target_compile_options(prompt_airlock_gateway PRIVATE /WX)
 else()

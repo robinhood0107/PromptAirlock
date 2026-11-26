@@ -1,6 +1,7 @@
 // 게이트웨이 실행 파일.
 //   prompt-airlock serve <config.json>      설정 하나로 Vault, NER pool, HTTPS 서버를 띄운다
 //   prompt-airlock issue-token <origin>      출처 token 을 발급한다(원문은 이때 한 번만 출력, 설정에는 해시만)
+//   prompt-airlock keys add|list|revoke <config.json> ...  설정 파일의 출처 키를 관리한다
 //   prompt-airlock protect-credential <평문 파일|-> <출력 파일>   provider 자격 증명을 보호 저장한다(Windows DPAPI, Linux 0600).
 //                                       - 는 표준 입력. 실행 중인 게이트웨이는 다음 요청부터 새 값을 쓴다(ADR 0026)
 //   prompt-airlock audit verify|list <감사 폴더> [줄 수]       감사 기록을 로컬에서 검증·열람한다(관리 기록은 admin/ 에)
@@ -402,6 +403,74 @@ int issue_token(std::string_view origin) {
     return 0;
 }
 
+int keys_failure(gw::OriginFileError error) {
+    const auto code = gw::origin_file_error_name(error);
+    std::fprintf(stderr, "prompt-airlock: keys failed code=%.*s\n", static_cast<int>(code.size()), code.data());
+    return 1;
+}
+
+std::string_view grade_policy_name(core::GradePolicy policy) {
+    return policy == core::GradePolicy::OOnly ? "o-only" : "declare";
+}
+
+int keys_list(std::string_view config_path) {
+    try {
+        const std::filesystem::path config_file(config_path);
+        const auto origins = gw::manage_origin_file(config_file, gw::OriginFileAction::List);
+        if (!origins) return keys_failure(origins.error());
+        for (const auto& origin : *origins) {
+            const auto grade = grade_policy_name(origin.grade_policy);
+            std::printf("%s %.*s\n", origin.name.c_str(), static_cast<int>(grade.size()), grade.data());
+        }
+        return 0;
+    } catch (...) {
+        return keys_failure(gw::OriginFileError::ReadFailed);
+    }
+}
+
+int keys_add(std::string_view config_path, std::string_view name, std::string_view grade_text) {
+    core::GradePolicy policy = core::GradePolicy::OOnly;
+    if (!grade_text.empty()) {
+        if (grade_text == "o-only") {
+            policy = core::GradePolicy::OOnly;
+        } else if (grade_text == "declare") {
+            policy = core::GradePolicy::Declare;
+        } else {
+            return fail("keys failed code=invalid_grade");
+        }
+    }
+    try {
+        const std::filesystem::path config_file(config_path);
+        core::SensitiveText token(random_token());
+        const auto view = token.view();
+        const std::string hash = core::sha256_hex(std::as_bytes(std::span(view.data(), view.size())));
+        const auto added = gw::manage_origin_file(config_file, gw::OriginFileAction::Add, name, hash, policy);
+        if (!added) return keys_failure(added.error());
+        const int prefix_result = std::fputs("token: ", stdout);
+        const std::size_t token_count = std::fwrite(view.data(), 1, view.size(), stdout);
+        const int newline_result = std::fputc('\n', stdout);
+        const int flush_result = std::fflush(stdout);
+        if (prefix_result < 0 || token_count != view.size() || newline_result == EOF || flush_result != 0) {
+            return fail("keys failed code=token_output_failed_registered; use keys revoke if token output was not captured");
+        }
+        return 0;
+    } catch (...) {
+        return keys_failure(gw::OriginFileError::WriteFailed);
+    }
+}
+
+int keys_revoke(std::string_view config_path, std::string_view name) {
+    try {
+        const std::filesystem::path config_file(config_path);
+        const auto revoked = gw::manage_origin_file(config_file, gw::OriginFileAction::Revoke, name);
+        if (!revoked) return keys_failure(revoked.error());
+        std::puts("keys: revoked");
+        return 0;
+    } catch (...) {
+        return keys_failure(gw::OriginFileError::WriteFailed);
+    }
+}
+
 int protect_credential_file(std::string_view in, const std::filesystem::path& out) {
     // 갱신 작업이 평문을 디스크에 남기지 않도록 - 면 표준 입력에서 읽는다.
     auto plain = in == "-" ? std::optional<std::string>(std::string(std::istreambuf_iterator<char>(std::cin), {}))
@@ -483,6 +552,15 @@ int main(int argc, char** argv) try {
     if (command == "issue-token" && argc == 3) {
         return issue_token(argv[2]);
     }
+    if (command == "keys" && argc == 4 && std::string_view(argv[2]) == "list") {
+        return keys_list(argv[3]);
+    }
+    if (command == "keys" && argc == 5 && std::string_view(argv[2]) == "revoke") {
+        return keys_revoke(argv[3], argv[4]);
+    }
+    if (command == "keys" && (argc == 5 || argc == 6) && std::string_view(argv[2]) == "add") {
+        return keys_add(argv[3], argv[4], argc == 6 ? std::string_view(argv[5]) : std::string_view{});
+    }
     if (command == "protect-credential" && argc == 4) {
         return protect_credential_file(argv[2], argv[3]);
     }
@@ -492,6 +570,9 @@ int main(int argc, char** argv) try {
     std::fputs("usage: prompt-airlock serve <config.json>\n       prompt-airlock check <config.json>\n"
                "       prompt-airlock stats <audit-dir>\n"
                "       prompt-airlock issue-token <origin-name>\n"
+               "       prompt-airlock keys list <config.json>\n"
+               "       prompt-airlock keys add <config.json> <origin-name> [o-only|declare]\n"
+               "       prompt-airlock keys revoke <config.json> <origin-name>\n"
                "       prompt-airlock protect-credential <plain-file|-> <out-file>\n"
                "       prompt-airlock audit verify|list <audit-dir> [lines]\n",
                stderr);

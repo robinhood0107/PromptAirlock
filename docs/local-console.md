@@ -50,3 +50,19 @@ prompt-airlock stats <audit-dir>
 ~~~
 
 정상, 정책 차단, 확인 필요, 그 밖의 실패는 최종 request 이벤트만 집계합니다. 차단은 등급·대상·인코딩·잔여 검사 사유이며, 그 밖의 거절은 실패로 셉니다. 확인 승인·미리보기·egress·응답 기록은 별도 요청으로 더하지 않습니다. 정상 결과는 scope=recent_24h와 coverage=complete를 표시합니다. 폴더가 없거나 비어 있으면 상태를 구분해 알리고, 손상·잘림은 고정 stage/code와 0이 아닌 종료값으로 실패합니다. 최근 구간이 제한되면 state=partial로 표시하고 부분 숫자를 성공 결과처럼 내보내지 않습니다. 이 명령은 감사 파일을 쓰거나 provider·Vault를 호출하지 않습니다.
+
+## 출처 키 관리
+
+로컬 운영자는 명시한 Gateway 설정 파일의 출처만 추가·목록·폐기할 수 있습니다.
+
+~~~text
+prompt-airlock keys list <config.json>
+prompt-airlock keys add <config.json> <origin-name> [o-only|declare]
+prompt-airlock keys revoke <config.json> <origin-name>
+~~~
+
+추가 등급을 생략하면 `o-only`를 사용합니다. 추가가 성공하면 token 원문을 한 번 출력하고 설정에는 SHA-256만 저장합니다. 목록은 이름과 등급만 표시합니다. 마지막 출처와 키 교체·관리 조회에서 참조하는 출처는 폐기하지 않으며, 변경은 Gateway 재기동 뒤 반영됩니다. 설정 검증·권한 확인·원자 교체 실패 시 기존 파일을 유지합니다.
+
+Windows에서는 token 출력을 완료하지 못해도 설정 저장은 이미 끝난 상태입니다. 명령은 `token_output_failed_registered`를 알리며, token을 받지 못했다면 해당 출처를 `keys revoke`로 폐기한 뒤 새 출처를 추가합니다. Windows 교체 전후에 owner·group·DACL과 DACL 보호 상태가 같음을 확인하고, 맞지 않으면 기존 파일 복원을 시도합니다. 파일 시스템이나 권한이 owner·ACL 보존을 허용하지 않으면 변경을 거절합니다.
+
+`keys` 명령끼리는 같은 설정 파일을 직렬화합니다. Windows 잠금은 같은 호스트의 로그인 세션 사이에서 공유하며 잠금 객체를 만들거나 여는 데 실패하면 설정을 바꾸지 않고 고정 오류를 반환합니다. POSIX 잠금은 같은 폴더 안의 `keys` 호출을 직렬화합니다. 외부 편집기와 `keys` 명령의 동시 변경은 조정하지 않으며, 외부 편집기 변경은 저장을 마친 뒤 `keys` 명령을 실행해야 반영됩니다.
