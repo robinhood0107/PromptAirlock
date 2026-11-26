@@ -2,6 +2,17 @@
 
 내장 `/console`은 미리보기, 파일 검사, 연결 설정, 접속 상태, 승인 목록과 관리자 조회를 제공합니다. 이 문서는 미리보기 API와 기존 로컬 확인 경계의 동작을 설명합니다.
 
+## 로컬 준비와 provider TLS 확인
+
+~~~text
+prompt-airlock check <config.json>
+prompt-airlock check <config.json> --connect
+~~~
+
+기본 `check`는 설정, TLS 자료, 보호 credential 파일, 모델, 정책과 점검 전용 Vault scope를 확인합니다. listener·감사 기록을 열지 않고 provider 연결·요청·local CLI 실행은 하지 않습니다.
+
+HTTPS 설정에서만 `--connect`가 설정의 한 provider 호스트를 해석하고 첫 주소 하나에 TCP 연결을 시도한 뒤 TLS handshake로 서버 인증서를 검증합니다. 설정한 trust 파일 또는 운영체제 기본 신뢰 저장소, 기존 DNS 이름/IP SAN 검사와 SNI를 사용하며 해석·연결·인증서 확인을 묶어 5초 타이머를 적용합니다. HTTP·자격 증명·본문·LLM 요청·CLI 실행을 보내지 않습니다. `tls_verified`는 TLS handshake만 확인했다는 뜻이며 provider API 호출과 데이터 전송은 계속 `not_tested`입니다. local CLI 설정에는 연결하지 않고 실행 여부도 `not_tested`로 표시합니다. 실패는 고정 단계·코드만 반환합니다.
+
 ## 미리보기
 
 `POST /v1/preview`에 대화와 같은 본문·출처 token·등급 헤더를 보냅니다. 입력 필드와 한도도 대화 요청과 같습니다.

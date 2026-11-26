@@ -49,6 +49,25 @@ foreach(forbidden IN ITEMS "CHECK_COMMAND_SENTINEL" "${PA_TEST_DIR}" "${PA_APP}"
 endforeach()
 
 execute_process(
+  COMMAND "${PA_APP}" check "${invalid_config}" --connect
+  RESULT_VARIABLE connect_invalid_status
+  OUTPUT_VARIABLE connect_invalid_stdout
+  ERROR_VARIABLE connect_invalid_stderr)
+if(NOT connect_invalid_status EQUAL 1)
+  message(FATAL_ERROR "check_connect_invalid_exit")
+endif()
+if(NOT connect_invalid_stderr MATCHES "check: failed stage=config code=invalid")
+  message(FATAL_ERROR "check_connect_invalid_code")
+endif()
+set(connect_invalid_output "${connect_invalid_stdout}${connect_invalid_stderr}")
+foreach(forbidden IN ITEMS "CHECK_COMMAND_SENTINEL" "${PA_TEST_DIR}" "${PA_APP}")
+  string(FIND "${connect_invalid_output}" "${forbidden}" found)
+  if(NOT found EQUAL -1)
+    message(FATAL_ERROR "check_connect_invalid_output_redaction")
+  endif()
+endforeach()
+
+execute_process(
   COMMAND "${PA_APP}" check
   RESULT_VARIABLE usage_status
   OUTPUT_VARIABLE usage_stdout
@@ -57,7 +76,7 @@ if(NOT usage_status EQUAL 2)
   message(FATAL_ERROR "check_usage_exit")
 endif()
 set(usage_output "${usage_stdout}${usage_stderr}")
-string(FIND "${usage_output}" "prompt-airlock check <config.json>" usage_found)
+string(FIND "${usage_output}" "prompt-airlock check <config.json> [--connect]" usage_found)
 if(usage_found EQUAL -1)
   message(FATAL_ERROR "check_usage_line")
 endif()

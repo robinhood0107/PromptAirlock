@@ -7,8 +7,10 @@
 //                                       - 는 표준 입력. 실행 중인 게이트웨이는 다음 요청부터 새 값을 쓴다(ADR 0026)
 //   prompt-airlock audit verify|list <감사 폴더> [줄 수]       감사 기록을 로컬에서 검증·열람한다(관리 기록은 admin/ 에)
 #include <boost/asio/io_context.hpp>
+#include <boost/asio/co_spawn.hpp>
 #include <boost/asio/thread_pool.hpp>
 #include <boost/asio/signal_set.hpp>
+#include <boost/asio/use_future.hpp>
 
 #include <algorithm>
 #include <array>
@@ -19,6 +21,7 @@
 #include <exception>
 #include <expected>
 #include <filesystem>
+#include <future>
 #include <fstream>
 #include <iostream>
 #include <iterator>
@@ -154,8 +157,21 @@ int check_failure(const char* stage, const char* code) noexcept {
     return 1;
 }
 
-// 요청·감사·제공자 실행 없이 현재 설정의 로컬 준비 상태만 확인한다.
-int check_command(std::string_view config_arg) noexcept {
+// 주소나 인증서 세부 사항을 드러내지 않는 연결 오류 코드.
+const char* connection_check_code(prompt_airlock::provider::ConnectCheckError error) noexcept {
+    using prompt_airlock::provider::ConnectCheckError;
+    switch (error) {
+        case ConnectCheckError::ResolveFailed: return "resolve_failed";
+        case ConnectCheckError::ConnectFailed: return "connect_failed";
+        case ConnectCheckError::Timeout: return "timeout";
+        case ConnectCheckError::TlsSetupFailed: return "tls_setup_failed";
+        case ConnectCheckError::TlsHandshakeFailed: return "tls_handshake_failed";
+    }
+    return "connect_failed";
+}
+
+// 기본은 요청·감사·provider 실행 없이 로컬 준비만 확인한다. --connect만 TCP/TLS handshake를 추가한다.
+int check_command(std::string_view config_arg, bool connect_requested = false) noexcept {
     try {
         const std::filesystem::path config_path(config_arg);
         const auto text = read_file(config_path);
@@ -167,7 +183,7 @@ int check_command(std::string_view config_arg) noexcept {
             return check_failure("config", "invalid");
         }
 
-        const auto tls = load_tls(*config);
+        auto tls = load_tls(*config);
         if (!tls) {
             return check_failure("tls", "not_ready");
         }
@@ -212,6 +228,23 @@ int check_command(std::string_view config_arg) noexcept {
             }
         }
 
+        if (connect_requested && !local_cli) {
+            prompt_airlock::provider::Endpoint endpoint{config->provider.host, config->provider.port,
+                                                        config->provider.target, config->provider.credential_mode,
+                                                        config->provider.api_version_header_name,
+                                                        config->provider.api_version_header_value};
+            prompt_airlock::provider::ClientLimits limits{std::chrono::seconds{5}};
+            prompt_airlock::provider::HttpsClient client(tls->client, std::move(endpoint),
+                                                          config->provider.credential_file, limits);
+            asio::io_context connect_io;
+            auto future = asio::co_spawn(connect_io, client.check_connection(), asio::use_future);
+            connect_io.run();
+            const auto connected = future.get();
+            if (!connected) {
+                return check_failure("provider_connection", connection_check_code(connected.error()));
+            }
+        }
+
         std::puts("check: ok");
         std::puts("config: ready");
         std::puts("tls: ready");
@@ -224,8 +257,9 @@ int check_command(std::string_view config_arg) noexcept {
         std::puts(local_cli ? "provider: local_cli_configuration_only" : "provider: https_configuration_only");
         if (local_cli) {
             std::puts("provider_invocation: not_tested");
+            if (connect_requested) std::puts("provider_connection: not_tested");
         } else {
-            std::puts("provider_connection: not_tested");
+            std::puts(connect_requested ? "provider_connection: tls_verified" : "provider_connection: not_tested");
         }
         std::puts("provider_request: not_sent");
         std::puts("provider_transfer: not_tested");
@@ -1113,6 +1147,9 @@ int main(int argc, char** argv) try {
     if (command == "check" && argc == 3) {
         return check_command(argv[2]);
     }
+    if (command == "check" && argc == 4 && std::string_view(argv[3]) == "--connect") {
+        return check_command(argv[2], true);
+    }
     if (command == "stats" && argc == 3) {
         return stats_command(argv[2]);
     }
@@ -1137,7 +1174,7 @@ int main(int argc, char** argv) try {
     if (command == "audit" && (argc == 4 || argc == 5)) {
         return audit_command(argv[2], argv[3], argc == 5 ? std::atoi(argv[4]) : 20);
     }
-    std::fputs("usage: prompt-airlock serve <config.json>\n       prompt-airlock check <config.json>\n"
+    std::fputs("usage: prompt-airlock serve <config.json>\n       prompt-airlock check <config.json> [--connect]\n"
                "       prompt-airlock stats <audit-dir>\n"
                "       prompt-airlock issue-token <origin-name>\n"
                "       prompt-airlock keys list <config.json>\n"

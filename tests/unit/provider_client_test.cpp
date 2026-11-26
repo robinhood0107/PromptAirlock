@@ -6,6 +6,7 @@
 #include <boost/asio/steady_timer.hpp>
 #include <boost/asio/cancellation_signal.hpp>
 #include <boost/asio/bind_cancellation_slot.hpp>
+#include <boost/asio/post.hpp>
 #include <gtest/gtest.h>
 #include <nlohmann/json.hpp>
 
@@ -66,6 +67,15 @@ protected:
                                credential_file_, {std::chrono::seconds(5)});
         asio::io_context io;
         auto future = asio::co_spawn(io, client.send(std::move(body)), asio::use_future);
+        io.run();
+        return future.get();
+    }
+    std::expected<void, pv::ConnectCheckError> check_connection_with(
+        asio::ssl::context& tls, std::string host, std::uint16_t port, const std::filesystem::path& credential_file,
+        std::chrono::seconds timeout) {
+        pv::HttpsClient client(tls, {std::move(host), port, "/v1/chat/completions"}, credential_file, {timeout});
+        asio::io_context io;
+        auto future = asio::co_spawn(io, client.check_connection(), asio::use_future);
         io.run();
         return future.get();
     }
@@ -177,6 +187,90 @@ TEST_F(ProviderClient, VerifiesServerNameAgainstCertificate) {
     EXPECT_TRUE(send("localhost", "provider-secret", "{}").has_value());
     const auto wrong = send("127.0.0.2", "provider-secret", "{}");
     EXPECT_FALSE(wrong.has_value());
+}
+
+TEST_F(ProviderClient, CheckConnectionVerifiesTlsWithoutCredentialOrApplicationRequest) {
+    const auto missing_credential = std::filesystem::path(credential_file_.string() + ".check-missing");
+    std::filesystem::remove(missing_credential);
+    const auto result = check_connection_with(*client_tls_, "127.0.0.1", mock_->local_endpoint().port(),
+                                              missing_credential, std::chrono::seconds(5));
+    ASSERT_TRUE(result);
+    EXPECT_FALSE(std::filesystem::exists(missing_credential));
+    EXPECT_EQ(mock_->connections(), 1u);
+    EXPECT_TRUE(mock_->received().empty());
+}
+
+TEST_F(ProviderClient, CheckConnectionRejectsUntrustedCertificateWithoutApplicationRequest) {
+    const auto other = pa_test::make_test_certificate();
+    auto untrusted = prompt_airlock::tls::make_client_context(std::string_view{other.certificate_pem});
+    ASSERT_TRUE(untrusted);
+    const auto missing_credential = std::filesystem::path(credential_file_.string() + ".check-untrusted-missing");
+    std::filesystem::remove(missing_credential);
+    const auto result = check_connection_with(*untrusted, "127.0.0.1", mock_->local_endpoint().port(),
+                                              missing_credential, std::chrono::seconds(5));
+    ASSERT_FALSE(result);
+    EXPECT_EQ(result.error(), pv::ConnectCheckError::TlsHandshakeFailed);
+    EXPECT_FALSE(std::filesystem::exists(missing_credential));
+    EXPECT_EQ(mock_->connections(), 1u);
+    EXPECT_TRUE(mock_->received().empty());
+}
+
+TEST_F(ProviderClient, CheckConnectionBoundsUnreachableTargetWithoutApplicationRequest) {
+    asio::io_context unused_io;
+    tcp::acceptor unused(unused_io);
+    unused.open(tcp::v4());
+    unused.bind(tcp::endpoint(asio::ip::address_v4::loopback(), 0));
+    const auto port = unused.local_endpoint().port();
+    const auto missing_credential = std::filesystem::path(credential_file_.string() + ".check-refused-missing");
+    std::filesystem::remove(missing_credential);
+    const auto started = std::chrono::steady_clock::now();
+    const auto result = check_connection_with(*client_tls_, "127.0.0.1", port, missing_credential,
+                                              std::chrono::seconds(2));
+    const auto elapsed = std::chrono::steady_clock::now() - started;
+    unused.close();
+    ASSERT_FALSE(result);
+    EXPECT_TRUE(result.error() == pv::ConnectCheckError::ConnectFailed ||
+                result.error() == pv::ConnectCheckError::Timeout);
+    EXPECT_LT(elapsed, std::chrono::seconds(3));
+    EXPECT_FALSE(std::filesystem::exists(missing_credential));
+    EXPECT_TRUE(mock_->received().empty());
+}
+
+TEST_F(ProviderClient, CheckConnectionTimesOutDuringTlsHandshakeWithoutApplicationRequest) {
+    asio::io_context silent_io;
+    tcp::acceptor acceptor(silent_io, tcp::endpoint(asio::ip::address_v4::loopback(), 0));
+    tcp::socket peer(silent_io);
+    asio::steady_timer hold(silent_io);
+    std::atomic_bool accepted{false};
+    std::promise<void> cleanup_done;
+    auto cleanup_future = cleanup_done.get_future();
+    acceptor.async_accept(peer, [&](const boost::system::error_code& error) {
+        if (error) return;
+        accepted.store(true, std::memory_order_relaxed);
+        hold.expires_after(std::chrono::seconds(5));
+        hold.async_wait([](const boost::system::error_code&) {});
+    });
+    std::thread server_thread([&] { silent_io.run(); });
+
+    const auto missing_credential = std::filesystem::path(credential_file_.string() + ".check-timeout-missing");
+    std::filesystem::remove(missing_credential);
+    const auto result = check_connection_with(*client_tls_, "127.0.0.1", acceptor.local_endpoint().port(),
+                                              missing_credential, std::chrono::seconds(1));
+    asio::post(silent_io, [&] {
+        boost::system::error_code ignored;
+        hold.cancel();
+        peer.close(ignored);
+        acceptor.close(ignored);
+        cleanup_done.set_value();
+    });
+    cleanup_future.wait();
+    server_thread.join();
+
+    ASSERT_TRUE(accepted.load(std::memory_order_relaxed));
+    ASSERT_FALSE(result);
+    EXPECT_EQ(result.error(), pv::ConnectCheckError::Timeout);
+    EXPECT_FALSE(std::filesystem::exists(missing_credential));
+    EXPECT_TRUE(mock_->received().empty());
 }
 
 TEST_F(ProviderClient, RefusesUntrustedProvider) {
