@@ -14,6 +14,7 @@
 #include <cstdio>
 #include <exception>
 #include <expected>
+#include <filesystem>
 #include <fstream>
 #include <iostream>
 #include <iterator>
@@ -23,6 +24,7 @@
 #include <span>
 #include <string>
 #include <string_view>
+#include <system_error>
 #include <thread>
 #include <vector>
 
@@ -114,6 +116,92 @@ std::expected<gw::SentenceCheck, const char*> make_sentence_check(bool enabled) 
         }
         return (*hit)->category;
     };
+}
+
+int check_failure(const char* stage, const char* code) noexcept {
+    std::fprintf(stderr, "check: failed stage=%s code=%s\n", stage, code);
+    return 1;
+}
+
+// 요청·감사·제공자 실행 없이 현재 설정의 로컬 준비 상태만 확인한다.
+int check_command(std::string_view config_arg) noexcept {
+    try {
+        const std::filesystem::path config_path(config_arg);
+        const auto text = read_file(config_path);
+        if (!text) {
+            return check_failure("config", "unreadable");
+        }
+        const auto config = gw::parse_config(*text, config_path.parent_path());
+        if (!config) {
+            return check_failure("config", "invalid");
+        }
+
+        const auto tls = load_tls(*config);
+        if (!tls) {
+            return check_failure("tls", "not_ready");
+        }
+
+        const bool local_cli = config->provider.protocol == gw::ProviderProtocol::LocalCliText;
+        if (local_cli) {
+            std::error_code ec;
+            if (!std::filesystem::is_regular_file(config->provider.cli.executable, ec) || ec) {
+                return check_failure("provider", "cli_executable_unavailable");
+            }
+        } else {
+            const auto credential = prompt_airlock::provider::load_credential(config->provider.credential_file);
+            if (!credential) {
+                return check_failure("provider", "credential_unavailable");
+            }
+        }
+
+        auto ner = prompt_airlock::ner::NerPool::make(PA_NER_MODEL_DIR);
+        if (!ner) {
+            return check_failure("model", "ner_unavailable");
+        }
+        auto sentence = make_sentence_check(config->sentence_warn);
+        if (!sentence) {
+            return check_failure("model", "sentence_unavailable");
+        }
+
+        const std::vector<std::string_view> terms(config->internal_terms.begin(), config->internal_terms.end());
+        const auto detectors = prompt_airlock::detect::Detectors::make(terms, *ner, config->policy);
+        if (!detectors) {
+            return check_failure("policy", "invalid");
+        }
+
+        {
+            prompt_airlock::vault_client::ServiceOptions vault_options;
+            vault_options.exe = PA_VAULT_EXE;
+            prompt_airlock::vault_client::VaultService vault(vault_options);
+            {
+                auto scope = vault.open_scope();
+                if (!scope) {
+                    return check_failure("vault", "unavailable");
+                }
+            }
+        }
+
+        std::puts("check: ok");
+        std::puts("config: ready");
+        std::puts("tls: ready");
+        std::puts("models: ready");
+        std::puts("policy: ready");
+        std::puts("vault: ready");
+        std::puts("vault_scope: opened_and_dropped");
+        std::puts("listener: not_started");
+        std::puts("audit: not_opened");
+        std::puts(local_cli ? "provider: local_cli_configuration_only" : "provider: https_configuration_only");
+        if (local_cli) {
+            std::puts("provider_invocation: not_tested");
+        } else {
+            std::puts("provider_connection: not_tested");
+        }
+        std::puts("provider_request: not_sent");
+        std::puts("provider_transfer: not_tested");
+        return 0;
+    } catch (...) {
+        return check_failure("internal", "check_failed");
+    }
 }
 
 int serve(const std::filesystem::path& config_path) {
@@ -342,6 +430,9 @@ int main(int argc, char** argv) try {
     if (command == "serve" && argc == 3) {
         return serve(argv[2]);
     }
+    if (command == "check" && argc == 3) {
+        return check_command(argv[2]);
+    }
     if (command == "issue-token" && argc == 3) {
         return issue_token(argv[2]);
     }
@@ -351,7 +442,8 @@ int main(int argc, char** argv) try {
     if (command == "audit" && (argc == 4 || argc == 5)) {
         return audit_command(argv[2], argv[3], argc == 5 ? std::atoi(argv[4]) : 20);
     }
-    std::fputs("usage: prompt-airlock serve <config.json>\n       prompt-airlock issue-token <origin-name>\n"
+    std::fputs("usage: prompt-airlock serve <config.json>\n       prompt-airlock check <config.json>\n"
+               "       prompt-airlock issue-token <origin-name>\n"
                "       prompt-airlock protect-credential <plain-file|-> <out-file>\n"
                "       prompt-airlock audit verify|list <audit-dir> [lines]\n",
                stderr);

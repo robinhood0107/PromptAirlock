@@ -49,6 +49,19 @@ if ($LASTEXITCODE -ne 0) { throw 'strict CA and IP verification failed' }
 ~~~
 
 CA와 leaf는 이 ACL 제한 디렉터리에만 저장합니다. leaf SAN은 127.0.0.1과 localhost입니다. Git for Windows OpenSSL의 지정 CA/IP 검증만 사용하고 Windows trust store에는 추가하지 않습니다.
+
+## 사전 점검
+
+실행 전에 아래 명령으로 설정 파싱, 수신·provider TLS 자료, 보호된 HTTPS 자격 증명, 고정 모델 지문, 기관 정책, check 소유 Vault의 준비 상태를 확인할 수 있습니다.
+
+~~~powershell
+prompt-airlock check config.json
+~~~
+
+이 명령은 HTTP listener나 audit 파일을 만들지 않으며 provider 연결, CLI 실행, 요청 전송, 응답 검증은 하지 않습니다. provider_connection: not_tested와 provider_transfer: not_tested는 실제 연결·전송 동작을 확인하지 않았다는 뜻입니다. HTTPS provider는 보호된 자격 증명 파일만 읽고, local CLI provider는 설정된 실행 파일의 존재만 확인합니다.
+
+실패는 고정 stage/code와 0이 아닌 종료값으로 보고하며 설정 경로, 자격 증명, 본문은 출력하지 않습니다.
+
 ## Gateway config와 protected request 파일
 
 PowerShell에서 token을 한 번 발급하고 stdout을 보호 파일로 돌립니다. 두 번째 줄의 hash만 `config.json`에 넣고 첫 줄의 원문은 ACL이 제한된 파일에서만 읽습니다.
