@@ -30,6 +30,10 @@ add_test(NAME prompt_airlock_policy_suggest_cli_contract
     "-DPA_APP=$<TARGET_FILE:prompt-airlock>"
     "-DPA_TEST_DIR=${CMAKE_CURRENT_BINARY_DIR}/policy-suggest-cli-contract"
     -P "${PROJECT_SOURCE_DIR}/tests/cmake/policy_suggest_cli_command.cmake")
+if(NOT WIN32 AND PA_SANITIZE MATCHES "address")
+  set_tests_properties(prompt_airlock_policy_suggest_cli_contract PROPERTIES
+    ENVIRONMENT "LSAN_OPTIONS=suppressions=${PROJECT_SOURCE_DIR}/tests/lsan.supp")
+endif()
 if(MSVC)
   target_compile_options(prompt-airlock PRIVATE /WX)
 else()
