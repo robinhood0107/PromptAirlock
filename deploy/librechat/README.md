@@ -23,6 +23,8 @@ docker compose --project-name librechat-local up --pull never -d
 
 `librechat.yaml`은 upstream schema version `1.3.19`를 사용합니다. custom endpoint의 공식 `dropParams`로 `stream`, `user`, `frequency_penalty`, `presence_penalty`를 제거해 Gateway 허용 필드만 보내고, `addParams.maxRetries: 0`으로 앱 내부 재시도를 끕니다. v0.8.9의 Agents 화면은 별도로 stream 요청을 쓰므로 새 대화마다 `Parameters` → `Disable Streaming`을 켭니다. 이 선택은 현재 대화에만 적용되고 `New chat`에서는 꺼집니다. custom endpoint의 파일 전달은 직접 provider 경로를 선택하므로 업로드가 RAG 서비스로 가지 않고 Gateway에서 다시 검사됩니다. 기본 모델 이름은 Gateway가 고정 provider 별칭으로 교체합니다. healthcheck는 MongoDB의 인증 없는 읽기 전용 `ping`만 실행하며 root 암호를 인자에 넣지 않습니다.
 
+이 배포는 `ENDPOINTS=custom`으로 `Prompt Airlock` 연결 하나만 노출합니다. `fileConfig.endpoints.custom.supportedMimeTypes`는 v0.8.9 기본 MIME 허용 목록을 유지하면서 실제 브라우저의 HWP MIME `application/x-hwp` 하나만 추가하고, `defaultLLMDeliveryPath.fallback: provider`로 파일 부분을 기존 Gateway 추출 경로에 전달합니다. 다른 custom endpoint를 더하면 HWP 허용 범위를 다시 나눠야 합니다.
+
 차단·확인 요청의 LibreChat API HTTP 상태와 Gateway 판정은 구분해서 봅니다. 앱의 HTTP 200은 보호된 provider 왕복 성공을 뜻하지 않습니다. 승인 후 원래 출처와 같은 본문을 한 번 다시 보내며, Gateway는 보호 단계를 다시 거칩니다. 승인, 차단, 미리보기, 설정과 상태 점검은 외부 provider를 직접 호출하지 않습니다.
 
 ## 저장, 보존, 백업과 복구
