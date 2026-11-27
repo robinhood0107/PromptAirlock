@@ -2,6 +2,17 @@
 
 내장 `/console`은 미리보기, 파일 검사, 연결 설정, 접속 상태, 승인 목록과 관리자 조회를 제공합니다. 이 문서는 미리보기 API와 기존 로컬 확인 경계의 동작을 설명합니다.
 
+## 로컬 준비와 provider TLS 확인
+
+~~~text
+prompt-airlock check <config.json>
+prompt-airlock check <config.json> --connect
+~~~
+
+기본 `check`는 설정, TLS 자료, 보호 credential 파일, 모델, 정책과 점검 전용 Vault scope를 확인합니다. listener·감사 기록을 열지 않고 provider 연결·요청·local CLI 실행은 하지 않습니다.
+
+HTTPS 설정에서만 `--connect`가 설정의 한 provider 호스트를 해석하고 첫 주소 하나에 TCP 연결을 시도한 뒤 TLS handshake로 서버 인증서를 검증합니다. 설정한 trust 파일 또는 운영체제 기본 신뢰 저장소, 기존 DNS 이름/IP SAN 검사와 SNI를 사용하며 해석·연결·인증서 확인을 묶어 5초 타이머를 적용합니다. HTTP·자격 증명·본문·LLM 요청·CLI 실행을 보내지 않습니다. `tls_verified`는 TLS handshake만 확인했다는 뜻이며 provider API 호출과 데이터 전송은 계속 `not_tested`입니다. local CLI 설정에는 연결하지 않고 실행 여부도 `not_tested`로 표시합니다. 실패는 고정 단계·코드만 반환합니다.
+
 ## 미리보기
 
 `POST /v1/preview`에 대화와 같은 본문·출처 token·등급 헤더를 보냅니다. 입력 필드와 한도도 대화 요청과 같습니다.
@@ -40,3 +51,39 @@ HTTP 오류를 대화 안내로 바꾼 경우에도, 읽지 않은 본문이 남
 기존 `X-Prompt-Airlock-Confirm` 헤더 방식도 사용할 수 있습니다. 헤더에 틀린 표지를 보낸 요청을 승인 장부로 우회하지 않습니다. 두 방식이 동시에 같은 승인을 사용하려 해도 한 요청만 사용할 수 있습니다.
 
 설계 계약은 [ADR 0029](adr/0029-local-console-and-chat-app.md)에 있습니다.
+
+## 로컬 감사 통계
+
+서버의 감사 폴더를 지정해 전체 연결 무결성을 확인하고 최근 24시간의 요청 결과를 집계합니다.
+
+~~~text
+prompt-airlock stats <audit-dir>
+~~~
+
+정상, 정책 차단, 확인 필요, 그 밖의 실패는 최종 request 이벤트만 집계합니다. 차단은 등급·대상·인코딩·잔여 검사 사유이며, 그 밖의 거절은 실패로 셉니다. 확인 승인·미리보기·egress·응답 기록은 별도 요청으로 더하지 않습니다. 정상 결과는 scope=recent_24h와 coverage=complete를 표시합니다. 폴더가 없거나 비어 있으면 상태를 구분해 알리고, 손상·잘림은 고정 stage/code와 0이 아닌 종료값으로 실패합니다. 최근 구간이 제한되면 state=partial로 표시하고 부분 숫자를 성공 결과처럼 내보내지 않습니다. 이 명령은 감사 파일을 쓰거나 provider·Vault를 호출하지 않습니다.
+
+## 출처 키 관리
+
+로컬 운영자는 명시한 Gateway 설정 파일의 출처만 추가·목록·폐기할 수 있습니다.
+
+~~~text
+prompt-airlock keys list <config.json>
+prompt-airlock keys add <config.json> <origin-name> [o-only|declare]
+prompt-airlock keys revoke <config.json> <origin-name>
+~~~
+
+추가 등급을 생략하면 `o-only`를 사용합니다. 추가가 성공하면 token 원문을 한 번 출력하고 설정에는 SHA-256만 저장합니다. 목록은 이름과 등급만 표시합니다. 마지막 출처와 키 교체·관리 조회에서 참조하는 출처는 폐기하지 않으며, 변경은 Gateway 재기동 뒤 반영됩니다. 설정 검증·권한 확인·원자 교체 실패 시 기존 파일을 유지합니다.
+
+Windows에서는 token 출력을 완료하지 못해도 설정 저장은 이미 끝난 상태입니다. 명령은 `token_output_failed_registered`를 알리며, token을 받지 못했다면 해당 출처를 `keys revoke`로 폐기한 뒤 새 출처를 추가합니다. Windows 교체 전후에 owner·group·DACL과 DACL 보호 상태가 같음을 확인하고, 맞지 않으면 기존 파일 복원을 시도합니다. 파일 시스템이나 권한이 owner·ACL 보존을 허용하지 않으면 변경을 거절합니다.
+
+`keys` 명령끼리는 같은 설정 파일을 직렬화합니다. Windows 잠금은 같은 호스트의 로그인 세션 사이에서 공유하며 잠금 객체를 만들거나 여는 데 실패하면 설정을 바꾸지 않고 고정 오류를 반환합니다. POSIX 잠금은 같은 폴더 안의 `keys` 호출을 직렬화합니다. 외부 편집기와 `keys` 명령의 동시 변경은 조정하지 않으며, 외부 편집기 변경은 저장을 마친 뒤 `keys` 명령을 실행해야 반영됩니다.
+
+## 기관 대상어 후보
+
+~~~text
+prompt-airlock policy suggest <institution-document-dir>
+~~~
+
+지정 폴더의 바로 아래 파일만 기존 문서 추출기와 같은 파일·추출 상한으로 읽습니다. 하위 폴더는 순회하지 않으며 링크, 지원하지 않는 형식, 추출 실패는 고정 상태나 오류 코드로 구분합니다. `사업명`, `과제명`, `연구과제명`, `프로젝트명`처럼 구분 기호가 붙은 명시적 표지 뒤의 짧은 값만 후보로 살펴봅니다.
+
+화면에는 후보와 집계만 표시합니다. 명령은 설정·감사 파일을 바꾸거나 실행 중인 Gateway 서버, Vault, provider에 요청하지 않으며 후보를 자동 적용하지 않습니다. 문서 추출은 기존 로컬 추출 경로로 처리합니다. 기관 운영자는 표시된 후보를 직접 검토한 뒤 기존 정책 설정의 검증 절차를 거쳐 반영해야 합니다. 표지 형식이 다르거나 추출이 지원되지 않는 문서는 후보에서 빠질 수 있으므로 완료·부분 상태를 함께 확인합니다.

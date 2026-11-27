@@ -1,7 +1,10 @@
 #include "prompt_airlock/provider/https_client.hpp"
 
 #include <boost/asio/as_tuple.hpp>
+#include <boost/asio/bind_cancellation_slot.hpp>
+#include <boost/asio/cancellation_signal.hpp>
 #include <boost/asio/ip/tcp.hpp>
+#include <boost/asio/steady_timer.hpp>
 #include <boost/asio/this_coro.hpp>
 #include <boost/asio/use_awaitable.hpp>
 #include <boost/beast/core.hpp>
@@ -32,6 +35,7 @@
 #include <fstream>
 #include <iterator>
 #include <limits>
+#include <memory>
 #include <span>
 #include <string_view>
 #include <utility>
@@ -74,6 +78,14 @@ struct ClientTimer {
 
 gateway::ProviderError classify(const beast::error_code& ec) {
     return ec == beast::error::timeout ? gateway::ProviderError::Timeout : gateway::ProviderError::Unavailable;
+}
+
+bool set_peer_identity(SSL* ssl, const Endpoint& endpoint) noexcept {
+    boost::system::error_code not_ip;
+    (void)asio::ip::make_address(endpoint.host, not_ip);
+    return not_ip ? SSL_set_tlsext_host_name(ssl, endpoint.host.c_str()) == 1 &&
+                        SSL_set1_host(ssl, endpoint.host.c_str()) == 1
+                  : X509_VERIFY_PARAM_set1_ip_asc(SSL_get0_param(ssl), endpoint.host.c_str()) == 1;
 }
 
 struct CredentialFileBuffer {
@@ -349,6 +361,63 @@ HttpsClient::HttpsClient(asio::ssl::context& tls, Endpoint endpoint, std::filesy
                          ClientLimits limits)
     : tls_(tls), endpoint_(std::move(endpoint)), credential_file_(std::move(credential_file)), limits_(limits) {}
 
+asio::awaitable<std::expected<void, ConnectCheckError>> HttpsClient::check_connection() const {
+    const auto executor = co_await asio::this_coro::executor;
+    tcp::resolver resolver(executor);
+    auto timed_out = std::make_shared<std::atomic_bool>(false);
+    auto cancellation = std::make_shared<asio::cancellation_signal>();
+    asio::steady_timer deadline(executor);
+    deadline.expires_after(limits_.timeout);
+    deadline.async_wait([timed_out, cancellation](const boost::system::error_code& error) {
+        if (!error) {
+            timed_out->store(true, std::memory_order_relaxed);
+            cancellation->emit(asio::cancellation_type::all);
+        }
+    });
+
+    auto [resolve_error, results] = co_await resolver.async_resolve(
+        endpoint_.host, std::to_string(endpoint_.port),
+        asio::bind_cancellation_slot(cancellation->slot(), use_tuple));
+    if (resolve_error) {
+        co_return std::unexpected(timed_out->load(std::memory_order_relaxed) ? ConnectCheckError::Timeout
+                                                                             : ConnectCheckError::ResolveFailed);
+    }
+    if (results.empty() || timed_out->load(std::memory_order_relaxed)) {
+        co_return std::unexpected(results.empty() ? ConnectCheckError::ResolveFailed : ConnectCheckError::Timeout);
+    }
+
+    beast::ssl_stream<beast::tcp_stream> stream(executor, tls_);
+    if (!set_peer_identity(stream.native_handle(), endpoint_)) {
+        co_return std::unexpected(ConnectCheckError::TlsSetupFailed);
+    }
+    auto& socket = beast::get_lowest_layer(stream);
+    socket.expires_after(limits_.timeout);
+    auto [connect_error] = co_await socket.async_connect(
+        results.begin()->endpoint(), asio::bind_cancellation_slot(cancellation->slot(), use_tuple));
+    if (connect_error) {
+        const bool timeout = timed_out->load(std::memory_order_relaxed) || connect_error == beast::error::timeout;
+        co_return std::unexpected(timeout ? ConnectCheckError::Timeout : ConnectCheckError::ConnectFailed);
+    }
+    if (timed_out->load(std::memory_order_relaxed)) {
+        co_return std::unexpected(ConnectCheckError::Timeout);
+    }
+
+    socket.expires_after(limits_.timeout);
+    auto [handshake_error] = co_await stream.async_handshake(
+        asio::ssl::stream_base::client, asio::bind_cancellation_slot(cancellation->slot(), use_tuple));
+    if (handshake_error) {
+        const bool timeout = timed_out->load(std::memory_order_relaxed) || handshake_error == beast::error::timeout;
+        co_return std::unexpected(timeout ? ConnectCheckError::Timeout : ConnectCheckError::TlsHandshakeFailed);
+    }
+    if (timed_out->load(std::memory_order_relaxed)) {
+        co_return std::unexpected(ConnectCheckError::Timeout);
+    }
+
+    boost::system::error_code ignored;
+    socket.socket().close(ignored);
+    co_return std::expected<void, ConnectCheckError>{};
+}
+
 asio::awaitable<Result> HttpsClient::send(std::string body, ClientTimings* timings) const {
     ClientTimer timer(timings);
     // 보내기 직전에 읽어 바꿔 끼운 자격 증명을 쓴다. 읽지 못하면 연결도 하지 않는다(실패하면 막는 쪽).
@@ -369,13 +438,7 @@ asio::awaitable<Result> HttpsClient::send(std::string body, ClientTimings* timin
     beast::ssl_stream<beast::tcp_stream> stream(executor, tls_);
     beast::get_lowest_layer(stream).expires_after(limits_.timeout);  // 연결부터 응답 끝까지 한 번의 상한
     // 상대 인증서의 이름 확인. IP 주소면 SAN 의 IP 를, 아니면 DNS 이름을 맞춰 보고 SNI 를 보낸다.
-    boost::system::error_code not_ip;
-    (void)asio::ip::make_address(endpoint_.host, not_ip);
-    SSL* ssl = stream.native_handle();
-    const bool name_set =
-        not_ip ? SSL_set_tlsext_host_name(ssl, endpoint_.host.c_str()) == 1 && SSL_set1_host(ssl, endpoint_.host.c_str()) == 1
-               : X509_VERIFY_PARAM_set1_ip_asc(SSL_get0_param(ssl), endpoint_.host.c_str()) == 1;
-    if (!name_set) {
+    if (!set_peer_identity(stream.native_handle(), endpoint_)) {
         co_return std::unexpected(gateway::ProviderError::Unavailable);
     }
 

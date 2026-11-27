@@ -5,13 +5,41 @@
 
 #include <algorithm>
 #include <array>
+#include <atomic>
 #include <charconv>
 #include <cctype>
 #include <chrono>
+#include <cstring>
+#include <fstream>
 #include <functional>
 #include <initializer_list>
+#include <iterator>
+#include <limits>
+#include <optional>
 #include <set>
+#include <span>
 #include <utility>
+
+#include "prompt_airlock/core/sha256.hpp"
+
+#ifdef _WIN32
+#ifndef WIN32_LEAN_AND_MEAN
+#define WIN32_LEAN_AND_MEAN
+#endif
+#ifndef NOMINMAX
+#define NOMINMAX
+#endif
+#include <windows.h>
+#include <aclapi.h>
+#else
+#include <cerrno>
+#include <fcntl.h>
+#include <sys/file.h>
+#include <sys/stat.h>
+#include <sys/types.h>
+#include <sys/xattr.h>
+#include <unistd.h>
+#endif
 
 namespace prompt_airlock::gateway {
 namespace {
@@ -465,6 +493,421 @@ private:
     bool duplicate_ = false;
 };
 
+std::atomic<std::uint64_t> config_temp_sequence{0};
+
+class ConfigMutationLock {
+public:
+    explicit ConfigMutationLock(const std::filesystem::path& file) {
+#ifdef _WIN32
+        std::error_code ec;
+        const auto canonical = std::filesystem::canonical(file, ec);
+        if (ec) return;
+        const auto native = canonical.native();
+        const int lower_size = LCMapStringEx(LOCALE_NAME_INVARIANT, LCMAP_LOWERCASE, native.c_str(), -1, nullptr, 0,
+                                             nullptr, nullptr, 0);
+        if (lower_size <= 0) return;
+        std::wstring lower(static_cast<std::size_t>(lower_size), L'\0');
+        if (LCMapStringEx(LOCALE_NAME_INVARIANT, LCMAP_LOWERCASE, native.c_str(), -1, lower.data(), lower_size,
+                          nullptr, nullptr, 0) == 0) {
+            return;
+        }
+        lower.resize(static_cast<std::size_t>(lower_size - 1));
+        const auto path_bytes = std::as_bytes(std::span(lower.data(), lower.size()));
+        const auto digest = prompt_airlock::core::sha256_hex(path_bytes);
+        std::wstring object_name = L"Global\\PromptAirlock.Keys.";
+        object_name.append(digest.begin(), digest.end());
+        mutex_ = CreateMutexW(nullptr, FALSE, object_name.c_str());
+        if (!mutex_) return;
+        const DWORD wait = WaitForSingleObject(mutex_, INFINITE);
+        if (wait == WAIT_OBJECT_0 || wait == WAIT_ABANDONED) {
+            locked_ = true;
+        }
+#else
+        auto directory = file.parent_path();
+        if (directory.empty()) directory = ".";
+        int flags = O_RDONLY | O_CLOEXEC;
+#ifdef O_DIRECTORY
+        flags |= O_DIRECTORY;
+#endif
+        descriptor_ = ::open(directory.c_str(), flags);
+        if (descriptor_ < 0) return;
+        while (::flock(descriptor_, LOCK_EX) != 0) {
+            if (errno != EINTR) return;
+        }
+        locked_ = true;
+#endif
+    }
+
+    ConfigMutationLock(const ConfigMutationLock&) = delete;
+    ConfigMutationLock& operator=(const ConfigMutationLock&) = delete;
+
+    ~ConfigMutationLock() {
+#ifdef _WIN32
+        if (locked_) (void)ReleaseMutex(mutex_);
+        if (mutex_) (void)CloseHandle(mutex_);
+#else
+        if (descriptor_ >= 0) {
+            if (locked_) (void)::flock(descriptor_, LOCK_UN);
+            (void)::close(descriptor_);
+        }
+#endif
+    }
+
+    [[nodiscard]] bool locked() const noexcept { return locked_; }
+
+private:
+#ifdef _WIN32
+    HANDLE mutex_ = nullptr;
+#else
+    int descriptor_ = -1;
+#endif
+    bool locked_ = false;
+};
+
+std::expected<std::string, OriginFileError> read_config_text(const std::filesystem::path& file) {
+    std::error_code ec;
+    const auto status = std::filesystem::symlink_status(file, ec);
+    if (ec) return std::unexpected(OriginFileError::ReadFailed);
+    if (!std::filesystem::is_regular_file(status)) return std::unexpected(OriginFileError::UnsafePermissions);
+    std::ifstream input(file, std::ios::binary);
+    if (!input) return std::unexpected(OriginFileError::ReadFailed);
+    std::string text{std::istreambuf_iterator<char>(input), std::istreambuf_iterator<char>()};
+    if (input.bad()) return std::unexpected(OriginFileError::ReadFailed);
+    return text;
+}
+
+std::string temp_suffix() {
+#ifdef _WIN32
+    const auto process = static_cast<std::uint64_t>(GetCurrentProcessId());
+#else
+    const auto process = static_cast<std::uint64_t>(::getpid());
+#endif
+    return ".keys." + std::to_string(process) + "." +
+           std::to_string(config_temp_sequence.fetch_add(1, std::memory_order_relaxed));
+}
+
+#ifdef _WIN32
+struct DaclSnapshot {
+    std::vector<std::byte> descriptor;
+    std::vector<std::byte> acl;
+    std::vector<std::byte> owner_sid;
+    std::vector<std::byte> group_sid;
+    PACL value = nullptr;
+    PSID owner = nullptr;
+    PSID group = nullptr;
+    SECURITY_DESCRIPTOR_CONTROL control = 0;
+};
+
+std::expected<DaclSnapshot, OriginFileError> read_dacl(const std::filesystem::path& file) {
+    DWORD needed = 0;
+    constexpr SECURITY_INFORMATION requested = OWNER_SECURITY_INFORMATION | GROUP_SECURITY_INFORMATION |
+                                               DACL_SECURITY_INFORMATION;
+    (void)GetFileSecurityW(file.c_str(), requested, nullptr, 0, &needed);
+    if (needed == 0) return std::unexpected(OriginFileError::UnsafePermissions);
+    DaclSnapshot snapshot;
+    snapshot.descriptor.resize(needed);
+    if (!GetFileSecurityW(file.c_str(), requested,
+                          reinterpret_cast<PSECURITY_DESCRIPTOR>(snapshot.descriptor.data()), needed, &needed)) {
+        return std::unexpected(OriginFileError::UnsafePermissions);
+    }
+    PSID owner = nullptr;
+    PSID group = nullptr;
+    BOOL owner_defaulted = FALSE;
+    BOOL group_defaulted = FALSE;
+    if (!GetSecurityDescriptorOwner(reinterpret_cast<PSECURITY_DESCRIPTOR>(snapshot.descriptor.data()), &owner,
+                                    &owner_defaulted) ||
+        !GetSecurityDescriptorGroup(reinterpret_cast<PSECURITY_DESCRIPTOR>(snapshot.descriptor.data()), &group,
+                                    &group_defaulted) ||
+        !owner || !group || !IsValidSid(owner) || !IsValidSid(group)) {
+        return std::unexpected(OriginFileError::UnsafePermissions);
+    }
+    const DWORD owner_size = GetLengthSid(owner);
+    const DWORD group_size = GetLengthSid(group);
+    if (owner_size == 0 || group_size == 0) return std::unexpected(OriginFileError::UnsafePermissions);
+    snapshot.owner_sid.resize(owner_size);
+    snapshot.group_sid.resize(group_size);
+    if (!CopySid(owner_size, snapshot.owner_sid.data(), owner) ||
+        !CopySid(group_size, snapshot.group_sid.data(), group)) {
+        return std::unexpected(OriginFileError::UnsafePermissions);
+    }
+    snapshot.owner = snapshot.owner_sid.data();
+    snapshot.group = snapshot.group_sid.data();
+    DWORD revision = 0;
+    if (!GetSecurityDescriptorControl(reinterpret_cast<PSECURITY_DESCRIPTOR>(snapshot.descriptor.data()),
+                                      &snapshot.control, &revision)) {
+        return std::unexpected(OriginFileError::UnsafePermissions);
+    }
+    BOOL present = FALSE;
+    BOOL defaulted = FALSE;
+    PACL acl = nullptr;
+    if (!GetSecurityDescriptorDacl(reinterpret_cast<PSECURITY_DESCRIPTOR>(snapshot.descriptor.data()), &present, &acl,
+                                   &defaulted) ||
+        !present || !acl) {
+        return std::unexpected(OriginFileError::UnsafePermissions);
+    }
+    snapshot.acl.resize(acl->AclSize);
+    std::memcpy(snapshot.acl.data(), acl, acl->AclSize);
+    snapshot.value = reinterpret_cast<PACL>(snapshot.acl.data());
+    return snapshot;
+}
+
+bool same_file_security(const std::filesystem::path& file, const DaclSnapshot& expected) {
+    const auto current = read_dacl(file);
+    constexpr SECURITY_DESCRIPTOR_CONTROL relevant_control = SE_OWNER_DEFAULTED | SE_GROUP_DEFAULTED | SE_DACL_DEFAULTED |
+                                                              SE_DACL_AUTO_INHERIT_REQ | SE_DACL_AUTO_INHERITED |
+                                                              SE_DACL_PROTECTED;
+    return current && current->owner_sid == expected.owner_sid && current->group_sid == expected.group_sid &&
+           current->acl == expected.acl &&
+           (current->control & relevant_control) == (expected.control & relevant_control);
+}
+
+bool windows_file_exists(const std::filesystem::path& file) {
+    const DWORD attributes = GetFileAttributesW(file.c_str());
+    return attributes != INVALID_FILE_ATTRIBUTES && (attributes & FILE_ATTRIBUTE_DIRECTORY) == 0;
+}
+
+bool restore_windows_backup(const std::filesystem::path& target, const std::filesystem::path& backup) {
+    if (!windows_file_exists(backup)) return windows_file_exists(target);
+    if (windows_file_exists(target)) {
+        auto rollback = target;
+        rollback += temp_suffix() + ".rollback";
+        if (!ReplaceFileW(target.c_str(), backup.c_str(), rollback.c_str(), 0, nullptr, nullptr)) return false;
+        return DeleteFileW(rollback.c_str()) != 0;
+    }
+    return MoveFileExW(backup.c_str(), target.c_str(), MOVEFILE_WRITE_THROUGH) != 0;
+}
+
+std::expected<void, OriginFileError> replace_config_atomically(const std::filesystem::path& target,
+                                                               std::string_view content) {
+    const DWORD attributes = GetFileAttributesW(target.c_str());
+    if (attributes == INVALID_FILE_ATTRIBUTES || (attributes & FILE_ATTRIBUTE_DIRECTORY) != 0 ||
+        (attributes & FILE_ATTRIBUTE_REPARSE_POINT) != 0 || (attributes & FILE_ATTRIBUTE_ENCRYPTED) != 0) {
+        return std::unexpected(OriginFileError::UnsafePermissions);
+    }
+    auto dacl = read_dacl(target);
+    if (!dacl) return std::unexpected(dacl.error());
+
+    std::filesystem::path temp;
+    HANDLE output = INVALID_HANDLE_VALUE;
+    for (unsigned attempt = 0; attempt < 32 && output == INVALID_HANDLE_VALUE; ++attempt) {
+        temp = target;
+        temp += temp_suffix() + ".tmp." + std::to_string(attempt);
+        output = CreateFileW(temp.c_str(), GENERIC_WRITE | WRITE_DAC | WRITE_OWNER, 0, nullptr, CREATE_NEW,
+                             FILE_ATTRIBUTE_NORMAL, nullptr);
+        if (output == INVALID_HANDLE_VALUE && GetLastError() != ERROR_FILE_EXISTS &&
+            GetLastError() != ERROR_ALREADY_EXISTS) {
+            return std::unexpected(OriginFileError::WriteFailed);
+        }
+    }
+    if (output == INVALID_HANDLE_VALUE) return std::unexpected(OriginFileError::WriteFailed);
+
+    SECURITY_INFORMATION security = OWNER_SECURITY_INFORMATION | GROUP_SECURITY_INFORMATION | DACL_SECURITY_INFORMATION;
+    security |= (dacl->control & SE_DACL_PROTECTED) != 0 ? PROTECTED_DACL_SECURITY_INFORMATION
+                                                         : UNPROTECTED_DACL_SECURITY_INFORMATION;
+    bool written = SetSecurityInfo(output, SE_FILE_OBJECT, security, dacl->owner, dacl->group, dacl->value, nullptr) ==
+                   ERROR_SUCCESS;
+    std::size_t offset = 0;
+    while (written && offset < content.size()) {
+        const auto remaining = content.size() - offset;
+        const DWORD chunk = remaining > std::numeric_limits<DWORD>::max()
+            ? std::numeric_limits<DWORD>::max() : static_cast<DWORD>(remaining);
+        DWORD count = 0;
+        written = WriteFile(output, content.data() + offset, chunk, &count, nullptr) != 0 && count != 0;
+        offset += count;
+    }
+    if (written) written = FlushFileBuffers(output) != 0;
+    const bool closed = CloseHandle(output) != 0;
+    written = written && closed;
+    if (!written) {
+        (void)DeleteFileW(temp.c_str());
+        return std::unexpected(OriginFileError::WriteFailed);
+    }
+
+    auto backup = target;
+    backup += temp_suffix() + ".backup";
+    if (!ReplaceFileW(target.c_str(), temp.c_str(), backup.c_str(), 0, nullptr, nullptr)) {
+        const bool restored = restore_windows_backup(target, backup);
+        (void)DeleteFileW(temp.c_str());
+        return std::unexpected(restored ? OriginFileError::WriteFailed : OriginFileError::UnsafePermissions);
+    }
+
+    const auto readback = read_config_text(target);
+    if (!readback || *readback != content || !same_file_security(target, *dacl)) {
+        const bool restored = restore_windows_backup(target, backup);
+        return std::unexpected(restored ? OriginFileError::WriteFailed : OriginFileError::UnsafePermissions);
+    }
+    if (!DeleteFileW(backup.c_str())) {
+        const bool restored = restore_windows_backup(target, backup);
+        return std::unexpected(restored ? OriginFileError::WriteFailed : OriginFileError::UnsafePermissions);
+    }
+    return {};
+}
+#else
+using Xattr = std::pair<std::string, std::vector<unsigned char>>;
+
+std::expected<std::vector<Xattr>, OriginFileError> read_xattrs(int descriptor) {
+    const ssize_t size = ::flistxattr(descriptor, nullptr, 0);
+    if (size < 0) {
+        if (errno == ENOTSUP || errno == EOPNOTSUPP) return std::vector<Xattr>{};
+        return std::unexpected(OriginFileError::UnsafePermissions);
+    }
+    std::vector<char> names(static_cast<std::size_t>(size));
+    if (size > 0 && ::flistxattr(descriptor, names.data(), names.size()) != size) {
+        return std::unexpected(OriginFileError::UnsafePermissions);
+    }
+    std::vector<Xattr> values;
+    for (std::size_t offset = 0; offset < names.size();) {
+        const std::string name(names.data() + offset);
+        offset += name.size() + 1;
+        if (name == "security.ima" || name == "security.evm") {
+            return std::unexpected(OriginFileError::UnsafePermissions);
+        }
+        const ssize_t value_size = ::fgetxattr(descriptor, name.c_str(), nullptr, 0);
+        if (value_size < 0) return std::unexpected(OriginFileError::UnsafePermissions);
+        std::vector<unsigned char> value(static_cast<std::size_t>(value_size));
+        if (value_size > 0 && ::fgetxattr(descriptor, name.c_str(), value.data(), value.size()) != value_size) {
+            return std::unexpected(OriginFileError::UnsafePermissions);
+        }
+        values.emplace_back(name, std::move(value));
+    }
+    return values;
+}
+
+bool same_xattr_names(const std::vector<Xattr>& expected, const std::vector<Xattr>& current) {
+    if (expected.size() != current.size()) return false;
+    return std::ranges::all_of(expected, [&](const Xattr& item) {
+        return std::ranges::any_of(current, [&](const Xattr& candidate) {
+            return item.first == candidate.first && item.second == candidate.second;
+        });
+    });
+}
+
+std::expected<void, OriginFileError> replace_config_atomically(const std::filesystem::path& target,
+                                                               std::string_view content) {
+    int flags = O_RDONLY | O_CLOEXEC;
+#ifdef O_NOFOLLOW
+    flags |= O_NOFOLLOW;
+#endif
+    const int source = ::open(target.c_str(), flags);
+    if (source < 0) return std::unexpected(OriginFileError::UnsafePermissions);
+    struct stat original {};
+    if (::fstat(source, &original) != 0 || !S_ISREG(original.st_mode) || original.st_nlink != 1) {
+        (void)::close(source);
+        return std::unexpected(OriginFileError::UnsafePermissions);
+    }
+    const auto xattrs = read_xattrs(source);
+    if (!xattrs) {
+        (void)::close(source);
+        return std::unexpected(xattrs.error());
+    }
+
+    std::filesystem::path temp;
+    int output = -1;
+    for (unsigned attempt = 0; attempt < 32 && output < 0; ++attempt) {
+        temp = target;
+        temp += temp_suffix() + ".tmp." + std::to_string(attempt);
+        output = ::open(temp.c_str(), O_WRONLY | O_CREAT | O_EXCL | O_CLOEXEC
+#ifdef O_NOFOLLOW
+                        | O_NOFOLLOW
+#endif
+                        , 0600);
+        if (output < 0 && errno != EEXIST) {
+            (void)::close(source);
+            return std::unexpected(OriginFileError::WriteFailed);
+        }
+    }
+    if (output < 0) {
+        (void)::close(source);
+        return std::unexpected(OriginFileError::WriteFailed);
+    }
+
+    bool written = ::fchown(output, original.st_uid, original.st_gid) == 0 &&
+                   ::fchmod(output, original.st_mode & 07777) == 0;
+    const auto current_xattrs = read_xattrs(output);
+    if (!current_xattrs) written = false;
+    if (written) {
+        for (const auto& current : *current_xattrs) {
+            if (std::ranges::none_of(*xattrs, [&](const Xattr& expected) { return expected.first == current.first; }) &&
+                ::fremovexattr(output, current.first.c_str()) != 0) {
+                written = false;
+                break;
+            }
+        }
+    }
+    for (const auto& [name, value] : *xattrs) {
+        if (!written) break;
+        if (::fsetxattr(output, name.c_str(), value.data(), value.size(), 0) != 0) written = false;
+    }
+    std::size_t offset = 0;
+    while (written && offset < content.size()) {
+        const auto count = ::write(output, content.data() + offset, content.size() - offset);
+        if (count < 0 && errno == EINTR) continue;
+        if (count <= 0) {
+            written = false;
+            break;
+        }
+        offset += static_cast<std::size_t>(count);
+    }
+    if (written) written = ::fsync(output) == 0;
+    const bool closed = ::close(output) == 0;
+    written = written && closed;
+    (void)::close(source);
+    if (!written) {
+        (void)::unlink(temp.c_str());
+        return std::unexpected(OriginFileError::WriteFailed);
+    }
+
+    std::filesystem::path backup;
+    bool linked = false;
+    for (unsigned attempt = 0; attempt < 32 && !linked; ++attempt) {
+        backup = target;
+        backup += temp_suffix() + ".backup." + std::to_string(attempt);
+        if (::link(target.c_str(), backup.c_str()) == 0) {
+            linked = true;
+        } else if (errno != EEXIST) {
+            break;
+        }
+    }
+    struct stat backed_up {};
+    if (!linked || ::stat(backup.c_str(), &backed_up) != 0 || backed_up.st_dev != original.st_dev ||
+        backed_up.st_ino != original.st_ino) {
+        if (linked) (void)::unlink(backup.c_str());
+        (void)::unlink(temp.c_str());
+        return std::unexpected(OriginFileError::UnsafePermissions);
+    }
+    if (::rename(temp.c_str(), target.c_str()) != 0) {
+        const bool backup_removed = ::unlink(backup.c_str()) == 0;
+        (void)::unlink(temp.c_str());
+        return std::unexpected(backup_removed ? OriginFileError::WriteFailed : OriginFileError::UnsafePermissions);
+    }
+    const int committed = ::open(target.c_str(), O_RDONLY | O_CLOEXEC
+#ifdef O_NOFOLLOW
+                                 | O_NOFOLLOW
+#endif
+                                 );
+    if (committed < 0) {
+        if (::rename(backup.c_str(), target.c_str()) == 0) return std::unexpected(OriginFileError::WriteFailed);
+        return std::unexpected(OriginFileError::UnsafePermissions);
+    }
+    struct stat updated {};
+    const auto updated_xattrs = read_xattrs(committed);
+    const bool verified = ::fstat(committed, &updated) == 0 && S_ISREG(updated.st_mode) &&
+                          (updated.st_mode & 07777) == (original.st_mode & 07777) &&
+                          updated.st_uid == original.st_uid && updated.st_gid == original.st_gid && updated_xattrs &&
+                          same_xattr_names(*xattrs, *updated_xattrs);
+    (void)::close(committed);
+    if (!verified) {
+        if (::rename(backup.c_str(), target.c_str()) == 0) return std::unexpected(OriginFileError::WriteFailed);
+        return std::unexpected(OriginFileError::UnsafePermissions);
+    }
+    if (::unlink(backup.c_str()) != 0) {
+        if (::rename(backup.c_str(), target.c_str()) == 0) return std::unexpected(OriginFileError::WriteFailed);
+        return std::unexpected(OriginFileError::UnsafePermissions);
+    }
+    return {};
+}
+#endif
+
 }  // namespace
 
 std::expected<Config, ConfigError> parse_config(std::string_view json_text, const std::filesystem::path& base_dir) {
@@ -556,6 +999,97 @@ std::string_view config_problem_name(ConfigProblem problem) noexcept {
         case ConfigProblem::Duplicate: return "duplicate";
     }
     return "unknown";
+}
+
+std::string_view origin_file_error_name(OriginFileError error) noexcept {
+    switch (error) {
+        case OriginFileError::InvalidName: return "invalid_name";
+        case OriginFileError::InvalidConfig: return "invalid_config";
+        case OriginFileError::InvalidCandidateConfig: return "invalid_candidate_config";
+        case OriginFileError::ReadFailed: return "read_failed";
+        case OriginFileError::Duplicate: return "duplicate";
+        case OriginFileError::NotFound: return "not_found";
+        case OriginFileError::InUse: return "origin_in_use";
+        case OriginFileError::LastOrigin: return "last_origin";
+        case OriginFileError::LockFailed: return "lock_failed";
+        case OriginFileError::UnsafePermissions: return "unsafe_permissions";
+        case OriginFileError::WriteFailed: return "write_failed";
+    }
+    return "invalid_config";
+}
+
+std::expected<std::vector<Origin>, OriginFileError> manage_origin_file(const std::filesystem::path& file,
+                                                                       OriginFileAction action,
+                                                                       std::string_view name,
+                                                                       std::string_view token_sha256,
+                                                                       core::GradePolicy grade_policy) {
+    try {
+        if (action != OriginFileAction::List && !valid_origin_name(name)) {
+            return std::unexpected(OriginFileError::InvalidName);
+        }
+        std::optional<ConfigMutationLock> lock;
+        if (action != OriginFileAction::List) {
+            lock.emplace(file);
+            if (!lock->locked()) return std::unexpected(OriginFileError::LockFailed);
+        }
+
+        const auto source = read_config_text(file);
+        if (!source) return std::unexpected(source.error());
+        const auto base_dir = file.parent_path().empty() ? std::filesystem::path(".") : file.parent_path();
+        const auto current = parse_config(*source, base_dir);
+        if (!current) {
+            return std::unexpected(current.error().problem == ConfigProblem::Duplicate ? OriginFileError::Duplicate
+                                                                                      : OriginFileError::InvalidConfig);
+        }
+        if (action == OriginFileAction::List) return current->origins;
+        if (action != OriginFileAction::Add && action != OriginFileAction::Revoke) {
+            return std::unexpected(OriginFileError::InvalidConfig);
+        }
+
+        DuplicateKeyGuard guard;
+        json root = json::parse(*source, std::ref(guard), /*allow_exceptions=*/false);
+        if (root.is_discarded() || guard.found()) return std::unexpected(OriginFileError::InvalidConfig);
+        auto& origins = root["origins"];
+        if (action == OriginFileAction::Add) {
+            if (grade_policy != core::GradePolicy::OOnly && grade_policy != core::GradePolicy::Declare) {
+                return std::unexpected(OriginFileError::InvalidConfig);
+            }
+            if (std::ranges::any_of(current->origins, [&](const Origin& origin) {
+                    return origin.name == name || origin.token_sha256 == token_sha256;
+                })) {
+                return std::unexpected(OriginFileError::Duplicate);
+            }
+            origins.push_back({{"name", name},
+                               {"token_sha256", token_sha256},
+                               {"grade_policy", grade_policy == core::GradePolicy::OOnly ? "o-only" : "declare"}});
+        } else {
+            const auto found = std::ranges::find_if(origins, [&](const json& origin) {
+                return origin["name"].get_ref<const std::string&>() == name;
+            });
+            if (found == origins.end()) return std::unexpected(OriginFileError::NotFound);
+            if (origins.size() == 1) return std::unexpected(OriginFileError::LastOrigin);
+            const auto& provider = root["provider"];
+            if ((provider.contains("credential_rotation_origin") &&
+                 provider["credential_rotation_origin"].get_ref<const std::string&>() == name) ||
+                (root.contains("admin_history_origin") &&
+                 root["admin_history_origin"].get_ref<const std::string&>() == name)) {
+                return std::unexpected(OriginFileError::InUse);
+            }
+            origins.erase(found);
+        }
+
+        const auto serialized = root.dump(2) + "\n";
+        const auto updated = parse_config(serialized, base_dir);
+        if (!updated) {
+            return std::unexpected(updated.error().problem == ConfigProblem::Duplicate ? OriginFileError::Duplicate
+                                                                                      : OriginFileError::InvalidCandidateConfig);
+        }
+        const auto replacement_result = replace_config_atomically(file, serialized);
+        if (!replacement_result) return std::unexpected(replacement_result.error());
+        return updated->origins;
+    } catch (...) {
+        return std::unexpected(OriginFileError::WriteFailed);
+    }
 }
 
 }  // namespace prompt_airlock::gateway

@@ -82,10 +82,29 @@ struct ConfigError {
     std::string field;
 };
 
+enum class OriginFileAction : std::uint8_t { List, Add, Revoke };
+enum class OriginFileError : std::uint8_t {
+    InvalidName,
+    InvalidConfig,
+    InvalidCandidateConfig,
+    ReadFailed,
+    Duplicate,
+    NotFound,
+    InUse,
+    LastOrigin,
+    LockFailed,
+    UnsafePermissions,
+    WriteFailed,
+};
+
 // 상대 경로는 base_dir(보통 설정 파일이 있는 폴더) 기준으로 바꾼다. 파일 존재 여부는 여기서 보지 않는다.
 [[nodiscard]] std::expected<Config, ConfigError> parse_config(std::string_view json_text,
                                                               const std::filesystem::path& base_dir);
 
 [[nodiscard]] std::string_view config_problem_name(ConfigProblem problem) noexcept;
+[[nodiscard]] std::string_view origin_file_error_name(OriginFileError error) noexcept;
+[[nodiscard]] std::expected<std::vector<Origin>, OriginFileError> manage_origin_file(
+    const std::filesystem::path& file, OriginFileAction action, std::string_view name = {},
+    std::string_view token_sha256 = {}, core::GradePolicy grade_policy = core::GradePolicy::OOnly);
 
 }  // namespace prompt_airlock::gateway

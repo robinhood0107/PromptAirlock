@@ -41,6 +41,27 @@ struct RecentRead {
     bool complete = true;
 };
 
+enum class StatsState : std::uint8_t { Missing, Empty, Ready, Partial };
+enum class StatsStage : std::uint8_t { Verify, Read, Fields };
+
+struct StatsFailure {
+    StatsStage stage;
+    AuditError error;
+};
+
+struct StatsReport {
+    StatsState state = StatsState::Missing;
+    bool complete = true;
+    std::uint64_t records = 0;
+    std::uint64_t requests = 0;
+    std::uint64_t normal = 0;
+    std::uint64_t blocked = 0;
+    std::uint64_t confirmation = 0;
+    std::uint64_t failure = 0;
+};
+
+[[nodiscard]] std::string_view stats_stage_name(StatsStage stage) noexcept;
+
 class AuditLog {
 public:
     // dir 이 없으면 만든다. 마지막 세그먼트의 마지막 해시에서 이어 쓴다.
@@ -57,6 +78,10 @@ public:
     // 최근 구간의 세그먼트만 제한된 크기로 스냅샷을 읽고 해시 연결을 확인한다.
     [[nodiscard]] std::expected<RecentRead, AuditError> read_recent(Clock::time_point now = Clock::now());
 
+    // 기존 로그를 만들거나 고치지 않고 최근 요청 결과만 집계한다.
+    [[nodiscard]] static std::expected<StatsReport, StatsFailure> stats_recent_readonly(
+        const std::filesystem::path& dir, Clock::time_point now = Clock::now());
+
     [[nodiscard]] const std::filesystem::path& dir() const noexcept { return dir_; }
 
 private:
@@ -71,6 +96,7 @@ public:
 private:
     std::expected<void, AuditError> write_line(std::string_view kind, std::string_view severity, nlohmann::json fields,
                                                Clock::time_point now);
+    std::expected<void, AuditError> load_existing_state();
     std::expected<void, AuditError> close_segment();
     std::expected<int, AuditError> expire_locked(Clock::time_point now);
 

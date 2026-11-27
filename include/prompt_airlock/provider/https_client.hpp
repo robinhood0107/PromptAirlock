@@ -44,6 +44,7 @@ struct ClientTimings {
 };
 
 enum class CredentialError : std::uint8_t { Unreadable, Empty, InvalidCharacter, NotProtected, ReplaceFailed };
+enum class ConnectCheckError : std::uint8_t { ResolveFailed, ConnectFailed, Timeout, TlsSetupFailed, TlsHandshakeFailed };
 
 // 자격 증명 파일(ADR 0021). Windows 는 DPAPI(현재 사용자)로 보호한 파일만, Linux 는 권한 0600(그룹·다른 사용자 권한 없음) 파일만 읽는다.
 // 내용은 한 줄(끝 줄바꿈은 뗀다), 보이는 ASCII 만(헤더에 그대로 들어가므로).
@@ -67,6 +68,9 @@ public:
     // timings는 선택한 요청의 호출자가 소유하고, co_await가 끝날 때까지 유지한다. 요청 사이에 공유하지 않는다.
     [[nodiscard]] boost::asio::awaitable<std::expected<gateway::ProviderReply, gateway::ProviderError>> send(
         std::string body, ClientTimings* timings = nullptr) const;
+
+    // 고정된 대상의 TCP 연결과 서버 인증서 검증 handshake 만 수행한다. 자격 증명을 읽거나 HTTP 를 보내지 않는다.
+    [[nodiscard]] boost::asio::awaitable<std::expected<void, ConnectCheckError>> check_connection() const;
 
 private:
     boost::asio::ssl::context& tls_;
