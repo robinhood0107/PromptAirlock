@@ -1,0 +1,6 @@
+**
+!deploy/
+!deploy/gateway/
+!deploy/gateway/entrypoint.sh
+!deploy/gateway/dist/
+!deploy/gateway/dist/**

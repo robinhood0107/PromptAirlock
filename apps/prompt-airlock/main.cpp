@@ -82,6 +82,69 @@ namespace detect = prompt_airlock::detect;
 namespace extract = prompt_airlock::extract;
 namespace gw = prompt_airlock::gateway;
 
+struct RuntimePaths {
+    std::filesystem::path vault_executable;
+    std::filesystem::path ner_model_dir;
+    std::filesystem::path sentence_model_dir;
+};
+
+std::expected<RuntimePaths, const char*> runtime_paths() {
+    const auto development_paths = []() -> std::expected<RuntimePaths, const char*> {
+        RuntimePaths paths{PA_VAULT_EXE, PA_NER_MODEL_DIR, PA_SENTENCE_MODEL_DIR};
+        if (paths.vault_executable.empty() || paths.ner_model_dir.empty() || paths.sentence_model_dir.empty() ||
+            !paths.vault_executable.is_absolute() || !paths.ner_model_dir.is_absolute() ||
+            !paths.sentence_model_dir.is_absolute()) {
+            return std::unexpected("build_paths_invalid");
+        }
+        return paths;
+    };
+
+    const auto extractor = extract::default_executable();
+    if (extractor.empty()) {
+        return development_paths();
+    }
+    const auto bin_dir = extractor.parent_path();
+    if (bin_dir.empty() || bin_dir.filename() != std::filesystem::path("bin")) {
+        return development_paths();
+    }
+    const auto root = bin_dir.parent_path();
+    if (root.empty() || !root.is_absolute()) {
+        return std::unexpected("bundle_path_invalid");
+    }
+
+    std::error_code error;
+    const auto manifest = root / "manifest.sha256";
+    const auto manifest_status = std::filesystem::symlink_status(manifest, error);
+    if (error) {
+        return std::unexpected("bundle_probe_failed");
+    }
+    if (manifest_status.type() == std::filesystem::file_type::not_found) {
+        return std::unexpected("bundle_manifest_missing");
+    }
+    if (manifest_status.type() != std::filesystem::file_type::regular) {
+        return std::unexpected("bundle_invalid");
+    }
+
+#ifdef _WIN32
+    const auto vault = root / "libexec" / "prompt-airlock-vault.exe";
+#else
+    const auto vault = root / "libexec" / "prompt-airlock-vault";
+#endif
+    const auto ner_dir = root / "share" / "models" / "ner";
+    const auto is_regular_file = [&error](const std::filesystem::path& path) {
+        error.clear();
+        const auto status = std::filesystem::symlink_status(path, error);
+        return !error && status.type() == std::filesystem::file_type::regular;
+    };
+    if (!is_regular_file(extractor) || !is_regular_file(vault) ||
+        !is_regular_file(ner_dir / "config.json") || !is_regular_file(ner_dir / "tokenizer.json") ||
+        !is_regular_file(ner_dir / "model.onnx")) {
+        return std::unexpected("bundle_incomplete");
+    }
+
+    return RuntimePaths{vault, ner_dir, root / "share" / "models" / "sentence"};
+}
+
 // 요청을 처리하는 io 스레드 수. 탐지·Vault 호출이 동기라 동시 처리 수의 상한이기도 하다.
 constexpr unsigned io_threads = 4;
 
@@ -128,11 +191,12 @@ std::expected<Tls, const char*> load_tls(const gw::Config& config) {
 }
 
 // 경고 모드(ADR 0023): 켰는데 판별기를 불러오지 못하면 기동하지 않는다(판별 없이 보내지 않는다). 끄면 빈 함수.
-std::expected<gw::SentenceCheck, const char*> make_sentence_check(bool enabled) {
+std::expected<gw::SentenceCheck, const char*> make_sentence_check(bool enabled,
+                                                                  const std::filesystem::path& model_dir) {
     if (!enabled) {
         return gw::SentenceCheck{};
     }
-    auto classifier = prompt_airlock::ner::SentenceClassifier::make(PA_SENTENCE_MODEL_DIR);
+    auto classifier = prompt_airlock::ner::SentenceClassifier::make(model_dir);
     if (!classifier) {
         return std::unexpected("sentence classifier files are missing or do not match the pinned hashes");
     }
@@ -201,11 +265,15 @@ int check_command(std::string_view config_arg, bool connect_requested = false) n
             }
         }
 
-        auto ner = prompt_airlock::ner::NerPool::make(PA_NER_MODEL_DIR);
+        const auto paths = runtime_paths();
+        if (!paths) {
+            return check_failure("runtime", paths.error());
+        }
+        auto ner = prompt_airlock::ner::NerPool::make(paths->ner_model_dir);
         if (!ner) {
             return check_failure("model", "ner_unavailable");
         }
-        auto sentence = make_sentence_check(config->sentence_warn);
+        auto sentence = make_sentence_check(config->sentence_warn, paths->sentence_model_dir);
         if (!sentence) {
             return check_failure("model", "sentence_unavailable");
         }
@@ -218,7 +286,7 @@ int check_command(std::string_view config_arg, bool connect_requested = false) n
 
         {
             prompt_airlock::vault_client::ServiceOptions vault_options;
-            vault_options.exe = PA_VAULT_EXE;
+            vault_options.exe = paths->vault_executable;
             prompt_airlock::vault_client::VaultService vault(vault_options);
             {
                 auto scope = vault.open_scope();
@@ -332,12 +400,15 @@ int serve(const std::filesystem::path& config_path) {
         return fail("provider credential file is missing, empty or has invalid characters");
     }
 
-    // shortcut: 모델 폴더와 Vault 실행 파일은 빌드 트리 경로를 쓴다. 배포 묶음(Phase 13)에서 실행 파일 옆으로 옮긴다.
-    auto ner = prompt_airlock::ner::NerPool::make(PA_NER_MODEL_DIR);
+    const auto paths = runtime_paths();
+    if (!paths) {
+        return fail(paths.error());
+    }
+    auto ner = prompt_airlock::ner::NerPool::make(paths->ner_model_dir);
     if (!ner) {
         return fail("NER model files are missing or do not match the pinned hashes");
     }
-    auto sentence = make_sentence_check(config->sentence_warn);
+    auto sentence = make_sentence_check(config->sentence_warn, paths->sentence_model_dir);
     if (!sentence) {
         return fail(sentence.error());
     }
@@ -347,7 +418,7 @@ int serve(const std::filesystem::path& config_path) {
         return fail("institution protected terms or policy labels rejected");
     }
     prompt_airlock::vault_client::ServiceOptions vault_options;
-    vault_options.exe = PA_VAULT_EXE;
+    vault_options.exe = paths->vault_executable;
     prompt_airlock::vault_client::VaultService vault(vault_options);
 
     // 감사 기록은 설정 파일 옆 audit/ 에 둔다(ADR 0021). 열지 못하면 기동하지 않는다.
@@ -1015,7 +1086,9 @@ int policy_suggest(std::string_view folder_arg) noexcept {
                 if (!validated) return policy_suggest_failure({"policy", "invalid_candidate", std::nullopt});
             }
 
-            auto ner = prompt_airlock::ner::NerPool::make(PA_NER_MODEL_DIR);
+            const auto paths = runtime_paths();
+            if (!paths) return policy_suggest_failure({"runtime", paths.error(), std::nullopt});
+            auto ner = prompt_airlock::ner::NerPool::make(paths->ner_model_dir);
             if (!ner) return policy_suggest_failure({"detector", "unavailable", std::nullopt});
             const std::span<const std::string_view> no_terms;
             const auto detectors = detect::Detectors::make(no_terms, *ner);
