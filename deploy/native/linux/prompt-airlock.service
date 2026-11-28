@@ -1,0 +1,14 @@
+[Unit]
+Description=Prompt Airlock local gateway
+After=default.target
+
+[Service]
+Type=simple
+WorkingDirectory=%h/.local/share/prompt-airlock
+Environment=LD_LIBRARY_PATH=%h/.local/lib/prompt-airlock/lib
+ExecStart=%h/.local/lib/prompt-airlock/bin/prompt-airlock serve %h/.local/share/prompt-airlock/config.json
+Restart=on-failure
+RestartSec=2
+
+[Install]
+WantedBy=default.target

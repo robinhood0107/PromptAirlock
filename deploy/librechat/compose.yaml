@@ -6,6 +6,8 @@ services:
     depends_on:
       mongodb:
         condition: service_healthy
+      gateway:
+        condition: service_healthy
     environment:
       ALLOW_REGISTRATION: ${ALLOW_REGISTRATION:-false}
       CREDS_IV: ${CREDS_IV:?set CREDS_IV in .env}
@@ -24,7 +26,7 @@ services:
       RUM_ENABLED: "false"
       SCARF_ANALYTICS: "false"
     volumes:
-      - ./gateway-ca.pem:/run/librechat/gateway-ca.pem:ro
+      - ${PA_GATEWAY_RUNTIME_DIR:-./gateway-runtime}/certs/ca.pem:/run/librechat/gateway-ca.pem:ro
       - ./librechat.yaml:/app/librechat.yaml:ro
       - librechat_uploads:/app/uploads
   mongodb:
@@ -50,6 +52,27 @@ services:
     volumes:
       - ./mongo-init.js:/docker-entrypoint-initdb.d/10-create-app-user.js:ro
       - mongodb_data:/data/db
+  gateway:
+    build:
+      context: ../..
+      dockerfile: deploy/gateway/Dockerfile
+    image: prompt-airlock-gateway:local
+    restart: unless-stopped
+    network_mode: host
+    working_dir: /var/lib/prompt-airlock
+    volumes:
+      - ${PA_GATEWAY_RUNTIME_DIR:-./gateway-runtime}:/run/prompt-airlock:ro
+      - gateway_runtime:/var/lib/prompt-airlock
+      - gateway_audit:/var/lib/prompt-airlock/audit
+    healthcheck:
+      test: ["CMD", "/opt/prompt-airlock/bin/prompt-airlock", "check", "/var/lib/prompt-airlock/config.json"]
+      interval: 15s
+      timeout: 10s
+      retries: 4
+      start_period: 30s
+
 volumes:
+  gateway_audit:
+  gateway_runtime:
   librechat_uploads:
   mongodb_data:

@@ -88,7 +88,7 @@ linux-clang-asan-ubsan, linux-clang-tsan, linux-clang-fuzz도 지원합니다. f
 
 Windows win-debug 실행 파일은 build/win-debug/apps/prompt-airlock/prompt-airlock.exe와 같은 폴더의 prompt-airlock-extract.exe, build/win-debug/tools/mock-provider/mock-provider.exe입니다. WSL linux-gcc14 build root는 $HOME/.cache/prompt-airlock/main/linux-gcc14이고 Gateway와 mock 실행 파일은 apps/prompt-airlock/ 및 tools/mock-provider/ 아래에 있습니다.
 
-보호된 합성 config, test CA, `request-auth.curl` 생성, 엄격한 TLS 확인, 첫 O 요청·C 차단 및 local mock 실행 절차는 [로컬 mock 연동 가이드](docs/local-mock-smoke.md)에 있습니다. Windows native와 WSL에서 CLI 흐름을 확인했고 Visual Studio Open Folder UI와 새 설치 환경은 실행 검증하지 않았습니다. LibreChat은 선택적 컨테이너 경로이며 native 빌드에는 Docker가 필요하지 않습니다.
+보호된 합성 config, test CA, `request-auth.curl` 생성, 엄격한 TLS 확인, 첫 O 요청·C 차단 및 local mock 실행 절차는 [로컬 mock 연동 가이드](docs/local-mock-smoke.md)에 있습니다. 네이티브 설치 묶음과 WSL user service는 [로컬 설치 안내](deploy/native/README.md), 전체 로컬 Compose는 [LibreChat 배포 안내](deploy/librechat/README.md)를 참고합니다. LibreChat은 선택적 컨테이너 경로이며 native 빌드에는 Docker가 필요하지 않습니다.
 
 ## 로컬 콘솔과 채팅 앱
 
